@@ -54,6 +54,7 @@ from rnw.progress import checkpoint
 from rnw.relief import HILL_STEP, blurred_window, cell_roughness, strip_bend
 from rnw.rng import derive_seed, hash_point
 from rnw.settings import RESOURCES, ResourceSettings, SettingsError
+from rnw.timing import measured
 from rnw.topology import adjacency_pairs, distance_from
 
 if TYPE_CHECKING:
@@ -620,6 +621,7 @@ def nearest_rows(train: NDArray[np.int64], query: NDArray[np.int64], k: int) -> 
     )
 
 
+@measured
 def calibrated_weights(
     train: NDArray[np.int64],
     classes: NDArray[np.int64],
@@ -663,6 +665,7 @@ def calibrated_weights(
     return weights
 
 
+@measured
 def block_features(
     land: NDArray[np.bool_], height: NDArray[np.integer], grid: ClimateGrid
 ) -> tuple[NDArray[np.bool_], NDArray[np.int64]]:
@@ -793,17 +796,16 @@ def cell_mean(
 ) -> NDArray[np.int64]:
     """The mean of ``values`` over the pixels of each of the first ``count`` cells, a strip of
     ``RELIEF_ROWS`` rows at a time (exact: a strip's sums stay below 2^53). Integers."""
-    totals = np.zeros(count, dtype=np.int64)
-    pixels = np.zeros(count, dtype=np.int64)
+    totals = np.zeros((4, count), dtype=np.int64)
     for start in range(0, int(labels.shape[0]), RELIEF_ROWS):
         checkpoint()
-        cell = labels[start : start + RELIEF_ROWS]
-        keep = (cell >= 0) & (cell < count)
-        chosen = cell[keep]
-        weights = values[start : start + RELIEF_ROWS][keep]
-        totals += np.bincount(chosen, weights=weights, minlength=count).astype(np.int64)
-        pixels += np.bincount(chosen, minlength=count)
-    return totals // np.maximum(pixels, 1)
+        totals += _native.label_moments(
+            np.ascontiguousarray(labels[start : start + RELIEF_ROWS]),
+            np.ascontiguousarray(values[start : start + RELIEF_ROWS], dtype=np.int64),
+            count,
+            start,
+        )
+    return totals[3] // np.maximum(totals[0], 1)
 
 
 def ground_scores(model: SizeModel, readings: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -897,6 +899,7 @@ def _block_raster(land: NDArray[np.bool_]) -> tuple[NDArray[np.int32], NDArray[n
     return out, pixels
 
 
+@measured
 def _ground_readings(  # noqa: PLR0913 - the blocks, the height, the grid and how to read them.
     blocks: NDArray[np.int32],
     count: int,
@@ -920,6 +923,7 @@ def _ground_readings(  # noqa: PLR0913 - the blocks, the height, the grid and ho
     return np.stack([mean_height, rugged, rough, _sample(grid.coast, centres)], axis=1)
 
 
+@measured
 def ground_field(
     model: SizeModel,
     land: NDArray[np.bool_],
@@ -980,6 +984,7 @@ def block_ground_scores(field: GroundField, found: NDArray[np.bool_]) -> NDArray
     return summed[: found.shape[0], : found.shape[1]][found]
 
 
+@measured
 def _ground_training(  # noqa: PLR0913 - the map, its voters, their grounds, height, grid and land.
     labels: NDArray[np.int32],
     voters: NDArray[np.bool_],
@@ -1104,6 +1109,7 @@ class SizeModel:
         return found.hexdigest()
 
 
+@measured
 def size_model(
     game_map: Eu5Map,
     templates: dict[str, dict[str, str]],
@@ -1396,6 +1402,7 @@ def _solved(matrix: list[list[Fraction]], values: list[Fraction]) -> list[Fracti
     return [rows[row][size] / rows[row][row] for row in range(size)]
 
 
+@measured
 def _location_sums(
     labels: NDArray[np.int32],
     table: NDArray[np.int64],
@@ -1408,19 +1415,19 @@ def _location_sums(
     block in raster order, ``shape`` blocks) over them; a label of -1 is none."""
     pixels = np.zeros(count, dtype=np.int64)
     sums = np.zeros((count, table.shape[1]), dtype=np.int64)
-    columns = np.arange(int(labels.shape[1]), dtype=np.int64) // step
+    table = np.ascontiguousarray(table)
     for first in range(0, int(labels.shape[0]), step * 8):
         checkpoint()
-        window = labels[first : first + step * 8].ravel()
-        rows = np.arange(first, first + step * 8, dtype=np.int64)[: labels.shape[0] - first]
-        block = (rows[:, np.newaxis] // step * shape[1] + columns[np.newaxis, :]).ravel()
-        here = window >= 0
-        block, owner = block[here], window[here]
-        pixels += np.bincount(owner, minlength=count)
-        for column in range(table.shape[1]):
-            # Exact: integer sums below 2^53 in a strip.
-            found = np.bincount(owner, weights=table[block, column], minlength=count)
-            sums[:, column] += found.astype(np.int64)
+        found, total = _native.location_sums(
+            np.ascontiguousarray(labels[first : first + step * 8]),
+            table,
+            count,
+            step,
+            shape[1],
+            first,
+        )
+        pixels += found
+        sums += total
     return pixels, sums
 
 
@@ -1480,6 +1487,7 @@ def _pair_sizes(
     return out
 
 
+@measured
 def cell_readings(  # noqa: PLR0913 - the cells, the height, grid, sea and ground of the land.
     labels: NDArray[np.int32],
     count: int,
@@ -1506,9 +1514,23 @@ def cell_readings(  # noqa: PLR0913 - the cells, the height, grid, sea and groun
     )
     del land, table
     features = sums // np.maximum(pixels, 1)[:, np.newaxis]
+    centred, votes, coastal = _centred_readings(labels, count, height, grid, sea, ground=ground)
+    return features, centred, votes, coastal
+
+
+def _centred_readings(  # noqa: PLR0913 - the same inputs as cell_readings, without block means.
+    labels: NDArray[np.int32],
+    count: int,
+    height: NDArray[np.integer],
+    grid: ClimateGrid,
+    sea: NDArray[np.bool_],
+    *,
+    ground: GroundField,
+) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.bool_]]:
+    """Centre features, ground votes and sea contacts, without the unused block statistics."""
     centred = land_features(grid, _cell_centres(labels, count), cell_mean(labels, height, count))
     votes = cell_ground_scores(labels, count, ground)
-    return features, centred, votes, _cells_touching(labels, count, sea)
+    return centred, votes, _cells_touching(labels, count, sea)
 
 
 def _cells_touching(
@@ -1559,20 +1581,13 @@ def _landmass_sizes(contacts: NDArray[np.int64], land: NDArray[np.bool_]) -> NDA
 def _cell_centres(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]:
     """The centre (row, column) of each of the first ``count`` labels, floored as
     ``newworld.derive_world`` floors them, a strip of ``RELIEF_ROWS`` rows at a time."""
-    pixels = np.zeros(count, dtype=np.int64)
-    rows = np.zeros(count, dtype=np.int64)
-    columns = np.zeros(count, dtype=np.int64)
+    totals = np.zeros((4, count), dtype=np.int64)
     for start in range(0, int(labels.shape[0]), RELIEF_ROWS):
         checkpoint()
-        cell = labels[start : start + RELIEF_ROWS]
-        keep = (cell >= 0) & (cell < count)
-        where_rows, where_columns = np.nonzero(keep)
-        chosen = cell[keep]
-        pixels += np.bincount(chosen, minlength=count)
-        rows += np.bincount(chosen, weights=where_rows + start, minlength=count).astype(np.int64)
-        columns += np.bincount(chosen, weights=where_columns, minlength=count).astype(np.int64)
-    found = np.maximum(pixels, 1)
-    return np.stack([rows // found, columns // found], axis=1)
+        totals += _native.label_moments(
+            np.ascontiguousarray(labels[start : start + RELIEF_ROWS]), None, count, start
+        )
+    return (totals[1:3] // np.maximum(totals[0], 1)).T.copy()
 
 
 def cell_edges(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]:
@@ -1644,6 +1659,7 @@ def cell_sizes(  # noqa: PLR0913 - the model, the cells' readings, coast and con
     return _pair_sizes(model, pair, features) + model.offsets[coastal.astype(np.int64), kinds]
 
 
+@measured
 def coastal_offsets(  # noqa: PLR0913 - the model, the cells, the height, grid, sea and ground.
     model: SizeModel,
     labels: NDArray[np.int32],
@@ -1658,7 +1674,7 @@ def coastal_offsets(  # noqa: PLR0913 - the model, the cells, the height, grid, 
     be given lie off its inland flatland, on the coast, in thousandths of an octave
     (``SizeModel.offsets``): the pair and the ground voted as ``cell_sizes`` votes them; 0 for a
     cell that does not touch the ``sea``."""
-    _, centred, votes, coastal = cell_readings(labels, count, height, grid, sea, ground=ground)
+    centred, votes, coastal = _centred_readings(labels, count, height, grid, sea, ground=ground)
     voted = cell_pairs(model, centred, edges=cell_edges(labels, count))
     kinds = choose_grounds(model, votes, model.vote_dry[voted], matched=True)
     flatland = model.offsets[0, TOPOGRAPHIES.index("flatland")]

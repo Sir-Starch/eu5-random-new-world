@@ -6,6 +6,7 @@ pub mod cells;
 pub mod components;
 pub mod distance;
 pub mod drainage;
+pub mod growth;
 pub mod hash;
 pub mod knn;
 pub mod lzav;
@@ -14,9 +15,11 @@ pub mod noise;
 pub mod objects;
 pub mod raster;
 pub mod slots;
+pub mod spacing;
 pub mod terrain;
 pub mod tiles;
 pub mod voronoi;
+pub mod water;
 
 use numpy::{
     IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
@@ -60,6 +63,326 @@ mod _native {
             .num_threads(threads.max(1))
             .build_global();
         rayon::current_num_threads()
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn strip_bend<'py>(
+        py: Python<'py>,
+        land: PyReadonlyArray2<'py, bool>,
+        values: PyReadonlyArray2<'py, i64>,
+        start: usize,
+        stop: usize,
+        rows: usize,
+        step: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = land.as_array().dim();
+        if values.as_array().dim() != shape
+            || start > stop
+            || stop > rows
+            || shape.0 != (stop.saturating_add(step).min(rows) - start.saturating_sub(step))
+            || step == 0
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid bend strip or halo",
+            ));
+        }
+        let (land, values) = (land.as_slice()?, values.as_slice()?);
+        let out =
+            py.detach(|| raster::strip_bend(land, values, shape.1, (start, stop, rows, step)));
+        shaped(py, (stop - start, shape.1), out)
+    }
+
+    #[pyfunction]
+    fn water_open_cells<'py>(
+        py: Python<'py>,
+        image: PyReadonlyArray3<'py, u8>,
+        distance: PyReadonlyArray2<'py, u8>,
+        reach: u8,
+        first: usize,
+        last: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = distance.as_array().dim();
+        if image.as_array().dim() != (shape.0, shape.1, 4)
+            || first > last
+            || last > shape.0
+            || !first.is_multiple_of(32)
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid water strip",
+            ));
+        }
+        let (image, distance) = (image.as_slice()?, distance.as_slice()?);
+        let out = py.detach(|| water::open_cells(image, distance, shape.1, reach, first, last));
+        shaped(py, (out.len() / 5, 5), out)
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn water_profile_sums<'py>(
+        py: Python<'py>,
+        image: PyReadonlyArray3<'py, u8>,
+        distance: PyReadonlyArray2<'py, u8>,
+        grid: PyReadonlyArray3<'py, i64>,
+        reach: usize,
+        first: usize,
+        last: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = distance.as_array().dim();
+        let (gr, gc, channels) = grid.as_array().dim();
+        if image.as_array().dim() != (shape.0, shape.1, 4)
+            || shape.0 < 64
+            || gr == 0
+            || gc == 0
+            || channels != 4
+            || reach > 255
+            || first > last
+            || last > shape.0
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid water calibration strip",
+            ));
+        }
+        let (image, distance, grid) = (image.as_slice()?, distance.as_slice()?, grid.as_slice()?);
+        let out = py.detach(|| {
+            water::profile_sums(image, distance, shape, grid, (gr, gc), reach, first, last)
+        });
+        shaped(py, (out.len() / 5, 5), out)
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn water_render<'py>(
+        py: Python<'py>,
+        image: PyReadonlyArray3<'py, u8>,
+        old: PyReadonlyArray2<'py, u8>,
+        new: PyReadonlyArray2<'py, u8>,
+        touched: PyReadonlyArray2<'py, bool>,
+        table: PyReadonlyArray3<'py, i64>,
+        grid: PyReadonlyArray3<'py, i64>,
+        first: usize,
+        last: usize,
+        reach: usize,
+        key: u64,
+    ) -> PyResult<Bound<'py, PyArray1<u8>>> {
+        let shape = old.as_array().dim();
+        let (bands, distances, channels) = table.as_array().dim();
+        let (gr, gc, gchannels) = grid.as_array().dim();
+        if image.as_array().dim() != (shape.0, shape.1, 4)
+            || new.as_array().dim() != shape
+            || touched.as_array().dim() != shape
+            || bands == 0
+            || reach > 255
+            || distances != reach + 1
+            || channels != 4
+            || gr == 0
+            || gc == 0
+            || gchannels != 4
+            || first >= last
+            || last > shape.0
+            || shape.1 == 0
+            || reach > 255
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid water render strip",
+            ));
+        }
+        let params = water::Render {
+            image: image.as_slice()?,
+            old: old.as_slice()?,
+            new: new.as_slice()?,
+            touched: touched.as_slice()?,
+            shape,
+            table: table.as_slice()?,
+            bands,
+            grid: grid.as_slice()?,
+            grid_shape: (gr, gc),
+            first,
+            last,
+            reach,
+            key,
+        };
+        let out = py.detach(|| water::render(&params));
+        Ok(out.into_pyarray(py))
+    }
+
+    #[pyfunction]
+    fn label_moments<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        values: Option<PyReadonlyArray2<'py, i64>>,
+        count: usize,
+        first: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = labels.as_array().dim();
+        if values.as_ref().is_some_and(|v| v.as_array().dim() != shape) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "raster shapes differ",
+            ));
+        }
+        let values = values.as_ref().map(|v| v.as_slice()).transpose()?;
+        let labels = labels.as_slice()?;
+        let out = py.detach(|| cells::moments(labels, values, shape.1, count, first));
+        shaped(py, (4, count), out)
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn location_sums<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        table: PyReadonlyArray2<'py, i64>,
+        count: usize,
+        step: usize,
+        block_columns: usize,
+        first: usize,
+    ) -> PyResult<(Bound<'py, PyArray1<i64>>, Bound<'py, PyArray2<i64>>)> {
+        let (rows, width) = labels.as_array().dim();
+        let (blocks, features) = table.as_array().dim();
+        if step == 0
+            || block_columns < width.div_ceil(step)
+            || (rows > 0
+                && width > 0
+                && blocks < ((first + rows - 1) / step) * block_columns + width.div_ceil(step))
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "block table does not fit the raster",
+            ));
+        }
+        let (labels, table) = (labels.as_slice()?, table.as_slice()?);
+        let (pixels, sums) = py
+            .detach(|| {
+                cells::location_sums(
+                    labels,
+                    width,
+                    table,
+                    features,
+                    count,
+                    step,
+                    block_columns,
+                    first,
+                )
+            })
+            .map_err(|_| pyo3::exceptions::PyValueError::new_err("label out of range"))?;
+        Ok((
+            pixels.into_pyarray(py),
+            shaped(py, (count, features), sums)?,
+        ))
+    }
+
+    #[pyfunction]
+    fn centre_pixels<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        flat: PyReadonlyArray1<'py, i64>,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let width = labels.as_array().dim().1;
+        let (labels, flat) = (labels.as_slice()?, flat.as_slice()?);
+        let out = py.detach(|| cells::centre_pixels(labels, width, flat));
+        Ok(out.into_pyarray(py))
+    }
+
+    #[pyfunction]
+    fn merge_small<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        minimum: i64,
+    ) -> PyResult<Bound<'py, PyArray2<i32>>> {
+        let shape = labels.as_array().dim();
+        let labels = labels.as_slice()?;
+        let out = py.detach(|| cells::merge_small(labels, shape, minimum));
+        shaped(py, shape, out)
+    }
+
+    /// Frontier growth; call Python cancellation only between Rust-owned batches.
+    #[pyfunction]
+    fn grow_labels<'py>(
+        py: Python<'py>,
+        mask: PyReadonlyArray2<'py, bool>,
+        seeds: PyReadonlyArray2<'py, i32>,
+        speed: Option<PyReadonlyArray1<'py, i64>>,
+        checkpoint: Py<PyAny>,
+    ) -> PyResult<Bound<'py, PyArray2<i32>>> {
+        let shape = mask.as_array().dim();
+        if seeds.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "raster shapes differ",
+            ));
+        }
+        let speeds = speed.as_ref().map(|s| s.as_slice()).transpose()?;
+        let (mask, seeds) = (mask.as_slice()?, seeds.as_slice()?);
+        let mut state = py
+            .detach(|| growth::Growth::new(mask, seeds, shape.1, speeds))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        loop {
+            checkpoint.call0(py)?;
+            if py.detach(|| state.advance(std::time::Duration::from_millis(100))) {
+                break;
+            }
+        }
+        shaped(py, shape, state.finish())
+    }
+
+    /// Synchronous eight-neighbour spacing relaxation, with unchanged convergence.
+    #[pyfunction]
+    fn grade_spacing<'py>(
+        py: Python<'py>,
+        spacing: PyReadonlyArray2<'py, i64>,
+        land: PyReadonlyArray2<'py, bool>,
+        step: i64,
+        checkpoint: Py<PyAny>,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = spacing.as_array().dim();
+        if land.as_array().dim() != shape || step < 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid spacing grid or step",
+            ));
+        }
+        let (spacing, land) = (spacing.as_slice()?, land.as_slice()?);
+        let mut state = py.detach(|| spacing::Grading::new(spacing, land, shape.1, step));
+        loop {
+            checkpoint.call0(py)?;
+            if py.detach(|| state.advance(std::time::Duration::from_millis(100))) {
+                break;
+            }
+        }
+        shaped(py, shape, state.finish())
+    }
+
+    /// Sequential seed acceptance in hashed buckets, preserving candidate order.
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn throw_seeds<'py>(
+        py: Python<'py>,
+        xs: PyReadonlyArray1<'py, i64>,
+        ys: PyReadonlyArray1<'py, i64>,
+        radius: PyReadonlyArray1<'py, i64>,
+        smallest: i64,
+        widest: i64,
+        columns: i64,
+        gap: i64,
+        checkpoint: Py<PyAny>,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let (xs, ys, radius) = (xs.as_slice()?, ys.as_slice()?, radius.as_slice()?);
+        if xs.len() != ys.len()
+            || xs.len() != radius.len()
+            || smallest <= 0
+            || widest <= 0
+            || gap <= 0
+            || radius.iter().any(|&r| r <= 0 || r > widest)
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid seed candidates or spacing",
+            ));
+        }
+        let mut state = spacing::Scatter::new(xs, ys, radius, smallest, widest, gap);
+        loop {
+            checkpoint.call0(py)?;
+            if py.detach(|| state.advance(std::time::Duration::from_millis(100))) {
+                break;
+            }
+        }
+        Ok(state.finish(columns).into_pyarray(py))
     }
 
     /// Decode a format-3 LZAV stream that expands to exactly `size` bytes.

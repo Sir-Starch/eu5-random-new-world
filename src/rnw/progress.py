@@ -50,6 +50,10 @@ STAGES: Final[dict[str, StageInfo]] = {
     "vanilla natives": StageInfo("Reading the old native peoples", 4),
     "vanilla Americas": StageInfo("Reading the game's own Americas", 0),
     "generate world": StageInfo("Generating continents, seas and relief", 26),
+    # Substages share their parent's weight and show what is actually running.
+    "relief": StageInfo("Raising mountains and valleys", 0),
+    "sea cells": StageInfo("Growing sea zones", 0),
+    "land cells": StageInfo("Growing land locations", 0),
     "land character": StageInfo("Planning the land and its wastelands", 3),
     "settle coasts": StageInfo("Giving every coast a port", 3),
     "water shapes": StageInfo("Shaping bays, straits and currents", 1),
@@ -71,9 +75,6 @@ STAGES: Final[dict[str, StageInfo]] = {
     "selection cover": StageInfo("Covering the New World until it is played", 1),
     "write files": StageInfo("Writing the mod", 4),
     # Parts of the stages above: they show in the list while they run and add no weight.
-    "land cells": StageInfo("Growing land locations", 0),
-    "sea cells": StageInfo("Growing sea zones", 0),
-    "relief": StageInfo("Raising mountains and valleys", 0),
     "terrain": StageInfo("Building the terrain", 0),
     # Parts of installing, after the export (``rnw.app.service``).
     "candidates": StageInfo("Sketching continents", 0),

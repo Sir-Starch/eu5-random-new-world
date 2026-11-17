@@ -18,7 +18,6 @@ from rnw.eu5_water import (
     BAND_ROWS,
     BLEND,
     GRID,
-    _background,  # pyright: ignore[reportPrivateUsage]
     _background_grid,  # pyright: ignore[reportPrivateUsage]
     _decode,  # pyright: ignore[reportPrivateUsage]
     _downsample,  # pyright: ignore[reportPrivateUsage]
@@ -160,3 +159,21 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
     result = np.where(touched[..., None], blended, image).clip(0, 255).astype(np.uint8)
     changed = touched & np.any(result != image, axis=2)
     return rewrite(data, result, changed), int(np.count_nonzero(changed))
+
+
+def _background(grid: NDArray[np.int64], first: int, last: int, columns: int) -> NDArray[np.int64]:
+    """Bilinear open-water colour of rows ``first`` to ``last``; columns wrap at the seam.
+
+    Cell centres sit half a cell in; weights are in 1/(2 GRID), so every step is exact.
+    """
+    height, width = grid.shape[:2]
+    span = 2 * GRID
+    y = 2 * np.arange(first, last, dtype=np.int64) + 1 - GRID
+    row, fy = y // span, (y % span)[:, None, None]
+    x = 2 * np.arange(columns, dtype=np.int64) + 1 - GRID
+    column, fx = x // span, (x % span)[None, :, None]
+    vertical = (
+        grid[np.clip(row, 0, height - 1)] * (span - fy) + grid[np.clip(row + 1, 0, height - 1)] * fy
+    )
+    across = vertical[:, column % width] * (span - fx) + vertical[:, (column + 1) % width] * fx
+    return (across + span * span // 2) // (span * span)

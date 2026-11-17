@@ -207,7 +207,7 @@ def test_the_background_of_a_flat_sea_is_that_sea_everywhere() -> None:
     assert np.all(grid == np.array([17, 91, 133, 255]))
     columns = 9 * eu5_water.GRID
     rows = 5 * eu5_water.GRID
-    painted = eu5_water._background(grid, 0, rows, columns)  # pyright: ignore[reportPrivateUsage]
+    painted = reference_water._background(grid, 0, rows, columns)  # pyright: ignore[reportPrivateUsage]
     assert np.all(painted == np.array([17, 91, 133, 255]))
 
 

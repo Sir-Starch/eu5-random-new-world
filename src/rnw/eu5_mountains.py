@@ -25,6 +25,7 @@ from rnw import _native
 from rnw.eu5_slots import NO_MATERIAL
 from rnw.fields import block_mean, box_blur
 from rnw.rng import derive_seed, hash_point
+from rnw.timing import measured
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -179,6 +180,7 @@ class MountainRelief:
         """The slots the stamps lay over a decal window, ``NO_MATERIAL`` where none does."""
         return self.stamp(origin, shape)[1]
 
+    @measured
     def stamp(
         self, origin: tuple[int, int], shape: tuple[int, int]
     ) -> tuple[NDArray[np.int64], NDArray[np.uint8]]:

@@ -121,6 +121,19 @@ def recording(game_dir: Path) -> Generator[InputRecorder]:
             _ACTIVE.remove(recorder)
 
 
+def note_manifest(game_dir: Path, manifest: Manifest) -> None:
+    """Replay verified cache dependencies so a world records the same inputs on a hit.
+
+    Hash memoization may avoid opening a file during verification; its dependency still
+    belongs to each active recorder. Directory inventories are replayed as directories.
+    """
+    for recorder in tuple(_ACTIVE):
+        for name in manifest.files:
+            recorder.note(str(game_dir / name))
+        for name in manifest.directories:
+            recorder.note(str(game_dir / name), directory=True)
+
+
 # Digests of files already read, by path, size and times: comparing several worlds with the
 # same game reads its files once. A file written again gets a new modification time.
 _DIGESTS: dict[tuple[str, int, int, int], str] = {}

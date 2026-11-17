@@ -1588,3 +1588,17 @@ def test_redrawing_chaos_is_inert_in_other_modes(tmp_path: Path, fake_export: Ex
     code = controller.code
     controller.randomize_settings()
     assert controller.code == code
+
+
+def test_geography_activity_is_visible_to_both_windows(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    from rnw.gui.text import stage_text  # noqa: PLC0415
+
+    controller = _controller(tmp_path, fake_export)
+    controller.running = ("generate world", "land cells")
+    controller.finished = frozenset({"relief", "sea cells"})
+    rows = dict(controller.stage_rows())
+    assert rows[stage_text("land cells")] == "running"
+    assert rows[stage_text("relief")] == "done"
+    assert rows[stage_text("sea cells")] == "done"

@@ -36,6 +36,7 @@ import numpy as np
 from rnw import _native
 from rnw.noise import fractal_noise
 from rnw.rng import derive_seed
+from rnw.timing import measured
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -120,6 +121,7 @@ def slot_remap() -> NDArray[np.int64]:
     return table
 
 
+@measured
 def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables and noise.
     labels: NDArray[np.int32],
     land: NDArray[np.bool_],

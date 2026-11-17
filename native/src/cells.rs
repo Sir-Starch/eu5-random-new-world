@@ -161,6 +161,159 @@ pub fn cell_sums(
     Ok(total)
 }
 
+/// Per-label pixel count, row sum, column sum and optional value sum in a strip.
+/// Out-of-range labels are ignored, as the biome readers' explicit masks do.
+pub fn moments(
+    labels: &[i32],
+    values: Option<&[i64]>,
+    width: usize,
+    count: usize,
+    first: usize,
+) -> Vec<i64> {
+    let mut out = vec![0_i64; 4 * count];
+    for (at, &label) in labels.iter().enumerate() {
+        if label < 0 || label as usize >= count {
+            continue;
+        }
+        let cell = label as usize;
+        out[cell] += 1;
+        out[count + cell] += (first + at / width) as i64;
+        out[2 * count + cell] += (at % width) as i64;
+        if let Some(values) = values {
+            out[3 * count + cell] = out[3 * count + cell].wrapping_add(values[at]);
+        }
+    }
+    out
+}
+
+/// Sum block features over the pixels of each label without gathered pixel-sized tables.
+#[allow(clippy::too_many_arguments)]
+pub fn location_sums(
+    labels: &[i32],
+    width: usize,
+    table: &[i64],
+    features: usize,
+    count: usize,
+    step: usize,
+    block_columns: usize,
+    first: usize,
+) -> Result<(Vec<i64>, Vec<i64>), LabelOutOfRange> {
+    let mut pixels = vec![0_i64; count];
+    let mut sums = vec![0_i64; count * features];
+    for (at, &label) in labels.iter().enumerate() {
+        if label < 0 {
+            continue;
+        }
+        let cell = label as usize;
+        if cell >= count {
+            return Err(LabelOutOfRange);
+        }
+        pixels[cell] += 1;
+        let block = ((first + at / width) / step * block_columns + (at % width) / step) * features;
+        for column in 0..features {
+            sums[cell * features + column] =
+                sums[cell * features + column].wrapping_add(table[block + column]);
+        }
+    }
+    Ok((pixels, sums))
+}
+
+/// The same floored mean and first nearest own pixel as the reference's per-strip lexsort.
+pub fn centre_pixels(labels: &[i32], width: usize, flat: &[i64]) -> Vec<i64> {
+    let count = flat.len();
+    let sums = moments(labels, None, width, count, 0);
+    let mut rows = vec![0_i64; count];
+    let mut columns = vec![0_i64; count];
+    let mut best = vec![i64::MAX; count];
+    let mut found = flat.to_vec();
+    for cell in 0..count {
+        if sums[cell] == 0 {
+            continue;
+        }
+        rows[cell] = sums[count + cell] / sums[cell];
+        columns[cell] = sums[2 * count + cell] / sums[cell];
+        let at = rows[cell] as usize * width + columns[cell] as usize;
+        if labels[at] == cell as i32 {
+            found[cell] = at as i64;
+            best[cell] = -1;
+        }
+    }
+    for (at, &label) in labels.iter().enumerate() {
+        if label < 0 || label as usize >= count {
+            continue;
+        }
+        let cell = label as usize;
+        if best[cell] < 0 {
+            continue;
+        }
+        let dy = at as i64 / width as i64 - rows[cell];
+        let dx = at as i64 % width as i64 - columns[cell];
+        let distance = dy * dy + dx * dx;
+        if distance < best[cell] {
+            best[cell] = distance;
+            found[cell] = at as i64;
+        }
+    }
+    found
+}
+
+/// Merge small cells in label order, with the original border counts and label tie break.
+pub fn merge_small(labels: &[i32], shape: (usize, usize), minimum: i64) -> Vec<i32> {
+    let count = (labels.iter().max().copied().unwrap_or(-1) + 1).max(0) as usize;
+    let mut sizes = vec![0_i64; count];
+    for &label in labels {
+        if label >= 0 {
+            sizes[label as usize] += 1;
+        }
+    }
+    let (pairs, lengths) = adjacency_lengths(labels, shape);
+    let mut neighbours = vec![Vec::new(); count];
+    for (&pair, &length) in pairs.iter().zip(&lengths) {
+        let a = pair >> 32;
+        let b = pair & 0xffff_ffff;
+        if a < 0 || b < 0 || a as usize >= count || b as usize >= count {
+            continue;
+        }
+        neighbours[a as usize].push((b as usize, length));
+        neighbours[b as usize].push((a as usize, length));
+    }
+    let mut target: Vec<usize> = (0..count).collect();
+    fn resolve(mut cell: usize, target: &[usize]) -> usize {
+        while target[cell] != cell {
+            cell = target[cell];
+        }
+        cell
+    }
+    for cell in 0..count {
+        if sizes[cell] >= minimum {
+            continue;
+        }
+        if let Some(&(best, _)) = neighbours[cell]
+            .iter()
+            .min_by_key(|&&(n, length)| (-length, n))
+        {
+            let root = resolve(best, &target);
+            if root != cell {
+                target[cell] = root;
+                sizes[root] += sizes[cell];
+            }
+        }
+    }
+    let mapping: Vec<i32> = (0..count)
+        .map(|cell| resolve(cell, &target) as i32)
+        .collect();
+    labels
+        .iter()
+        .map(|&label| {
+            if label < 0 {
+                -1
+            } else {
+                mapping[label as usize]
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

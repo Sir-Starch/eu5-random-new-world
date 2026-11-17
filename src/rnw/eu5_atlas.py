@@ -19,6 +19,7 @@ import numpy as np
 from rnw.atlas import KINDS, Atlas, Country, history_links
 from rnw.history_archive import build as build_history
 from rnw.history_archive_checks import validate as validate_history
+from rnw.timing import measured
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -83,6 +84,7 @@ def _centres(labels: NDArray[np.int32], count: int) -> NDArray[np.int32]:
     return centre
 
 
+@measured
 def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     *,
     world: NewWorld,

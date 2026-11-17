@@ -28,12 +28,12 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 from PIL import Image
 
+from rnw import _native
 from rnw.dds import rewrite
-from rnw.fields import box_blur
-from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import band_rows
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
+from rnw.timing import measured
 from rnw.topology import distance_from
 
 if TYPE_CHECKING:
@@ -88,6 +88,7 @@ def _decode(data: bytes) -> NDArray[np.uint8]:
         Image.MAX_IMAGE_PIXELS = previous
 
 
+@measured
 def _open_water_cells(
     image: NDArray[np.uint8], distance: NDArray[np.uint8], reach: int, strip: int
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
@@ -102,22 +103,14 @@ def _open_water_cells(
     counts = np.zeros(cells, dtype=np.int64)
     step = max(1, strip // GRID) * GRID
     for first in range(0, rows, step):
+        checkpoint()
         last = min(rows, first + step)
-        block_rows = -(-(last - first) // GRID)
-        shape = (block_rows * GRID, cells[1] * GRID)
-        far = np.zeros(shape, dtype=bool)
-        far[: last - first, :columns] = distance[first:last] >= reach
-        top = first // GRID
-        counts[top : top + block_rows] = far.reshape(block_rows, GRID, cells[1], GRID).sum(
-            axis=(1, 3), dtype=np.int64
+        found = _native.water_open_cells(image, distance, reach, first, last).reshape(
+            -1, cells[1], 5
         )
-        for channel in range(4):
-            values = np.zeros(shape, dtype=np.int64)
-            values[: last - first, :columns] = image[first:last, :, channel]
-            values[~far] = 0
-            sums[top : top + block_rows, :, channel] = values.reshape(
-                block_rows, GRID, cells[1], GRID
-            ).sum(axis=(1, 3), dtype=np.int64)
+        top = first // GRID
+        counts[top : top + found.shape[0]] = found[..., 0]
+        sums[top : top + found.shape[0]] = found[..., 1:]
     return sums, counts
 
 
@@ -166,24 +159,7 @@ def _background_grid(sums: NDArray[np.int64], counts: NDArray[np.int64]) -> NDAr
     return grid
 
 
-def _background(grid: NDArray[np.int64], first: int, last: int, columns: int) -> NDArray[np.int64]:
-    """Bilinear open-water colour of rows ``first`` to ``last``; columns wrap at the seam.
-
-    Cell centres sit half a cell in; weights are in 1/(2 GRID), so every step is exact.
-    """
-    height, width = grid.shape[:2]
-    span = 2 * GRID
-    y = 2 * np.arange(first, last, dtype=np.int64) + 1 - GRID
-    row, fy = y // span, (y % span)[:, None, None]
-    x = 2 * np.arange(columns, dtype=np.int64) + 1 - GRID
-    column, fx = x // span, (x % span)[None, :, None]
-    vertical = (
-        grid[np.clip(row, 0, height - 1)] * (span - fy) + grid[np.clip(row + 1, 0, height - 1)] * fy
-    )
-    across = vertical[:, column % width] * (span - fx) + vertical[:, (column + 1) % width] * fx
-    return (across + span * span // 2) // (span * span)
-
-
+@measured
 def _profile_table(
     image: NDArray[np.uint8],
     distance: NDArray[np.uint8],
@@ -197,26 +173,16 @@ def _profile_table(
     gives the same table as adding them at once. Every division rounds to the nearest: a floor
     takes half a unit off each channel at each step, and the steps add up to a dark disc.
     """
-    rows, columns = distance.shape
+    rows = int(distance.shape[0])
     bands = rows // BAND_ROWS
-    size = bands * (reach + 1)
-    counts = np.zeros(size, dtype=np.int64)
-    sums = np.zeros((size, 4), dtype=np.float64)
+    totals = np.zeros((bands * (reach + 1), 5), dtype=np.int64)
     for first in range(0, rows, strip):
-        last = min(rows, first + strip)
-        latitude = np.minimum(np.arange(first, last, dtype=np.int64) // BAND_ROWS, bands - 1)
-        key = (
-            latitude[:, None] * (reach + 1)
-            + np.minimum(distance[first:last], reach).astype(np.int64)
-        ).ravel()
-        counts += np.bincount(key, minlength=size)
-        offset = image[first:last].astype(np.int64) - _background(grid, first, last, columns)
-        for channel in range(4):
-            sums[:, channel] += np.bincount(
-                key, weights=offset[..., channel].ravel(), minlength=size
-            )
-    counts = np.maximum(1, counts)
-    means = (sums.astype(np.int64) + counts[:, None] // 2) // counts[:, None]
+        checkpoint()
+        totals += _native.water_profile_sums(
+            image, distance, grid, reach, first, min(rows, first + strip)
+        )
+    counts = np.maximum(1, totals[:, :1])
+    means = (totals[:, 1:] + counts // 2) // counts
     return _isolated_shelf(means.reshape(bands, reach + 1, 4))
 
 
@@ -238,27 +204,7 @@ def _isolated_shelf(table: NDArray[np.int64]) -> NDArray[np.int64]:
     return result
 
 
-def _synthesize(
-    table: NDArray[np.int64], distance: NDArray[np.int64], reach: int, first_row: int
-) -> NDArray[np.int64]:
-    """Colour by latitude (linearly blended between bands) and distance to land.
-
-    ``distance`` holds the rows from ``first_row`` of the image on.
-    """
-    rows = distance.shape[0]
-    bands = table.shape[0]
-    position = (
-        np.arange(first_row, first_row + rows, dtype=np.int64) * 1000 - BAND_ROWS * 500
-    ) // BAND_ROWS
-    lower = np.minimum(np.maximum(position // 1000, 0), bands - 1)
-    upper = np.minimum(lower + 1, bands - 1)
-    weight = np.minimum(np.maximum(position - lower * 1000, 0), 1000)[:, None, None]
-    d = np.minimum(distance, reach)
-    first = table[lower[:, None], d]
-    second = table[upper[:, None], d]
-    return (first * (1000 - weight) + second * weight + 500) // 1000
-
-
+@measured
 def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the shelf, the sea and the noise.
     image: NDArray[np.uint8],
     distances: tuple[NDArray[np.uint8], NDArray[np.uint8]],
@@ -271,48 +217,10 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the she
     key: int,
 ) -> NDArray[np.uint8]:
     """New colours of rows ``first`` to ``last``; the blur reads ``BLUR`` rows past them."""
-    rows, columns = touched.shape
-    start, stop = max(0, first - BLUR), min(rows, last + BLUR)
-    old_distance, new_distance = (d[start:stop].astype(np.int64) for d in distances)
     table, grid = colors
-    shelf = _synthesize(table, new_distance, reach, start)
-    for channel in range(4):
-        padded = np.pad(shelf[..., channel], ((0, 0), (BLUR, BLUR)), mode="wrap")
-        shelf[..., channel] = box_blur(padded, BLUR)[:, BLUR:-BLUR]
-    # What the shelf adds to the far sea, and the sea and shelf of a coast made from nothing.
-    far = _synthesize(table, np.full_like(new_distance, reach), reach, start)
-    synthetic = (shelf + _background(grid, start, stop, columns))[first - start : last - start]
-    halo = (shelf - far)[first - start : last - start]
-    noise = fractal_noise(
-        key, 0, first, columns, last - first, period=96, octaves=3, persistence_permille=500
-    )
-    other = fractal_noise(
-        key,
-        columns,
-        first,
-        columns,
-        last - first,
-        period=96,
-        octaves=3,
-        persistence_permille=500,
-    )
-    position = np.arange(columns, dtype=np.int64) * 1000 // columns
-    weight = position * position * (3000 - 2 * position) // 1_000_000
-    # At either map edge the same section of noise is sampled. Smooth endpoint
-    # weights also preserve its slope, rather than resetting the texture at x=0.
-    noise = (other * (1000 - weight) + noise * weight) // 1000
-    synthetic[..., :3] += ((noise * 6 + NOISE_SCALE // 2) // NOISE_SCALE)[..., None]
-    calm = np.minimum(old_distance, new_distance)[first - start : last - start]
-    keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
-    original = image[first:last].astype(np.int64)
-    # Where the old map was open sea (``reach`` or more from land) the pixel is the original sea
-    # with the halo of the new coast added: nothing but the halo changes, so no disc edge shows
-    # and the original's own detail stays. Nearer old land the sea is the synthetic one.
-    open_sea = np.clip(old_distance[first - start : last - start] - (reach - BLEND), 0, BLEND)
-    open_sea = open_sea[..., None]
-    target = ((original + halo) * open_sea + synthetic * (BLEND - open_sea) + BLEND // 2) // BLEND
-    blended = (original * keep + target * (BLEND - keep) + BLEND // 2) // BLEND
-    return np.where(touched[first:last, :, None], blended, original).clip(0, 255).astype(np.uint8)
+    return _native.water_render(
+        image, distances[0], distances[1], touched, table, grid, first, last, reach, key
+    ).reshape(last - first, touched.shape[1], 4)
 
 
 def carry_pixels(
@@ -335,6 +243,7 @@ def carry_pixels(
     return placed
 
 
+@measured
 def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the seed.
     data: bytes,
     *,

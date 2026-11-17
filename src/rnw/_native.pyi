@@ -1,5 +1,7 @@
 # Typing of the Rust extension module (native/, ADR 0005).
 
+from collections.abc import Callable
+
 from numpy import bool_, float32, int8, int32, int64, uint8, uint16, uint32
 from numpy.typing import NDArray
 
@@ -132,3 +134,76 @@ def decal_heights(
     params: dict[str, int],
     core: tuple[int, int, int, int],
 ) -> tuple[NDArray[bool_], NDArray[bool_], NDArray[int64]]: ...
+def grow_labels(
+    mask: NDArray[bool_],
+    seeds: NDArray[int32],
+    speed: NDArray[int64] | None,
+    checkpoint: Callable[[], None],
+) -> NDArray[int32]: ...
+def grade_spacing(
+    spacing: NDArray[int64],
+    land: NDArray[bool_],
+    step: int,
+    checkpoint: Callable[[], None],
+) -> NDArray[int64]: ...
+def throw_seeds(
+    xs: NDArray[int64],
+    ys: NDArray[int64],
+    radius: NDArray[int64],
+    smallest: int,
+    widest: int,
+    columns: int,
+    gap: int,
+    checkpoint: Callable[[], None],
+) -> NDArray[int64]: ...
+def label_moments(
+    labels: NDArray[int32],
+    values: NDArray[int64] | None,
+    count: int,
+    first: int,
+) -> NDArray[int64]: ...
+def location_sums(
+    labels: NDArray[int32],
+    table: NDArray[int64],
+    count: int,
+    step: int,
+    block_columns: int,
+    first: int,
+) -> tuple[NDArray[int64], NDArray[int64]]: ...
+def centre_pixels(labels: NDArray[int32], flat: NDArray[int64]) -> NDArray[int64]: ...
+def merge_small(labels: NDArray[int32], minimum: int) -> NDArray[int32]: ...
+def water_open_cells(
+    image: NDArray[uint8],
+    distance: NDArray[uint8],
+    reach: int,
+    first: int,
+    last: int,
+) -> NDArray[int64]: ...
+def water_profile_sums(
+    image: NDArray[uint8],
+    distance: NDArray[uint8],
+    grid: NDArray[int64],
+    reach: int,
+    first: int,
+    last: int,
+) -> NDArray[int64]: ...
+def water_render(
+    image: NDArray[uint8],
+    old: NDArray[uint8],
+    new: NDArray[uint8],
+    touched: NDArray[bool_],
+    table: NDArray[int64],
+    grid: NDArray[int64],
+    first: int,
+    last: int,
+    reach: int,
+    key: int,
+) -> NDArray[uint8]: ...
+def strip_bend(
+    land: NDArray[bool_],
+    values: NDArray[int64],
+    start: int,
+    stop: int,
+    rows: int,
+    step: int,
+) -> NDArray[int64]: ...

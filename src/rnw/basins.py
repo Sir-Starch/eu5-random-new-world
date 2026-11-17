@@ -48,6 +48,7 @@ from rnw.fields import PERMILLE, block_mean, box_blur, smoothstep, upsample, war
 from rnw.relief import COAST_HEIGHT, HINT_HIGH, HINT_LOW, HINT_STEP
 from rnw.rivers import STEP, accumulate, upstream_order
 from rnw.rng import derive_seed
+from rnw.timing import measured
 from rnw.topology import label_components
 from rnw.watersheds import plan_spans
 
@@ -379,6 +380,7 @@ def _basin_change(  # noqa: PLR0913 - the grid, relief, land, seed, drawing and 
     return -box_blur(lowering, settings.smoothing)
 
 
+@measured
 def shape_relief(  # noqa: PLR0913 - the relief, land, plan, seed, drawing, spread and settings.
     relief: NDArray[np.int32],
     land: NDArray[np.bool_],

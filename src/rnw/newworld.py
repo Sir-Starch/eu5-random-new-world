@@ -45,6 +45,7 @@ from rnw.sea_corridors import (
 )
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_slivers, merge_small, renumber, seed_sites
+from rnw.timing import measured
 from rnw.topology import (
     adjacency_pairs,
     distance_from,
@@ -1025,6 +1026,7 @@ def _scale_wobble(
             offset[window] = offset[window] * WOBBLE_PX * factor // (NOISE_SCALE * PERMILLE)
 
 
+@measured
 def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) -> NDArray[np.int32]:
     """Grow land cells, with larger seed spacing toward both polar edges."""
     sites = seed_sites(key, mask, spacing)
@@ -1042,6 +1044,7 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
     return merge_small(grow_regions(mask, sites), smallest)
 
 
+@measured
 def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, settings and seam.
     land: NDArray[np.bool_],
     lakes: NDArray[np.bool_],
@@ -1244,6 +1247,7 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
     return land, ocean, lakes
 
 
+@measured
 def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the domain, seed, settings and the extras.
     domain: NDArray[np.bool_],
     *,

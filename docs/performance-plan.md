@@ -1,8 +1,8 @@
 # Generation performance plan
 
-**Status:** Planned, 2026-11-17. The owner requires substantially faster generation with
+**Status:** Implementation in progress, 2026-11-17. The owner requires substantially faster generation with
 unchanged algorithm logic and quality, including rewriting hot paths in Rust where useful.
-This document plans the implementation; no optimization has been implemented or accepted yet.
+The first native kernels and exact calibration cache are implemented; the time targets remain open.
 It follows [ADR 0005](adr/0005-native-core.md), [ADR 0006](adr/0006-machine-resources.md)
 and the existing [verification rules](testing.md).
 
@@ -238,6 +238,25 @@ needed, must follow the localization workflow. Progress reporting is useful, but
 zero to the measured speedup and cannot satisfy the performance targets.
 
 ## Completion evidence
+
+[V-EXEC 2026-11-17] The first implementation adds optional `RNW_TRACE=/path/trace.jsonl`
+spans (including strip workers, nested wall/thread-CPU time and process peak memory),
+ports frontier growth, spacing relaxation, greedy seed acceptance, small-cell merging,
+centre selection, label/block statistics, bend and water colour work to Rust, removes
+the coast correction's discarded block means, and caches the original map's size model.
+The cache verifies content hashes and directory inventories and replays its dependencies
+into the world's input record. Both windows now show the existing geography substages.
+
+Three fresh-library baseline service runs, including verification, writing and installation
+into isolated profiles, took **342.2, 332.8 and 335.4 seconds** (median 335.4; peak RSS
+8.82–9.55 GiB). All reproduce the reported world's 884 files and digest above. The first
+post-change diagnostic export also reproduces all 884 files and the same input digest;
+it took **299.9 seconds**, peak 9.34 GiB. It overlapped development checks and is **not**
+the final matched performance comparison. Its water stage took 8.8 seconds and geography
+105.9 seconds. The 180/120-second targets are **not yet met**. Continue from the remaining
+profile rather than treating this first gain as completion. The locked full checks pass
+(3,393 Python tests, 22 optional skips; 31 Rust tests). Local raw evidence stays under
+`local_data/performance-20261117/`.
 
 The final result must include a before/after table of complete-world time, critical-path
 stage time, peak memory, cache mode and output digest; the unchanged golden/reference

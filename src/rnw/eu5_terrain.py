@@ -46,6 +46,7 @@ from rnw.progress import checkpoint
 from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
 from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
+from rnw.timing import measured
 from rnw.topology import distance_from
 
 if TYPE_CHECKING:
@@ -341,6 +342,7 @@ class Window:
     inner_column: int
 
 
+@measured
 def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the core to compute.
     codes: NDArray[np.int8],
     vanilla_water: NDArray[np.bool_],
@@ -403,6 +405,7 @@ def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the cor
 SURFACE_COLUMNS: Final[int] = 2048  # core columns of one window of ``surface_heights``
 
 
+@measured
 def surface_heights(
     codes: NDArray[np.int8],
     vanilla_water: NDArray[np.bool_],
@@ -566,6 +569,7 @@ def _band_window(decal: Decal, shape: tuple[int, int], first: int, last: int) ->
     )
 
 
+@measured
 def _write_where(
     target: NDArray[np.uint16] | NDArray[np.uint8],
     values: NDArray[np.integer],
@@ -580,6 +584,7 @@ def _write_where(
     np.copyto(target, values, where=mask, casting="unsafe")
 
 
+@measured
 def _lay_stamp_slots(
     slots: NDArray[np.uint8],
     stamped: NDArray[np.uint8],
@@ -599,6 +604,7 @@ def _lay_stamp_slots(
     return np.where(shown, np.minimum(slots, remapped), slots).astype(np.uint8)
 
 
+@measured
 def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inputs and the images.
     decal: Decal,
     *,
@@ -669,6 +675,7 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         _write_where(material_image[target], slots, inside)
 
 
+@measured
 def _rebuild_decal(  # noqa: PLR0913 - a decal reads the store, the inputs, the tables and the bands.
     decal: Decal,
     store: DecalStore,

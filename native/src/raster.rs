@@ -4,6 +4,51 @@
 
 use rayon::prelude::*;
 
+/// Horizontal and vertical second differences of a strip, preserving endpoint masks.
+pub fn strip_bend(
+    land: &[bool],
+    values: &[i64],
+    width: usize,
+    (start, stop, rows, step): (usize, usize, usize, usize),
+) -> Vec<i64> {
+    let low = start.saturating_sub(step);
+    let mut out = vec![-1; (stop - start) * width];
+    out.par_chunks_mut(width.max(1))
+        .enumerate()
+        .for_each(|(r, line)| {
+            let y = start + r;
+            for (x, slot) in line.iter_mut().enumerate() {
+                let at = (y - low) * width + x;
+                let mut total = 0_i64;
+                let mut ends = 0;
+                if x >= step && x + step < width && land[at - step] && land[at + step] {
+                    total = values[at - step]
+                        .wrapping_add(values[at + step])
+                        .wrapping_sub(values[at].wrapping_mul(2))
+                        .wrapping_abs();
+                    ends += 1;
+                }
+                if y >= step
+                    && y + step < rows
+                    && land[at - step * width]
+                    && land[at + step * width]
+                {
+                    total = total.wrapping_add(
+                        values[at - step * width]
+                            .wrapping_add(values[at + step * width])
+                            .wrapping_sub(values[at].wrapping_mul(2))
+                            .wrapping_abs(),
+                    );
+                    ends += 1;
+                }
+                if ends > 0 {
+                    *slot = total.div_euclid(ends);
+                }
+            }
+        });
+    out
+}
+
 /// Bilinear interpolation of a grid whose sample `(i, j)` sits at `(i * step, j * step)`.
 ///
 /// `coarse` has `columns` samples per row and at least `height / step + 2` rows.

@@ -25,11 +25,13 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import _native
 from rnw.fields import PERMILLE, block_mean, box_blur, smoothstep, upsample, warped_noise
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
+from rnw.timing import measured
 from rnw.topology import euclidean_distance, label_components, nearest_label
 
 if TYPE_CHECKING:
@@ -597,6 +599,7 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     return np.where(window[core], height[core], 0).astype(np.int32)
 
 
+@measured
 def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three epoch-64 fields.
     land: NDArray[np.bool_],
     *,
@@ -672,6 +675,7 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three
     return out
 
 
+@measured
 def strip_bend(
     land: NDArray[np.bool_], height: NDArray[np.integer], start: int, stop: int, rows: int
 ) -> NDArray[np.int64]:
@@ -680,31 +684,14 @@ def strip_bend(
     column whose two ends are land, -1 where neither is read. ``land`` and ``height`` hold the
     rows from ``max(0, start - HILL_STEP)`` to ``min(rows, stop + HILL_STEP)``; integers.
     """
-    step = HILL_STEP
-    low = max(0, start - step)
-    columns = int(land.shape[1])
-    values = height.astype(np.int64)
-    inner = slice(start - low, stop - low)
-    bend = np.zeros((stop - start, columns), dtype=np.int64)
-    ends = np.zeros((stop - start, columns), dtype=np.int64)
-    if columns > 2 * step:
-        middle = slice(step, columns - step)
-        both = land[inner, : -2 * step] & land[inner, 2 * step :]
-        found = values[inner, 2 * step :] + values[inner, : -2 * step]
-        found = np.abs(found - 2 * values[inner, middle])
-        bend[:, middle] += np.where(both, found, 0)
-        ends[:, middle] += both
-    # Rows ``step`` away from the strip's own; the first and last ``step`` of the map have none.
-    first, last = max(start, step), min(stop, rows - step)
-    if first < last:
-        here = slice(first - low, last - low)
-        above = slice(first - step - low, last - step - low)
-        below = slice(first + step - low, last + step - low)
-        both = land[above] & land[below]
-        found = np.abs(values[above] + values[below] - 2 * values[here])
-        bend[first - start : last - start] += np.where(both, found, 0)
-        ends[first - start : last - start] += both
-    return np.where(ends > 0, bend // np.maximum(ends, 1), -1)
+    return _native.strip_bend(
+        np.ascontiguousarray(land),
+        np.ascontiguousarray(height, dtype=np.int64),
+        start,
+        stop,
+        rows,
+        HILL_STEP,
+    )
 
 
 def land_blur(
@@ -732,6 +719,7 @@ def blurred_window(
     return blurred[low - first : high - first]
 
 
+@measured
 def cell_roughness(
     labels: NDArray[np.int32],
     elevation: NDArray[np.integer],

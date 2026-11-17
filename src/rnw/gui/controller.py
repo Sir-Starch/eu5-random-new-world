@@ -1046,10 +1046,10 @@ class Controller:
         return None
 
     def stage_rows(self) -> list[tuple[str, str]]:
-        """(label, state) of every weighted stage in order: waiting, running or done."""
+        """Weighted stages and geography activity in order: waiting, running or done."""
         rows: list[tuple[str, str]] = []
         for name, info in STAGES.items():
-            if info.weight == 0:
+            if info.weight == 0 and name not in {"relief", "sea cells", "land cells"}:
                 continue
             state = (
                 "done"

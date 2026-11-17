@@ -5,6 +5,11 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Speed up cell construction, terrain statistics and water painting with exact native kernels,
+  omit discarded coastal statistics, and reuse the installed map's content-validated size
+  calibration across new worlds. The same seed and inputs produce the same world files.
+  Both windows show mountains, sea zones and land locations as they are built.
+
 - Make the **wastelands of a New World more than mountains**. Up to 1.2.2 the highest cells of the
   relief were the impassable locations, so every wasteland was a mountain, while the game's own map
   has impassable tundra and taiga, jungle, dunes, plateaus and hills as well (by area less than a

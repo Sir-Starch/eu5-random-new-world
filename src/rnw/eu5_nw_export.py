@@ -33,6 +33,7 @@ from rnw import (
     text_references,
     worldname,
 )
+from rnw import calibration as input_calibration
 from rnw.app.worldcode import WorldCodeError, decode
 from rnw.artifacts import (
     Spool,
@@ -339,6 +340,7 @@ from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
 from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
 from rnw.splnet import SplineError
+from rnw.timing import measured
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 from rnw.watersheds import domain_climate, domain_rivers
 from rnw.wording import render
@@ -617,6 +619,7 @@ def _wasteland_settings(game_dir: Path, world: NewWorld, settings: Settings) -> 
     )
 
 
+@measured
 def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the vanilla climate and the game.
     game_map: Eu5Map,
     *,
@@ -3099,7 +3102,11 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
     def generate() -> tuple[NewWorld, SizeModel | None]:
         # The game's own locations size the cells (epoch 64) and vote their ground later.
         sizes = (
-            _vanilla_sizes(game_dir, game_map) if settings.algorithm >= epoch.RIVERS_FIRST else None
+            input_calibration.get_sizes(
+                cache_dir, game_dir, game_map, lambda: _vanilla_sizes(game_dir, game_map)
+            )
+            if settings.algorithm >= epoch.RIVERS_FIRST
+            else None
         )
         made = landcache.get_world(
             cache_dir,
@@ -3950,6 +3957,7 @@ def _old_world_land(game_map: Eu5Map) -> NDArray[np.bool_]:
     )
 
 
+@measured
 def _vanilla_sizes(game_dir: Path, game_map: Eu5Map) -> SizeModel:
     """How large the game makes its land locations of each class (``eu5_biomes.size_model``),
     read from its map as it ships, before anything is moved or generated."""
@@ -3998,6 +4006,7 @@ def _final_climate(
     return climate_grid(final_sea[final_labels], height, seasonal=seasonal)
 
 
+@measured
 def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world and the vanilla climate.
     game_map: Eu5Map,
     *,

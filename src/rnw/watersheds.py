@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import _native
 from rnw.eu5_biomes import (
     CLIMATE_STEP,
     SIZE_STEP,
@@ -40,6 +41,7 @@ from rnw.eu5_biomes import (
 )
 from rnw.eu5_rivers import watershed_spans
 from rnw.fields import PERMILLE, block_mean, warped_noise
+from rnw.progress import checkpoint
 from rnw.rivers import (
     NONE,
     STEP,
@@ -52,6 +54,7 @@ from rnw.rivers import (
 )
 from rnw.rng import derive_seed, hash_grid
 from rnw.synth import first_pixels, grow_regions, grow_weighted, merge_small
+from rnw.timing import measured
 from rnw.topology import adjacency_pairs, label_components
 
 if TYPE_CHECKING:
@@ -67,6 +70,7 @@ if TYPE_CHECKING:
 BORDER_PERMILLE: Final[int] = 300
 
 
+@measured
 def domain_climate(
     land: NDArray[np.bool_], lakes: NDArray[np.bool_], height: NDArray[np.integer]
 ) -> ClimateGrid:
@@ -107,6 +111,7 @@ def plan_spans(columns: int, seam: int | None) -> tuple[tuple[int, int], ...]:
     return ((0, columns),) if seam is None else watershed_spans(columns, seam)
 
 
+@measured
 def plan_drainage(
     land: NDArray[np.bool_],
     height: NDArray[np.int32],
@@ -131,6 +136,7 @@ def plan_drainage(
     return DrainagePlan(seam=seam, parents=parents)
 
 
+@measured
 def domain_rivers(
     land: NDArray[np.bool_],
     plan: DrainagePlan,
@@ -331,6 +337,7 @@ def spacing_permille(exponent: NDArray[np.int64]) -> NDArray[np.int64]:
     return (value << up) >> (_FIXED + down)
 
 
+@measured
 def grade_spacing(
     spacing: NDArray[np.int64], land: NDArray[np.bool_], step_permille: int
 ) -> NDArray[np.int64]:
@@ -339,29 +346,12 @@ def grade_spacing(
     diagonal one), as a mesh limits the growth of its elements: a small spacing narrows the
     large ones around it, a large one never widens the small. Blocks without land neither take
     nor pass a limit."""
-    big = np.int64(1) << 40
-    graded = np.where(land, spacing, big)
-    straight, diagonal = step_permille, step_permille * 1414 // 1000
-    while True:
-        padded = np.pad(graded, 1, constant_values=big)
-        limit = np.minimum.reduce(
-            [
-                padded[:-2, 1:-1] + straight,
-                padded[2:, 1:-1] + straight,
-                padded[1:-1, :-2] + straight,
-                padded[1:-1, 2:] + straight,
-                padded[:-2, :-2] + diagonal,
-                padded[:-2, 2:] + diagonal,
-                padded[2:, :-2] + diagonal,
-                padded[2:, 2:] + diagonal,
-            ]
-        )
-        lowered = np.minimum(graded, np.where(land, limit, big))
-        if np.array_equal(lowered, graded):
-            return np.where(land, graded, spacing)
-        graded = lowered
+    return _native.grade_spacing(
+        np.ascontiguousarray(spacing), np.ascontiguousarray(land), step_permille, checkpoint
+    )
 
 
+@measured
 def spacing_grid(  # noqa: PLR0913 - the land, sea, relief and climate, bands, model and spacing.
     land: NDArray[np.bool_],
     height: NDArray[np.integer],
@@ -399,6 +389,7 @@ def spacing_grid(  # noqa: PLR0913 - the land, sea, relief and climate, bands, m
     )
 
 
+@measured
 def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea, bands, model, key.
     cells: NDArray[np.int32],
     height: NDArray[np.integer],
@@ -600,6 +591,7 @@ def spaced_sites(
     return seeds.reshape(mask.shape)
 
 
+@measured
 def _seed_candidates(
     key: int, mask: NDArray[np.bool_], spacing: int, grid: NDArray[np.int64], smallest: int
 ) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
@@ -631,6 +623,7 @@ def _seed_candidates(
     return sx, sy, radius, order
 
 
+@measured
 def _throw_seeds(  # noqa: PLR0913 - the candidates, their spacings, the extremes and the width.
     xs: NDArray[np.int64],
     ys: NDArray[np.int64],
@@ -644,35 +637,19 @@ def _throw_seeds(  # noqa: PLR0913 - the candidates, their spacings, the extreme
     one lies nearer than ``SEED_GAP`` of the mean of their spacings (all in pixels). Kept seeds
     are filed in buckets of the ``smallest`` spacing, and a candidate looks as far as the
     ``widest`` spacing could reach."""
-    buckets: dict[tuple[int, int], list[int]] = {}
-    kept_x: list[int] = []
-    kept_y: list[int] = []
-    kept_r: list[int] = []
-    gap = SEED_GAP * SEED_GAP
-    scale = 4 * PERMILLE * PERMILLE
-    for x, y, r in zip(xs.tolist(), ys.tolist(), radius.tolist(), strict=True):
-        reach = -(-SEED_GAP * (r + widest) // (2 * PERMILLE * smallest))
-        bx, by = x // smallest, y // smallest
-        clear = True
-        for cy in range(by - reach, by + reach + 1):
-            for cx in range(bx - reach, bx + reach + 1):
-                for j in buckets.get((cx, cy), ()):
-                    dx, dy, both = x - kept_x[j], y - kept_y[j], r + kept_r[j]
-                    if scale * (dx * dx + dy * dy) < gap * both * both:
-                        clear = False
-                        break
-                if not clear:
-                    break
-            if not clear:
-                break
-        if clear:
-            buckets.setdefault((bx, by), []).append(len(kept_x))
-            kept_x.append(x)
-            kept_y.append(y)
-            kept_r.append(r)
-    return np.array(kept_y, dtype=np.int64) * columns + np.array(kept_x, dtype=np.int64)
+    return _native.throw_seeds(
+        np.ascontiguousarray(xs),
+        np.ascontiguousarray(ys),
+        np.ascontiguousarray(radius),
+        smallest,
+        widest,
+        columns,
+        SEED_GAP,
+        checkpoint,
+    )
 
 
+@measured
 def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and the merge size.
     land: NDArray[np.bool_],
     walls: NDArray[np.bool_],
@@ -882,54 +859,13 @@ def _shore_cells(
     return out
 
 
+@measured
 def _centre_pixels(grown: NDArray[np.int32], flat: NDArray[np.int64]) -> NDArray[np.int64]:
     """The raster position of the centre of each cell of ``grown`` (numbered as the seeds at
     ``flat``): the pixel of its mean row and column (floored) when the cell holds it, else the
     cell's pixel nearest to it, the first in raster order of equals. A seed that grew no cell
     keeps its pixel."""
-    count = int(flat.size)
-    rows, columns = (int(size) for size in grown.shape)
-    pixels = np.zeros(count, dtype=np.int64)
-    row_sums = np.zeros(count, dtype=np.int64)
-    column_sums = np.zeros(count, dtype=np.int64)
-    for first in range(0, rows, CENTRE_STRIP):
-        part = grown[first : first + CENTRE_STRIP]
-        ys, xs = np.nonzero(part >= 0)
-        labels = part[ys, xs]
-        pixels += np.bincount(labels, minlength=count)
-        # Sums of whole rows and columns stay below 2^53, so the float sums are exact.
-        row_sums += np.bincount(labels, weights=ys + first, minlength=count).astype(np.int64)
-        column_sums += np.bincount(labels, weights=xs, minlength=count).astype(np.int64)
-    grew = pixels > 0
-    held = np.maximum(pixels, 1)
-    centre_rows, centre_columns = row_sums // held, column_sums // held
-    centres = centre_rows * columns + centre_columns
-    own = grew & (grown.ravel()[centres] == np.arange(count))
-    out = np.where(own, centres, flat)
-    missing = np.flatnonzero(grew & ~own)
-    if missing.size == 0:
-        return out
-    best = np.full(count, np.iinfo(np.int64).max, dtype=np.int64)
-    found = np.full(count, -1, dtype=np.int64)
-    wanted = np.zeros(count, dtype=bool)
-    wanted[missing] = True
-    for first in range(0, rows, CENTRE_STRIP):
-        part = grown[first : first + CENTRE_STRIP]
-        ys, xs = np.nonzero((part >= 0) & wanted[np.maximum(part, 0)])
-        if ys.size == 0:
-            continue
-        labels = part[ys, xs].astype(np.int64)
-        ys = ys + first
-        distance = (ys - centre_rows[labels]) ** 2 + (xs - centre_columns[labels]) ** 2
-        # Nearest first, then raster order; strips run in raster order, so an earlier strip's
-        # equal pixel is kept.
-        sequence = np.lexsort((ys * columns + xs, distance, labels))
-        labels, distance = labels[sequence], distance[sequence]
-        position = (ys * columns + xs)[sequence]
-        firsts = np.flatnonzero(np.r_[True, labels[1:] != labels[:-1]])
-        chosen, nearest = labels[firsts], distance[firsts]
-        better = nearest < best[chosen]
-        best[chosen[better]] = nearest[better]
-        found[chosen[better]] = position[firsts][better]
-    out[missing] = found[missing]
+    checkpoint()
+    out = _native.centre_pixels(np.ascontiguousarray(grown), np.ascontiguousarray(flat))
+    checkpoint()
     return out

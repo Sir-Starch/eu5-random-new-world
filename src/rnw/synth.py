@@ -16,10 +16,12 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import _native
 from rnw.model import Cell, CellClass, Parents, World
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.progress import checkpoint
 from rnw.rng import SplitMix64, derive_seed, hash_grid
+from rnw.timing import measured
 from rnw.topology import adjacency_pairs, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -84,24 +86,21 @@ def synthetic_base(canvas: SyntheticSettings) -> World:
     return World(labels, cells, anchors=frozenset({6, 7}))
 
 
+@measured
 def grow_regions(mask: NDArray[np.bool_], seeds: NDArray[np.int32]) -> NDArray[np.int32]:
     """Grow seed labels through ``mask`` one 4-neighbour step per round.
 
-    A pixel adopts the label of an already labelled neighbour in N, W, E, S order, so
+    Sources claim south, east, west, north in that order, so
     every grown region stays 4-connected to its seed. Unreachable pixels remain -1.
     Only the previous round's frontier can border unlabelled pixels, so each round
     touches the frontier instead of the whole raster.
     """
-    height, width = mask.shape
-    allowed = mask.ravel()
-    labels = np.where(allowed, seeds.ravel(), -1).astype(np.int32)
-    frontier = np.flatnonzero(labels >= 0)
-    while frontier.size:
-        checkpoint()
-        frontier = _claim(labels, allowed, frontier, width, height)
-    return labels.reshape(height, width)
+    return _native.grow_labels(
+        np.ascontiguousarray(mask), np.ascontiguousarray(seeds), None, checkpoint
+    )
 
 
+@measured
 def grow_weighted(
     mask: NDArray[np.bool_], seeds: NDArray[np.int32], speed: NDArray[np.int64]
 ) -> NDArray[np.int32]:
@@ -109,43 +108,12 @@ def grow_weighted(
     in round ``t`` a label steps on when ``t * speed // fastest`` grows, so the fastest steps
     every round, and the border between two seeds lies where they meet at their speeds.
     """
-    height, width = mask.shape
-    allowed = mask.ravel()
-    labels = np.where(allowed, seeds.ravel(), -1).astype(np.int32)
-    frontier = np.flatnonzero(labels >= 0)
-    fastest = int(speed.max()) if speed.size else 1
-    round_number = 0
-    while frontier.size:
-        checkpoint()
-        round_number += 1
-        pace = speed[labels[frontier]]
-        steps = round_number * pace // fastest > (round_number - 1) * pace // fastest
-        claimed = _claim(labels, allowed, frontier[steps], width, height)
-        frontier = np.concatenate([frontier[~steps], claimed])
-    return labels.reshape(height, width)
-
-
-def _claim(
-    labels: NDArray[np.int32],
-    allowed: NDArray[np.bool_],
-    frontier: NDArray[np.int64],
-    width: int,
-    height: int,
-) -> NDArray[np.int64]:
-    """One growth round in N, W, E, S priority; returns the newly labelled pixels."""
-    column = frontier % width
-    claimed: list[NDArray[np.int64]] = []
-    for sources, offset in (
-        (frontier[frontier < (height - 1) * width], width),
-        (frontier[column != width - 1], 1),
-        (frontier[column != 0], -1),
-        (frontier[frontier >= width], -width),
-    ):
-        targets = sources + offset
-        free = allowed[targets] & (labels[targets] < 0)
-        labels[targets[free]] = labels[sources[free]]
-        claimed.append(targets[free])
-    return np.sort(np.concatenate(claimed))
+    return _native.grow_labels(
+        np.ascontiguousarray(mask),
+        np.ascontiguousarray(seeds),
+        np.ascontiguousarray(speed),
+        checkpoint,
+    )
 
 
 def first_pixels(components: NDArray[np.integer]) -> NDArray[np.int64]:
@@ -191,43 +159,13 @@ def renumber(labels: NDArray[np.int32]) -> NDArray[np.int32]:
     return out.reshape(labels.shape)
 
 
+@measured
 def merge_small(labels: NDArray[np.int32], minimum: int) -> NDArray[np.int32]:
     """Merge cells smaller than ``minimum`` into their longest-border neighbour."""
-    count = int(labels.max()) + 1
-    sizes = np.bincount(labels[labels >= 0], minlength=count).astype(np.int64)
-    pairs: dict[int, dict[int, int]] = {}
-    for a, b in (
-        (labels[:, :-1], labels[:, 1:]),
-        (labels[:-1], labels[1:]),
-    ):
-        touching = (a != b) & (a >= 0) & (b >= 0)
-        packed = a[touching].astype(np.int64) * count + b[touching]
-        values, shared = np.unique(packed, return_counts=True)
-        for value, length in zip(values.tolist(), shared.tolist(), strict=True):
-            first, second = divmod(value, count)
-            pairs.setdefault(first, {})[second] = (
-                pairs.setdefault(first, {}).get(second, 0) + length
-            )
-            pairs.setdefault(second, {})[first] = (
-                pairs.setdefault(second, {}).get(first, 0) + length
-            )
-    target = list(range(count))
-
-    def resolve(item: int) -> int:
-        while target[item] != item:
-            item = target[item]
-        return item
-
-    for cell in range(count):
-        if sizes[cell] >= minimum or not pairs.get(cell):
-            continue
-        best = min(pairs[cell].items(), key=lambda item: (-item[1], item[0]))[0]
-        root = resolve(best)
-        if root != cell:
-            target[cell] = root
-            sizes[root] += sizes[cell]
-    mapping = np.array([resolve(item) for item in range(count)], dtype=np.int32)
-    return np.where(labels >= 0, mapping[np.maximum(labels, 0)], -1).astype(np.int32)
+    checkpoint()
+    out = _native.merge_small(np.ascontiguousarray(labels), minimum)
+    checkpoint()
+    return out
 
 
 SLIVER_STRIP: Final[int] = 1024
