@@ -16,19 +16,18 @@ from typing import TYPE_CHECKING, Final
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-# Topological order; these are the data dependencies in eu5_nw_export._export_new_world.
-# The vanilla reads need the moved island groups, so they are submitted only after the world
-# is generated; the main thread waits for the world checks, which read the identities, before
-# the slot tables. The two long branches (terrain and scripts) join at write files. Keep
-# this beside its regression. The land character (the wasteland plan, epoch 64 on) precedes the
-# coasts, which are made for the land it leaves passable; before epoch 64 it is skipped.
+# Topological order. The island-placement milestone makes the relocated vanilla map
+# available during geography. The main thread still waits for the complete world and
+# its checks before exporting; terrain and scripts join at write files.
+MILESTONES: Final[frozenset[str]] = frozenset({"island placements"})
 DEPENDENCIES: Final[dict[str, tuple[str, ...]]] = {
     "load map": (),
     "select canvas": ("load map",),
+    "island placements": ("select canvas",),
     "generate world": ("select canvas",),
-    "vanilla reads": ("generate world",),
-    "vanilla geometry": ("generate world",),
-    "vanilla localization keys": ("generate world",),
+    "vanilla reads": ("island placements",),
+    "vanilla geometry": ("island placements",),
+    "vanilla localization keys": ("select canvas",),
     "vanilla climate": ("vanilla reads",),
     "vanilla material levels": ("vanilla reads",),
     "vanilla natives": ("vanilla reads", "vanilla geometry"),
@@ -66,6 +65,7 @@ REFERENCE_SECONDS: Final[dict[str, float]] = {
     "vanilla climate": 10.3,
     "vanilla material levels": 7.1,
     "vanilla natives": 6.2,
+    "island placements": 25.0,
     "generate world": 88.6,
     "land character": 14.0,
     "settle coasts": 7.3,
@@ -98,7 +98,7 @@ OVERDUE_GRACE: Final[float] = 2.0
 MIN_CALIBRATION_WEIGHT: Final[float] = 2.0
 # Not a measure of the machine: reading the map waits for the disk, and the canvas's cost
 # depends on the preset (a few seconds, or half a minute with expanded oceans).
-UNCALIBRATED: Final[frozenset[str]] = frozenset({"load map", "select canvas"})
+UNCALIBRATED: Final[frozenset[str]] = frozenset({"load map", "select canvas"}) | MILESTONES
 
 
 class Estimate:
@@ -160,6 +160,8 @@ class Estimate:
             ready = max((end for end in known if end is not None), default=self.started)
             self.costs[name] = max(0.01, now - ready)
         self.ends[name] = now
+        if name == "generate world" and not self.fresh_world:
+            _ = self.costs.pop("island placements", None)
 
     def _scale(self) -> float:
         # Short cached reads and a cached physical world say nothing about the speed of

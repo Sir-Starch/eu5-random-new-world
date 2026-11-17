@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, cast
 import pytest
 
 from rnw.app import estimates
-from rnw.eta import DEPENDENCIES, REFERENCE_SECONDS, Estimate
+from rnw.eta import DEPENDENCIES, MILESTONES, REFERENCE_SECONDS, Estimate
 from rnw.progress import STAGES, Progress
 
 if TYPE_CHECKING:
@@ -53,7 +53,7 @@ def test_eta_graph_covers_every_weighted_stage_without_nested_double_counting() 
     for name, dependencies in DEPENDENCIES.items():
         assert set(dependencies) <= seen
         seen.add(name)
-    assert {name for name, info in STAGES.items() if info.weight} == seen - {"install"}
+    assert {name for name, info in STAGES.items() if info.weight} == seen - {"install"} - MILESTONES
     assert "terrain" not in seen
     assert "relief" not in seen
     assert _model().remaining(0) < sum(REFERENCE_SECONDS.values())
@@ -98,14 +98,14 @@ def _generating(learned: dict[str, float]) -> Estimate:
 
 
 @pytest.mark.parametrize("learned", [{}, {"vanilla localization keys": 120.0}])
-def test_polling_counts_down_while_stages_waiting_for_the_world_are_not_submitted(
+def test_polling_counts_down_while_future_inputs_are_not_ready(
     learned: dict[str, float],
 ) -> None:
-    # The vanilla reads are submitted only after the world exists; their forecast must not
-    # start "now" on every poll, which recedes the deadline with the clock.
+    # Placement is still pending. Forecasts of dependent work must not restart on each
+    # poll; independent localization may already run alongside the geography.
     model = _generating(learned)
     first = model.remaining(9)
-    for time in range(10, 9 + int(REFERENCE_SECONDS["generate world"])):
+    for time in range(10, 9 + int(REFERENCE_SECONDS["vanilla localization keys"])):
         assert model.remaining(float(time)) == pytest.approx(first - (time - 9))
 
 

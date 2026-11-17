@@ -8,6 +8,7 @@ from typing import Final
 # time left and the bar count these stages as done.
 SKIPPED: Final[tuple[str, ...]] = (
     "generate world",
+    "island placements",
     "vanilla reads",
     "vanilla geometry",
     "vanilla localization keys",

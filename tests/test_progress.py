@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+import time
 
 import pytest
 
@@ -133,3 +134,31 @@ def test_cached_geography_earns_its_whole_weight_without_subpasses() -> None:
     with progress.active(job):
         progress.run_stage("generate world", lambda: None)
     assert job.fraction == pytest.approx(STAGES["generate world"].weight / TOTAL_WEIGHT)
+
+
+def test_dependency_milestone_starts_read_costs_without_a_visible_stage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = [0.0]
+    monkeypatch.setattr(time, "monotonic", lambda: now[0])
+    job, updates = _collect()
+    job.begin("load map")
+    now[0] = 1.0
+    job.finish("load map")
+    job.begin("select canvas")
+    now[0] = 2.0
+    job.finish("select canvas")
+    job.begin("generate world")
+    before = job.fraction
+    now[0] = 15.0
+    with progress.active(job):
+        progress.mark_ready("island placements")
+    assert job.fraction == before
+    assert all(update.stage != "island placements" for update in updates)
+    job.begin("vanilla reads")
+    now[0] = 17.0
+    job.finish("vanilla reads")
+    assert job.stage_costs()["vanilla reads"] == 2.0
+    # No land-cell pass: a kept continent must not train a cheap placement cost.
+    job.finish("generate world")
+    assert "island placements" not in job.stage_costs()

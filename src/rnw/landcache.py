@@ -47,7 +47,7 @@ from rnw.rivers import STEP as RIVER_STEP
 from rnw.watersheds import DrainagePlan, plan_spans
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from numpy.typing import NDArray
 
@@ -495,12 +495,14 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     algorithm: int = epoch.CURRENT,
     seam: int | None = None,
     sizes: SizeModel | None = None,
+    on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
     A world not yet made starts from the land stage of its sketch when one is kept.
     ``template`` is the Americas on the canvas (``Canvas.template``) that Omerika reads.
-    ``algorithm``, ``seam`` and ``sizes`` are ``generate_new_world``'s.
+    ``algorithm``, ``seam`` and ``sizes`` are ``generate_new_world``'s. ``on_placed`` is
+    notified once on both a made and a kept world; it never forms part of the cache identity.
     """
     key = (
         None
@@ -524,6 +526,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     if target is not None and target.exists():
         world = _read(target, domain.shape)
         touch(target)
+        if on_placed is not None:
+            on_placed(tuple((int(row), int(column)) for row, column in world.moves.tolist()))
         return world
     stage = None
     if cache is not None and drawn is None:
@@ -545,6 +549,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             algorithm=algorithm,
             seam=seam,
             sizes=sizes,
+            on_placed=on_placed,
         )
     )
     if target is not None and cache is not None:

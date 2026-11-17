@@ -160,6 +160,13 @@ class Progress:
             self._done.update(found)
             self._estimate.skip(found)
 
+    def mark_ready(self, name: str) -> None:
+        """Timestamp a dependency milestone without presenting an extra UI stage."""
+        with self._lock:
+            now = time.monotonic()
+            self._estimate.begin(name, now)
+            self._estimate.finish(name, now, completed=True)
+
     def stage_costs(self) -> dict[str, float]:
         """Completed critical-path costs, for learning only after a successful job."""
         with self._lock:
@@ -238,6 +245,13 @@ def skip_stages(*names: str) -> None:
     progress = _active
     if progress is not None:
         progress.skip(names)
+
+
+def mark_ready(name: str) -> None:
+    """Publish a dependency milestone to the active ETA model, if any."""
+    progress = _active
+    if progress is not None:
+        progress.mark_ready(name)
 
 
 def checkpoint() -> None:

@@ -6,6 +6,24 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-17, **1.3.0 development / epoch 64 — exact-output performance** (C540).
+[V-EXEC] Installed the generator-only hub after the native, calibration, raster and early
+moved-map preparation phases. The matched cold service median is 221.0 s versus 335.4 s;
+see [performance evidence](../docs/performance-plan.md#implementation-evidence-and-remaining-work)
+for cache/resource scope and the still-open time targets. Locked checks pass (3,485 Python
+checks, 22 optional skips, 31 Rust checks), the installed-game references reproduce epochs
+61–64, and layer rerolls pass. One-thread/minimum-band fresh geography matches the ordinary
+run at 6.79 GiB peak. The standard Wine window/native/code and shell/bridge self-tests pass;
+the updater verifies every installed hub file and retains
+`.rnw-hub-backups/1.3.0-1794915435685504555`. Candidate:
+`local_data/hub-updates/1.3.0-performance-1794913879315249581/rnw_exp_hub`; Windows wheel SHA-256:
+`6ff7f3d6290d59be5e736539468554c8a506eac8a8106e31741a546e6c6c7544`; window
+`db914e388f11ae537301221623f0a4aef14d3346487523adf2a0428cfa809ad3`; launcher unchanged
+(`49674400…6932`). Reuse existing world `rnw_exp_world_3xtvum6wfb`: the regenerated original
+884-file manifest is identical (`da85e5c9…341de`). Its installed 866 files are unchanged;
+the 18 optional cover files are already absent because its saved `show_new_world` is true.
+No world, save, playset or preference was replaced, and EU5 was not launched or controlled.
+
 2026-11-10, **1.2.1 hotfix / epoch 62 — market centres only where the plan puts them** (C527).
 [V-EXEC] From `6fc23b7`, installed **`mod/rnw_exp_world_xmin7loaib`** ("Custom world XMIN") in the existing
 Windows/Proton profile: code `RNW1-082JH-V212F-K325Z-E0410-20R10-2B020-N676J-G`, the code of world 3QFN

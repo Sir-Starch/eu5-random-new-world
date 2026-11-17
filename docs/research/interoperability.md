@@ -184,7 +184,10 @@ that no official editor exists.
   hold ten little-endian 32-bit floats per transform (position, quaternion, scale;
   40 bytes). The existing adapter keeps outside records, samples new instances from
   its calibrated fields and enforces the instance budget. Inline transform blocks
-  are text. `lakes.bin` uses the same 40-byte transform size: records centred on
+  are text. Their native decimal reader preserves the float64-to-float32 rounding, and
+  the native fixed-decimal writer matches Python's formatter; equality fixtures include
+  signed zero, nonfinite values and boundary rounding. The binary layout is unchanged.
+  `lakes.bin` uses the same 40-byte transform size: records centred on
   replaced geography are omitted, retained records are byte-identical. Its writer
   now rejects an incomplete record instead of discarding a trailing byte; synthetic
   tests check exact retention and refusal.

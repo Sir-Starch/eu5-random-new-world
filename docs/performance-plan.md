@@ -237,78 +237,74 @@ recalibrate progress weights and ETA from the new measurements. New visible stri
 needed, must follow the localization workflow. Progress reporting is useful, but contributes
 zero to the measured speedup and cannot satisfy the performance targets.
 
-## Completion evidence
+## Implementation evidence and remaining work
 
-[V-EXEC 2026-11-17] The first implementation adds optional `RNW_TRACE=/path/trace.jsonl`
-spans (including strip workers, nested wall/thread-CPU time and process peak memory),
-ports frontier growth, spacing relaxation, greedy seed acceptance, small-cell merging,
-centre selection, label/block statistics, bend and water colour work to Rust, removes
-the coast correction's discarded block means, and caches the original map's size model.
-The cache verifies content hashes and directory inventories and replays its dependencies
-into the world's input record. Both windows now show the existing geography substages.
+[V-EXEC 2026-11-17] Four implementation phases preserve the numerical oracle: optional
+nested wall/thread-CPU traces and local full-size kernel replays; native cell growth,
+spacing, merging, seed selection, statistics and water rendering; fused terrain/relief
+arithmetic and exact neighbour queries; and moved-map preparation as soon as immutable island
+placements exist. The generator releases the original map's full rasters at that milestone.
+The size-model cache validates content hashes and directory inventories and replays its input
+dependencies. It contains no generated geography. Both windows credit completed geography
+subpasses; the ETA graph includes placement readiness, with timing schema 4.
 
-Three fresh-library baseline service runs, including verification, writing and installation
-into isolated profiles, took **342.2, 332.8 and 335.4 seconds** (median 335.4; peak RSS
-8.82–9.55 GiB). All reproduce the reported world's 884 files and digest above. The first
-post-change diagnostic export also reproduces all 884 files and the same input digest;
-it took **299.9 seconds**, peak 9.34 GiB. It overlapped development checks and is **not**
-the final matched performance comparison. Its water stage took 8.8 seconds and geography
-105.9 seconds. The 180/120-second targets are **not yet met**. Continue from the remaining
-profile rather than treating this first gain as completion. The locked full checks pass
-(3,393 Python tests, 22 optional skips; 31 Rust tests). Local raw evidence stays under
-`local_data/performance-20261117/`.
+The controlled service runs include verification, writing and installation into fresh,
+isolated profiles. Each uses a 31-thread budget and four stage slots. Filesystem caches and
+other desktop activity are uncontrolled; no system caches were cleared. The reported
+432.4-second application observation above is separate from this controlled comparison.
 
-[V-EXEC 2026-11-17] The next implementation also fuses land-height blurs, block relief,
-mountain blending and material stamping; removes whole-raster component sorting and unused
-roughness readings; batches exact geographic remaps; and reuses history queries only within
-their immutable state snapshot. Terrain bands omit columns outside their active core, retain
-all original halos, and evaluate land noise only where its value is consumed. The ground survey
-computes the odd height samples directly instead of discarding three quarters of them. The
-written decals still use the complete height field. Shifted island layers prepare their source
-coordinates once, and inline vegetation numbers and localization hashes use exact native
-conversions. Original implementations and adversarial equality cases remain in the tests.
+| Mode and case | Before | After | Peak RSS before / after |
+|---|---:|---:|---:|
+| Empty application cache, reported seed, three runs | **335.4 s median**, 332.8–342.2 | **221.0 s median**, 219.4–224.8 | 8.82–9.55 / **8.55–8.75 GiB** |
+| Static input preparation cached, new seed 42, one run each | 300.3 s | **201.9 s** | 9.34 / **8.99 GiB** |
 
-An intermediate fresh-library export with eight threads took **262.5 seconds**, peak
-**7.84 GiB**, reproducing the same 884 files and input digest. Its geography stage took 90.0 s,
-including relief 19.8 s and land cells 40.5 s; the later terrain branch took 84.1 s (decals 53.5 s,
-vegetation 28.4 s). Several of these spans overlap or wait for dependencies: they are not
-additive exclusive CPU costs. This is a diagnostic comparison with a different thread limit,
-not the final matched benchmark. The latest kernels still need a clean complete-world time
-comparison and the installed-game current/frozen-epoch checks. Full locked checks pass after
-this phase (3,450 Python tests, 22 optional skips; 31 Rust tests). No goldens have changed.
+The first case is **34% faster** (1.52 times the throughput). For the second case only each
+implementation's static canvas cache was primed, plus the new exact size calibration in the
+candidate. No world or sketch cache was copied: the new seed's land, cells and societies were
+made. The canvas hit took 0.045 s and calibration-cache read 0.093 s; geography still took
+70.5 s. These are one-run warm-input observations, not medians.
 
-The latest complete candidate export took **301.4 s**, peak **8.55 GiB**, at eight threads,
-again reproducing every output and input hash. Its terrain branch was 78.2 s, including
-22.8 s for vegetation, but geography was 107.6 s and canvas selection 13.7 s. The difference
-from the preceding 262.5-second diagnostic is unresolved host/run variability; do not select
-the fastest observation as the after result. A matched repeated comparison remains required.
-The additional mid-kernel cancellation test raises from the second native growth checkpoint
-and preserves the caller's seed raster.
+Every compared full export has the same file set and hashes as its pre-change counterpart.
+The reported seed retains all **884** files and digest `da85e5c9…341de` above; seed 42 retains
+884 files and digest `dc3cb2974754b52f03773911ad02d94641fc4e9bcd2d6a64de8d4d771f5f6240`.
+The input manifests also match. `atlas.json`, both previews and `atlas_labels.png` are
+byte-identical in both cases. No goldens, world epochs or product versions were changed.
 
-[V-EXEC 2026-11-17] A later complete **31-thread** run took **254.1 s**, peak **7.68 GiB**,
-with the same 884 output files and input digest. This matches the baseline's resource limit,
-but is still a single after observation. CPU sampling then selected fused chain arithmetic,
-Rust-owned ridge accumulators and canvas budget counts without pixel-coordinate vectors.
-Nearest-neighbour queries use the exact tree only when the selected set is unique; boundary
-ties still use the original NumPy partition, and out-of-model integer ranges keep its wrapped
-arithmetic. Synthetic tests include dense duplicates, query chunking, integer overflow,
-noncontiguous inputs and consumed-state errors.
+| Stage, median of the three cold runs | Before | After |
+|---|---:|---:|
+| Generate world | 127.3 s | 80.0 s |
+| Land character | 40.8 s | 12.8 s |
+| Terrain branch | 94.8 s | 70.2 s |
+| Its decal work | 63.8 s | 53.4 s |
+| Its vegetation work | 29.4 s | 15.4 s |
+| Native societies and history | 39.2 s | 35.5 s |
 
-The complete candidate with these relief kernels again reproduced all output/input hashes
-(**252.3 s**, peak **8.13 GiB**; this diagnostic also captured relief inputs). Its relief stage
-was **13.6 s**, versus **21.4 s** in the preceding 31-thread run; total times must still be
-repeated under matched conditions. Full locked checks now pass **3,482 Python tests**
-(22 optional skips) and **31 Rust tests**. Progress weights and ETA priors were recalibrated
-from actual dependency-excluding stage costs, and the local timing schema was advanced to 3.
-World epochs, versions and goldens are unchanged. These results do **not** meet the time targets.
+These are inclusive wall spans, with overlap and dependency waits; do not add them.
+In particular, land character no longer waits for the moved-map climate calculation.
+A preliminary eager-preparation candidate retained both original and moved rasters and
+peaked at 9.93 GiB. It was rejected; early release of the original rasters removed that peak.
+Earlier diagnostic timings are retained in the private evidence, not selected as the after
+result. Local raw game-derived evidence stays in `local_data/performance-20261117/`.
 
-The bar also credits completed relief/sea-cell/land-cell subpasses against their parent's
-weight, without counting them twice or inventing progress while a pass is running. This is
-separate from generation speed. The **180/120-second targets remain open**.
+Full locked checks pass **3,485 Python tests** (22 optional skips) and **31 Rust tests**,
+including reference equality, boundary ties, overflow, strip/thread parity, callback order,
+cache invalidation and cancellation after native work has started. The read-only installed-game
+suite passes 19 checks, including the current epoch 64 and selectable frozen epochs 61–63;
+the optional layer-reroll check also passes separately. Epochs 59–60 were not rerun and their
+goldens remain unchanged. A fresh seed-42 run with one thread and the smallest band budget
+produces the same world, atlas and previews as the 31-thread run, peaking at **6.79 GiB**.
+This checks the existing 8-GiB free-memory floor; its timing is not a performance comparison.
 
-The final result must include a before/after table of complete-world time, critical-path
-stage time, peak memory, cache mode and output digest; the unchanged golden/reference
-results; the coherent implementation commits and the installed hub self-test result.
-Update this document with the measured results rather than duplicating the narrative across
-the roadmap, ledger and experiment notes. Planning alone requires document/link checks,
-not a generator rebuild, new reference world or hub installation.
+The Windows hub passes the standard Wine window/native/code and shell/bridge self-tests,
+and is installed with an all-file verification and a backup of the previous hub. See
+[installation history](../experiments/INSTALLED.md). Existing worlds and playsets are preserved.
+
+**The 180/120-second targets are not met.** The measured gaps are about 41 s cold and 82 s
+with static inputs cached. Further work must reduce the society → texts → verification
+critical path as well as the remaining raster work. The serial history replay contains the
+same 60 rounds and 60,463 events in the captured reported case; isolated profiling identifies
+proposal construction/eligibility, contact indexes, snapshot validation and repeated immutable
+record work. A wider native context is the next candidate when its ownership and checkpoints
+can preserve that complete replay. Keep validators and all rounds. Current synthetic tests
+cover drawings, seams, polar bands and resource extremes; the broader full-size preset matrix
+in step 7 is still outstanding.

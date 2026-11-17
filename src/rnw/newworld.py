@@ -66,7 +66,7 @@ from rnw.watersheds import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from numpy.typing import NDArray
 
@@ -1263,6 +1263,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     algorithm: int = epoch.CURRENT,
     seam: int | None = None,
     sizes: SizeModel | None = None,
+    on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
@@ -1278,7 +1279,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     ``groups`` are island groups that the domain covers. The land is made on the whole domain; a
     group that it leaves room stays, and one it touches moves to free ocean (``rnw.islands``).
     The groups are then holes of the domain, and the cells are made on what is left.
-    ``NewWorld.moves`` has the translation of each group.
+    ``NewWorld.moves`` has the translation of each group. ``on_placed`` receives the same
+    immutable translations as soon as placement is fixed, before relief and cell work.
 
     Cells belong to this continuous canvas. Projecting it across the game's raster
     boundary must retain each cell's identity on both sides, just as vanilla does.
@@ -1306,6 +1308,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     )
     moves = place(whole, land, placement_ocean, groups, margin=settings.coast_margin_px)
     del placement_ocean
+    if on_placed is not None:
+        on_placed(tuple((int(row), int(column)) for row, column in moves))
     domain = carve(whole, groups, moves)
     land &= domain
     ocean &= domain

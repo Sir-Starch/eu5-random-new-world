@@ -319,7 +319,7 @@ from rnw.pdx import Block, parse
 from rnw.pictures import center_column, cover, tagged, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.ports import ForeignCoast, coast_links, pair_lengths, plan_ports
-from rnw.progress import Progress, active, checkpoint, run_stage, running, skip_stages
+from rnw.progress import Progress, active, checkpoint, mark_ready, run_stage, running, skip_stages
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
@@ -348,11 +348,13 @@ from rnw.wording import render
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
+    from concurrent.futures import Future
     from pathlib import Path
 
     from numpy.typing import NDArray
 
     from rnw.barrens import WastelandSettings
+    from rnw.eu5_islands import Moved
     from rnw.eu5_remap import GeographicRemap
     from rnw.eu5_start import Country, FinalStartPlan
     from rnw.game_texts import Entry
@@ -3019,6 +3021,72 @@ def _ocean_pixels(world: NewWorld) -> NDArray[np.bool_]:
     return ocean
 
 
+type _VanillaReads = tuple[DecalStore, dict[str, dict[str, str]], set[str], DevelopmentCalibration]
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedVanilla:
+    game_map: Eu5Map
+    canvas: Canvas
+    moved: Moved | None
+    removed: set[str]
+    moves: tuple[tuple[int, int], ...]
+    reads: Future[_VanillaReads]
+    geometries: Future[VanillaGeometry]
+    climates: Future[VanillaClimate]
+    levels: Future[dict[str, NDArray[np.int64]]]
+    natives: Future[VanillaNatives]
+
+
+def _prepare_vanilla(  # noqa: PLR0913, PLR0917 - original inputs and their fixed island placement.
+    stages: Stages,
+    game_dir: Path,
+    original: Eu5Map,
+    clean: Canvas,
+    hierarchy: dict[str, Location],
+    algorithm: int,
+    moves: tuple[tuple[int, int], ...],
+) -> _PreparedVanilla:
+    canvas = place_islands(original, clean, list(moves))
+    game_map = relocate_map(open_map(original, canvas), canvas)
+    width = int(game_map.labels.shape[1])
+    moved = moved_pixels_of(canvas)
+    removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
+    mark_ready("island placements")
+
+    def read_vanilla() -> _VanillaReads:
+        return (
+            ShiftedStore(game_dir, (int(game_map.labels.shape[0]), width), moved),
+            template_attributes(_read(game_dir, TEMPLATES)),
+            vanilla_new_world_keys(hierarchy, removed),
+            calibrate_development(game_dir, game_map, hierarchy),
+        )
+
+    reads = stages.submit("vanilla reads", read_vanilla)
+    geometries = stages.submit(
+        "vanilla geometry", lambda: vanilla_geometry(game_map, canvas, hierarchy)
+    )
+    climates = stages.submit(
+        "vanilla climate",
+        lambda: _vanilla_climate(
+            game_map, reads.result()[0], seasonal=algorithm >= epoch.OPEN_CLIMATE
+        ),
+    )
+    levels = stages.submit(
+        "vanilla material levels",
+        lambda: _vanilla_level_counts(game_map, reads.result()[1], reads.result()[0]),
+    )
+    natives = stages.submit(
+        "vanilla natives",
+        lambda: vanilla_natives(
+            game_dir, game_map, geometries.result(), reads.result()[1], hierarchy
+        ),
+    )
+    return _PreparedVanilla(
+        game_map, canvas, moved, removed, moves, reads, geometries, climates, levels, natives
+    )
+
+
 def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over every stage of the export.
     spool: Spool,
     recorder: inputs.InputRecorder,
@@ -3081,82 +3149,76 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
         None if land_mask is None else fit_drawing(land_mask, clean.mask.shape, settings.algorithm)
     )
 
-    def generate() -> tuple[NewWorld, SizeModel | None]:
-        # The game's own locations size the cells (epoch 64) and vote their ground later.
-        sizes = (
-            input_calibration.get_sizes(
-                cache_dir, game_dir, game_map, lambda: _vanilla_sizes(game_dir, game_map)
-            )
-            if settings.algorithm >= epoch.RIVERS_FIRST
-            else None
-        )
-        made = landcache.get_world(
-            cache_dir,
-            clean.mask,
-            seed=seed,
-            settings=settings.new_world,
-            drawn=None if drawing is None else drawing.land,
-            sea_bands=bands,
-            groups=clean.footprints,
-            template=clean.template,
-            lakes_drawn=None if drawing is None else drawing.lakes,
-            hints=None if drawing is None else drawing.hints,
-            algorithm=settings.algorithm,
-            seam=(clean.roll - clean.col0) % clean.shape[1],
-            sizes=sizes,
-        )
-        return made, sizes
-
-    world: NewWorld
-    world, sizes = run_stage("generate world", generate)
-    drawing = None  # the fitted drawing is the cache's key and the world's land; let it go
-    canvas = place_islands(
-        game_map, clean, [(int(rows), int(columns)) for rows, columns in world.moves.tolist()]
-    )
-    game_map = relocate_map(open_map(game_map, canvas), canvas)
-    width = int(game_map.labels.shape[1])
-    seam = (canvas.roll - canvas.col0) % width
-    moved_groups = moved_pixels_of(canvas)
-    removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     with Stages(stage_workers()) as stages:
-        # The vanilla reads need the moved island groups, so they run beside the coasts and
-        # water of the generated world, not beside its generation (``rnw.eta.DEPENDENCIES``).
-        def read_vanilla() -> tuple[
-            DecalStore, dict[str, dict[str, str]], set[str], DevelopmentCalibration
-        ]:
-            store = ShiftedStore(game_dir, (int(game_map.labels.shape[0]), width), moved_groups)
-            return (
-                store,
-                template_attributes(_read(game_dir, TEMPLATES)),
-                vanilla_new_world_keys(hierarchy, removed),
-                calibrate_development(game_dir, game_map, hierarchy),
-            )
+        preparations: list[_PreparedVanilla] = []
 
-        reads = stages.submit("vanilla reads", read_vanilla)
-        geometries = stages.submit(
-            "vanilla geometry", lambda: vanilla_geometry(game_map, canvas, hierarchy)
-        )
-        localization = stages.submit(
-            "vanilla localization keys", lambda: key_hashes(vanilla_localization_keys(game_dir))
-        )
-        climates = stages.submit(
-            "vanilla climate",
-            lambda: _vanilla_climate(
-                game_map,
-                reads.result()[0],
-                seasonal=settings.algorithm >= epoch.OPEN_CLIMATE,
-            ),
-        )
-        levels = stages.submit(
-            "vanilla material levels",
-            lambda: _vanilla_level_counts(game_map, reads.result()[1], reads.result()[0]),
-        )
-        vanilla_start = stages.submit(
-            "vanilla natives",
-            lambda: vanilla_natives(
-                game_dir, game_map, geometries.result(), reads.result()[1], hierarchy
-            ),
-        )
+        def prepare(moves: tuple[tuple[int, int], ...]) -> None:
+            nonlocal game_map
+            if preparations:
+                message = "The world's island placements were published more than once"
+                raise NewWorldExportError(message)
+            preparations.append(
+                _prepare_vanilla(
+                    stages, game_dir, game_map, clean, hierarchy, settings.algorithm, moves
+                )
+            )
+            # The generator now owns its domain masks. Its calibration is complete,
+            # so all further readers can share the moved map and release the original.
+            game_map = preparations[0].game_map
+
+        localizations: list[Future[set[int]]] = []
+
+        def generate() -> tuple[NewWorld, SizeModel | None]:
+            # The game's own locations size the cells (epoch 64) and vote their ground later.
+            sizes = (
+                input_calibration.get_sizes(
+                    cache_dir, game_dir, game_map, lambda: _vanilla_sizes(game_dir, game_map)
+                )
+                if settings.algorithm >= epoch.RIVERS_FIRST
+                else None
+            )
+            # Close the calibration recorder before unrelated parallel game reads.
+            localizations.append(
+                stages.submit(
+                    "vanilla localization keys",
+                    lambda: key_hashes(vanilla_localization_keys(game_dir)),
+                )
+            )
+            made = landcache.get_world(
+                cache_dir,
+                clean.mask,
+                seed=seed,
+                settings=settings.new_world,
+                drawn=None if drawing is None else drawing.land,
+                sea_bands=bands,
+                groups=clean.footprints,
+                template=clean.template,
+                lakes_drawn=None if drawing is None else drawing.lakes,
+                hints=None if drawing is None else drawing.hints,
+                algorithm=settings.algorithm,
+                seam=(clean.roll - clean.col0) % clean.shape[1],
+                sizes=sizes,
+                on_placed=prepare,
+            )
+            return made, sizes
+
+        world, sizes = run_stage("generate world", generate)
+        localization = localizations[0]
+        drawing = None
+        moves = tuple((int(row), int(column)) for row, column in world.moves.tolist())
+        if not preparations:
+            # Kept worlds and diagnostic providers may return their finished placement.
+            prepare(moves)
+        prepared = preparations[0]
+        if prepared.moves != moves:
+            message = "The completed world differs from its published island placements"
+            raise NewWorldExportError(message)
+        game_map, canvas = prepared.game_map, prepared.canvas
+        moved_groups, removed = prepared.moved, prepared.removed
+        reads, geometries = prepared.reads, prepared.geometries
+        climates, levels, vanilla_start = prepared.climates, prepared.levels, prepared.natives
+        width = int(game_map.labels.shape[1])
+        seam = (canvas.roll - canvas.col0) % width
         # The corridor planner depends on the physical water mask, not on cell
         # identities. Recompute it on cached worlds as well as freshly made ones.
         ocean = _ocean_pixels(world)

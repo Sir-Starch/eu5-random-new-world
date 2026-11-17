@@ -314,3 +314,30 @@ def test_a_damaged_canvas_fails_instead_of_being_selected_again(
     _ = target.write_bytes(target.read_bytes()[:100])
     with pytest.raises(landcache.CacheError, match="damaged"):
         _ = landcache.get_canvas(tmp_path, game_map, 40, expanded=True)
+
+
+def test_island_notification_is_the_same_on_cache_miss_and_hit(tmp_path: Path) -> None:
+    domain = np.ones((160, 192), dtype=bool)
+    placements: list[tuple[tuple[int, int], ...]] = []
+    made = landcache.get_world(
+        tmp_path,
+        domain,
+        seed=42,
+        settings=SMALL,
+        drawn=None,
+        sizes=SIZES,
+        on_placed=placements.append,
+    )
+    kept = landcache.get_world(
+        tmp_path,
+        domain,
+        seed=42,
+        settings=SMALL,
+        drawn=None,
+        sizes=SIZES,
+        on_placed=placements.append,
+    )
+    assert len(placements) == 2
+    assert placements[0] == placements[1]
+    assert np.array_equal(np.asarray(placements[0], dtype=np.int64).reshape(-1, 2), made.moves)
+    assert np.array_equal(made.labels, kept.labels)

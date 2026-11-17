@@ -27,6 +27,7 @@ from rnw.newworld import (
     unported_cells,
     wobble_borders,
 )
+from rnw.progress import Progress, active
 from rnw.sea_corridors import corridor_paths, draw_corridors
 from rnw.settings import NewWorldSettings
 from rnw.topology import distance_from, label_components
@@ -375,3 +376,20 @@ def test_the_centre_control_moves_land_inward_and_keeps_its_share() -> None:
     assert max(shares) - min(shares) <= max(shares) // 20
     plain = land_stage(domain, 7, settings)[0]
     assert np.array_equal(plain, land_stage(domain, 7, replace(settings, centre_permille=0))[0])
+
+
+def test_island_placement_is_published_once_before_relief_and_cell_stages() -> None:
+    domain = np.ones((160, 192), dtype=bool)
+    events: list[str] = []
+    placements: list[tuple[tuple[int, int], ...]] = []
+    job = Progress(lambda update: events.append(update.stage) if not update.finished else None)
+
+    def placed(moves: tuple[tuple[int, int], ...]) -> None:
+        placements.append(moves)
+        events.append("placed")
+
+    with active(job):
+        made = generate_new_world(domain, seed=42, settings=SMALL, sizes=SIZES, on_placed=placed)
+    assert placements == [tuple((int(r), int(c)) for r, c in made.moves.tolist())]
+    for name in ("relief", "land cells", "sea cells"):
+        assert events.index("placed") < events.index(name)
