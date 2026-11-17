@@ -403,6 +403,7 @@ class _Canvas:
     def __init__(self, removed: np.ndarray) -> None:
         self.removed = removed
         self.col0 = 0
+        self.roll = 0
         self.shape = (4, 4)
         self.mask = np.ones((4, 4), dtype=np.bool_)
 

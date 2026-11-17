@@ -278,10 +278,10 @@ def courses_over(
     east_sum = np.zeros(cells, dtype=np.float64)
     north_sum = np.zeros(cells, dtype=np.float64)
     height, crop = world.labels.shape
-    columns = (np.arange(crop, dtype=np.int64) + canvas.col0) % canvas.shape[1]
+    columns = (np.arange(crop, dtype=np.int64) + canvas.col0 - canvas.roll) % canvas.shape[1]
     for start in range(0, height, STRIP_ROWS):
         rows = slice(start, min(height, start + STRIP_ROWS))
-        old = canvas.rolled(game_map.labels, rows)[:, columns]
+        old = np.take(game_map.labels[rows], columns, axis=1)
         generated = world.labels[rows]
         on = lane[old] & (generated >= 0)
         found, were = generated[on], old[on]
@@ -316,11 +316,11 @@ def current_bands(
         ):
             lane[label] = True
     height, crop = canvas.mask.shape
-    columns = (np.arange(crop, dtype=np.int64) + canvas.col0) % canvas.shape[1]
+    columns = (np.arange(crop, dtype=np.int64) + canvas.col0 - canvas.roll) % canvas.shape[1]
     bands = np.empty((height, crop), dtype=np.bool_)
     for start in range(0, height, STRIP_ROWS):
         rows = slice(start, min(height, start + STRIP_ROWS))
-        bands[rows] = lane[canvas.rolled(game_map.labels, rows)[:, columns]] & canvas.mask[rows]
+        bands[rows] = lane[np.take(game_map.labels[rows], columns, axis=1)] & canvas.mask[rows]
     return bands
 
 

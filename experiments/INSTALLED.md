@@ -6,6 +6,19 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-17, **1.3.0 development / epoch 64 — direct wrapped raster reads** (C542).
+[V-EXEC] Updated the generator-only hub after replacing rolled/column-major strip temporaries
+with direct row-major reads. Locked checks pass (3,522 Python checks, 22 optional skips,
+33 Rust checks). The reported world retains all 884 hashes, input manifest, atlas and previews;
+the current epoch-64 reference reproduces `17b974b3…31a47c` with one thread and minimum bands,
+peaking at 6.71 GiB. Existing installed worlds are reused. Both Wine offscreen self-tests and
+the updater's all-file verification pass. Candidate:
+`local_data/hub-updates/1.3.0-performance-1794927273738889856/rnw_exp_hub`; previous hub:
+`.rnw-hub-backups/1.3.0-1794927464181777391`. Windows wheel SHA-256:
+`ef2b55e7da58b2e8d9eaa2120ed71489e7eef9c26e245ffda08e347b8254f5ce`; window
+`0808ec118489465fd96e67eedef0d3bb517d7486cb587ce6c19b4e58c93b9164`; launcher unchanged
+(`49674400…6932`). No EU5 launch/control or changes to worlds, saves, playsets or preferences.
+
 2026-11-17, **1.3.0 development / epoch 64 — native script parsing** (C541).
 [V-EXEC] Updated the generator-only hub after the Rust lexer/parser phase. All 3,005 recorded
 text inputs retain their parsed records/spans, and 2,311 synthetic cases match Linux and

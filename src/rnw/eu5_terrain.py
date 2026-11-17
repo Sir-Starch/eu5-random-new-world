@@ -607,8 +607,10 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
     rows = slice(window.row0, window.row1)
     width = int(codes.shape[1])
     columns = np.arange(window.column0, window.column1, dtype=np.int64) % width
-    local_water = inputs.vanilla_water[rows][:, columns]
-    local_codes = coast_codes(codes[rows][:, columns], local_water)
+    # Take whole rows in memory order; advanced column indexing stores this large
+    # gather in column-major order and makes the native kernel copy it back again.
+    local_water = np.take(inputs.vanilla_water[rows], columns, axis=1)
+    local_codes = coast_codes(np.take(codes[rows], columns, axis=1), local_water)
     # Nothing is written outside this exact mask. Keep the normal halo around its
     # horizontal bounding box, so every retained distance/noise sample is unchanged.
     core_row = window.inner_row // 2
@@ -637,8 +639,12 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         )
         return
     relief = inputs.relief(rows, slice(window.column0, window.column1))
-    labels = np.repeat(np.repeat(inputs.labels[rows][:, columns], 2, axis=0), 2, axis=1)
-    rivers = np.repeat(np.repeat(inputs.rivers[rows][:, columns], 2, axis=0), 2, axis=1)
+    labels = np.repeat(
+        np.repeat(np.take(inputs.labels[rows], columns, axis=1), 2, axis=0), 2, axis=1
+    )
+    rivers = np.repeat(
+        np.repeat(np.take(inputs.rivers[rows], columns, axis=1), 2, axis=0), 2, axis=1
+    )
     river_reach = (
         distance_from(rivers, 12, octagonal=True) if inputs.mountains is not None else None
     )

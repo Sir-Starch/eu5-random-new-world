@@ -502,7 +502,7 @@ def outside_contacts(
     """(vanilla label, generated cell) pairs that touch across the canvas edge."""
     height, width = canvas.shape
     stop = canvas.col0 + int(canvas.mask.shape[1]) + 1
-    columns = np.arange(canvas.col0 - 1, stop, dtype=np.int64) % width
+    columns = (np.arange(canvas.col0 - 1, stop, dtype=np.int64) - canvas.roll) % width
     contacts: set[tuple[int, int]] = set()
     for start in range(0, height, STRIP_ROWS):
         rows = slice(start, min(height, start + STRIP_ROWS + 1))
@@ -510,7 +510,7 @@ def outside_contacts(
         combined = np.where(
             generated >= 0,
             generated + offset,
-            canvas.rolled(game_map.labels, rows)[:, columns],
+            np.take(game_map.labels[rows], columns, axis=1),
         ).astype(np.int32)
         pairs = adjacency_pairs(combined)
         low, high = pairs >> PAIR_SHIFT, pairs & LOW_BITS

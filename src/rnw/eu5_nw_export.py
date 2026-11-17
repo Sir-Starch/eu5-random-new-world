@@ -595,8 +595,8 @@ def _surface(game_map: Eu5Map, canvas: Canvas, world: NewWorld, seed: int) -> ND
     strip = 1024  # rows of the map's labels copied at a time
     for start in range(0, rows, strip):
         window = slice(start, min(rows, start + strip))
-        codes[window] = world_codes[window][:, columns]
-        water[window] = water_kind[game_map.labels[window][:, columns]]
+        codes[window] = np.take(world_codes[window], columns, axis=1)
+        water[window] = water_kind[np.take(game_map.labels[window], columns, axis=1)]
     del world_codes
     return surface_heights(codes, water, world.elevation, seed=seed)
 
@@ -3404,8 +3404,8 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
                     window = np.zeros((rows.stop - rows.start, world_columns.size), dtype=np.int32)
                     local = inside[valid]
                     window[:, valid] = np.where(
-                        canvas.mask[rows][:, local],
-                        carved[rows][:, local],  # noqa: F821 - deleted after the stages
+                        np.take(canvas.mask[rows], local, axis=1),
+                        np.take(carved[rows], local, axis=1),  # noqa: F821 - deleted after the stages
                         0,
                     )
                     return window

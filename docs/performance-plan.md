@@ -314,6 +314,20 @@ during that run. It is not a matched after result and does not replace the contr
 world, but has no matched end-to-end performance evidence; it is not selected for the
 product. Further experiments stay local until they demonstrate a useful gain.
 
+[V-EXEC C542] Wrapped raster windows now gather columns in row-major order directly
+from the original strip. This removes the full-strip roll and column-major temporary in
+coast contacts and current footprints, and avoids extra layout copies in surface and decal
+preparation. Pixel values, contact ordering, current votes and all generation passes stay
+the same. Synthetic rolled/strip cases and the existing uncut terrain-band oracle agree;
+locked checks pass 3,522 Python tests (22 skips) and 33 Rust tests. A full eight-thread export
+retains the reported world's 884 hashes, inputs, atlas and previews. The current epoch-64
+reference also reproduces its unchanged golden with one thread and the minimum band budget,
+peaking at **6.71 GiB**. These low-priority runs overlap other validation/background work;
+their timings are not matched performance claims. The updated Windows hub passes both
+offscreen self-tests and is installed with a verified backup. Packed-frontier and rotated
+noise-table prototypes remain private: their selected replays did not establish a useful
+whole-kernel gain.
+
 **The 180/120-second targets are not met.** The measured gaps are about 41 s cold and 82 s
 with static inputs cached. Further work must reduce the society → texts → verification
 critical path as well as the remaining raster work. The serial history replay contains the
