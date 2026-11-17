@@ -20,6 +20,7 @@ guidance from the historical record; an old unchecked box is not a current task.
 | [Capability overview](feasibility.md) | Implemented T3 route and boundaries of the product |
 | [Roadmap](roadmap.md) | Released scope and owner-requested future directions |
 | [1.2.0 plan](history-plan.md) | Accepted design, decisions, phases and acceptance criteria for history and geopolitics |
+| [Generation performance plan](performance-plan.md) | Faster full generation with unchanged world bytes: profiling, Rust kernels, exact reuse and acceptance targets |
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
 | [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |
