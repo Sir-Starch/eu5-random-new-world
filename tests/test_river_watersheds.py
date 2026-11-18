@@ -18,10 +18,12 @@ from rnw.eu5_rivers import encode_rivers, watershed_spans
 from rnw.rivers import (
     NONE,
     SOURCE,
+    RiverGenerationError,
     flow_classes,
     network_problems,
     outlet_problems,
 )
+from rnw.watersheds import domain_climate, domain_rivers, plan_drainage
 from tests.test_river_raster import WIDTHS, _fork  # pyright: ignore[reportPrivateUsage]
 from tests.test_rivers import _valley  # pyright: ignore[reportPrivateUsage]
 
@@ -110,6 +112,37 @@ def test_water_on_the_other_side_does_not_become_a_seam_outlet() -> None:
     height = np.where(land, 8000, 0).astype(np.int32)
     with pytest.raises(NewWorldExportError, match="no water outlet"):
         _ = _river_basins(land, height, canvas, climate, 5)
+
+
+def test_retained_land_never_becomes_a_river_outlet() -> None:
+    rows, columns = 320, 520
+    _, c = np.indices((rows, columns))
+    land = (c >= 90) & (c < 468)
+    retained = c >= 468
+    lakes = np.zeros_like(land)
+    # This relief slopes toward the retained coast. The flood must use the real
+    # west coast even though its route is longer and initially uphill.
+    height = np.where(land, 10_000 - c * 8, 0).astype(np.int32)
+    plan = plan_drainage(land, height, lakes=lakes, seam=None, seed=11, outside_land=retained)
+    grid = domain_climate(land, lakes, height, outside_land=retained)
+    rivers = domain_rivers(
+        land,
+        plan,
+        lakes=lakes,
+        rain=np.full_like(grid.rain, 1000),
+        seed=11,
+        outside_land=retained,
+    )
+    assert rivers.stats["mouths"] > 0
+    assert not np.any(rivers.role[retained] != NONE)
+    water = ~(land | retained)
+    assert not any(outlet_problems(rivers.role, water).values())
+    assert not any(network_problems(rivers.role, water).values())
+    wrong = plan_drainage(land, height, lakes=lakes, seam=None, seed=11)
+    with pytest.raises(RiverGenerationError, match="routes across retained land"):
+        _ = domain_rivers(land, wrong, lakes=lakes, rain=grid.rain, seed=11, outside_land=retained)
+    with pytest.raises(RiverGenerationError, match="no water outlet"):
+        _ = plan_drainage(land, height, lakes=lakes, seam=None, seed=11, outside_land=~land)
 
 
 def test_a_wet_tributary_does_not_excuse_a_dry_main_line_end() -> None:

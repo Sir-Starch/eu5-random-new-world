@@ -135,7 +135,11 @@ def sample_instance_sets(
 ) -> list[NDArray[float32]]: ...
 def label_components(labels: NDArray[int32], wrap_x: bool) -> NDArray[int32]: ...
 def drainage(
-    land: NDArray[bool_], height: NDArray[int64], rain: NDArray[int64], key: int
+    land: NDArray[bool_],
+    height: NDArray[int64],
+    rain: NDArray[int64],
+    key: int,
+    blocked: NDArray[bool_] | None = None,
 ) -> tuple[NDArray[int64], NDArray[int64]]: ...
 def interior_points(
     labels: NDArray[int32], land: NDArray[bool_], interior_limit: int, shore_limit: int

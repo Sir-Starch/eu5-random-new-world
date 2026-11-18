@@ -72,12 +72,20 @@ BORDER_PERMILLE: Final[int] = 300
 
 @measured
 def domain_climate(
-    land: NDArray[np.bool_], lakes: NDArray[np.bool_], height: NDArray[np.integer], *, row0: int = 0
+    land: NDArray[np.bool_],
+    lakes: NDArray[np.bool_],
+    height: NDArray[np.integer],
+    *,
+    row0: int = 0,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> ClimateGrid:
     """Rainfall of each season and distance to the sea on a grid ``CLIMATE_STEP`` coarser than
-    the domain, with all but its land and lakes taken as sea. ``row0`` locates the first row
-    on the game map to read its latitude."""
-    return climate_grid(~(land | lakes), height, seasonal=True, row0=row0)
+    the domain. Its land, lakes and retained land are dry for the transport model.
+    ``row0`` locates the first row on the game map to read its latitude."""
+    sea = ~(land | lakes)
+    if outside_land is not None:
+        sea &= ~outside_land
+    return climate_grid(sea, height, seasonal=True, row0=row0)
 
 
 def _span_rain(rain: NDArray[np.int64], shape: tuple[int, int], left: int) -> NDArray[np.int64]:
@@ -111,25 +119,40 @@ def plan_spans(columns: int, seam: int | None) -> tuple[tuple[int, int], ...]:
     return ((0, columns),) if seam is None else watershed_spans(columns, seam)
 
 
+def _validate_outside_land(
+    land: NDArray[np.bool_],
+    lakes: NDArray[np.bool_],
+    outside_land: NDArray[np.bool_] | None,
+) -> None:
+    if outside_land is not None and (
+        outside_land.shape != land.shape or np.any(outside_land & (land | lakes))
+    ):
+        message = "Retained land must be outside the drainage domain's land and lakes"
+        raise RiverGenerationError(message)
+
+
 @measured
-def plan_drainage(
+def plan_drainage(  # noqa: PLR0913 - the drainage plan reads the domain and its outside terrain.
     land: NDArray[np.bool_],
     height: NDArray[np.int32],
     *,
     lakes: NDArray[np.bool_],
     seam: int | None,
     seed: int,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> DrainagePlan:
     """The drainage of the domain's relief in independent watershed domains split at ``seam``
     (the column the game's map starts at; None: no seam), as the export plans its rivers
     (``eu5_nw_export._river_basins``), each span with its own seed."""
     columns = int(land.shape[1])
+    _validate_outside_land(land, lakes, outside_land)
     parents = tuple(
         route(
             land[:, left:right],
             height[:, left:right],
             seed=derive_seed(seed, f"river_basin_{left}"),
             lakes=lakes[:, left:right],
+            outside_land=None if outside_land is None else outside_land[:, left:right],
         ).astype(np.int32)
         for left, right in plan_spans(columns, seam)
     )
@@ -137,13 +160,14 @@ def plan_drainage(
 
 
 @measured
-def domain_rivers(
+def domain_rivers(  # noqa: PLR0913 - drainage, waters and rain for each basin.
     land: NDArray[np.bool_],
     plan: DrainagePlan,
     *,
     lakes: NDArray[np.bool_],
     rain: NDArray[np.int64],
     seed: int,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> Rivers:
     """The rivers of the domain along its drainage ``plan`` (``plan_drainage``), the flow being
     the domain's own ``rain`` (``domain_climate``), each span draining to genuine water.
@@ -151,6 +175,7 @@ def domain_rivers(
     A plan that is not this domain's (another number of spans, or water where the domain has
     land) or a span with a bad outlet fails.
     """
+    _validate_outside_land(land, lakes, outside_land)
     rows, columns = (int(size) for size in land.shape)
     seam = plan.seam
     spans = plan_spans(columns, seam)
@@ -170,6 +195,7 @@ def domain_rivers(
     thresholds: list[int] = []
     for (left, right), parent in zip(spans, plan.parents, strict=True):
         domain = land[:, left:right]
+        kept = None if outside_land is None else outside_land[:, left:right]
         target = Rivers(rivers.role[:, left:right], rivers.flow[:, left:right], {})
         found = planned_rivers(
             domain,
@@ -178,8 +204,12 @@ def domain_rivers(
             seed=derive_seed(seed, f"river_basin_{left}"),
             output=target,
             lakes=lakes[:, left:right],
+            outside_land=kept,
         )
-        problems = outlet_problems(found.role, ~domain)
+        water = ~domain
+        if kept is not None:
+            water &= ~kept
+        problems = outlet_problems(found.role, water)
         if any(problems.values()):
             message = f"river basin {left}:{right} has invalid outlets: {problems}"
             raise RiverGenerationError(message)

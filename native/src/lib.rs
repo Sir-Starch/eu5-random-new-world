@@ -1457,6 +1457,7 @@ mod _native {
 
     /// Priority-flood drainage tree of a coarse land grid: (downstream cell, catchment).
     #[pyfunction]
+    #[pyo3(signature = (land, height, rain, key, blocked=None))]
     #[allow(clippy::type_complexity)]
     fn drainage<'py>(
         py: Python<'py>,
@@ -1464,13 +1465,20 @@ mod _native {
         height: PyReadonlyArray2<'py, i64>,
         rain: PyReadonlyArray2<'py, i64>,
         key: u64,
+        blocked: Option<PyReadonlyArray2<'py, bool>>,
     ) -> PyResult<(Bound<'py, PyArray1<i64>>, Bound<'py, PyArray1<i64>>)> {
         let shape = land.as_array().dim();
-        if height.as_array().dim() != shape || rain.as_array().dim() != shape {
+        if height.as_array().dim() != shape
+            || rain.as_array().dim() != shape
+            || blocked
+                .as_ref()
+                .is_some_and(|array| array.as_array().dim() != shape)
+        {
             return Err(pyo3::exceptions::PyValueError::new_err("mismatched grids"));
         }
         let (land, height, rain) = (land.as_slice()?, height.as_slice()?, rain.as_slice()?);
-        let tree = py.detach(|| crate::drainage::drainage(land, height, rain, shape, key));
+        let blocked = blocked.as_ref().map(|array| array.as_slice()).transpose()?;
+        let tree = py.detach(|| crate::drainage::drainage(land, height, rain, shape, key, blocked));
         Ok((tree.parent.into_pyarray(py), tree.flow.into_pyarray(py)))
     }
 

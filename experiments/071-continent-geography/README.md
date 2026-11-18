@@ -73,12 +73,34 @@ RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_
 ```
 
 The production ocean identities, shoreline integrations, native histories, script
-rewrites and texture export have yet to run against the combined world. The
-experiment records where the African domain reaches Asia. The coastal and
-drainage stages still need to support a passable boundary with valid river
-outlets before the two possible Africa–Asia outcomes can be verified. See the
+rewrites and texture export still need the combined export path. See the
 [implementation plan](../../docs/continent-generation-plan.md) for the scope of
 the end-to-end measurement.
+
+### Africa and Asia
+
+[V-EXEC 2026-11-18, same build and worker budget] The installed map has
+168 candidate African border pixels next to passable Asian land. The
+regular coastal margin left all of them under water. The coast model now
+eases the penalty at the original dry interface over one coastal ramp.
+The terrain field and the land budget still choose where land lies.
+Retained dry terrain continues the local relief and receives no generated
+river, including when a coarse drainage cell straddles the border.
+
+| Prototype selection | Seed | Passable African border pixels | Retained non-marine pixels changed | Seconds |
+|---|---:|---:|---:|---:|
+| Africa | 42 | 0 | 0 | 41.7 |
+| Africa | 43 | 0 | 0 | 42.5 |
+| America, Africa and Oceania | 17 | 168 | 0 | 139.6 |
+
+These runs include the shared climate, biome and material stages. The
+combined run held 30,795 populated raster IDs and peaked at 9.2 GiB. Its
+African rivers passed the genuine-outlet check during generation. A
+passable prototype border records raster adjacency, with full export and
+in-game traversal still to be checked.
+Drawing the rivers again on the finished African prototype at seed 17
+validated all 161 mouths and the river network. No river pixels lie on
+the retained side.
 
 [V-LOCAL] The non-marine African hierarchy contains five subcontinents,
 16 regions and 97 areas. Oceania has two subcontinents, five regions and
@@ -121,9 +143,21 @@ France and the Catholic saints list to Catholic populations. Regional setup
 pruning now treats individual saints and modifiers as independent entries.
 The installed Africa audit with mixed holdings trimmed retires 580 country
 tags with that rule, compared with 965 using the legacy pruner. The religion
-definitions and their unaffected entries survive. The same audit still
-retires Morocco, the Mamluks and France through their personal and dynastic
-dependencies. Oceania's 28 retirements are the same under either rule.
-The prototype also fixes overlapping deletion spans when an organization
-loses its last member in a later pass. Regional export still needs to rebind
-retained characters and dynasties to the generated geography.
+definitions and their unaffected entries survive. That earlier audit still
+retired Morocco, the Mamluks and France through their personal and dynastic
+dependencies. Oceania's 28 retirements were the same under either rule.
+
+[V-EXEC 2026-11-18] The regional setup pass now rebinds birth and dynasty
+home locations before calculating retirements and removes kinship fields
+that point to retired characters. It also limits identity retirement to
+the managers that declare identities. This keeps an `army` statement or
+an area preference in one file from retiring valid countries in another.
+With substitute location IDs, the installed audit retires 230 country
+tags for Africa, 28 for Oceania and 258 for both. It retains Morocco's
+four European holdings and the Mamluks' 75 Asian holdings. The audit uses
+Algeciras and Damascus as their replacement capitals. France and the
+Golden Horde remain in the resulting setup.
+An additional African run at seed 17 mapped the 51 affected original
+birth and home locations to 25 generated passable destinations with
+the geographic remapper. It confirmed the same 230 retirements and
+preserved all four named countries.

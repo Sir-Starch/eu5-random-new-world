@@ -37,6 +37,10 @@ form where the generated land reaches the existing boundary. Its presence is a
 result of the geography. Asia keeps its land, locations and coastline.
 The planner allows contact at the existing land interface and protects other
 retained shores. A route is established by passable land in the final map.
+At that interface the coast penalty eases over one ramp, so the ordinary
+terrain field can reach the retained land. Local river routing treats the
+retained terrain as a closed boundary. The composed climate uses the
+installation's heights on the retained side.
 
 Oceania covers the game's `oceania` continent, including Australia, New Zealand,
 New Guinea and Hawaii. Indonesia stays vanilla. Preserve the distinction between
@@ -59,6 +63,9 @@ location when required. This needs an explicit setup rule because the current
 pruner can remove the entire record. On the installed EU5 1.4.9 build 26655995,
 the 1337 records give Morocco four locations in Europe and the Mamluks 75 in
 Asia, including one conquered location. Both records also hold African land. [V-LOCAL]
+The regional setup pass binds character birthplaces and dynasty homes to
+present locations, then trims optional kinship links when a character is
+retired. Only named identities can propagate a retirement to other files.
 
 ## One generation pipeline
 

@@ -294,6 +294,8 @@ def land_stage(
     seed: int,
     settings: NewWorldSettings,
     template: NDArray[np.bool_] | None = None,
+    *,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation.
 
@@ -315,7 +317,9 @@ def land_stage(
     if settings.template_permille:
         shape = _template(domain, seed, settings, template)
         omerika.add_to(relief, shape)
-    land, ocean, lakes, elevation = _natural_land(domain, seed, settings, relief)
+    land, ocean, lakes, elevation = _natural_land(
+        domain, seed, settings, relief, outside_land=outside_land
+    )
     if shape is not None:
         omerika.check_joined(land, shape)
     return land, ocean, lakes, elevation
@@ -343,6 +347,7 @@ def _natural_land(  # noqa: PLR0913 - the density field, the land budget and the
     *,
     budget_px: int | None = None,
     outside: NDArray[np.bool_] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Construct natural coasts from a density field, preserving the requested land budget.
 
@@ -355,12 +360,17 @@ def _natural_land(  # noqa: PLR0913 - the density field, the land budget and the
     ramp = EDGE_RAMP_MARGINS * margin
     shift_px = EDGE_SHIFT_RAMPS * ramp
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
-    guard = ~domain
+    water = _outer_water(domain, outside_land)
+    guard = water.copy()
     guard[:, [0, -1]] = True
-    share = _widen_boundary(guard, domain, ~domain if outside is None else outside, settings)
+    share = _widen_boundary(guard, domain, water if outside is None else outside, settings)
+    del water
     if budget_px is None and share != settings.land_permille:
         settings = replace(settings, land_permille=share)
     _guard_polar_edges(guard, domain, relief, settings)
+    contact = (
+        None if outside_land is None else distance_from(outside_land, ramp + 1, octagonal=True)
+    )
     wobble = _field(
         seed,
         "new_world_edge",
@@ -371,12 +381,21 @@ def _natural_land(  # noqa: PLR0913 - the density field, the land budget and the
     )
     offset = _edge_offset(seed, wobble, ramp=ramp, shift_px=shift_px, shift_period=shift_period)
     del wobble
-    open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
+    open_shore = (
+        distance_from(open_sea(domain, outside_land=outside_land), margin, octagonal=True) < margin
+    )
     # A sea cut off from open water (around a protected islet) gets a strait: its shortest
     # path to open water joins the guard and the coasts are drawn again, so the strait has
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
     land, shore, elevation = _coasts(
-        domain, guard, relief, offset, ramp=ramp, settings=settings, budget_px=budget_px
+        domain,
+        guard,
+        relief,
+        offset,
+        ramp=ramp,
+        settings=settings,
+        budget_px=budget_px,
+        contact=contact,
     )
     for _ in range(MAX_STRAITS):
         checkpoint()
@@ -385,9 +404,16 @@ def _natural_land(  # noqa: PLR0913 - the density field, the land budget and the
             break
         guard |= path
         land, shore, elevation = _coasts(
-            domain, guard, relief, offset, ramp=ramp, settings=settings, budget_px=budget_px
+            domain,
+            guard,
+            relief,
+            offset,
+            ramp=ramp,
+            settings=settings,
+            budget_px=budget_px,
+            contact=contact,
         )
-    del relief, offset, guard, open_shore
+    del relief, offset, guard, open_shore, contact
     # Isthmuses, inland seas and then lakes are made before islands are counted, so none
     # leaves a speck behind.
     ocean = _ocean(domain, land, shore)[1]
@@ -648,12 +674,31 @@ def _land_from_mask(
     return _classify(domain, land, shore, settings, lakes)
 
 
-def _off_limits(domain: NDArray[np.bool_], settings: NewWorldSettings) -> NDArray[np.bool_]:
+def _outer_water(
+    domain: NDArray[np.bool_], outside_land: NDArray[np.bool_] | None
+) -> NDArray[np.bool_]:
+    outside = ~domain
+    if outside_land is not None:
+        outside &= ~outside_land
+    return outside
+
+
+def _off_limits(
+    domain: NDArray[np.bool_],
+    settings: NewWorldSettings,
+    outside_land: NDArray[np.bool_] | None = None,
+) -> NDArray[np.bool_]:
     """Pixels where no land may be added after the coasts are drawn: a coast margin from what
     lies outside the domain and from the longitudinal borders."""
-    guard = ~domain
+    guard = _outer_water(domain, outside_land)
     guard[:, [0, -1]] = True
-    return distance_from(guard, settings.coast_margin_px, octagonal=True) < settings.coast_margin_px
+    margin = settings.coast_margin_px
+    shore = distance_from(guard, margin, octagonal=True) < margin
+    if outside_land is not None:
+        contact = distance_from(outside_land, margin + 1, octagonal=True)
+        shore &= contact > margin
+        shore |= ~domain
+    return shore
 
 
 def _large_parts(mask: NDArray[np.bool_], minimum: int) -> NDArray[np.bool_]:
@@ -697,6 +742,7 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
     ramp: int,
     settings: NewWorldSettings,
     budget_px: int | None = None,
+    contact: NDArray[np.int32] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Lower the relief over a ramp from the guard and keep the land budget.
 
@@ -710,6 +756,8 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
     # No land in slivers of the domain too thin to hold a full ramp.
     opened = distance_from(edge >= ramp, ramp + 1, octagonal=True) <= ramp
     shore = edge < settings.coast_margin_px
+    if contact is not None:
+        shore &= contact > settings.coast_margin_px
     height, width = (int(size) for size in edge.shape)
     elevation = np.empty((height, width), dtype=np.int32)
     lift = _centre_lift(guard, settings.centre_permille)
@@ -718,6 +766,11 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
         reach = edge[rows].astype(np.int64) + offset[rows]
         penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
         penalty = np.where(opened[rows], penalty, 3 * NOISE_SCALE)
+        if contact is not None:
+            # The coast ramp is half strength where dry ground continues into the
+            # retained terrain. The same density field still decides if it reaches.
+            fade = np.minimum(contact[rows] - 1, ramp).clip(0)
+            penalty = penalty * (ramp + fade) // (2 * ramp)
         elevation[rows] = (relief[rows] - np.maximum(0, penalty)).astype(np.int32)
         if lift is not None:
             blocks = lift[first // CENTRE_STEP : -(-rows.stop // CENTRE_STEP)]
@@ -768,16 +821,20 @@ def _threshold(values: NDArray[np.int32], mask: NDArray[np.bool_], permille: int
     return low + int(np.searchsorted(np.cumsum(counts), total - keep, side="right"))
 
 
-def open_sea(domain: NDArray[np.bool_]) -> NDArray[np.bool_]:
+def open_sea(
+    domain: NDArray[np.bool_], *, outside_land: NDArray[np.bool_] | None = None
+) -> NDArray[np.bool_]:
     """Pixels outside the domain that reach the raster border, and the border itself.
 
     Holes in the domain (protected islands or seas inside it) are not open sea.
     """
-    outside = ~domain
+    outside = _outer_water(domain, outside_land)
     parts = label_components(outside.astype(np.int32))
     border = np.zeros(domain.shape, dtype=bool)
     border[[0, -1], :] = True
     border[:, [0, -1]] = True
+    if outside_land is not None:
+        border &= ~outside_land
     reaching = np.unique(parts[border & outside])
     return border | (outside & np.isin(parts, reaching))
 
@@ -1058,6 +1115,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     hints: ReliefHints | None = None,
     spread: NDArray[np.int16] | None = None,
     algorithm: int = epoch.CURRENT,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan, NDArray[np.int64]]:
     """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``), the river pixels
     that are their borders, the drainage plan the rivers run down and the seed spacing of every
@@ -1076,11 +1134,15 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         raise ValueError(message)
     row0, map_height = (0, land.shape[0]) if map_rows is None else map_rows
     try:
-        plan = plan_drainage(land, relief, lakes=lakes, seam=seam, seed=seed)
+        plan = plan_drainage(
+            land, relief, lakes=lakes, seam=seam, seed=seed, outside_land=outside_land
+        )
         if algorithm >= epoch.BASINS:
             shape_relief(relief, land, plan, seed=seed, hints=hints, spread=spread)
-        climate = domain_climate(land, lakes, relief, row0=row0)
-        rivers = domain_rivers(land, plan, lakes=lakes, rain=climate.rain, seed=seed)
+        climate = domain_climate(land, lakes, relief, row0=row0, outside_land=outside_land)
+        rivers = domain_rivers(
+            land, plan, lakes=lakes, rain=climate.rain, seed=seed, outside_land=outside_land
+        )
     except RiverGenerationError as error:
         raise ValueError(str(error)) from error
     walls = border_rivers(rivers)
@@ -1092,6 +1154,8 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     # the ground of the cells will be (``eu5_terrain.surface_heights``).
     surface = land_surface(land, relief, seed=seed) if algorithm >= epoch.ROUGH_HILLS else relief
     sea = ~(land | lakes)
+    if outside_land is not None:
+        sea &= ~outside_land
     # The ground is voted once over the land, a block at a time, and every cell takes that of the
     # land it covers (``eu5_biomes.ground_field``), the first cells as the final ones.
     ground = ground_field(sizes, land, surface, climate)
@@ -1228,8 +1292,15 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
     stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None,
     template: NDArray[np.bool_] | None = None,
     lakes: NDArray[np.bool_] | None = None,
+    *,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Land, ocean and lake masks of the domain: drawn, kept from a sketch or made now."""
+    if outside_land is not None and (
+        outside_land.shape != domain.shape or np.any(outside_land & domain)
+    ):
+        message = "Retained land must fit the generation window and lie outside its domain"
+        raise ValueError(message)
     if drawn is None and lakes is not None:
         message = "Marked lakes belong to a drawn land, and none was given"
         raise ValueError(message)
@@ -1246,7 +1317,7 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
             message = "The kept land stage does not fit the domain"
             raise ValueError(message)
         return stage
-    land, ocean, lakes, _ = land_stage(domain, seed, settings, template)
+    land, ocean, lakes, _ = land_stage(domain, seed, settings, template, outside_land=outside_land)
     return land, ocean, lakes
 
 
@@ -1267,6 +1338,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     seam: int | None = None,
     sizes: SizeModel | None = None,
     map_rows: tuple[int, int] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
@@ -1290,6 +1362,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     boundary must retain each cell's identity on both sides, just as vanilla does.
     ``map_rows`` is the first global row and the height of the global raster when
     the domain is vertically cropped. Latitude and the polar bands use the map's rows.
+    ``outside_land`` marks retained land against which an ordinary coastline may become
+    an inland contact. The routing and river mouths treat it as a closed boundary.
 
     The land cells, the sea cells and the relief depend only on the masks, so they are
     built beside each other when the machine has the cores and the memory for it.
@@ -1310,7 +1384,9 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     if not 0 <= row0 < row0 + domain.shape[0] <= map_height:
         message = "The generation domain rows are outside the map"
         raise ValueError(message)
-    land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage, template, lakes_drawn)
+    land, ocean, lakes = _first_land(
+        domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
+    )
     whole = domain
     # Retained ocean islands stay in the open ocean, never in a new inland sea.
     placement_ocean = (
@@ -1324,7 +1400,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     land &= domain
     ocean &= domain
     lakes &= domain
-    shore = _off_limits(domain, settings)
+    shore = _off_limits(domain, settings, outside_land)
     land, ocean, _ = pinch(land, ocean, shore)
     # Narrowing can detach a small pocket from the ocean. Classify the finished coasts,
     # including existing lakes, before any cell, port or relief field gives it an identity.
@@ -1380,6 +1456,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                 margins=algorithm >= epoch.CORDILLERAS,
                 spread=spread,
                 tablelands=algorithm >= epoch.TABLELANDS,
+                outside_land=outside_land,
             ),
         )
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
@@ -1402,6 +1479,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                     hints=hints,
                     spread=spread,
                     algorithm=algorithm,
+                    outside_land=outside_land,
                 ),
             ).result()
             del spread

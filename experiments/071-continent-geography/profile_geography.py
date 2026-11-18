@@ -144,6 +144,7 @@ def profile(  # noqa: PLR0915 - the prototype records each phase.
             sizes=sizes,
             map_rows=(domain.first_row, game.labels.shape[0]),
             sea_bands=bands,
+            outside_land=domain.contact_land,
         )
         if canvas is not None:
             moved = moved_pixels_of(place_islands(game, canvas, world.moves))
@@ -179,6 +180,11 @@ def profile(  # noqa: PLR0915 - the prototype records each phase.
             "sea_cells": world.classes.count(CellClass.SEA),
             "wraps": domain.seam is not None,
         }
+        if domain.land_interface is not None:
+            passable = np.array([kind is CellClass.LAND for kind in world.classes] + [False])
+            regions[key]["passable_border_pixels"] = int(
+                np.count_nonzero(domain.land_interface & passable[world.labels])
+            )
         del world, bands
     sea = np.array([kind is CellClass.SEA for kind in kinds], dtype=bool)
     climate = timed(

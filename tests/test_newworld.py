@@ -153,6 +153,24 @@ def test_a_small_canvas_lobe_has_no_reserved_land() -> None:
     assert len(set(areas)) > len(areas) // 2
 
 
+def test_land_can_reach_a_retained_neighbor_without_a_forced_bridge() -> None:
+    domain = np.zeros((300, 520), dtype=bool)
+    domain[18:282, 16:388] = True
+    asia = np.zeros_like(domain)
+    asia[140:224, 388:508] = True
+    settings = replace(SMALL, feature_px=140, land_permille=310, wasteland_permille=0)
+    passable: list[bool] = []
+    for seed in (3, 4):
+        world = generate_new_world(
+            domain, seed=seed, settings=settings, sizes=SIZES, outside_land=asia
+        )
+        assert np.array_equal(world.labels >= 0, domain)
+        assert np.all(world.elevation[asia] == 0)
+        classes = np.array([kind is CellClass.LAND for kind in world.classes] + [False])
+        passable.append(bool(np.any(classes[world.labels[140:224, 387]])))
+    assert passable == [False, True]
+
+
 def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:
     """A drawn continent is continuous even when its display crosses both map edges."""
     domain = np.ones((160, 400), dtype=bool)

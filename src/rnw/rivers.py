@@ -94,18 +94,25 @@ class RiverGenerationError(ValueError):
 
 
 def drainage(
-    land: NDArray[np.bool_], height: NDArray[np.int64], rain: NDArray[np.int64], key: int
+    land: NDArray[np.bool_],
+    height: NDArray[np.int64],
+    rain: NDArray[np.int64],
+    key: int,
+    *,
+    blocked: NDArray[np.bool_] | None = None,
 ) -> Drainage:
     """Priority flood from all water over 8-neighbours; rain accumulated downstream.
 
     ``land``, ``height`` and ``rain`` are coarse grids. Equal filled heights are taken
     in hashed-noise order, so drainage across flats wanders instead of running straight.
+    Blocked coarse cells are neither receiving water nor terrain the flood can cross.
     """
     parent, flow = _native.drainage(
         np.ascontiguousarray(land, dtype=np.bool_),
         np.ascontiguousarray(height, dtype=np.int64),
         np.ascontiguousarray(rain, dtype=np.int64),
         key & MASK64,
+        None if blocked is None else np.ascontiguousarray(blocked, dtype=np.bool_),
     )
     return Drainage(parent=parent, flow=flow)
 
@@ -274,6 +281,7 @@ class _Canvas:
     role: NDArray[np.int8]
     flow: NDArray[np.int64]
     owner: NDArray[np.int32]
+    outside_land: NDArray[np.bool_] | None = None
 
     def free_land(self, r: int, c: int) -> bool:
         rows, columns = self.land.shape
@@ -284,6 +292,13 @@ class _Canvas:
 
     def empty(self, r: int, c: int) -> bool:
         return int(self.owner[r, c]) < 0
+
+    def water(self, r: int, c: int) -> bool:
+        return (
+            self.inside(r, c)
+            and not self.land[r, c]
+            and (self.outside_land is None or not self.outside_land[r, c])
+        )
 
     def rivers_near(
         self, r: int, c: int, steps: tuple[tuple[int, int], ...]
@@ -385,7 +400,7 @@ def _descend(
                 out.append((r, c, value))
                 mine[(r, c)] = 0
             continue
-        if canvas.inside(r, c) and not canvas.land[r, c] and canvas.empty(r, c):
+        if canvas.water(r, c) and canvas.empty(r, c):
             return _mouth(canvas, out, mine, line[index:]), True
         if (r, c) in mine:
             for pr, pc, _ in out[mine[(r, c)] + 1 :]:
@@ -416,7 +431,7 @@ def _mouth(
     """Extend a line that reached water by up to MOUTH_PX free water pixels."""
     added = 0
     for r, c, value in rest:
-        if added >= MOUTH_PX or not canvas.inside(r, c) or canvas.land[r, c]:
+        if added >= MOUTH_PX or not canvas.water(r, c):
             break
         if (r, c) == (out[-1][0], out[-1][1]):
             continue
@@ -458,6 +473,7 @@ def draw_rivers(  # noqa: PLR0913 - explicit coarse grid and optional shared ras
     columns: int,
     seed: int,
     output: Rivers | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> Rivers:
     """Draw streams at full resolution, largest catchment first, each from its head down.
 
@@ -479,6 +495,7 @@ def draw_rivers(  # noqa: PLR0913 - explicit coarse grid and optional shared ras
         role=role,
         flow=flow,
         owner=np.full(land.shape, -1, dtype=np.int32),
+        outside_land=outside_land,
     )
     stats = {"streams": len(found), "mouths": 0, "joins": 0, "dropped": 0}
     key = derive_seed(seed, "river_lines")
@@ -561,12 +578,31 @@ def _coarse_water(
     return coarse_land, coarse_lake, flows_over
 
 
+def _blocked_drainage(
+    land_share: NDArray[np.int64],
+    flows_over: NDArray[np.bool_],
+    outside_land: NDArray[np.bool_] | None,
+) -> NDArray[np.bool_] | None:
+    """A predominantly dry boundary cell is unavailable as a coarse outlet."""
+    if outside_land is None:
+        return None
+    dry = land_share + _coarse_share(outside_land, STRIP_ROWS)
+    blocked = ~flows_over & (dry >= PERMILLE // 2)
+    if np.all(flows_over | blocked):
+        message = "River domain has no water outlet across its retained boundary"
+        raise RiverGenerationError(message)
+    return blocked
+
+
 def _routing(
     land: NDArray[np.bool_],
     height: NDArray[np.int32] | NDArray[np.int64],
     seed: int,
     lakes: NDArray[np.bool_] | None,
-) -> tuple[NDArray[np.int64], NDArray[np.bool_] | None, NDArray[np.bool_]]:
+    outside_land: NDArray[np.bool_] | None = None,
+) -> tuple[
+    NDArray[np.int64], NDArray[np.bool_] | None, NDArray[np.bool_], NDArray[np.bool_] | None
+]:
     """The heights the flow is routed over (the relief plus valley noise), the coarse lakes and
     the flowed-over cells of a domain."""
     shape = (-(-land.shape[0] // STEP), -(-land.shape[1] // STEP))
@@ -583,7 +619,8 @@ def _routing(
         octaves=4,
         warp_px=VALLEY_PERIOD // 3,
     )
-    return coarse_height + valleys * VALLEY_HEIGHT // NOISE_SCALE, coarse_lake, flows_over
+    blocked = _blocked_drainage(count, flows_over, outside_land)
+    return coarse_height + valleys * VALLEY_HEIGHT // NOISE_SCALE, coarse_lake, flows_over, blocked
 
 
 def _weights(rain: NDArray[np.int64], flows_over: NDArray[np.bool_]) -> NDArray[np.int64]:
@@ -598,6 +635,7 @@ def route(
     *,
     seed: int,
     lakes: NDArray[np.bool_] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.int64]:
     """The drainage tree ``generate_rivers`` routes a domain's flow by, without the flow: the
     downstream coarse cell of every coarse cell in raster order, -1 for water.
@@ -606,10 +644,17 @@ def route(
     drawn later along it (``planned_rivers``) with any rain are those ``generate_rivers`` draws
     from the same relief and rain.
     """
-    routing, _, flows_over = _routing(land, height, seed, lakes)
+    routing, _, flows_over, blocked = _routing(land, height, seed, lakes, outside_land)
     tree = drainage(
-        flows_over, routing, np.zeros(routing.shape, dtype=np.int64), derive_seed(seed, "drainage")
+        flows_over,
+        routing,
+        np.zeros(routing.shape, dtype=np.int64),
+        derive_seed(seed, "drainage"),
+        blocked=blocked,
     )
+    if blocked is not None and not np.array_equal(tree.parent >= 0, flows_over.ravel()):
+        message = "Land behind the retained boundary has no reachable water outlet"
+        raise RiverGenerationError(message)
     return tree.parent
 
 
@@ -650,10 +695,13 @@ def _drawn(  # noqa: PLR0913 - the land, its tree, lakes, columns, seed and the 
     columns: int,
     seed: int,
     output: Rivers | None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> Rivers:
     threshold = river_threshold(tree, int(np.count_nonzero(land)), coarse_lake)
     found = streams(tree, threshold, MIN_STREAM_CELLS, coarse_lake)
-    rivers = draw_rivers(land, tree, found, columns=columns, seed=seed, output=output)
+    rivers = draw_rivers(
+        land, tree, found, columns=columns, seed=seed, output=output, outside_land=outside_land
+    )
     rivers.stats["threshold"] = threshold
     return rivers
 
@@ -674,7 +722,7 @@ def generate_rivers(  # noqa: PLR0913 - the raster, its fields, the lakes and th
     lake receives its rivers and gives one outflow river from its lowest rim, instead of
     ending every river it meets. Without it all water is a sink.
     """
-    routing, coarse_lake, flows_over = _routing(land, height, seed, lakes)
+    routing, coarse_lake, flows_over, _ = _routing(land, height, seed, lakes)
     tree = drainage(flows_over, routing, _weights(rain, flows_over), derive_seed(seed, "drainage"))
     return _drawn(land, tree, coarse_lake, columns=routing.shape[1], seed=seed, output=output)
 
@@ -687,6 +735,7 @@ def planned_rivers(  # noqa: PLR0913 - the raster, its tree, rain, lakes and the
     seed: int,
     output: Rivers | None = None,
     lakes: NDArray[np.bool_] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> Rivers:
     """The rivers ``generate_rivers`` draws, along a drainage tree made before (``route``)
     instead of one routed over the domain's relief now: the flow is the rain accumulated down
@@ -698,8 +747,20 @@ def planned_rivers(  # noqa: PLR0913 - the raster, its tree, rain, lakes and the
     if links.size != flows_over.size or not np.array_equal(links >= 0, flows_over.ravel()):
         message = "The drainage plan is not this domain's: its water differs from the land's"
         raise RiverGenerationError(message)
+    blocked = _blocked_drainage(count, flows_over, outside_land)
+    if blocked is not None and np.any(blocked.ravel()[links[links >= 0]]):
+        message = "The drainage plan routes across retained land"
+        raise RiverGenerationError(message)
     tree = Drainage(parent=links, flow=accumulate(links, _weights(rain, flows_over)))
-    return _drawn(land, tree, coarse_lake, columns=shape[1], seed=seed, output=output)
+    return _drawn(
+        land,
+        tree,
+        coarse_lake,
+        columns=shape[1],
+        seed=seed,
+        output=output,
+        outside_land=outside_land,
+    )
 
 
 def flow_classes(rivers: Rivers, shares_permille: tuple[int, ...]) -> NDArray[np.int8]:

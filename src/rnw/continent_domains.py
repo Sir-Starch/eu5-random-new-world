@@ -83,7 +83,10 @@ class Domain:
     mask: NDArray[np.bool_]
     footprint: NDArray[np.bool_]
     first_row: int = 0
+    # Local pixels where generated land can meet passable retained terrain.
     land_interface: NDArray[np.bool_] | None = None
+    # Dry land of the eligible retained neighbor throughout the regional window.
+    contact_land: NDArray[np.bool_] | None = None
     legacy_canvas: Canvas | None = None
 
     def spans(self) -> tuple[tuple[slice, slice], ...]:
@@ -237,14 +240,15 @@ def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are
         )
     claim &= near > guard
     del near
-    interface = (
+    neighbor = (
         None
         if continent.land_neighbor is None
-        else _interface(
-            footprint & solid[local],
-            (_membership(game_map, continent.land_neighbor) & solid)[local],
-        )
+        else (_membership(game_map, continent.land_neighbor) & solid)[local]
     )
+    interface = None
+    if neighbor is not None:
+        passable = np.fromiter((kind is CellClass.LAND for kind in game_map.classes), dtype=bool)
+        interface = _interface(footprint & solid[local], neighbor & passable[local])
     domain = Domain(
         continent,
         first,
@@ -253,6 +257,7 @@ def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are
         footprint,
         first_row=top,
         land_interface=interface,
+        contact_land=neighbor,
     )
     for columns, original in domain.spans():
         domain.mask[:, columns] &= ~occupied[domain.rows, original]

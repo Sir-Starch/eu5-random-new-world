@@ -584,6 +584,7 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three
     margins: bool = False,
     spread: NDArray[np.int16] | None = None,
     tablelands: bool = False,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed.
 
@@ -602,6 +603,8 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three
     The raster is cut into strips of ``STRIP_ROWS`` rows (a multiple of the coarsest noise
     step) that run on a few threads; the result is the same for any strip height and any
     number of threads, and the working memory is a few strips instead of a dozen rasters.
+    Retained ``outside_land`` contributes to dry terrain for shore distances and
+    continental margins. Relief is generated only on the domain's own land.
     """
     rows, columns = (int(size) for size in land.shape)
     if hints is not None and not hints.fits(land.shape):
@@ -619,12 +622,14 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three
         ceiling=STRIP_ROWS + 2 * HALO,
     )
     strip = max(STRIP_ALIGN, (height - 2 * HALO) // STRIP_ALIGN * STRIP_ALIGN)
-    grid = _inland_grid(land, strip)
-    sea_grid = grid if lakes is None else _inland_grid(land | lakes, strip)
+    dry = land if outside_land is None else land | outside_land
+    grid = _inland_grid(dry, strip)
+    sea_grid = grid if lakes is None else _inland_grid(dry | lakes, strip)
     lake_grid = None if lakes is None else _inland_grid(~lakes, strip)
     margin_grid = (
-        _margin_grid(land if lakes is None else land | lakes, seed, strip) if margins else None
+        _margin_grid(dry if lakes is None else dry | lakes, seed, strip) if margins else None
     )
+    del dry
     out = np.empty((rows, columns), dtype=np.int32)
 
     def run(first: int) -> None:

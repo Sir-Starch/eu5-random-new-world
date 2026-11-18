@@ -22,6 +22,7 @@ pub fn drainage(
     rain: &[i64],
     (rows, columns): (usize, usize),
     key: u64,
+    blocked: Option<&[bool]>,
 ) -> Tree {
     let width = columns + 2;
     let size = (rows + 2) * width;
@@ -33,6 +34,9 @@ pub fn drainage(
     for row in 0..rows {
         for column in 0..columns {
             let (inner, outer) = (row * columns + column, at(row, column));
+            if blocked.is_some_and(|cells| cells[inner]) {
+                continue;
+            }
             is_land[outer] = land[inner];
             level[outer] = height[inner].max(0);
             flow[outer] = rain[inner].max(0);
@@ -118,10 +122,19 @@ mod tests {
         let land = [false, true, true, true];
         let height = [0, 5, 3, 9];
         let rain = [0, 1, 1, 1];
-        let tree = drainage(&land, &height, &rain, (1, 4), 1);
+        let tree = drainage(&land, &height, &rain, (1, 4), 1, None);
         assert_eq!(tree.parent[0], -1);
         // the flood reaches cell 1 from the sea, then 2 from 1, then 3 from 2
         assert_eq!(tree.parent[1..], [0, 1, 2]);
         assert_eq!(tree.flow, vec![3, 3, 2, 1]);
+    }
+
+    #[test]
+    fn retained_terrain_is_closed_to_the_flood() {
+        let land = [false, true, true, false];
+        let blocked = [false, false, false, true];
+        let tree = drainage(&land, &[0; 4], &[0, 1, 1, 0], (1, 4), 1, Some(&blocked));
+        assert_eq!(tree.parent, vec![-1, 0, 1, -1]);
+        assert_eq!(tree.flow, vec![2, 2, 1, 0]);
     }
 }
