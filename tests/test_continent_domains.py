@@ -12,7 +12,12 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import pytest
 
-from rnw.continent_domains import CONTINENTS, Domain, plan_domains
+from rnw.continent_domains import (
+    CONTINENTS,
+    Domain,
+    _coastal_waters,  # pyright: ignore[reportPrivateUsage]
+    plan_domains,
+)
 from rnw.eu5_biomes import EQUATOR_ROW, block_features, climate_grid, land_features, latitude_tenths
 from rnw.eu5_canvas import CanvasError, select_canvas
 from rnw.model import CellClass
@@ -121,6 +126,42 @@ def test_america_only_uses_the_current_canvas() -> None:
         (group.locations, group.zones) for group in expected.groups
     ]
     assert np.array_equal(domain.legacy_canvas.removed, expected.removed)
+
+
+def test_small_islands_do_not_claim_the_full_continental_band() -> None:
+    footprint = np.zeros((48, 64), dtype=bool)
+    footprint[10:20, 10:20] = True
+    footprint[25:27, 40:42] = True
+    seas = ~footprint
+    seas[23, 13] = False  # A retained location in the large landmass's band.
+    coastal = _coastal_waters(footprint, seas, reach=8, island_reach=3, continental_area=64)
+    assert coastal[26, 12]
+    assert coastal[29, 40]
+    assert not coastal[30, 40]
+    assert not coastal[23, 13]
+    assert not np.any(coastal & footprint)
+
+
+def test_continents_resolve_their_own_presets() -> None:
+    selected = {
+        "america": CONTINENTS["america"].geography("wall"),
+        "africa": CONTINENTS["africa"].geography("archipelago"),
+        "oceania": CONTINENTS["oceania"].geography("supercontinent"),
+    }
+    assert selected["america"] == PRESETS["wall"].new_world
+    assert selected["africa"].land_permille == PRESETS["archipelago"].new_world.land_permille
+    assert selected["oceania"].land_permille == PRESETS["supercontinent"].new_world.land_permille
+    assert not selected["africa"].expand_oceans
+    assert not selected["oceania"].expand_oceans
+
+
+@pytest.mark.parametrize("name", ["wall", "omerika"])
+def test_american_landforms_cannot_be_applied_to_other_continents(name: str) -> None:
+    for key in ("africa", "oceania"):
+        with pytest.raises(CanvasError, match="American options"):
+            _ = CONTINENTS[key].geography(name)
+        with pytest.raises(CanvasError, match="American options"):
+            _ = plan_domains(_map(), {key: PRESETS[name].new_world})
 
 
 @pytest.mark.parametrize("names", [(), ("asia",)])

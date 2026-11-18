@@ -25,7 +25,7 @@ import math
 import re
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from fractions import Fraction
 from functools import partial
 from itertools import pairwise
@@ -53,12 +53,12 @@ from rnw.parallel import worker_count
 from rnw.progress import checkpoint
 from rnw.relief import HILL_STEP, blurred_window, cell_roughness, strip_bend
 from rnw.rng import derive_seed, hash_point
-from rnw.settings import RESOURCES, ResourceSettings, SettingsError
+from rnw.settings import RANGES, RESOURCES, ResourceSettings, SettingsError
 from rnw.timing import measured
 from rnw.topology import adjacency_pairs, distance_from
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Mapping
 
     from numpy.typing import NDArray
 
@@ -67,6 +67,7 @@ if TYPE_CHECKING:
 PERMILLE: Final[int] = 1000
 # Materials whose weight the precious setting scales.
 PRECIOUS: Final[frozenset[str]] = frozenset({"goods_gold", "silver", "gems", "pearls"})
+type MaterialWeights = ResourceSettings | Mapping[str, int]
 # Epoch 64 (``epoch.POOLED_RESOURCES``): a class of raw materials counts its broader class as
 # ``RESOURCE_PRIOR`` locations more (``_pooled``). Of the vanilla New World's 282 classes 137 have
 # five locations or fewer, and taking such a class whole left subtropical jungle and arid desert
@@ -1161,7 +1162,7 @@ def size_model(
         if pixels[i] > 0 and game_map.classes[i] is CellClass.LAND
     ]
     contacts = adjacency_pairs(labels, wrap_x=True)
-    coastal = _vanilla_coastal(game_map, contacts)
+    coastal = coastal_locations(game_map, contacts)
     landmass = _landmass_sizes(
         contacts, np.array([kind not in WATER_KINDS for kind in game_map.classes])
     )
@@ -1735,6 +1736,16 @@ class Generated:
 
 
 @dataclass(frozen=True, slots=True)
+class MaterialRegion:
+    """The cells of one continent and its independent raw material roll."""
+
+    cells: range
+    seed: int
+    weights: Mapping[str, int] = field(default_factory=dict[str, int])
+    precious_permille: int = PERMILLE
+
+
+@dataclass(frozen=True, slots=True)
 class CellBiomes:
     """Template attributes per generated cell ("" where a field does not apply)."""
 
@@ -1861,7 +1872,11 @@ def _pick(counter: Counter[str], key: int) -> str:
 
 
 def _new_world(game_map: Eu5Map) -> NDArray[np.bool_]:
-    return np.array([name == NEW_WORLD for name in game_map.continents], dtype=bool)
+    return _continent_land(game_map, NEW_WORLD)
+
+
+def _continent_land(game_map: Eu5Map, continent: str) -> NDArray[np.bool_]:
+    return np.array([name == continent for name in game_map.continents], dtype=bool)
 
 
 def _old_world(game_map: Eu5Map) -> NDArray[np.bool_]:
@@ -2041,6 +2056,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     open_climate: bool = False,
     ground: SizeModel | None = None,
     pooled_resources: bool = False,
+    regional_resources: Mapping[str, MaterialRegion] | None = None,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics.
 
@@ -2057,7 +2073,8 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     64) is voted once over all the land by the vanilla locations of ``ground`` (the ``SizeModel``
     of the game's map, ``vote_grounds``, matched alike), which they then require. With
     ``pooled_resources`` (epoch 64, ``epoch.POOLED_RESOURCES``) the raw materials are drawn from
-    pooled classes (``_raw_materials``).
+    pooled classes (``_raw_materials``). A composed world supplies ``regional_resources``
+    so each continent uses its own vanilla pools, weights and seed after the common biome vote.
     """
     count = len(cells.kinds)
     old = _old_world(game_map)
@@ -2166,17 +2183,29 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     )
     for cell, name in waters.items():
         climate[cell] = name
-    raw = _raw_materials(
-        game_map,
-        attributes=attributes,
-        vanilla=vanilla,
-        source=_new_world(game_map),
-        cells=cells,
-        fields=(climate, vegetation, topography),
-        seed=seed if material_seed is None else material_seed,
-        precious_permille=precious_permille,
-        resources=resources,
-        pooled=pooled_resources,
+    raw = (
+        _raw_materials(
+            game_map,
+            attributes=attributes,
+            vanilla=vanilla,
+            source=_new_world(game_map),
+            cells=cells,
+            fields=(climate, vegetation, topography),
+            seed=seed if material_seed is None else material_seed,
+            precious_permille=precious_permille,
+            resources=resources,
+            pooled=pooled_resources,
+        )
+        if regional_resources is None
+        else _regional_materials(
+            game_map,
+            attributes=attributes,
+            vanilla=vanilla,
+            cells=cells,
+            fields=(climate, vegetation, topography),
+            regions=regional_resources,
+            pooled=pooled_resources,
+        )
     )
     result = CellBiomes(
         tuple(climate),
@@ -2296,7 +2325,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         climate=[row.get("climate", "") for row in attributes],
         vegetation=[row.get("vegetation", "") for row in attributes],
         topography=[row.get("topography", "") for row in attributes],
-        coastal=_vanilla_coastal(game_map, vanilla.pairs),
+        coastal=coastal_locations(game_map, vanilla.pairs),
         pixels=pixels,
         include=old,
         groups=settings.groups,
@@ -2325,7 +2354,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     return plan_wastelands(terrain, calibration, settings, seed=seed)
 
 
-def _vanilla_coastal(game_map: Eu5Map, pairs: NDArray[np.int64]) -> NDArray[np.bool_]:
+def coastal_locations(game_map: Eu5Map, pairs: NDArray[np.int64]) -> NDArray[np.bool_]:
     """Which vanilla locations touch a sea zone (a contact in ``pairs`` is low << 32 | high)."""
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     low = pairs >> np.int64(32)
@@ -2334,6 +2363,67 @@ def _vanilla_coastal(game_map: Eu5Map, pairs: NDArray[np.int64]) -> NDArray[np.b
     coastal[low[sea[high]]] = True
     coastal[high[sea[low]]] = True
     return coastal
+
+
+def _regional_materials(  # noqa: PLR0913 - cells, the calibrated sources and each regional roll.
+    game_map: Eu5Map,
+    *,
+    attributes: list[dict[str, str]],
+    vanilla: VanillaLocations,
+    cells: Generated,
+    fields: tuple[list[str], list[str], list[str]],
+    regions: Mapping[str, MaterialRegion],
+    pooled: bool,
+) -> tuple[str, ...]:
+    count = len(cells.kinds)
+    raw = [""] * count
+    assigned = np.zeros(count, dtype=bool)
+    for name, region in regions.items():
+        span = region.cells
+        if span.step != 1 or not 0 <= span.start <= span.stop <= count:
+            message = f"Invalid regional material cells for {name}"
+            raise SettingsError(message)
+        window = slice(span.start, span.stop)
+        if np.any(assigned[window]):
+            message = f"Overlapping regional material cells for {name}"
+            raise SettingsError(message)
+        source = _continent_land(game_map, name)
+        available = {
+            attributes[i]["raw_material"]
+            for i in np.flatnonzero(source).tolist()
+            if game_map.classes[i] is CellClass.LAND and "raw_material" in attributes[i]
+        }
+        if unknown := region.weights.keys() - (available - PRECIOUS):
+            message = f"Unknown ordinary resources in {name}: {', '.join(sorted(unknown))}"
+            raise SettingsError(message)
+        low, high = RANGES["precious_permille"]
+        if any(
+            type(weight) is not int or not low <= weight <= high
+            for weight in (region.precious_permille, *region.weights.values())
+        ):
+            message = f"Resource weights in {name} must be integers from {low} to {high}"
+            raise SettingsError(message)
+        raw[window] = _raw_materials(
+            game_map,
+            attributes=attributes,
+            vanilla=vanilla,
+            source=source,
+            cells=cells,
+            fields=fields,
+            seed=region.seed,
+            precious_permille=region.precious_permille,
+            resources=region.weights,
+            pooled=pooled,
+            selection=span,
+        )
+        assigned[window] = True
+    if any(
+        kind is CellClass.LAND and not present
+        for kind, present in zip(cells.kinds, assigned, strict=True)
+    ):
+        message = "Generated land cells lack a region for their raw materials"
+        raise SettingsError(message)
+    return tuple(raw)
 
 
 def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template field.
@@ -2346,18 +2436,17 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     fields: tuple[list[str], list[str], list[str]],
     seed: int,
     precious_permille: int = 1000,
-    resources: ResourceSettings = RESOURCES,
+    resources: MaterialWeights = RESOURCES,
     pooled: bool = False,
+    selection: range | None = None,
 ) -> tuple[str, ...]:
     """Draw each land cell's raw material from vanilla frequencies of similar locations.
 
-    The frequencies are those of the vanilla New World (``source``): drawing them from the
-    Old World gave a generated America elephants, horses, wheat, rice, silk and tea and none
-    of its maize, potatoes, cocoa, tobacco or chili (C116). Similar means the same climate,
-    vegetation, topography and coast. ``precious_permille`` weighs gold, silver, gems and
-    pearls against the rest (1000: their vanilla share); ordinary materials use their
+    The frequencies are those of the selected vanilla continent (``source``). Similar means the
+    same climate, vegetation, topography and coast. ``precious_permille`` weighs gold, silver,
+    gems and pearls against the rest (1000: their vanilla share); ordinary materials use their
     individual ``resources`` weights. No material comes to the coast or inland that the
-    vanilla New World does not have there; if a cell's coastal/inland pool is empty,
+    selected continent does not have there; if a cell's coastal/inland pool is empty,
     generation fails explicitly.
 
     Up to epoch 63 a cell takes the first class of the four that vanilla has, so a class of two
@@ -2366,6 +2455,7 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     ones by how many vanilla locations stand behind it (``_pooled``), and the materials are
     weighed so that vanilla's own classes expect vanilla's own counts (``_material_factors``).
     """
+    selected = range(len(cells.kinds)) if selection is None else selection
     if pooled:
         return _pooled_materials(
             game_map,
@@ -2376,6 +2466,7 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
             fields=fields,
             seed=seed,
             weights=(precious_permille, resources),
+            selection=selected,
         )
     tables = [
         {key: _weighted(counter, precious_permille, resources) for key, counter in table.items()}
@@ -2384,8 +2475,8 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     climate, vegetation, topography = fields
     stream = derive_seed(seed, "raw_material")
     out: list[str] = []
-    for cell, kind in enumerate(cells.kinds):
-        if kind is not CellClass.LAND:
+    for slot, cell in enumerate(selected):
+        if cells.kinds[cell] is not CellClass.LAND:
             out.append("")
             continue
         flag = "coast" if cells.coastal[cell] else "inland"
@@ -2397,7 +2488,7 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
         if counter is None:
             message = f"No enabled raw materials for {flag} locations; increase resource weights"
             raise SettingsError(message)
-        out.append(_pick(counter, hash_point(stream, cell, 0)))
+        out.append(_pick(counter, hash_point(stream, slot, 0)))
     return tuple(out)
 
 
@@ -2419,9 +2510,9 @@ def _material_tables(
     vanilla: VanillaLocations,
     source: NDArray[np.bool_],
 ) -> list[dict[tuple[str, ...], Counter[str]]]:
-    """The raw materials of the vanilla New World's land counted in each class of
+    """The raw materials of the selected continent's land counted in each class of
     ``_material_keys``, one table per level."""
-    coastal = _vanilla_coastal(game_map, vanilla.pairs)
+    coastal = coastal_locations(game_map, vanilla.pairs)
     tables: list[dict[tuple[str, ...], Counter[str]]] = [{}, {}, {}, {}]
     for i, kind in enumerate(game_map.classes):
         if kind is not CellClass.LAND or not source[i] or "raw_material" not in attributes[i]:
@@ -2437,6 +2528,24 @@ def _material_tables(
         for table, key in zip(tables, keys, strict=True):
             table.setdefault(key, Counter())[row["raw_material"]] += 1
     return tables
+
+
+def material_frequencies(
+    game_map: Eu5Map,
+    templates: dict[str, dict[str, str]],
+    vanilla: VanillaLocations,
+    continent: str,
+) -> dict[str, Counter[str]]:
+    """The coastal and inland calibration pools before resource weights are applied."""
+    return {
+        key[0]: counts
+        for key, counts in _material_tables(
+            game_map,
+            [templates.get(key, {}) for key in game_map.keys],
+            vanilla,
+            _continent_land(game_map, continent),
+        )[-1].items()
+    }
 
 
 def _pooled(
@@ -2506,7 +2615,8 @@ def _pooled_materials(  # noqa: PLR0913 - the same inputs as ``_raw_materials``.
     cells: Generated,
     fields: tuple[list[str], list[str], list[str]],
     seed: int,
-    weights: tuple[int, ResourceSettings],
+    weights: tuple[int, MaterialWeights],
+    selection: range,
 ) -> tuple[str, ...]:
     """Each land cell's raw material from the pooled shares of its class (epoch 64)."""
     tables = _material_tables(game_map, attributes, vanilla, source)
@@ -2516,8 +2626,8 @@ def _pooled_materials(  # noqa: PLR0913 - the same inputs as ``_raw_materials``.
     stream = derive_seed(seed, "raw_material")
     pools: dict[tuple[str, ...], Counter[str]] = {}
     out: list[str] = []
-    for cell, kind in enumerate(cells.kinds):
-        if kind is not CellClass.LAND:
+    for slot, cell in enumerate(selection):
+        if cells.kinds[cell] is not CellClass.LAND:
             out.append("")
             continue
         flag = "coast" if cells.coastal[cell] else "inland"
@@ -2540,20 +2650,24 @@ def _pooled_materials(  # noqa: PLR0913 - the same inputs as ``_raw_materials``.
         if not pool:
             message = f"No enabled raw materials for {flag} locations; increase resource weights"
             raise SettingsError(message)
-        out.append(_pick(pool, hash_point(stream, cell, 0)))
+        out.append(_pick(pool, hash_point(stream, slot, 0)))
     return tuple(out)
 
 
 def _weighted(
-    counter: Counter[str], precious_permille: int, resources: ResourceSettings = RESOURCES
+    counter: Counter[str], precious_permille: int, resources: MaterialWeights = RESOURCES
 ) -> Counter[str]:
     """Scale placement frequencies, keeping the original counts at vanilla defaults."""
-    if precious_permille == PERMILLE and resources == RESOURCES:
+    if precious_permille == PERMILLE and (resources == RESOURCES or not resources):
         return counter
+    ordinary: Callable[[str, int], int] = (
+        resources.get
+        if not isinstance(resources, ResourceSettings)
+        else lambda name, default: getattr(resources, name, default)
+    )
     weighted = Counter(
         {
-            name: count
-            * (precious_permille if name in PRECIOUS else getattr(resources, name, PERMILLE))
+            name: count * (precious_permille if name in PRECIOUS else ordinary(name, PERMILLE))
             for name, count in counter.items()
         }
     )

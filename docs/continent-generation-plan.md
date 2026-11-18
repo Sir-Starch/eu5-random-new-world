@@ -3,8 +3,9 @@
 The owner confirmed the player-facing scope on 2026-11-18. The architecture below
 is the proposed implementation. The end-to-end performance budget will be agreed
 after measuring a prototype on the development machine. The
-[first geography prototype](../experiments/071-continent-geography/README.md)
-records the four initial timing cases and the startup data audit.
+[geography prototype](../experiments/071-continent-geography/README.md)
+records the initial timing cases, coastal calibration, the shared biome and
+regional resource trial, and the installed 1337 data audit.
 
 ## What the player chooses
 

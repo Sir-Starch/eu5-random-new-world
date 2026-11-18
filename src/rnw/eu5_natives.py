@@ -48,7 +48,7 @@ from rnw.eu5_archetypes import (
     merge_knowledge,
     partner_knowledge,
 )
-from rnw.eu5_biomes import latitude_tenths
+from rnw.eu5_biomes import coastal_locations, latitude_tenths
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_empires import (
     EmpireCalibration,
@@ -66,6 +66,7 @@ from rnw.eu5_empires import (
 from rnw.eu5_history_values import check_shown, position_ranges
 from rnw.eu5_laws import LawBook, read_book
 from rnw.eu5_remap import GeographicRemap, remap_text
+from rnw.eu5_rewrite import OWNED_LOCATIONS
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.eu5_technology import (
     TRIGGER_FILE,
@@ -108,7 +109,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from rnw.eu5_biomes import CellBiomes
+    from rnw.eu5_biomes import CellBiomes, VanillaLocations
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_newworld import Plan, VanillaGeometry
     from rnw.geography import Location
@@ -240,7 +241,7 @@ class NativesError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class Culture:
-    """A vanilla American culture: religion, homeland and the setups it used."""
+    """A vanilla culture: religion, homeland and the setups it used."""
 
     religion: str
     homeland: tuple[int, ...]
@@ -250,6 +251,24 @@ class Culture:
     city_setup: str
     town_setup: str
     family: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalPopulation:
+    """One continent's 1337 homeland, population and naming calibration."""
+
+    land_locations: int
+    owned_locations: int
+    population: int
+    density: dict[str, int]
+    cultures: dict[str, Culture]
+    religions: dict[str, tuple[tuple[int, ...], int]]
+    places: tuple[tuple[str, str], ...]
+    languages: dict[str, tuple[str, str]]
+
+    @property
+    def population_per_location(self) -> int:
+        return self.population // self.land_locations
 
 
 @dataclass(frozen=True, slots=True)
@@ -362,19 +381,26 @@ def _pops(text: str) -> dict[str, list[tuple[str, int, str, str]]]:
     return out
 
 
-def _countries(text: str) -> dict[str, tuple[str, list[str], list[str]]]:
+def _countries(
+    text: str, *, complete_ownership: bool = False
+) -> dict[str, tuple[str, list[str], list[str]]]:
     """Tag -> (kind, locations, includes) of the 1337 setup."""
     holder = parse(text).block("countries", "countries")
     out: dict[str, tuple[str, list[str], list[str]]] = {}
     if holder is None:
         return out
+    fields = (
+        (*sorted(OWNED_LOCATIONS), "add_pops_from_locations")
+        if complete_ownership
+        else ("own_control_core", "own_control_integrated", "add_pops_from_locations")
+    )
     for entry in holder.entries:
         if entry.key is None or not isinstance(entry.value, Block):
             continue
         kind = entry.value.first("type")
         pop = kind is not None and kind.value == "pop"
         locations: list[str] = []
-        for key in ("own_control_core", "own_control_integrated", "add_pops_from_locations"):
+        for key in fields:
             block = entry.value.block(key)
             if block is not None:
                 locations += [word.value for word in block.words() if isinstance(word.value, str)]
@@ -522,7 +548,188 @@ def effective_governments(
     return result
 
 
-def vanilla_natives(  # noqa: PLR0915 - independent installed calibration tables.
+@dataclass(frozen=True, slots=True, eq=False)
+class _PopulationTerrain:
+    attributes: Mapping[str, Mapping[str, str]]
+    index: dict[str, int]
+    rows: NDArray[np.int64]
+    coastal: set[str]
+    owned: set[str]
+    families: dict[str, str]
+
+    def profile(self, rows_of: list[tuple[str, int]]) -> tuple[int, ...]:
+        keys = [key for key, _ in rows_of]
+        return homeland(
+            [self.attributes.get(key, {}).get("climate", "") for key in keys],
+            [self.attributes.get(key, {}).get("vegetation", "") for key in keys],
+            [self.attributes.get(key, {}).get("topography", "") for key in keys],
+            [int(self.rows[self.index[key]]) for key in keys],
+            [key in self.coastal for key in keys],
+            [key in self.owned for key in keys],
+            [amount for _, amount in rows_of],
+            [self.families.get(key, "") for key in keys],
+        )
+
+
+def _ownership(
+    countries: Mapping[str, tuple[str, list[str], list[str]]],
+) -> set[str]:
+    return {
+        location
+        for kind, locations, _ in countries.values()
+        if kind == "land"
+        for location in locations
+    }
+
+
+def _culture_includes(
+    countries: Mapping[str, tuple[str, list[str], list[str]]],
+    tag_cultures: Mapping[str, str],
+) -> dict[tuple[str, str], str]:
+    includes: dict[tuple[str, str], list[str]] = {}
+    for tag, (kind, _, names) in countries.items():
+        culture = tag_cultures.get(tag, "")
+        chosen = [name for name in names if not name.startswith("expl_")]
+        if culture and chosen:
+            includes.setdefault((culture, kind), []).append(chosen[0])
+    return {key: _most_common(names) for key, names in includes.items()}
+
+
+def _identity_profiles(  # noqa: PLR0913 - population, geography and setup are separate inputs.
+    keys: list[str],
+    pops: dict[str, list[tuple[str, int, str, str]]],
+    terrain: _PopulationTerrain,
+    includes: Mapping[tuple[str, str], str],
+    setups: Mapping[tuple[str, str], str],
+    *,
+    legacy: bool = False,
+) -> tuple[dict[str, Culture], dict[str, tuple[tuple[int, ...], int]]]:
+    culture_rows, religion_rows = _pop_rows(pops, keys)
+    faiths: dict[str, Counter[str]] = {}
+    if legacy:
+        # Older worlds counted each location once per cohort of its culture.
+        for culture, rows_of in culture_rows.items():
+            votes = faiths.setdefault(culture, Counter())
+            for key, _ in rows_of:
+                for _, amount, name, religion in pops[key]:
+                    if name == culture:
+                        votes[religion] += amount
+    else:
+        for key in keys:
+            for _, amount, culture, religion in pops.get(key, []):
+                faiths.setdefault(culture, Counter())[religion] += amount
+    cultures = {
+        culture: Culture(
+            religion=min(faiths[culture], key=lambda r: (-faiths[culture][r], r)),
+            homeland=terrain.profile(rows_of),
+            population=sum(amount for _, amount in rows_of),
+            state_include=includes.get((culture, "land"), ""),
+            tribe_include=includes.get((culture, "pop"), ""),
+            city_setup=setups.get((culture, CITY), ""),
+            town_setup=setups.get((culture, TOWN), ""),
+            family=majority(
+                [terrain.families.get(key, "") for key, _ in rows_of],
+                [amount for _, amount in rows_of],
+            ),
+        )
+        for culture, rows_of in sorted(culture_rows.items())
+    }
+    religions = {
+        religion: (terrain.profile(rows_of), sum(amount for _, amount in rows_of))
+        for religion, rows_of in sorted(religion_rows.items())
+    }
+    return cultures, religions
+
+
+def _population_density(
+    keys: Collection[str],
+    pops: Mapping[str, list[tuple[str, int, str, str]]],
+    terrain: _PopulationTerrain,
+    pixels: NDArray[np.int64],
+) -> dict[str, int]:
+    counts: dict[str, list[int]] = {}
+    for key in keys:
+        size = sum(row[1] for row in pops.get(key, []))
+        climate = terrain.attributes.get(key, {}).get("climate", "")
+        entry = counts.setdefault(climate, [0, 0])
+        entry[0] += size
+        entry[1] += int(pixels[terrain.index[key]])
+    return {climate: size * PERMILLE // max(1, area) for climate, (size, area) in counts.items()}
+
+
+def regional_populations(
+    game_dir: Path,
+    game_map: Eu5Map,
+    vanilla: VanillaLocations,
+    attributes: dict[str, dict[str, str]],
+    selected: Collection[str],
+) -> dict[str, RegionalPopulation]:
+    """Read the 1337 files together, then build the profiles of the chosen continents."""
+    if vanilla.pixels is None:
+        message = "Continent population calibration requires measured vanilla locations"
+        raise NativesError(message)
+    keys_by_region: dict[str, list[str]] = {name: [] for name in sorted(selected)}
+    for key, continent, kind in zip(
+        game_map.keys, game_map.continents, game_map.classes, strict=True
+    ):
+        if kind is CellClass.LAND and continent in keys_by_region:
+            keys_by_region[continent].append(key)
+    if missing := [name for name, keys in keys_by_region.items() if not keys]:
+        message = f"No vanilla land locations in {', '.join(missing)}"
+        raise NativesError(message)
+    pops = _pops(_text(game_dir, f"{SETUP}/06_pops.txt"))
+    countries = _countries(_text(game_dir, f"{SETUP}/10_countries.txt"), complete_ownership=True)
+    tag_cultures, _ = _definitions(game_dir)
+    towns = parse(_text(game_dir, f"{SETUP}/07_cities_and_buildings.txt")).block("locations")
+    place_names = _location_names(game_dir)
+    coastal = coastal_locations(game_map, vanilla.pairs)
+    terrain = _PopulationTerrain(
+        attributes,
+        {key: index for index, key in enumerate(game_map.keys)},
+        latitude_tenths(vanilla.points[:, 0]),
+        {key for key, near in zip(game_map.keys, coastal, strict=True) if near},
+        _ownership(countries),
+        {},
+    )
+    profiles: dict[str, RegionalPopulation] = {}
+    for continent, keys in keys_by_region.items():
+        members = set(keys)
+        local = {key: [row for row in pops[key] if row[1] > 0] for key in keys if key in pops}
+        countries_here = {
+            tag: row for tag, row in countries.items() if members.intersection(row[1])
+        }
+        cultures, religions = _identity_profiles(
+            keys,
+            local,
+            terrain,
+            _culture_includes(countries_here, tag_cultures),
+            _town_setups_at(towns, local),
+        )
+        if not cultures or "" in cultures or "" in religions:
+            message = f"Incomplete 1337 culture or religion populations in {continent}"
+            raise NativesError(message)
+        profiles[continent] = RegionalPopulation(
+            land_locations=len(keys),
+            owned_locations=len(members & terrain.owned),
+            population=sum(culture.population for culture in cultures.values()),
+            density=_population_density(keys, local, terrain, vanilla.pixels),
+            cultures=cultures,
+            religions=religions,
+            places=tuple(
+                (place_names[key], _main_culture(local[key]))
+                for key in keys
+                if key in place_names and local.get(key)
+            ),
+            languages={},
+        )
+    languages = _languages(game_dir, {name for p in profiles.values() for name in p.cultures})
+    return {
+        name: replace(profile, languages={key: languages[key] for key in profile.cultures})
+        for name, profile in profiles.items()
+    }
+
+
+def vanilla_natives(
     game_dir: Path,
     game_map: Eu5Map,
     geometry: VanillaGeometry,
@@ -547,74 +754,27 @@ def vanilla_natives(  # noqa: PLR0915 - independent installed calibration tables
     setup_text = _text(game_dir, f"{SETUP}/10_countries.txt")
     countries = _countries(setup_text)
     tag_cultures, words = _definitions(game_dir)
-    owned = {
-        location
-        for kind, locations, _ in countries.values()
-        if kind == "land"
-        for location in locations
-    }
-    rows = latitude_tenths(geometry.rows)
-    climate_sums: dict[str, list[int]] = {}
-    for key in american:
-        size = sum(row[1] for row in pops.get(key, []))
-        climate = attributes.get(key, {}).get("climate", "")
-        if key not in owned:
-            entry = climate_sums.setdefault(climate, [0, 0])
-            entry[0] += size
-            entry[1] += int(pixels[index[key]])
-    density = {
-        climate: sums[0] * PERMILLE // max(1, sums[1]) for climate, sums in climate_sums.items()
-    }
+    owned = _ownership(countries)
+    terrain = _PopulationTerrain(
+        attributes,
+        index,
+        latitude_tenths(geometry.rows),
+        _vanilla_coastal(game_map, american, index),
+        owned,
+        {key: regional.of(hierarchy[key].region, hierarchy[key].area) for key in american},
+    )
+    density = _population_density(
+        [key for key in american if key not in owned], pops, terrain, pixels
+    )
     total = sum(row[1] for key in american for row in pops.get(key, []))
-    culture_rows, religion_rows = _pop_rows(pops, american)
-    coastal = _vanilla_coastal(game_map, american, index)
-
-    def family_of(key: str) -> str:
-        return regional.of(hierarchy[key].region, hierarchy[key].area)
-
-    def profile(rows_of: list[tuple[str, int]]) -> tuple[int, ...]:
-        keys = [key for key, _ in rows_of]
-        return homeland(
-            [attributes.get(key, {}).get("climate", "") for key in keys],
-            [attributes.get(key, {}).get("vegetation", "") for key in keys],
-            [attributes.get(key, {}).get("topography", "") for key in keys],
-            [int(rows[index[key]]) for key in keys],
-            [key in coastal for key in keys],
-            [key in owned for key in keys],
-            [amount for _, amount in rows_of],
-            [family_of(key) for key in keys],
-        )
-
-    includes: dict[tuple[str, str], list[str]] = {}
-    for tag, (kind, _, names) in countries.items():
-        culture = tag_cultures.get(tag, "")
-        chosen = [name for name in names if not name.startswith("expl_")]
-        if culture and chosen:
-            includes.setdefault((culture, kind), []).append(chosen[0])
-    setups = _town_setups(_text(game_dir, f"{SETUP}/07_cities_and_buildings.txt"), pops)
-    cultures: dict[str, Culture] = {}
-    for culture, rows_of in sorted(culture_rows.items()):
-        faiths = Counter[str]()
-        for key, _ in rows_of:
-            for _, amount, name, religion in pops.get(key, []):
-                if name == culture:
-                    faiths[religion] += amount
-        cultures[culture] = Culture(
-            religion=min(faiths, key=lambda r: (-faiths[r], r)),
-            homeland=profile(rows_of),
-            population=sum(amount for _, amount in rows_of),
-            state_include=_most_common(includes.get((culture, "land"), [])),
-            tribe_include=_most_common(includes.get((culture, "pop"), [])),
-            city_setup=setups.get((culture, CITY), ""),
-            town_setup=setups.get((culture, "town"), ""),
-            family=majority(
-                [family_of(key) for key, _ in rows_of], [amount for _, amount in rows_of]
-            ),
-        )
-    religions = {
-        religion: (profile(rows_of), sum(amount for _, amount in rows_of))
-        for religion, rows_of in sorted(religion_rows.items())
-    }
+    cultures, religions = _identity_profiles(
+        american,
+        pops,
+        terrain,
+        _culture_includes(countries, tag_cultures),
+        _town_setups(_text(game_dir, f"{SETUP}/07_cities_and_buildings.txt"), pops),
+        legacy=True,
+    )
     template_texts = {
         path.stem: path.read_text(encoding="utf-8-sig")
         for path in sorted((game_dir / TEMPLATE_DIR).glob("*.txt"))
@@ -967,7 +1127,12 @@ def _vanilla_coastal(game_map: Eu5Map, keys: list[str], index: dict[str, int]) -
 def _town_setups(
     text: str, pops: dict[str, list[tuple[str, int, str, str]]]
 ) -> dict[tuple[str, str], str]:
-    holder = parse(text).block("locations")
+    return _town_setups_at(parse(text).block("locations"), pops)
+
+
+def _town_setups_at(
+    holder: Block | None, pops: dict[str, list[tuple[str, int, str, str]]]
+) -> dict[tuple[str, str], str]:
     found: dict[tuple[str, str], list[str]] = {}
     if holder is None:
         return {}

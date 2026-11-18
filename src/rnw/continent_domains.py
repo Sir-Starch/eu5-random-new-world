@@ -15,7 +15,7 @@ from rnw.eu5_canvas import NEW_WORLD, CanvasError, roll_for, select_canvas
 from rnw.model import CellClass
 from rnw.progress import checkpoint
 from rnw.settings import PRESETS, NewWorldSettings
-from rnw.topology import distance_from
+from rnw.topology import distance_from, label_components
 from rnw.watersheds import DENSITY_STEP
 
 if TYPE_CHECKING:
@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 REFERENCE_WIDTH: Final[int] = 16_384
 BAND_ROWS: Final[int] = 256
 RETAINED_SHORE_PX: Final[int] = 160
+CONTINENTAL_SHORE_AREA_PX: Final[int] = 131_072
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,13 +38,19 @@ class Continent:
     preset: str
     ocean_band_px: int | None = None
     land_neighbor: str | None = None
+    island_band_px: int = 224
 
-    def geography(self) -> NewWorldSettings:
-        """The default preset expressed at this continent's shore scale."""
-        settings = PRESETS[self.preset].new_world
+    def geography(self, preset: str | None = None) -> NewWorldSettings:
+        """A supported preset expressed at this continent's shore scale."""
+        name = self.preset if preset is None else preset
+        if name not in PRESETS:
+            message = f"Unknown land preset {name}"
+            raise CanvasError(message)
+        settings = PRESETS[name].new_world
+        _validate_geography(self, settings)
         if self.ocean_band_px is None:
             return settings
-        return replace(settings, ocean_band_px=self.ocean_band_px)
+        return replace(settings, ocean_band_px=self.ocean_band_px, expand_oceans=0)
 
 
 CONTINENTS: Final[Mapping[str, Continent]] = MappingProxyType(
@@ -52,10 +59,18 @@ CONTINENTS: Final[Mapping[str, Continent]] = MappingProxyType(
         for region in (
             Continent(NEW_WORLD, "continents"),
             Continent("africa", "supercontinent", ocean_band_px=820, land_neighbor="asia"),
-            Continent("oceania", "archipelago", ocean_band_px=640),
+            Continent("oceania", "archipelago", ocean_band_px=560),
         )
     }
 )
+
+
+def _validate_geography(continent: Continent, settings: NewWorldSettings) -> None:
+    if continent.key != NEW_WORLD and (
+        settings.landform or settings.template_permille or settings.keep_geography
+    ):
+        message = "The Wall, Omerika and keeping vanilla geography are American options"
+        raise CanvasError(message)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -147,6 +162,28 @@ def _interface(inside: NDArray[np.bool_], neighbor: NDArray[np.bool_]) -> NDArra
     return inside & touching
 
 
+def _coastal_waters(
+    footprint: NDArray[np.bool_],
+    marine: NDArray[np.bool_],
+    reach: int,
+    island_reach: int,
+    continental_area: int,
+) -> NDArray[np.bool_]:
+    """Use the wide coastal band around large landmasses and a local band around islands."""
+    if island_reach >= reach:
+        return marine & (distance_from(footprint, reach + 1, octagonal=True) <= reach)
+    parts = label_components(footprint.astype(np.int32))
+    sizes = np.zeros(int(parts.max()) + 1, dtype=np.int64)
+    land_parts, counts = np.unique(parts[footprint], return_counts=True)
+    sizes[land_parts] = counts
+    shelves = (sizes >= continental_area)[parts]
+    del parts
+    claim = distance_from(footprint, island_reach + 1, octagonal=True) <= island_reach
+    if shelves.any():
+        claim |= distance_from(shelves, reach + 1, octagonal=True) <= reach
+    return marine & claim
+
+
 def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are independent inputs.
     game_map: Eu5Map,
     continent: Continent,
@@ -171,9 +208,13 @@ def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are
     local = _read(labels[top:end], first, width)
     footprint = member[local]
     marine = sea[local]
-    distance = distance_from(footprint, reach + 1, octagonal=True)
-    claim = marine & (distance <= reach)
-    del distance
+    claim = _coastal_waters(
+        footprint,
+        marine,
+        reach,
+        continent.island_band_px * map_width // REFERENCE_WIDTH,
+        max(1, CONTINENTAL_SHORE_AREA_PX * map_width**2 // REFERENCE_WIDTH**2),
+    )
     # The original footprint has priority over sea claims. Keep ocean room around
     # other land, including the islands of continental shelves and adjacent Asia.
     guard = max(1, RETAINED_SHORE_PX * map_width // REFERENCE_WIDTH)
@@ -229,6 +270,8 @@ def plan_domains(game_map: Eu5Map, selected: Mapping[str, NewWorldSettings]) -> 
     if not selected or set(selected) - CONTINENTS.keys():
         message = "Choose at least one supported continent"
         raise CanvasError(message)
+    for key, settings in selected.items():
+        _validate_geography(CONTINENTS[key], settings)
     if tuple(selected) == (NEW_WORLD,):
         return (_legacy_domain(game_map, selected[NEW_WORLD]),)
 

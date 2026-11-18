@@ -20,21 +20,59 @@ workload varied. Values are single observations. Land cells include wasteland.
 | America and Oceania | 114.4 | 8.0 | 5,800 | | 2,221 |
 | America, Africa and Oceania | 140.7 | 9.2 | 5,430 | 2,782 | 2,221 |
 
-The combined case adds 44.8 seconds to this geography measurement. The first
+The initial combined case adds 44.8 seconds to this geography measurement. The first
 combined run with full-height windows and broader coastal bands took 174.8
 seconds. The change to the coastal bands also changed the amount of generated
 land, so the difference does not isolate the effect of cropping. The wider
 Pacific replacement footprint in the America-only control accounts for part of
-the work difference. The selected land budgets and coastal priority still need
-calibration, especially for Oceania and its effect on the American canvas.
+the work difference.
+
+## Coastal and resource calibration
+
+[V-EXEC 2026-11-18, same game build and worker budget] Entire vanilla footprints
+still belong to their continent. Large connected landmasses get the whole
+coastal band, 820 map pixels in Africa and 560 in Oceania at full width. Small
+islands get up to 224 pixels, so remote islands reserve less open ocean from
+neighboring domains. These are trial settings. The wide band starts at
+131,072 connected pixels at full width.
+
+| All three continents | Seconds | Peak RSS (GiB) | American land cells | African land cells | Oceanian land cells |
+|---|---:|---:|---:|---:|---:|
+| Seed 42, calibrated bands | 139.4 | 8.6 | 6,765 | 1,956 | 1,162 |
+| Seed 43, calibrated bands | 138.0 | 8.3 | 6,516 | 1,984 | 1,209 |
+| Seed 42, with shared biomes and regional resources | 144.2 | 9.2 | 6,765 | 1,956 | 1,162 |
+
+Seed 42's American deficit against the original America-only control drops
+from 30% to 12%. The composed rasters contain 30,990 populated IDs at seed
+42 and 30,900 at seed 43, including retained vanilla IDs. This count precedes
+final shared-water allocation. Compliance with the 32,000 location limit will
+be checked on the written world.
+
+The resource trial casts one biome vote on the composed climate and contact
+graph, then draws from each continent's own weighted coastal and inland pools.
+That stage took 1.04 seconds for the combined world. The extra vanilla input
+statistics and climate for that vote took 1.3 seconds. At seed 42 it assigned
+materials to 6,155 American, 1,780 African and 1,058 Oceanian passable cells.
+Every draw came from the assigned continent's inventory. Regional weights cover
+ordinary materials specific to the local pools, including coffee and rice in
+Africa and millet and sugar in Oceania. This run uses preliminary geography
+classes before the full wasteland, height and coastal export stages.
+
+A separate seed-42 run enabled Africa with Continents and Oceania with
+Archipelago, leaving America disabled. It took 60.2 seconds including the
+biome and resource stage, with 6.6 GiB peak RSS. A scan of the composed
+raster found zero changed non-marine pixels in the disabled continents.
 
 ```sh
 RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_geography.py \
-  /path/to/eu5 america africa oceania --seed 42
+  /path/to/eu5 america africa oceania --seed 42 --materials
+RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_calibration.py \
+  /path/to/eu5
+RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_geography.py \
+  /path/to/eu5 africa oceania --seed 42 --preset africa=continents --materials
 ```
 
-The timing ends at geography, global climate and contact construction. The
-production ocean identities, shoreline integrations, native histories, script
+The production ocean identities, shoreline integrations, native histories, script
 rewrites and texture export have yet to run against the combined world. The
 experiment records where the African domain reaches Asia. The coastal and
 drainage stages still need to support a passable boundary with valid river
@@ -42,7 +80,31 @@ outlets before the two possible Africa–Asia outcomes can be verified. See the
 [implementation plan](../../docs/continent-generation-plan.md) for the scope of
 the end-to-end measurement.
 
+[V-LOCAL] The non-marine African hierarchy contains five subcontinents,
+16 regions and 97 areas. Oceania has two subcontinents, five regions and
+54 areas. In both continents, the vanilla areas with non-marine locations
+contain no sea zones. Oceania's Australasia and Pacific Islands span much
+of the same latitude range, so their key matching needs longitude as well
+as latitude. The existing north-to-south partition follows the American
+hierarchy.
+
 ## Startup data
+
+[V-EXEC] The 1337 population adapter reads population, country, city, naming
+and language data once for the requested continents and calibrates local
+cultures, faiths and naming corpora. Mixed territorial holdings count where
+they lie. The America-only generator keeps its existing identity calibration.
+
+| Vanilla continent | Land locations | Owned land | Population (pop units) | Cultures | Religions |
+|---|---:|---:|---:|---:|---:|
+| America | 4,434 | 493 (11.1%) | 30,113 | 730 | 70 |
+| Africa | 2,433 | 1,079 (44.3%) | 42,893 | 287 | 57 |
+| Oceania | 790 | 19 (2.4%) | 1,914 | 388 | 18 |
+
+These are source distributions for calibrating the societal defaults. The
+share of owned land differs by a factor of 18 between Africa and Oceania.
+The local template pools also differ, with sub-Saharan and Muslim monarchies
+in Africa and Polynesian and Indonesian precedents in Oceania.
 
 [V-EXEC] A direct footprint scan on the installed game inventories 985 script
 consumers for Africa and 60 for Oceania. Of those, 793 and 17 respectively have
@@ -55,8 +117,13 @@ Mamluk country entries in the direct scan. The existing transitive setup pruning
 then removes both tags through rulers and dynasties that refer to African places.
 The same closure can reach unrelated countries. A character linked to other
 French characters has a birth reference to Damietta. Removal propagates through
-France and the Catholic saints list to Catholic populations. The prototype
-fixes overlapping deletion spans when an organization loses its last remaining
-member in a later pass. Regional export still needs a typed policy for these
-references, preserving retained characters, dynasties and religions while
-resolving the specific affected fields and records.
+France and the Catholic saints list to Catholic populations. Regional setup
+pruning now treats individual saints and modifiers as independent entries.
+The installed Africa audit with mixed holdings trimmed retires 580 country
+tags with that rule, compared with 965 using the legacy pruner. The religion
+definitions and their unaffected entries survive. The same audit still
+retires Morocco, the Mamluks and France through their personal and dynastic
+dependencies. Oceania's 28 retirements are the same under either rule.
+The prototype also fixes overlapping deletion spans when an organization
+loses its last member in a later pass. Regional export still needs to rebind
+retained characters and dynasties to the generated geography.
