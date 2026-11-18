@@ -15,6 +15,8 @@ worlds and saves are not rewritten or migrated.
   Read wrapped raster windows directly in memory order, without rolling and transposing
   whole strips before the native kernels. Read road-network lists natively with identical
   records and errors, and start identity planning when biomes are ready while rivers finish.
+  Run climatic wind transport in bounded native strips, retaining both seasons, every wrap
+  pass and exact integer rounding.
 
 - Make the **wastelands of a New World more than mountains**. Up to 1.2.2 the highest cells of the
   relief were the impassable locations, so every wasteland was a mountain, while the game's own map

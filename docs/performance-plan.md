@@ -1,8 +1,9 @@
 # Generation performance plan
 
-**Status:** Implementation in progress, 2026-11-18. The owner requires substantially faster generation with
-unchanged algorithm logic and quality, including rewriting hot paths in Rust where useful.
-The first native kernels and exact calibration cache are implemented; the time targets remain open.
+**Status:** Current optimization phase complete, 2026-11-18. The owner accepts approximately
+**3–4 minutes** for now and asked to finish this phase and defer further optimization.
+Generation logic and quality are unchanged; the verified generator is installed locally.
+The original 180/120-second targets below remain unmet, deferred goals.
 It follows [ADR 0005](adr/0005-native-core.md), [ADR 0006](adr/0006-machine-resources.md)
 and the existing [verification rules](testing.md).
 
@@ -14,7 +15,7 @@ the rivers-first dependencies, climate votes and smoothing, relief detail, resol
 location counts, validators and complete export. Preserve tie breaking, integer rounding,
 RNG stream identities and draw order. Reducing any of these is outside this task.
 
-The engineering targets on the machine that produced the reported run are:
+The original engineering targets on the machine that produced the reported run were:
 
 * **At most 180 seconds** for a complete new world with an empty application cache.
 * **At most 120 seconds** for a different new seed with only reusable installed-input
@@ -23,10 +24,10 @@ The engineering targets on the machine that produced the reported run are:
   retain the current supported memory floor. Cancellation must still be noticed within
   roughly one to two seconds during long kernels.
 
-These are acceptance targets, not measured forecasts. The first detailed profile must assess
-their feasibility and allocate the critical-path budget. A faster reroll of already cached
-land does not satisfy either target. If the targets remain unmet, report the measured gap
-and continue on the largest remaining costs; do not relax the equality contract.
+These were engineering targets, not measured forecasts. A faster reroll of already cached
+land does not satisfy either target. On 2026-11-18 the owner accepted the approximately
+3–4-minute milestone and deferred more work; the targets are not a current release hold or
+an instruction to continue optimizing. Preserve the equality contract if work resumes.
 
 ## What is measured already
 
@@ -353,13 +354,38 @@ process/early-spline trial reproduces the world but takes 189.9 s, and early phy
 take 186.6 s. Those single-run differences do not justify their added scheduling complexity.
 No process offload, affinity restriction or early-river path was added to the product.
 
-**The 180/120-second targets remain open.** The latest cold single run is about 8 s above
-its target; the static-warm new-seed case has not been remeasured for C543 (the earlier
-201.9-second observation is about 82 s above its target). Further work must reduce the society → texts → verification
-critical path as well as the remaining raster work. The serial history replay contains the
+[V-EXEC C544] Seasonal and legacy wind transport now run in bounded Rust strips, including
+the sea-fetch scan, both zonal wrap laps and the equator-to-pole flows. The latitude weights,
+both seasons, smoothing and integer operation order are unchanged. The NumPy implementation
+is frozen as an independent oracle; comparisons cover strip boundaries, narrow grids, equators
+outside the map, signed int64 overflow and cancellation after a completed native strip.
+Three alternating synthetic-field replays (768 × 1,536) give **0.307 s → 0.041 s** medians,
+about **7.4 times** faster for that calculation. An unchanged component kernel retains its
+old speed. This is a kernel result, not a sevenfold full-generation claim.
+
+The two complete cold diagnostics take **241.7 s and 208.6 s** (9.11 and 9.07 GiB peak),
+with the same 31-thread/four-slot limits. A same-session C543 control takes **213.2 s**
+(9.58 GiB). The 241.7-second run also spends substantially longer in unchanged canvas and
+early geography work. This unexplained run variation prevents a new end-to-end median
+claim; keep these observations separate from the earlier controlled comparison. Both new
+runs retain all 884 world hashes, input manifests, atlas and previews. No fresh static-warm
+new-seed timing was taken for C544.
+
+Locked checks pass **3,567 Python tests** (22 optional skips) and **38 Rust tests**. The
+read-only installed-game suite again passes 19 checks (one optional skip), including current
+epoch 64 and frozen selectable epochs 61–63. Another **327** climate arrays match Linux and
+the packaged Windows runtime, including extreme arithmetic cases. The Windows hub passes
+both offscreen self-tests and is installed with all-file verification and a retained backup.
+World epochs, goldens and the product version remain unchanged.
+
+**Further optimization is deferred by the owner.** The approximately 3–4-minute practical
+milestone is accepted; the 180/120-second goals have not been achieved. The earlier 201.9-second
+static-warm observation belongs to C540 and is not a measurement of this final candidate.
+Possible later work includes the society → texts → verification critical path and repeated
+raster work. The serial history replay contains the
 same 60 rounds and 60,463 events in the captured reported case; isolated profiling identifies
 proposal construction/eligibility, contact indexes, snapshot validation and repeated immutable
-record work. A wider native context is the next candidate when its ownership and checkpoints
+record work. A wider native context is a possible candidate if its ownership and checkpoints
 can preserve that complete replay. Keep validators and all rounds. Current synthetic tests
 cover drawings, seams, polar bands and resource extremes; the broader full-size preset matrix
-in step 7 is still outstanding.
+in the original step 7 was not run and remains disclosed future coverage, not a current assignment.

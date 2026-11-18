@@ -6,6 +6,21 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-18, **1.3.0 development / epoch 64 — native wind transport** (C544).
+[V-EXEC] Updated the generator-only hub after moving the unchanged seasonal/legacy wind scans
+to bounded native strips. Locked checks pass (3,567 Python checks, 22 optional skips,
+38 Rust checks); installed-game reference epochs 61–64 retain their goldens (19 checks,
+one optional skip). All 884 reported-world files, inputs, atlas and previews remain identical;
+existing worlds are reused. Another 327 climate arrays match Linux and packaged Windows.
+Both Wine offscreen self-tests and all-file installation verification pass. Candidate:
+`local_data/hub-updates/1.3.0-performance-1794987577709412311/rnw_exp_hub`; previous hub:
+`.rnw-hub-backups/1.3.0-1794988687706536952`. Windows wheel SHA-256:
+`38920c900b331091ad26b51688093f8a8be06387bc292d4399d364ccab4db0a2`; window
+`1101f30dfb463c10e5246d214f5b0ea7357c5fec444b9105331827168e44fac0`; launcher unchanged
+(`49674400…6932`). No EU5 launch/control or changes to worlds, saves, playsets or preferences.
+The owner accepts the approximately 3–4-minute milestone and defers additional optimization;
+see the [timing scope and remaining goals](../docs/performance-plan.md#implementation-evidence-and-remaining-work).
+
 2026-11-18, **1.3.0 development / epoch 64 — native spline lists and shared biome readiness** (C543).
 [V-EXEC] Updated the generator-only hub after exact native list parsing and allowing identities
 to read completed biomes while rivers finish. Locked checks pass (3,543 Python checks,

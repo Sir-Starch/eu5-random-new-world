@@ -3,6 +3,7 @@
 //! Every function equals its Python reference in `tests/reference/` bit for bit.
 
 pub mod cells;
+pub mod climate;
 pub mod components;
 pub mod distance;
 pub mod drainage;
@@ -54,6 +55,46 @@ fn shaped<T: numpy::Element>(
     Ok(array.into_pyarray(py))
 }
 
+type ClimateMasks<'py> = (
+    PyReadonlyArray2<'py, bool>,
+    PyReadonlyArray2<'py, bool>,
+    PyReadonlyArray2<'py, bool>,
+);
+type ClimateWater<'py> = (
+    PyReadonlyArray2<'py, i64>,
+    PyReadonlyArray2<'py, i64>,
+    PyReadonlyArray2<'py, i64>,
+);
+
+fn climate_sources<'a>(
+    shape: (usize, usize),
+    masks: &'a ClimateMasks<'_>,
+    water: &'a ClimateWater<'_>,
+) -> PyResult<climate::Sources<'a>> {
+    if shape.0 == 0
+        || shape.1 == 0
+        || masks.0.as_array().dim() != shape
+        || masks.1.as_array().dim() != shape
+        || masks.2.as_array().dim() != shape
+        || water.0.as_array().dim() != (2, shape.0)
+        || water.1.as_array().dim() != (2, shape.0)
+        || water.2.as_array().dim() != (2, shape.0)
+    {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "climate rasters do not fit together",
+        ));
+    }
+    Ok(climate::Sources {
+        shape,
+        sea: masks.0.as_slice()?,
+        off_west: masks.1.as_slice()?,
+        off_east: masks.2.as_slice()?,
+        capacity: water.0.as_slice()?,
+        cold: water.1.as_slice()?,
+        warm: water.2.as_slice()?,
+    })
+}
+
 #[pymodule]
 mod _native {
     use super::*;
@@ -67,6 +108,98 @@ mod _native {
     use super::SplineReadError;
     #[pymodule_export]
     use super::TerrainRangeError;
+
+    #[pyfunction]
+    fn climate_sea_run<'py>(
+        py: Python<'py>,
+        sea: PyReadonlyArray2<'py, bool>,
+        limit: i64,
+        laps: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = sea.as_array().dim();
+        let flags = sea.as_slice()?;
+        if shape.1 == 0 {
+            return shaped(py, shape, vec![]);
+        }
+        let out = py.detach(|| climate::sea_run(flags, shape.1, limit, laps));
+        shaped(py, shape, out)
+    }
+
+    #[pyfunction]
+    fn climate_scan<'py>(
+        py: Python<'py>,
+        sea: PyReadonlyArray2<'py, bool>,
+        height: PyReadonlyArray2<'py, i64>,
+        rates: (i64, i64, i64),
+        laps: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = sea.as_array().dim();
+        if shape != height.as_array().dim() || shape.1 == 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "climate rasters do not fit together",
+            ));
+        }
+        let (flags, heights) = (sea.as_slice()?, height.as_slice()?);
+        let rates = climate::Rates(rates.0, rates.1, rates.2);
+        let out = py.detach(|| climate::scan(flags, heights, shape.1, rates, laps));
+        shaped(py, shape, out)
+    }
+
+    #[pyfunction]
+    fn climate_zonal<'py>(
+        py: Python<'py>,
+        masks: ClimateMasks<'py>,
+        water: ClimateWater<'py>,
+        height: PyReadonlyArray2<'py, i64>,
+        weights: ClimateWater<'py>,
+        rates: (i64, i64, i64),
+        laps: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = height.as_array().dim();
+        let sources = climate_sources(shape, &masks, &water)?;
+        if weights.0.as_array().dim() != (2, shape.0)
+            || weights.1.as_array().dim() != (2, shape.0)
+            || weights.2.as_array().dim() != (2, shape.0)
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "climate weights do not fit the rows",
+            ));
+        }
+        let heights = height.as_slice()?;
+        let weights = (
+            weights.0.as_slice()?,
+            weights.1.as_slice()?,
+            weights.2.as_slice()?,
+        );
+        let rates = climate::Rates(rates.0, rates.1, rates.2);
+        let out = py.detach(|| climate::zonal(&sources, heights, weights, rates, laps));
+        shaped(py, (2 * shape.0, shape.1), out)
+    }
+
+    #[pyfunction]
+    fn climate_inflow<'py>(
+        py: Python<'py>,
+        masks: ClimateMasks<'py>,
+        water: ClimateWater<'py>,
+        height: PyReadonlyArray2<'py, i64>,
+        weights: (PyReadonlyArray2<'py, i64>, PyReadonlyArray2<'py, i64>),
+        rates: (i64, i64, i64),
+        equator: i64,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = height.as_array().dim();
+        let sources = climate_sources(shape, &masks, &water)?;
+        if weights.0.as_array().dim() != (2, shape.0) || weights.1.as_array().dim() != (2, shape.0)
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "climate weights do not fit the rows",
+            ));
+        }
+        let heights = height.as_slice()?;
+        let weights = (weights.0.as_slice()?, weights.1.as_slice()?);
+        let rates = climate::Rates(rates.0, rates.1, rates.2);
+        let out = py.detach(|| climate::inflow(&sources, heights, weights, rates, equator));
+        shaped(py, (2 * shape.1, shape.0), out)
+    }
 
     #[pyfunction]
     fn spline_lists(

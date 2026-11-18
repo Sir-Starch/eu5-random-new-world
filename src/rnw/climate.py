@@ -30,13 +30,16 @@ from typing import TYPE_CHECKING, Final, final
 
 import numpy as np
 
+from rnw import _native
 from rnw.fields import PERMILLE, box_blur, smoothstep
+from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 SATURATED: Final[int] = 1 << 16
 LAPS: Final[int] = 2
+WIND_STRIP: Final[int] = 128
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,21 +58,16 @@ def _scan(
 ) -> NDArray[np.int64]:
     """Rain for wind blowing towards increasing column index, with wrap-around."""
     rows, columns = sea.shape
-    moisture = np.full(rows, SATURATED, dtype=np.int64)
-    previous = height[:, -1].copy()
-    rain = np.zeros((rows, columns), dtype=np.int64)
-    for lap in range(LAPS):
-        for column in range(columns):
-            here = height[:, column]
-            rise = np.maximum(0, here - previous)
-            loss = moisture // settings.decay_px + moisture * rise // settings.lift_units
-            loss = np.minimum(loss, moisture)
-            ocean = sea[:, column]
-            recharged = moisture + (SATURATED - moisture) // settings.recharge_px
-            moisture = np.where(ocean, recharged, moisture - loss)
-            if lap == LAPS - 1:
-                rain[:, column] = np.where(ocean, 0, loss)
-            previous = here
+    rain = np.empty((rows, columns), dtype=np.int64)
+    for first in range(0, rows, WIND_STRIP):
+        checkpoint()
+        window = slice(first, first + WIND_STRIP)
+        rain[window] = _native.climate_scan(
+            np.ascontiguousarray(sea[window]),
+            np.ascontiguousarray(height[window]),
+            (settings.decay_px, settings.recharge_px, settings.lift_units),
+            LAPS,
+        )
     return rain
 
 
@@ -140,13 +138,11 @@ def _sea_run(sea: NDArray[np.bool_], limit: int) -> NDArray[np.int64]:
     """Per sea pixel, its distance along the row (wrapping) from the land behind it, towards
     increasing column, capped at ``limit``; 0 on land."""
     rows, columns = sea.shape
-    run = np.full(rows, limit, dtype=np.int64)
     out = np.empty((rows, columns), dtype=np.int64)
-    for lap in range(LAPS):
-        for column in range(columns):
-            run = np.where(sea[:, column], np.minimum(run + 1, limit), 0)
-            if lap == LAPS - 1:
-                out[:, column] = run
+    for first in range(0, rows, WIND_STRIP):
+        checkpoint()
+        window = slice(first, first + WIND_STRIP)
+        out[window] = _native.climate_sea_run(np.ascontiguousarray(sea[window]), limit, LAPS)
     return out
 
 
@@ -195,31 +191,23 @@ def _zonal(  # noqa: PLR0913 - the sea, the relief, the rates and the two winds'
     """Add to ``total`` the rain of the wind towards increasing column (the westerlies), weighed
     by ``weights[0]``, and of the wind towards decreasing column, by ``weights[1]``, in each
     season (leading axis of ``efficiency``, the weights and ``total``); rows wrap around."""
-    sea = sources.sea
-    columns = int(sea.shape[1])
-    last = columns - 1
-    moisture = np.stack([sources.column(last), sources.column(0)], axis=1)
-    previous = np.stack([height[:, last], height[:, 0]])
-    rate = efficiency[:, np.newaxis, :]
-    weight = np.stack(weights, axis=1)
-    for lap in range(LAPS):
-        for step in range(columns):
-            back = last - step
-            here = np.stack([height[:, step], height[:, back]])
-            ocean = np.stack([sea[:, step], sea[:, back]])
-            rise = np.maximum(0, here - previous)
-            loss = np.minimum(
-                moisture // settings.decay_px + moisture * rise // settings.lift_units, moisture
-            )
-            target = np.stack([sources.column(step), sources.column(back)], axis=1)
-            moisture = np.where(
-                ocean, moisture + (target - moisture) // settings.recharge_px, moisture - loss
-            )
-            if lap == LAPS - 1:
-                fallen = np.where(ocean, 0, loss * rate // PERMILLE) * weight
-                total[:, :, step] += fallen[:, 0]
-                total[:, :, back] += fallen[:, 1]
-            previous = here
+    rows, columns = sources.sea.shape
+    for first in range(0, rows, WIND_STRIP):
+        checkpoint()
+        window = slice(first, min(rows, first + WIND_STRIP))
+        found = _native.climate_zonal(
+            _wind_masks(sources, window, slice(None)),
+            _wind_water(sources, window),
+            np.ascontiguousarray(height[window]),
+            (
+                np.ascontiguousarray(efficiency[:, window]),
+                np.ascontiguousarray(weights[0][:, window]),
+                np.ascontiguousarray(weights[1][:, window]),
+            ),
+            (settings.decay_px, settings.recharge_px, settings.lift_units),
+            LAPS,
+        )
+        total[:, window] += found.reshape(2, window.stop - window.start, columns)
 
 
 def _inflow(  # noqa: PLR0913 - the sea, the relief, the rates, the weights and the equator.
@@ -234,26 +222,39 @@ def _inflow(  # noqa: PLR0913 - the sea, the relief, the rates, the weights and 
 ) -> None:
     """Add to ``total`` the rain of the air flowing from the equator towards each pole, weighed
     by ``weight``, in each season."""
-    sea = sources.sea
-    rows = int(sea.shape[0])
-    start = min(max(equator, 0), rows - 1)
-    for order in (range(start, -1, -1), range(start, rows)):
-        moisture = sources.row(start)
-        previous = height[start].copy()
-        for row in order:
-            here = height[row]
-            rise = np.maximum(0, here - previous)
-            loss = np.minimum(
-                moisture // settings.decay_px + moisture * rise // settings.lift_units, moisture
-            )
-            moisture = np.where(
-                sea[row],
-                moisture + (sources.row(row) - moisture) // settings.recharge_px,
-                moisture - loss,
-            )
-            fallen = np.where(sea[row], 0, loss * efficiency[:, row, np.newaxis] // PERMILLE)
-            total[:, row] += fallen * weight[:, row, np.newaxis]
-            previous = here
+    rows, columns = sources.sea.shape
+    for first in range(0, columns, WIND_STRIP):
+        checkpoint()
+        window = slice(first, min(columns, first + WIND_STRIP))
+        found = _native.climate_inflow(
+            _wind_masks(sources, slice(None), window),
+            _wind_water(sources, slice(None)),
+            np.ascontiguousarray(height[:, window]),
+            (np.ascontiguousarray(efficiency), np.ascontiguousarray(weight)),
+            (settings.decay_px, settings.recharge_px, settings.lift_units),
+            equator,
+        )
+        total[:, :, window] += found.reshape(2, window.stop - window.start, rows).transpose(0, 2, 1)
+
+
+def _wind_masks(
+    sources: _Sea, rows: slice, columns: slice
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
+    return (
+        np.ascontiguousarray(sources.sea[rows, columns]),
+        np.ascontiguousarray(sources.off_west[rows, columns]),
+        np.ascontiguousarray(sources.off_east[rows, columns]),
+    )
+
+
+def _wind_water(
+    sources: _Sea, rows: slice
+) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
+    return (
+        np.ascontiguousarray(sources.capacity[:, rows]),
+        np.ascontiguousarray(sources.cold[:, rows]),
+        np.ascontiguousarray(sources.warm[:, rows]),
+    )
 
 
 def seasonal_rainfall(

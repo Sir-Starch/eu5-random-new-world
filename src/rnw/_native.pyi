@@ -8,6 +8,30 @@ from numpy.typing import NDArray
 class LzavError(ValueError): ...
 class TerrainRangeError(ValueError): ...
 
+type ClimateMasks = tuple[NDArray[bool_], NDArray[bool_], NDArray[bool_]]
+type ClimateWater = tuple[NDArray[int64], NDArray[int64], NDArray[int64]]
+
+def climate_sea_run(sea: NDArray[bool_], limit: int, laps: int) -> NDArray[int64]: ...
+def climate_scan(
+    sea: NDArray[bool_], height: NDArray[int64], rates: tuple[int, int, int], laps: int
+) -> NDArray[int64]: ...
+def climate_zonal(
+    masks: ClimateMasks,
+    water: ClimateWater,
+    height: NDArray[int64],
+    weights: ClimateWater,
+    rates: tuple[int, int, int],
+    laps: int,
+) -> NDArray[int64]: ...
+def climate_inflow(
+    masks: ClimateMasks,
+    water: ClimateWater,
+    height: NDArray[int64],
+    weights: tuple[NDArray[int64], NDArray[int64]],
+    rates: tuple[int, int, int],
+    equator: int,
+) -> NDArray[int64]: ...
+
 class RidgeAccumulator:
     def __init__(self, height: int, width: int, scale: int, gain: int) -> None: ...
     def add(self, noise: NDArray[int64], share: int) -> None: ...

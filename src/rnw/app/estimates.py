@@ -26,7 +26,8 @@ CONTEXTS: Final[int] = 16
 # 3: native raster/cell kernels, exact calibration caching and revised stage preparation.
 # 4: moved-map reads start at the island-placement milestone during geography.
 # 5: identities need the biome model, while rivers may still be drawing.
-SCHEMA: Final[int] = 5
+# 6: identical wind transport runs in bounded native strips.
+SCHEMA: Final[int] = 6
 MAX_SECONDS: Final[float] = 86400.0
 # Stages served from the land cache: a hit takes hundredths of a second and says nothing
 # about the cost of the next miss.
