@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Final
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_natives import COUNTRY_DIR
 from rnw.eu5_remap import script_files
-from rnw.eu5_rewrite import prune_setup
+from rnw.eu5_rewrite import prune_setup, retain_country_territory
 from rnw.geography import read_locations
 from rnw.pdx import Block, parse
 from rnw.progress import checkpoint
@@ -34,10 +34,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 GEOGRAPHY: Final[tuple[str, ...]] = ("location", "province", "area", "region", "subcontinent")
-# What a consumer can name: a retired tag, an American key, or state only retired objects set.
+# A consumer can name a retired tag, a replaced key, or state only retired objects set.
 KINDS: Final[tuple[str, ...]] = ("tag", *GEOGRAPHY, "state")
 SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
 DEFINITIONS: Final[str] = "game/in_game/map_data/definitions.txt"
+AMERICAN_FOOTPRINT: Final[frozenset[str]] = frozenset({NEW_WORLD})
 COMMENT: Final[re.Pattern[str]] = re.compile(r"#[^\n]*")
 # An optional scope prefix, the word, and the operator that would make the word a key.
 NAME: Final[str] = r"[A-Za-z_][A-Za-z0-9_]*"
@@ -69,13 +70,13 @@ SCOPES: Final[frozenset[str]] = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class Footprint:
-    """What the generator replaces: American keys by kind and the tags that go with them."""
+    """What the generator replaces: geographic keys by kind and the tags that go with them."""
 
     keys: Mapping[str, frozenset[str]]
     tags: frozenset[str]
 
     def kinds_of(self, word: str) -> tuple[str, ...]:
-        """The geography kinds in which ``word`` is an American key."""
+        """The geographic kinds in which ``word`` names a replaced key."""
         return tuple(kind for kind in GEOGRAPHY if word in self.keys[kind])
 
 
@@ -100,16 +101,23 @@ class Consumer:
         return f"{self.category}:{self.ident}"
 
 
-def read_footprint(game_dir: Path) -> Footprint:
-    """American keys by kind, and the tags whose 1337 setup records go with them.
+def read_footprint(
+    game_dir: Path,
+    *,
+    continents: AbstractSet[str] = AMERICAN_FOOTPRINT,
+    replacement_capitals: Mapping[str, str] | None = None,
+) -> Footprint:
+    """Keys of the selected continents and the tags whose 1337 setup records go with them.
 
     The tags are found as the exporter finds them: a setup record that names a removed
     location or province is removed, a removed record's key joins the removed identifiers
     and so on to a fixed point, and every tag defined by a country file that is among them
-    is retired. Here every American location and province is removed.
+    is retired. The default describes the current American exporter. A regional audit
+    with replacement capitals inventories direct country removals after retaining surviving
+    holdings. It leaves the ruler, dynasty and other setup dependencies for a separate audit.
     """
     locations = [
-        item for item in read_locations(game_dir / DEFINITIONS) if item.continent == NEW_WORLD
+        item for item in read_locations(game_dir / DEFINITIONS) if item.continent in continents
     ]
     keys = {
         "location": frozenset(item.key for item in locations),
@@ -118,11 +126,19 @@ def read_footprint(game_dir: Path) -> Footprint:
         "region": frozenset(item.region for item in locations),
         "subcontinent": frozenset(item.subcontinent for item in locations),
     }
-    setup = {
-        path.name: path.read_text(encoding="utf-8-sig")
-        for path in sorted((game_dir / SETUP_DIR).glob("*.txt"))
-    }
-    result = prune_setup(setup, set(keys["location"]) | set(keys["province"]), {})
+    setup_dir = game_dir / SETUP_DIR
+    removed = set(keys["location"]) | set(keys["province"])
+    if replacement_capitals is None:
+        setup = {
+            path.name: path.read_text(encoding="utf-8-sig")
+            for path in sorted(setup_dir.glob("*.txt"))
+        }
+    else:
+        source = "10_countries.txt"
+        text = (setup_dir / source).read_text(encoding="utf-8-sig")
+        country_setup = retain_country_territory(text, removed, replacement_capitals)
+        setup = {source: country_setup}
+    result = prune_setup(setup, removed, {})
     defined: set[str] = set()
     for path in sorted((game_dir / COUNTRY_DIR).glob("*.txt")):
         text = path.read_text(encoding="utf-8-sig")

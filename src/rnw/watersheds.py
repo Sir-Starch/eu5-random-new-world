@@ -72,12 +72,12 @@ BORDER_PERMILLE: Final[int] = 300
 
 @measured
 def domain_climate(
-    land: NDArray[np.bool_], lakes: NDArray[np.bool_], height: NDArray[np.integer]
+    land: NDArray[np.bool_], lakes: NDArray[np.bool_], height: NDArray[np.integer], *, row0: int = 0
 ) -> ClimateGrid:
     """Rainfall of each season and distance to the sea on a grid ``CLIMATE_STEP`` coarser than
-    the domain, with all but its land and lakes taken as sea. The domain's rows are the game
-    map's (latitudes)."""
-    return climate_grid(~(land | lakes), height, seasonal=True)
+    the domain, with all but its land and lakes taken as sea. ``row0`` locates the first row
+    on the game map to read its latitude."""
+    return climate_grid(~(land | lakes), height, seasonal=True, row0=row0)
 
 
 def _span_rain(rain: NDArray[np.int64], shape: tuple[int, int], left: int) -> NDArray[np.int64]:
@@ -358,7 +358,7 @@ def spacing_grid(  # noqa: PLR0913 - the land, sea, relief and climate, bands, m
     climate: ClimateGrid,
     *,
     sea: NDArray[np.bool_],
-    polar_rows: int,
+    polar_rows: int | tuple[int, int],
     sizes: SizeModel,
     ground: GroundField,
     spacing: int,
@@ -396,7 +396,7 @@ def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea
     climate: ClimateGrid,
     *,
     sea: NDArray[np.bool_],
-    polar_rows: int,
+    polar_rows: int | tuple[int, int],
     sizes: SizeModel,
     ground: GroundField,
     key: int,
@@ -466,12 +466,13 @@ def _land_share(land: NDArray[np.bool_]) -> NDArray[np.int64]:
     return share
 
 
-def _polar(shape: tuple[int, int], polar_rows: int) -> NDArray[np.bool_]:
-    """The blocks of the ``polar_rows`` rows at either edge."""
+def _polar(shape: tuple[int, int], polar_rows: int | tuple[int, int]) -> NDArray[np.bool_]:
+    """The blocks of the north and south polar rows that intersect the domain."""
     polar = np.zeros(shape, dtype=bool)
-    band = -(-polar_rows // DENSITY_STEP) if polar_rows else 0
-    if band:
-        polar[:band] = True
+    north, south = (polar_rows, polar_rows) if isinstance(polar_rows, int) else polar_rows
+    polar[: -(-north // DENSITY_STEP)] = True
+    if south:
+        band = -(-south // DENSITY_STEP)
         polar[-band:] = True
     return polar
 

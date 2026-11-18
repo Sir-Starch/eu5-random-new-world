@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from rnw.eu5_remap import remap_text
-from rnw.eu5_rewrite import prune_setup
+from rnw.eu5_rewrite import prune_setup, retain_country_territory
 from rnw.pdx import parse
 
 
@@ -65,3 +65,66 @@ def test_a_country_retired_in_a_later_pass_does_not_keep_nested_word_edits() -> 
     result = prune_setup(sources, {"gone_city", "gone_area"}, {})
     assert {"actor", "AAA"} <= result.removed_ids
     assert "AAA" not in result.texts["10_countries.txt"]
+
+
+MIXED_COUNTRIES = """countries = { countries = {
+    MIX = {
+        capital = gone_city # Seat of government
+        own_control_core = { gone_city }
+        own_control_integrated = { old_strip kept_city kept_country }
+        own_control_conquered = { held_border }
+        control = { gone_town }
+        government = { type = monarchy }
+    }
+    END = { capital = gone_city own_control_core = { gone_city } }
+    ADJ = { capital = other_city own_control_core = { other_city }
+            our_cores_conquered_by_others = { gone_city } }
+} }
+"""
+REMOVED_LOCATIONS = {"gone_city", "old_strip", "gone_town"}
+
+
+def test_keep_cross_border_ownership_and_reseat_its_capital_before_pruning() -> None:
+    countries = retain_country_territory(MIXED_COUNTRIES, REMOVED_LOCATIONS, {"MIX": "kept_city"})
+    result = prune_setup({"10_countries.txt": countries}, REMOVED_LOCATIONS, {})
+    assert "END" in result.removed_ids
+    assert {"MIX", "ADJ"}.isdisjoint(result.removed_ids)
+    rewritten = result.texts["10_countries.txt"]
+    assert "capital = kept_city # Seat of government" in rewritten
+    holder = parse(rewritten).block("countries", "countries")
+    assert holder is not None
+    kept = holder.block("MIX")
+    assert kept is not None
+    assert kept.block("own_control_core") is None
+    assert kept.block("control") is None
+    lands = kept.block("own_control_integrated")
+    assert lands is not None
+    assert [word.value for word in lands.words()] == ["kept_city", "kept_country"]
+    assert kept.block("own_control_conquered") is not None
+    assert kept.block("government") is not None
+
+
+@pytest.mark.parametrize("new_capital", ["gone_city", "other_city"])
+def test_reject_a_replacement_capital_outside_surviving_holdings(new_capital: str) -> None:
+    with pytest.raises(ValueError, match="MIX needs a replacement capital"):
+        _ = retain_country_territory(MIXED_COUNTRIES, REMOVED_LOCATIONS, {"MIX": new_capital})
+
+
+def test_remove_an_organization_that_loses_its_last_member_in_a_later_pass() -> None:
+    texts = {
+        "15_international_organizations.txt": (
+            "international_organizations = {\n"
+            "add_international_organization = { members = { AAA BBB } }\n"
+            "add_international_organization = { members = { CCC } }\n}\n"
+        ),
+        "10_countries.txt": (
+            "countries = { countries = {\n"
+            "BBB = { capital = replaced_city }\n"
+            "CCC = { capital = retained_city }\n} }\n"
+        ),
+    }
+    result = prune_setup(texts, {"AAA", "replaced_city"}, {})
+    organizations = result.texts["15_international_organizations.txt"]
+    assert "members = { CCC }" in organizations
+    assert "AAA" not in organizations
+    assert "BBB" not in organizations

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final
 from rnw.pdx import Block, Edits, Entry, line_span, parse
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 CLASS_LIST_NAMES: Final[tuple[str, ...]] = (
@@ -26,6 +26,19 @@ CLASS_LIST_NAMES: Final[tuple[str, ...]] = (
     "volcanoes",
     "earthquakes",
 )
+OWNED_LOCATIONS: Final[frozenset[str]] = frozenset(
+    {
+        "own_control_core",
+        "own_control_integrated",
+        "own_control_conquered",
+        "own_control_colony",
+        "own_core",
+    }
+)
+LOCATION_REFERENCES: Final[frozenset[str]] = OWNED_LOCATIONS | {
+    "control",
+    "our_cores_conquered_by_others",
+}
 
 
 def _delete(edits: Edits, text: str, entry: Entry) -> None:
@@ -324,6 +337,70 @@ def _record_holders(root: Block) -> Iterable[Block]:
             yield top.value
 
 
+def retain_country_territory(
+    text: str, removed: set[str], replacement_capitals: Mapping[str, str]
+) -> str:
+    """Keep surviving holdings before setup pruning and validate any required new capital.
+
+    The caller supplies capital choices from its startup plan. Countries whose entire
+    territory goes away still pass to the ordinary dependency pruner.
+    """
+    countries = parse(text).block("countries", "countries")
+    if countries is None:
+        message = "The setup has no countries block"
+        raise ValueError(message)
+    edits = Edits()
+    for entry in countries.entries:
+        if entry.key is None or not isinstance(entry.value, Block):
+            continue
+        body = entry.value
+        kind = body.first("type")
+        if kind is not None and kind.value == "pop":
+            continue
+        owned = _owned_locations(body)
+        retained = owned - removed
+        if not retained:
+            continue
+        for child in body.entries:
+            if child.key in LOCATION_REFERENCES and isinstance(child.value, Block):
+                _cut_location_words(text, child, removed, edits)
+        capital = body.first("capital")
+        if capital is not None and isinstance(capital.value, str) and capital.value in removed:
+            replacement = replacement_capitals.get(entry.key)
+            if replacement is None or replacement not in retained:
+                message = f"{entry.key} needs a replacement capital in its retained territory"
+                raise ValueError(message)
+            offset = capital.end - len(capital.value)
+            edits.deletions.append((offset, capital.end))
+            edits.insert(offset, replacement)
+    return edits.apply(text)
+
+
+def _owned_locations(country: Block) -> set[str]:
+    return {
+        word.value
+        for entry in country.entries
+        if entry.key in OWNED_LOCATIONS and isinstance(entry.value, Block)
+        for word in entry.value.words()
+        if isinstance(word.value, str)
+    }
+
+
+def _cut_location_words(text: str, field: Entry, removed: set[str], edits: Edits) -> None:
+    if not isinstance(field.value, Block):
+        return
+    gone = [
+        word
+        for word in field.value.words()
+        if isinstance(word.value, str) and word.value in removed
+    ]
+    if gone and len(gone) == len(field.value.entries):
+        _delete(edits, text, field)
+    else:
+        for word in gone:
+            edits.delete(word)
+
+
 def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup files.
     texts: dict[str, str],
     removed: set[str],
@@ -424,6 +501,7 @@ def _prune_members(
     gone = [item for item in items if item.value in ids]
     others = [entry for entry in block.entries if entry is not members]
     if (items and len(gone) == len(items)) or any(mentions(entry, ids) for entry in others):
+        words.difference_update((item.start, item.end) for item in gone)
         doomed.add((record.start, record.end))
         return True
     before = len(words)

@@ -2,7 +2,9 @@
 
 The owner confirmed the player-facing scope on 2026-11-18. The architecture below
 is the proposed implementation. The end-to-end performance budget will be agreed
-after measuring a prototype on the development machine.
+after measuring a prototype on the development machine. The
+[first geography prototype](../experiments/071-continent-geography/README.md)
+records the four initial timing cases and the startup data audit.
 
 ## What the player chooses
 
@@ -54,8 +56,8 @@ land on both sides keeps its surviving locations. The proposed handling keeps
 its tag and institutions on that land and moves its capital to a valid surviving
 location when required. This needs an explicit setup rule because the current
 pruner can remove the entire record. On the installed EU5 1.4.9 build 26655995,
-the 1337 records give Morocco four locations in Europe and the Mamluks 74 in
-Asia. Both records also hold African land. [V-LOCAL]
+the 1337 records give Morocco four locations in Europe and the Mamluks 75 in
+Asia, including one conquered location. Both records also hold African land. [V-LOCAL]
 
 ## One generation pipeline
 

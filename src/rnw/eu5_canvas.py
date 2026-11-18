@@ -136,7 +136,8 @@ def moved_pixels(canvas: Canvas) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     return np.concatenate(rows), np.concatenate(columns)
 
 
-def _roll_for(columns_used: NDArray[np.bool_]) -> int:
+def roll_for(columns_used: NDArray[np.bool_]) -> int:
+    """Place the raster cut in the widest gap between occupied columns."""
     """Roll that moves the centre of the widest unused column run to column 0."""
     width = columns_used.size
     doubled = np.concatenate([columns_used, columns_used])
@@ -344,7 +345,7 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
     new_world = continents == NEW_WORLD
     ocean = np.isin(continents, list(OCEANS))
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
-    roll = _roll_for(new_world[game_map.labels].any(axis=0))
+    roll = roll_for(new_world[game_map.labels].any(axis=0))
     rolled = np.roll(game_map.labels, roll, axis=1)
     inside_new = new_world[rolled]
     band = max(1, EXPANDED_BAND_PX * rolled.shape[1] // REFERENCE_WIDTH) if expanded else band_px

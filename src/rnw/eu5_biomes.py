@@ -316,6 +316,7 @@ class ClimateGrid:
     # The winter's share of ``rain`` (epoch 64, ``seasonal_rainfall``); None: the yearly zonal
     # rain alone.
     winter: NDArray[np.int64] | None = None
+    row0: int = 0
 
 
 def land_weights(columns: int) -> tuple[int, ...]:
@@ -354,7 +355,7 @@ def _block_means(
 
 
 def climate_grid(
-    sea: NDArray[np.bool_], height: NDArray[np.integer], *, seasonal: bool = False
+    sea: NDArray[np.bool_], height: NDArray[np.integer], *, seasonal: bool = False, row0: int = 0
 ) -> ClimateGrid:
     """Rainfall, distance to the sea (land) and distance to land (water), in pixels; with
     ``seasonal`` (epoch 64) the rain of the summer and the winter (``seasonal_rainfall``)."""
@@ -363,11 +364,11 @@ def climate_grid(
     sea_grid = share >= 500  # noqa: PLR2004 - half
     height_grid = np.maximum(mean, SEA_HEIGHT)
     del share, mean
-    rows = np.arange(sea_grid.shape[0], dtype=np.int64) * step + step // 2
+    rows = np.arange(sea_grid.shape[0], dtype=np.int64) * step + step // 2 + row0
     winter = None
     if seasonal:
         summer, winter = seasonal_rainfall(
-            sea_grid, height_grid, latitude_tenths(rows), EQUATOR_ROW // step, SEASONAL
+            sea_grid, height_grid, latitude_tenths(rows), (EQUATOR_ROW - row0) // step, SEASONAL
         )
         rain = summer + winter
         del summer
@@ -375,7 +376,7 @@ def climate_grid(
         rain = rainfall(sea_grid, height_grid, latitude_tenths(rows), RAIN)
     coast = distance_from(sea_grid, COAST_LIMIT, octagonal=True).astype(np.int64) * step
     shore = distance_from(~sea_grid, COAST_LIMIT, octagonal=True).astype(np.int64) * step
-    return ClimateGrid(rain=rain, coast=coast, shore=shore, winter=winter)
+    return ClimateGrid(rain=rain, coast=coast, shore=shore, winter=winter, row0=row0)
 
 
 def _sample(grid: NDArray[np.int64], points: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -394,7 +395,12 @@ def land_features(
     location-scale relief field, so the two would not be comparable.
     """
     rain = _sample(grid.rain, points)
-    columns = [latitude_tenths(points[:, 0]), rain, mean_height, _sample(grid.coast, points)]
+    columns = [
+        latitude_tenths(points[:, 0] + grid.row0),
+        rain,
+        mean_height,
+        _sample(grid.coast, points),
+    ]
     if grid.winter is not None:
         winter = _sample(grid.winter, points)
         columns[1] = rain_root(rain - winter)
@@ -404,7 +410,9 @@ def land_features(
 
 def water_features(grid: ClimateGrid, points: NDArray[np.int64]) -> NDArray[np.int64]:
     """Latitude and distance to land per water location."""
-    return np.stack([latitude_tenths(points[:, 0]), _sample(grid.shore, points)], axis=1)
+    return np.stack(
+        [latitude_tenths(points[:, 0] + grid.row0), _sample(grid.shore, points)], axis=1
+    )
 
 
 def _standardize(
@@ -732,7 +740,7 @@ def block_features(
         rain = rain_root(rain - winter)
         winter = rain_root(winter)
     found = count > 0
-    centres = np.arange(shape[0], dtype=np.int64) * step + step // 2
+    centres = np.arange(shape[0], dtype=np.int64) * step + step // 2 + grid.row0
     latitude = np.broadcast_to(latitude_tenths(centres)[:, np.newaxis], shape)
     columns = [latitude[found], rain[found], (total // np.maximum(count, 1))[found], coast[found]]
     if winter is not None:

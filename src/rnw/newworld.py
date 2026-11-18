@@ -1054,6 +1054,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     settings: NewWorldSettings,
     seam: int | None,
     sizes: SizeModel | None,
+    map_rows: tuple[int, int] | None = None,
     hints: ReliefHints | None = None,
     spread: NDArray[np.int16] | None = None,
     algorithm: int = epoch.CURRENT,
@@ -1073,18 +1074,20 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
             "Cells of this epoch are spaced by the game's locations; the size model is missing"
         )
         raise ValueError(message)
+    row0, map_height = (0, land.shape[0]) if map_rows is None else map_rows
     try:
         plan = plan_drainage(land, relief, lakes=lakes, seam=seam, seed=seed)
         if algorithm >= epoch.BASINS:
             shape_relief(relief, land, plan, seed=seed, hints=hints, spread=spread)
-        climate = domain_climate(land, lakes, relief)
+        climate = domain_climate(land, lakes, relief, row0=row0)
         rivers = domain_rivers(land, plan, lakes=lakes, rain=climate.rain, seed=seed)
     except RiverGenerationError as error:
         raise ValueError(str(error)) from error
     walls = border_rivers(rivers)
     del rivers
     spacing = settings.location_px
-    band = min(land.shape[0] // 4, 6 * spacing)
+    band = min(map_height // 4, 6 * spacing)
+    polar = (max(0, band - row0), max(0, band - (map_height - row0 - land.shape[0])))
     # The sizes are voted on the height the decals will show (epoch 64, ``epoch.ROUGH_HILLS``), as
     # the ground of the cells will be (``eu5_terrain.surface_heights``).
     surface = land_surface(land, relief, seed=seed) if algorithm >= epoch.ROUGH_HILLS else relief
@@ -1102,7 +1105,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
             surface,
             climate,
             sea=sea,
-            polar_rows=band,
+            polar_rows=polar,
             sizes=sizes,
             ground=ground,
             spacing=spacing,
@@ -1116,7 +1119,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         surface,
         climate,
         sea=sea,
-        polar_rows=band,
+        polar_rows=polar,
         sizes=sizes,
         ground=ground,
         key=derive_seed(seed, "nw_land_density"),
@@ -1263,6 +1266,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     algorithm: int = epoch.CURRENT,
     seam: int | None = None,
     sizes: SizeModel | None = None,
+    map_rows: tuple[int, int] | None = None,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
@@ -1284,6 +1288,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
 
     Cells belong to this continuous canvas. Projecting it across the game's raster
     boundary must retain each cell's identity on both sides, just as vanilla does.
+    ``map_rows`` is the first global row and the height of the global raster when
+    the domain is vertically cropped. Latitude and the polar bands use the map's rows.
 
     The land cells, the sea cells and the relief depend only on the masks, so they are
     built beside each other when the machine has the cores and the memory for it.
@@ -1300,6 +1306,10 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     ``eu5_biomes.size_model``; required from that epoch) and grown with the larger rivers as
     borders, and the wobble leaves those borders on their rivers.
     """
+    row0, map_height = (0, domain.shape[0]) if map_rows is None else map_rows
+    if not 0 <= row0 < row0 + domain.shape[0] <= map_height:
+        message = "The generation domain rows are outside the map"
+        raise ValueError(message)
     land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage, template, lakes_drawn)
     whole = domain
     # Retained ocean islands stay in the open ocean, never in a new inland sea.
@@ -1388,6 +1398,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                     settings=settings,
                     seam=seam,
                     sizes=sizes,
+                    map_rows=(row0, map_height),
                     hints=hints,
                     spread=spread,
                     algorithm=algorithm,
@@ -1432,7 +1443,12 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
         kinds[index] = CellClass.WASTELAND
     # Every land location touching a polar map edge is impassable, including
     # drawn worlds and the Wall. The shelves remain playable.
-    polar = np.unique(labels[[0, -1], :])
+    polar_edges = [
+        edge
+        for edge, at_pole in ((0, row0 == 0), (-1, row0 + labels.shape[0] == map_height))
+        if at_pole
+    ]
+    polar = np.unique(labels[polar_edges, :])
     for index in polar.tolist():
         if index >= 0 and kinds[index] is CellClass.LAND:
             kinds[index] = CellClass.WASTELAND
