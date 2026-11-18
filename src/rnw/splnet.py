@@ -38,6 +38,8 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import _native
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
@@ -194,11 +196,15 @@ def parse(data: bytes) -> SplineNetwork:
     anchors, anchor_xy, point_xy = _points(reader, points)
     reader.expect(CLOSE)
     reader.start(KEY_SEGMENTS)
-    segment_list = [_segment(reader, number) for number in range(segments)]
-    reader.expect(CLOSE)
-    reader.start(KEY_STRIPS)
-    strip_map = _strips(reader, strips, segments)
-    reader.expect(CLOSE)
+    try:
+        raw_segments, raw_strips, reader.offset = _native.spline_lists(
+            bytes(reader.data), reader.offset, segments, strips
+        )
+    except _native.SplineReadError as error:
+        raise SplineError(str(error)) from error
+    segment_list = [tuple(members) for members in raw_segments]
+    strip_map = {ident: tuple(refs) for ident, refs in raw_strips}
+    del raw_segments, raw_strips
     if reader.offset != len(data):
         message = f"Spline network: {len(data) - reader.offset} bytes follow the last list"
         raise SplineError(message)
@@ -227,45 +233,6 @@ def _points(
     xy = np.stack([block["x"], block["y"]], axis=1).astype(np.float32)
     anchored = ids < POINT_FLAG
     return ids[anchored], xy[anchored], xy[~anchored]
-
-
-def _segment(reader: _Reader, number: int) -> tuple[int, ...]:
-    reader.expect(OPEN, KEY_ID, EQUALS, I64)
-    ident = reader.number("<q")
-    if ident != number << SEGMENT_SHIFT:
-        message = f"Spline network: segment {number} has the id {ident}"
-        raise SplineError(message)
-    reader.start(KEY_POINT_IDS)
-    members: list[int] = []
-    while reader.peek() == U32:
-        reader.expect(U32)
-        members.append(reader.number("<I"))
-    reader.expect(CLOSE, CLOSE)
-    return tuple(members)
-
-
-def _strips(reader: _Reader, count: int, segments: int) -> dict[int, tuple[int, ...]]:
-    found: dict[int, tuple[int, ...]] = {}
-    previous = -1
-    for _ in range(count):
-        reader.expect(OPEN, KEY_ID, EQUALS, I64)
-        ident = reader.number("<q")
-        if ident <= previous:
-            message = "Spline network: the strips are not sorted by unique id"
-            raise SplineError(message)
-        previous = ident
-        reader.start(KEY_SEGMENT_IDS)
-        refs: list[int] = []
-        while reader.peek() == I64:
-            reader.expect(I64)
-            ref = reader.number("<q")
-            if ref % (1 << SEGMENT_SHIFT) or not 0 <= ref >> SEGMENT_SHIFT < segments:
-                message = f"Spline network: a strip names the segment {ref}, which does not exist"
-                raise SplineError(message)
-            refs.append(ref >> SEGMENT_SHIFT)
-        reader.expect(CLOSE, CLOSE)
-        found[ident] = tuple(refs)
-    return found
 
 
 def check(network: SplineNetwork) -> None:

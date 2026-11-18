@@ -333,3 +333,41 @@ def test_independent_preparation_uses_the_stage_pool_without_announcing_another_
         finished = stages.submit("texts", lambda: prepared.result() + 1)
         assert finished.result(timeout=5) == 43
     assert {update.stage for update in updates} == {"texts"}
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_shared_preparation_failure_reaches_both_consumers(workers: int) -> None:
+    error = ValueError("failed biome model")
+
+    def fail() -> int:
+        raise error
+
+    with parallel.Stages(workers) as stages:
+        prepared = stages.prepare("biome readings", fail)
+        consumers = [stages.prepare("consumer", prepared.result) for _ in range(2)]
+        for consumer in consumers:
+            with pytest.raises(ValueError, match="failed biome model") as caught:
+                _ = consumer.result(timeout=5)
+            assert caught.value is error
+
+
+def test_shared_readings_allow_an_independent_consumer_before_the_other_finishes() -> None:
+    river_started, identity_ready = threading.Event(), threading.Event()
+    with parallel.Stages(2) as stages:
+        prepared = stages.prepare("biome readings", lambda: 42)
+
+        def river() -> int:
+            biomes = prepared.result()
+            river_started.set()
+            assert identity_ready.wait(5)
+            return biomes
+
+        def identity() -> int:
+            biomes = prepared.result()
+            assert river_started.wait(5)
+            identity_ready.set()
+            return biomes
+
+        rivers = stages.prepare("rivers", river)
+        identities = stages.prepare("identities", identity)
+        assert identities.result(timeout=5) == rivers.result(timeout=5) == 42

@@ -18,6 +18,7 @@ SKIPPED: Final[tuple[str, ...]] = (
     "settle coasts",
     "water shapes",
     "water textures",
+    "biome readings",
     "biomes and rivers",
     "identities",
     "world checks",

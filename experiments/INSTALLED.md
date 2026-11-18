@@ -6,6 +6,20 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-18, **1.3.0 development / epoch 64 — native spline lists and shared biome readiness** (C543).
+[V-EXEC] Updated the generator-only hub after exact native list parsing and allowing identities
+to read completed biomes while rivers finish. Locked checks pass (3,543 Python checks,
+22 optional skips, 35 Rust checks); installed-game references 61–64 reproduce their goldens
+(19 checks, one optional skip). All 884 reported-world files, inputs, atlas and previews remain
+identical; existing worlds are reused. The cold 187.7-second result is one run, with the
+time targets still open. Another 1,443 synthetic parser cases match Linux and packaged Windows.
+Both Wine offscreen self-tests and all-file installation verification pass. Candidate:
+`local_data/hub-updates/1.3.0-performance-1794932990738749748/rnw_exp_hub`; previous hub:
+`.rnw-hub-backups/1.3.0-1794984959478530098`. Windows wheel SHA-256:
+`f531ca4485c95804f171d0884e0788cdbfb97522a379242074e3326300c34316`; window
+`9b6648c70db0e2c794a96165f18bcc73ab0b12ce8b6745d83e14b6bd26ba15da`; launcher unchanged
+(`49674400…6932`). No EU5 launch/control or changes to worlds, saves, playsets or preferences.
+
 2026-11-17, **1.3.0 development / epoch 64 — direct wrapped raster reads** (C542).
 [V-EXEC] Updated the generator-only hub after replacing rolled/column-major strip temporaries
 with direct row-major reads. Locked checks pass (3,522 Python checks, 22 optional skips,

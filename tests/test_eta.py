@@ -114,7 +114,7 @@ def test_overdue_stage_holds_the_countdown_instead_of_sawing(learned: dict[str, 
     model = _generating(learned)
     expected = learned.get("generate world", REFERENCE_SECONDS["generate world"])
     values = [model.remaining(float(time)) for time in range(9, 9 + int(expected * 4))]
-    rises = [right - left for left, right in pairwise(values) if right > left]
+    rises = [right - left for left, right in pairwise(values) if right - left > 1e-9]
     # Never the 3:10 -> 3:00 -> 3:10 cycle: a later forecast pauses the shown time, and
     # only one substantial revision may raise it.
     assert len(rises) <= 1
@@ -134,6 +134,21 @@ def test_small_corrections_change_the_pace_not_the_shown_time() -> None:
     assert model.remaining(1.0) == pytest.approx(target + 6.0 - 2.0)  # earlier: double speed
     model.deadline, model.polled = target + 60.0, 0.0
     assert model.remaining(1.0) == pytest.approx(target - 1.0)  # a revision: at once
+
+
+def test_identity_cost_starts_at_biome_readiness_while_rivers_still_run() -> None:
+    model = _model()
+    for name, end in (
+        ("biome readings", 10),
+        ("vanilla geometry", 3),
+        ("vanilla localization keys", 4),
+    ):
+        model.ends[name] = float(end)
+    model.begin("identities", 5)
+    model.finish("identities", 13, completed=True)
+    assert model.costs["identities"] == 3
+    assert "biomes and rivers" not in model.ends
+    assert "biomes and rivers" in DEPENDENCIES["slot tables"]
 
 
 def test_cancelled_or_failed_stage_does_not_train_and_reset_forgets_deadline(

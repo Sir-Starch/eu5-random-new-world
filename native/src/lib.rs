@@ -18,6 +18,7 @@ pub mod raster;
 pub mod relief;
 pub mod slots;
 pub mod spacing;
+pub mod splnet;
 pub mod terrain;
 pub mod tiles;
 pub mod voronoi;
@@ -32,6 +33,7 @@ use pyo3::prelude::*;
 pyo3::create_exception!(_native, LzavError, pyo3::exceptions::PyValueError);
 pyo3::create_exception!(_native, TerrainRangeError, pyo3::exceptions::PyValueError);
 pyo3::create_exception!(_native, PdxSyntaxError, pyo3::exceptions::PyValueError);
+pyo3::create_exception!(_native, SplineReadError, pyo3::exceptions::PyValueError);
 
 fn object_fault(fault: objects::Fault) -> PyErr {
     let message = match fault {
@@ -62,7 +64,21 @@ mod _native {
     #[pymodule_export]
     use super::PdxSyntaxError;
     #[pymodule_export]
+    use super::SplineReadError;
+    #[pymodule_export]
     use super::TerrainRangeError;
+
+    #[pyfunction]
+    fn spline_lists(
+        py: Python<'_>,
+        data: &[u8],
+        offset: usize,
+        segments: i32,
+        strips: i32,
+    ) -> PyResult<splnet::Lists> {
+        py.detach(|| splnet::parse(data, offset, segments, strips))
+            .map_err(SplineReadError::new_err)
+    }
 
     #[pyclass]
     struct PdxParser {

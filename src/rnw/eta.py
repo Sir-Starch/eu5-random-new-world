@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 # Topological order. The island-placement milestone makes the relocated vanilla map
 # available during geography. The main thread still waits for the complete world and
 # its checks before exporting; terrain and scripts join at write files.
-MILESTONES: Final[frozenset[str]] = frozenset({"island placements"})
+MILESTONES: Final[frozenset[str]] = frozenset({"island placements", "biome readings"})
 DEPENDENCIES: Final[dict[str, tuple[str, ...]]] = {
     "load map": (),
     "select canvas": ("load map",),
@@ -35,10 +35,11 @@ DEPENDENCIES: Final[dict[str, tuple[str, ...]]] = {
     "settle coasts": ("land character",),
     "water shapes": ("settle coasts",),
     "water textures": ("water shapes",),
-    "biomes and rivers": ("water shapes", "vanilla climate"),
-    "identities": ("biomes and rivers", "vanilla geometry", "vanilla localization keys"),
+    "biome readings": ("water shapes", "vanilla climate"),
+    "biomes and rivers": ("biome readings",),
+    "identities": ("biome readings", "vanilla geometry", "vanilla localization keys"),
     "world checks": ("identities",),
-    "slot tables": ("world checks", "vanilla material levels"),
+    "slot tables": ("world checks", "biomes and rivers", "vanilla material levels"),
     "location rasters": ("slot tables",),
     "png encoding": ("location rasters",),
     "terrain decals": ("location rasters",),
@@ -72,7 +73,8 @@ REFERENCE_SECONDS: Final[dict[str, float]] = {
     "water shapes": 3.6,
     "water textures": 15.4,
     "world checks": 1.6,
-    "biomes and rivers": 20.9,
+    "biome readings": 3.0,
+    "biomes and rivers": 17.9,
     "identities": 7.9,
     "slot tables": 0.1,
     "location rasters": 2.0,

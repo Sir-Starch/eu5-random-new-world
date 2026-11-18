@@ -1,6 +1,6 @@
 # Generation performance plan
 
-**Status:** Implementation in progress, 2026-11-17. The owner requires substantially faster generation with
+**Status:** Implementation in progress, 2026-11-18. The owner requires substantially faster generation with
 unchanged algorithm logic and quality, including rewriting hot paths in Rust where useful.
 The first native kernels and exact calibration cache are implemented; the time targets remain open.
 It follows [ADR 0005](adr/0005-native-core.md), [ADR 0006](adr/0006-machine-resources.md)
@@ -246,7 +246,8 @@ arithmetic and exact neighbour queries; and moved-map preparation as soon as imm
 placements exist. The generator releases the original map's full rasters at that milestone.
 The size-model cache validates content hashes and directory inventories and replays its input
 dependencies. It contains no generated geography. Both windows credit completed geography
-subpasses; the ETA graph includes placement readiness, with timing schema 4.
+subpasses; the ETA graph includes placement readiness and, since C543, biome readiness
+(timing schema 5).
 
 The controlled service runs include verification, writing and installation into fresh,
 isolated profiles. Each uses a 31-thread budget and four stage slots. Filesystem caches and
@@ -328,8 +329,33 @@ offscreen self-tests and is installed with a verified backup. Packed-frontier an
 noise-table prototypes remain private: their selected replays did not establish a useful
 whole-kernel gain.
 
-**The 180/120-second targets are not met.** The measured gaps are about 41 s cold and 82 s
-with static inputs cached. Further work must reduce the society → texts → verification
+[V-EXEC C543] The tagged spline segment/strip lists now use a native cursor. Records,
+first structural errors and byte offsets match the original Python reader; point-table
+float bits, semantic validators and the writer stay unchanged. Three alternating installed-file
+replays give medians **0.751 s → 0.223 s**; both readers round-trip its 31,615,438 bytes exactly.
+Another 1,443 valid/malformed synthetic cases have the same Linux/packaged-Windows digest.
+Identity planning now shares the completed biome-model future with the river stage, so it
+need not wait for rivers. The same bounded pool propagates failures to both consumers and
+keeps the one-worker sequence. The shared climate grid is released after both consumers.
+
+The full cold service run `spline-ready-31-1` takes **187.7 s**, peaking at **8.80 GiB**,
+with the same 31-thread/four-slot budget and no simultaneous agent validation. All 884
+world files, input hashes, atlas and previews remain identical. This is **one run**, not a
+new three-run median. The preceding row-major implementation also has a later clean
+single run at 195.1 s / 8.48 GiB; neither replaces the controlled 221.0-second median above.
+Locked checks pass 3,543 Python tests (22 skips) and 35 Rust tests. The installed-game suite
+again passes 19 checks (one optional skip), including reference epochs 61–64. The Windows
+hub passes both offscreen self-tests and is installed with all-file verification and a backup.
+
+Private alternatives remain unselected: the linear distance envelope slows typical dense
+fields; its uniform-row shortcut scarcely changes a real decal replay. A combined history
+process/early-spline trial reproduces the world but takes 189.9 s, and early physical rivers
+take 186.6 s. Those single-run differences do not justify their added scheduling complexity.
+No process offload, affinity restriction or early-river path was added to the product.
+
+**The 180/120-second targets remain open.** The latest cold single run is about 8 s above
+its target; the static-warm new-seed case has not been remeasured for C543 (the earlier
+201.9-second observation is about 82 s above its target). Further work must reduce the society → texts → verification
 critical path as well as the remaining raster work. The serial history replay contains the
 same 60 rounds and 60,463 events in the captured reported case; isolated profiling identifies
 proposal construction/eligibility, contact indexes, snapshot validation and repeated immutable

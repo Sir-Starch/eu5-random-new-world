@@ -13,7 +13,8 @@ worlds and saves are not rewritten or migrated.
   subpasses and estimate time from the measured dependency graph.
   Read script inputs natively with the same grammar, character spans and strict errors.
   Read wrapped raster windows directly in memory order, without rolling and transposing
-  whole strips before the native kernels.
+  whole strips before the native kernels. Read road-network lists natively with identical
+  records and errors, and start identity planning when biomes are ready while rivers finish.
 
 - Make the **wastelands of a New World more than mountains**. Up to 1.2.2 the highest cells of the
   relief were the impassable locations, so every wasteland was a mountain, while the game's own map

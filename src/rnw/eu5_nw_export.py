@@ -3273,7 +3273,7 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
         def identify() -> tuple[KeySpace, Plan]:
             loc_keys = KeySpace(localization.result() | static_hashes())
             geometry = geometries.result()
-            biomes = weathering.result()[0]
+            biomes = biome_readings.result()[0]  # noqa: F821 - released after both consumers
             physical = physical_keys(
                 game_map,
                 hierarchy,
@@ -3320,12 +3320,8 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
 
         water = stages.submit("water textures", build_water)
 
-        def weather() -> tuple[
-            CellBiomes,
-            dict[str, object],
-            tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]],
-        ]:
-            biomes, biome_stats, climate = _biome_model(
+        def read_biomes() -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
+            found = _biome_model(
                 game_map,
                 canvas=canvas,
                 world=world,
@@ -3338,6 +3334,20 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
                 material_seed=resources_seed,
                 land=land_biomes,
             )
+            mark_ready("biome readings")
+            return found
+
+        # Identities read the finished biome model, not the rivers. Submit its shared
+        # future first so errors (including cancellation) reach both consumers and a
+        # one-worker export keeps the original sequential order.
+        biome_readings = stages.prepare("biome readings", read_biomes)
+
+        def weather() -> tuple[
+            CellBiomes,
+            dict[str, object],
+            tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]],
+        ]:
+            biomes, biome_stats, climate = biome_readings.result()  # noqa: F821 - released after both consumers
             return biomes, biome_stats, _rivers(world, canvas, climate, seed, settings.algorithm)
 
         weathering = stages.submit("biomes and rivers", weather)
@@ -3363,6 +3373,8 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
             removed -= plan.oceans.retained
         _check_identity_budget(game_map, removed, plan)
         biomes, biome_stats, (river_codes, carved, river_stats) = weathering.result()
+        # The future also held the full climate grid, which neither consumer needs now.
+        del biome_readings
         slot_tables, slot_stats = run_stage(
             "slot tables",
             lambda: _slot_tables(game_map, vanilla_attributes, biomes, game_dir, levels.result()),

@@ -25,7 +25,8 @@ CONTEXTS: Final[int] = 16
 # 2: the vanilla reads follow the generated world, so schema 1 costs included its time.
 # 3: native raster/cell kernels, exact calibration caching and revised stage preparation.
 # 4: moved-map reads start at the island-placement milestone during geography.
-SCHEMA: Final[int] = 4
+# 5: identities need the biome model, while rivers may still be drawing.
+SCHEMA: Final[int] = 5
 MAX_SECONDS: Final[float] = 86400.0
 # Stages served from the land cache: a hit takes hundredths of a second and says nothing
 # about the cost of the next miss.

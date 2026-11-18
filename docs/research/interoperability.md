@@ -106,6 +106,16 @@ Path: `game/in_game/gfx/map/spline_network/spline_network.splnet`, 31,615,438 by
 - [UNKNOWN] The record explains the technical reason for preserving Old World strips but does not resolve protection of those particular contents or the permission for their local reproduction. General UGC permission (P1) is relevant; technical necessity and private output alone do not establish the answer. No conclusion of infringement is made either.
 - A game patch that changes the file stops the build (`parse` refuses an unknown format number, numbering or reference) and the file is made anew from the patched installation.
 
+### R-001 follow-up: native list cursor (2026-11-17, 1.3.0 development)
+
+The segment and strip list cursor now runs in Rust on the same immutable bytes. It reads
+the same little-endian tokens and identifiers, preserves list order and reports the same
+first structural error and byte offset. It allocates from actual records, not declared
+counts. The NumPy point-table reader, float bits, complete semantic checks and writer are
+unchanged. Synthetic truncations, byte mutations and hostile counts compare with the
+original Python cursor; installed-file round trips remain the compatibility check. This
+adds no format, syntax, dependency or distribution route; game-derived evidence stays local.
+
 ### R-001 follow-up: hierarchy assignment in N5 (2026-10-24, 0.11.4)
 
 [V-EXEC] N5 changes the generated hierarchy order, which also changes the one-based
