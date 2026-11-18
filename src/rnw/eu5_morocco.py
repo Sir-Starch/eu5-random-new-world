@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from rnw.eu5_natives import country_records, map_colors, new_tags
@@ -15,6 +14,7 @@ from rnw.eu5_rewrite import (
 from rnw.eu5_start import Country
 from rnw.pdx import Block, Edits, parse
 from rnw.rng import derive_seed
+from rnw.settings import DEFAULT_MOROCCO_POLICY, MoroccoPolicy
 from rnw.societies import STATE
 
 if TYPE_CHECKING:
@@ -31,18 +31,6 @@ AFRICAN_HOLDINGS: Final[int] = 86
 COUNTRIES_FILE: Final[str] = "10_countries.txt"
 COUNTRIES_BLOCK: Final[tuple[str, ...]] = ("countries", "countries")
 type Point = tuple[int, int]
-
-
-class MoroccoPolicy(StrEnum):
-    """Selectable results for the 1337 start when Africa is generated."""
-
-    RESTORE = "restore"
-    EMIRATE = "emirate"
-    CASTILE = "castile"
-    GRANADA = "granada"
-
-
-DEFAULT_MOROCCO_POLICY: Final[MoroccoPolicy] = MoroccoPolicy.RESTORE
 
 
 class MoroccoError(ValueError):

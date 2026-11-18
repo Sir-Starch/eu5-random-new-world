@@ -10,7 +10,6 @@ from rnw.eu5_morocco import (
     COUNTRIES_BLOCK,
     COUNTRIES_FILE,
     IBERIAN_HOLDINGS,
-    MoroccoPolicy,
     algeciras,
     apply_morocco_start,
     plan_morocco,
@@ -24,6 +23,7 @@ from rnw.geography import read_locations
 from rnw.loc_keys import KeySpace, key_hashes
 from rnw.model import CellClass
 from rnw.pdx import Block, parse
+from rnw.settings import MoroccoPolicy
 
 if TYPE_CHECKING:
     from pathlib import Path

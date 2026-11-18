@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass, fields, replace
+from enum import StrEnum
 from typing import TYPE_CHECKING, Final, cast
 
 from rnw.epoch import CURRENT as ALGORITHM
@@ -25,6 +26,22 @@ WINDOW_SIZE: Final[int] = 4
 
 class SettingsError(ValueError):
     """Settings are unknown, mistyped or out of range."""
+
+
+class MoroccoPolicy(StrEnum):
+    """Selectable results for the 1337 start when Africa is generated."""
+
+    RESTORE = "restore"
+    EMIRATE = "emirate"
+    CASTILE = "castile"
+    GRANADA = "granada"
+
+
+DEFAULT_MOROCCO_POLICY: Final[MoroccoPolicy] = MoroccoPolicy.RESTORE
+REGIONAL_PRESETS: Final[dict[str, tuple[str, int]]] = {
+    "africa": ("supercontinent", 820),
+    "oceania": ("archipelago", 560),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,6 +242,45 @@ NATIVES: Final[NativeSettings] = NativeSettings(
     # its fantasy setting.
     empire_permille=250,
 )
+REGIONAL_STATE_SHARE: Final[dict[str, int]] = {"africa": 443, "oceania": 24}
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalSettings:
+    """One enabled continent's independent generation controls."""
+
+    key: str
+    preset: str
+    new_world: NewWorldSettings
+    natives: NativeSettings
+    resources: tuple[tuple[str, int], ...] = ()
+    morocco: MoroccoPolicy | None = None
+
+    def document(self) -> dict[str, object]:
+        data: dict[str, object] = {
+            "preset": self.preset,
+            "new_world": asdict(self.new_world),
+            "natives": asdict(self.natives),
+        }
+        if self.resources:
+            data["resources"] = dict(self.resources)
+        if self.morocco is not None:
+            data["morocco"] = self.morocco.value
+        return data
+
+
+@dataclass(frozen=True, slots=True)
+class ContinentSettings:
+    """Legacy American controls remain at the root; additional regions are independent."""
+
+    america: bool = True
+    regions: tuple[RegionalSettings, ...] = ()
+
+    def document(self) -> dict[str, object]:
+        return {
+            "america": self.america,
+            **{region.key: region.document() for region in self.regions},
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,12 +300,17 @@ class Settings:
     # (a code and a record carry it as the release and the ``algorithm``), so it is no part of
     # the document and of no digest of it. Whoever asks for an older epoch passes it here.
     algorithm: int = ALGORITHM
+    continents: ContinentSettings = ContinentSettings()
 
     def to_json_data(self) -> dict[str, object]:
         """Return the schema-tagged document; no rolls are written while all are 0, so that the
         document, and every digest of it, is what it was before rolls existed."""
         data = cast("dict[str, object]", asdict(self))
         del data["algorithm"]
+        if self.continents == ContinentSettings():
+            del data["continents"]
+        else:
+            data["continents"] = self.continents.document()
         coast = cast("dict[str, object]", data["coast"])
         coast["window"] = list(self.coast.window)
         # Keep pre-Wall settings documents byte-identical, including old world codes.
@@ -600,6 +661,105 @@ def _merge[
     return replace(base, **changes)
 
 
+def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings:
+    fallback, band = REGIONAL_PRESETS[key]
+    allowed = {"preset", "new_world", "natives", "resources"}
+    if key == "africa":
+        allowed.add("morocco")
+    if unknown := fields_.keys() - allowed:
+        message = f"Unknown {key} settings: {', '.join(sorted(unknown))}"
+        raise SettingsError(message)
+    preset = fields_.get("preset", fallback)
+    if not isinstance(preset, str) or preset not in PRESETS or preset in {"wall", "omerika"}:
+        message = f"Invalid {key} preset: {preset}"
+        raise SettingsError(message)
+    base = PRESETS[preset]
+    land = _merge(
+        replace(base.new_world, ocean_band_px=band, expand_oceans=0),
+        f"{key} geography",
+        fields_.get("new_world", {}),
+    )
+    if land.expand_oceans or land.landform or land.template_permille or land.keep_geography:
+        message = f"The selected geography options apply only to America, not {key}"
+        raise SettingsError(message)
+    weights = fields_.get("resources", {})
+    if not isinstance(weights, dict):
+        message = f"{key} resource settings must be an object"
+        raise SettingsError(message)
+    resources = _resource_weights(key, cast("dict[object, object]", weights))
+    morocco = (
+        _morocco_policy(fields_.get("morocco", DEFAULT_MOROCCO_POLICY)) if key == "africa" else None
+    )
+    return RegionalSettings(
+        key,
+        preset,
+        land,
+        _merge(
+            replace(base.natives, state_share_permille=REGIONAL_STATE_SHARE[key]),
+            f"{key} societies",
+            fields_.get("natives", {}),
+        ),
+        resources,
+        morocco,
+    )
+
+
+def _resource_weights(region: str, data: dict[object, object]) -> tuple[tuple[str, int], ...]:
+    weights: dict[str, int] = {}
+    low, high = RANGES["precious_permille"]
+    for name, value in data.items():
+        if not isinstance(name, str) or not name or not name.replace("_", "").isalnum():
+            message = f"Invalid resource name in {region}: {name}"
+            raise SettingsError(message)
+        if type(value) is not int or not low <= value <= high:
+            message = (
+                f"Resource weight for {name} in {region} must be an integer in [{low}, {high}]"
+            )
+            raise SettingsError(message)
+        weights[name] = value
+    return tuple(sorted(weights.items()))
+
+
+def _morocco_policy(value: object) -> MoroccoPolicy:
+    if isinstance(value, str):
+        try:
+            return MoroccoPolicy(value)
+        except ValueError as error:
+            message = f"Unknown Morocco option: {value}"
+            raise SettingsError(message) from error
+    message = "Morocco's option must be a name"
+    raise SettingsError(message)
+
+
+def _continents(raw: object) -> ContinentSettings:
+    if not isinstance(raw, dict):
+        message = "Continent settings must be an object"
+        raise SettingsError(message)
+    values = cast("dict[str, object]", raw)
+    america = values.get("america", True)
+    if not isinstance(america, bool):
+        message = "The America switch must be true or false"
+        raise SettingsError(message)
+    if unknown := values.keys() - {"america", *REGIONAL_PRESETS}:
+        message = f"Unknown continents: {', '.join(sorted(unknown))}"
+        raise SettingsError(message)
+    configured: list[RegionalSettings] = []
+    for key in REGIONAL_PRESETS:
+        value = values.get(key, False)
+        if value is False:
+            continue
+        if value is True:
+            value = {}
+        if not isinstance(value, dict):
+            message = f"Settings for {key} must be an object or a switch"
+            raise SettingsError(message)
+        configured.append(_regional_settings(key, cast("dict[str, object]", value)))
+    if not (america or configured):
+        message = "Choose at least one continent"
+        raise SettingsError(message)
+    return ContinentSettings(america, tuple(configured))
+
+
 def build_settings(preset: str, overrides: dict[str, object] | None = None) -> Settings:
     """Apply a JSON-like override object to a named preset and validate it."""
     data = dict(overrides or {})
@@ -614,7 +774,17 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
     base = PRESETS[name]
     unknown = sorted(
         set(data)
-        - {"synthetic", "geography", "coast", "new_world", "natives", "rolls", "mask", "resources"}
+        - {
+            "synthetic",
+            "geography",
+            "coast",
+            "new_world",
+            "natives",
+            "rolls",
+            "mask",
+            "resources",
+            "continents",
+        }
     )
     if unknown:
         message = f"Unknown settings sections: {', '.join(unknown)}"
@@ -633,6 +803,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         rolls=_merge(base.rolls, "rolls", data.get("rolls", {})),
         mask=_merge(base.mask, "mask", data.get("mask", {})),
         resources=_merge(base.resources, "resources", data.get("resources", {})),
+        continents=_continents(data.get("continents", {})),
     )
 
     if resolved.new_world.landform and resolved.mask.id:

@@ -39,6 +39,9 @@ def export_world(  # noqa: PLR0913 - the CLI contract names each input.
     cache_dir: Path | None = None,
 ) -> dict[str, object]:
     """Generate, validate and stage one world's mod bundle; return its report."""
+    if settings.continents.regions:
+        message = "The combined continent export is still in development"
+        raise NewWorldExportError(message)
     if settings.new_world.keep_geography:
         if land_mask is not None:
             message = "A world that keeps the real Americas has no drawn land"

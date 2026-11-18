@@ -14,7 +14,7 @@ import numpy as np
 from rnw.eu5_canvas import NEW_WORLD, CanvasError, roll_for, select_canvas
 from rnw.model import CellClass
 from rnw.progress import checkpoint
-from rnw.settings import PRESETS, NewWorldSettings
+from rnw.settings import PRESETS, REGIONAL_PRESETS, NewWorldSettings
 from rnw.topology import distance_from, label_components
 from rnw.watersheds import DENSITY_STEP
 
@@ -58,8 +58,8 @@ CONTINENTS: Final[Mapping[str, Continent]] = MappingProxyType(
         region.key: region
         for region in (
             Continent(NEW_WORLD, "continents"),
-            Continent("africa", "supercontinent", ocean_band_px=820, land_neighbor="asia"),
-            Continent("oceania", "archipelago", ocean_band_px=560),
+            Continent("africa", *REGIONAL_PRESETS["africa"], land_neighbor="asia"),
+            Continent("oceania", *REGIONAL_PRESETS["oceania"]),
         )
     }
 )
@@ -107,6 +107,14 @@ class Domain:
         """Local column of the global wrap, when it lies inside the strip."""
         column = self.map_width - self.first_column
         return column if column < self.mask.shape[1] else None
+
+    @property
+    def watershed_seam(self) -> int | None:
+        """The display cut when it lies within or exactly at an edge of the window."""
+        if self.first_column == 0:
+            return 0
+        column = self.map_width - self.first_column
+        return column if column <= self.mask.shape[1] else None
 
 
 def _membership(game_map: Eu5Map, continent: str) -> NDArray[np.bool_]:

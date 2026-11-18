@@ -12,7 +12,6 @@ from rnw.eu5_morocco import (
     COUNTRIES_FILE,
     IBERIAN_HOLDINGS,
     MoroccoError,
-    MoroccoPolicy,
     algeciras,
     apply_morocco_start,
     plan_morocco,
@@ -20,6 +19,7 @@ from rnw.eu5_morocco import (
 from rnw.eu5_rewrite import owned_locations
 from rnw.loc_keys import KeySpace
 from rnw.pdx import parse
+from rnw.settings import MoroccoPolicy
 
 AFRICA = {f"loc_{i:03d}": (i + 5, 4) for i in range(110)}
 ORIGINAL = dict.fromkeys(IBERIAN_HOLDINGS, (4, 4)) | {"fez": (12, 4)}
