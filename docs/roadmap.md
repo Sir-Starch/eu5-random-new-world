@@ -224,6 +224,11 @@ scope when chosen.
 
 ## Other future work requested by the owner
 
+- **Optional continent generation.** America, Africa and Oceania can be selected
+  independently and combined in one world. Each has its own generation settings.
+  See the [continent generation plan](continent-generation-plan.md) for scope,
+  architecture and prototype measurements to collect.
+
 These are directions, not promises for 1.0.0 or automatic tasks for every agent.
 Choose a concrete scope when work is requested; use the next release target and
 pending epoch according to [ADR 0003](adr/0003-versioning.md).
