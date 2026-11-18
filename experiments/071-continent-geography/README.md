@@ -164,7 +164,7 @@ preserved all four named countries.
 
 ### Morocco's options
 
-[V-EXEC 2026-11-18, EU5 1.4.9 / Steam build 26655995] All three choices
+[V-EXEC 2026-11-18, EU5 1.4.9 / Steam build 26655995] All four choices
 passed the ownership check using one generated African map at seed 17.
 
 | Choice | Result in the 1337 setup |
@@ -172,12 +172,13 @@ passed the ownership check using one generated African map at seed 17.
 | Keep Morocco | `MOR` owns 86 African and all four Iberian locations. Its capital is one of the 86. |
 | Independent Algeciras | A new tag owns exactly the four Iberian locations, with its capital in Algeciras. |
 | Join Castile | `CAS` integrates the four locations and keeps Valladolid as its capital. |
+| Join Granada | `GRA` integrates the four locations and keeps Granada as its capital. |
 
 The offline trial includes the input scan for the new tag and checks the
-three setup variants in 7.8 seconds after one geography run. The default
+four setup variants in 9.4 seconds after one geography run. The default
 selects one variant.
 
 ```sh
 RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_geography.py \
-  /path/to/eu5 africa --seed 17 --morocco restore --morocco emirate --morocco castile
+  /path/to/eu5 africa --seed 17 --morocco restore --morocco emirate --morocco castile --morocco granada
 ```

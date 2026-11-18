@@ -69,7 +69,7 @@ retired. Only named identities can propagate a retirement to other files.
 
 ### Morocco's Iberian holdings
 
-When Africa is generated, the 1337 start offers three choices for Ronda,
+When Africa is generated, the 1337 start offers four choices for Ronda,
 Algeciras, Gibraltar and Marbella.
 
 1. **Keep Morocco (default).** Morocco retains its Iberian holdings, its
@@ -83,8 +83,10 @@ Algeciras, Gibraltar and Marbella.
    fresh tag. Morocco retires from this start.
 3. **Join Castile.** Castile integrates the four locations and keeps its
    own capital. Morocco retires from this start.
+4. **Join Granada.** The existing Emirate of Granada integrates the four
+   locations under its existing ruler. Morocco retires from this start.
 
-All three options use the existing population cohorts in Iberia. The
+All four options use the existing population cohorts in Iberia. The
 choice belongs to Africa's settings. The offline prototype exercises it
 on one map, with player controls and mod serialization scheduled for the
 combined exporter.

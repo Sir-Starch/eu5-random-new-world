@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 MOROCCO: Final[str] = "MOR"
 CASTILE: Final[str] = "CAS"
+GRANADA: Final[str] = "GRA"
 IBERIAN_HOLDINGS: Final[tuple[str, ...]] = ("ronda", "algeciras", "gibraltar", "marbella")
 AFRICAN_HOLDINGS: Final[int] = 86
 COUNTRIES_FILE: Final[str] = "10_countries.txt"
@@ -38,6 +39,7 @@ class MoroccoPolicy(StrEnum):
     RESTORE = "restore"
     EMIRATE = "emirate"
     CASTILE = "castile"
+    GRANADA = "granada"
 
 
 DEFAULT_MOROCCO_POLICY: Final[MoroccoPolicy] = MoroccoPolicy.RESTORE
@@ -202,8 +204,8 @@ def apply_morocco_start(  # noqa: PLR0913 - the selected policy and its regional
     else:
         discarded.add(MOROCCO)
         prepared[COUNTRIES_FILE] = drop_block_entries(text, COUNTRIES_BLOCK, {MOROCCO})
-        if start.policy is MoroccoPolicy.CASTILE:
-            recipient = CASTILE
+        if start.policy in (MoroccoPolicy.CASTILE, MoroccoPolicy.GRANADA):
+            recipient = CASTILE if start.policy is MoroccoPolicy.CASTILE else GRANADA
             prepared[COUNTRIES_FILE] = _grant(
                 prepared[COUNTRIES_FILE], recipient, "own_control_integrated", IBERIAN_HOLDINGS
             )

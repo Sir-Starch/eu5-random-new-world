@@ -80,6 +80,7 @@ def test_policy_has_one_iberian_owner_and_never_changes_its_population(
         MoroccoPolicy.RESTORE: "MOR",
         MoroccoPolicy.EMIRATE: emirate.tag,
         MoroccoPolicy.CASTILE: "CAS",
+        MoroccoPolicy.GRANADA: "GRA",
     }[policy]
     country = countries.block(recipient)
     assert country is not None
@@ -87,10 +88,16 @@ def test_policy_has_one_iberian_owner_and_never_changes_its_population(
         MoroccoPolicy.RESTORE: {*IBERIAN_HOLDINGS, *start.africa},
         MoroccoPolicy.EMIRATE: set(IBERIAN_HOLDINGS),
         MoroccoPolicy.CASTILE: {*IBERIAN_HOLDINGS, "toledo"},
+        MoroccoPolicy.GRANADA: {*IBERIAN_HOLDINGS, "granada"},
     }[policy]
     assert owned_locations(country) == expected
     assert result.texts["06_pops.txt"] == texts["06_pops.txt"]
     assert countries.block("GRA") is not None
+    if policy is MoroccoPolicy.GRANADA:
+        assert (capital := country.first("capital")) is not None
+        assert capital.value == "granada"
+        assert (integrated := country.block("own_control_integrated")) is not None
+        assert [word.value for word in integrated.words()] == list(IBERIAN_HOLDINGS)
     if policy is MoroccoPolicy.RESTORE:
         assert "MOR" not in result.removed_ids
         assert f"capital = {start.capital}" in result.texts[COUNTRIES_FILE]
