@@ -337,6 +337,24 @@ def _record_holders(root: Block) -> Iterable[Block]:
             yield top.value
 
 
+def _setup_holders(root: Block, *, regional: bool) -> Iterable[tuple[Block, bool]]:
+    """Each record holder and whether its keys introduce dependent identities."""
+    countries = root.block("countries", "countries")
+    if countries is not None:
+        yield countries, True
+        return
+    religions = root.block("religion_manager") if regional else None
+    for holder in _record_holders(root):
+        if holder is religions:
+            # The religion definitions remain installed. Only the individual setup entries
+            # name removable saints or modifiers, and those keys are statement types.
+            for record in holder.entries:
+                if isinstance(record.value, Block):
+                    yield record.value, False
+        else:
+            yield holder, True
+
+
 def retain_country_territory(
     text: str, removed: set[str], replacement_capitals: Mapping[str, str]
 ) -> str:
@@ -405,6 +423,8 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
     texts: dict[str, str],
     removed: set[str],
     pops_added: dict[str, list[str]],
+    *,
+    regional: bool = False,
 ) -> SetupResult:
     """Remove every setup record that refers to a removed identifier, to a fixed point.
 
@@ -412,20 +432,19 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
     organisations are removed word by word (an organisation whose members all vanish is
     removed). Keys of deleted records (characters, dynasties, tags) join the removed set
     so dependent records disappear too. Generated locations get empty pop entries.
+    Regional replacement checks religion setup entries individually, preserving the
+    religion holder and all its independent entries.
     """
     ids = set(removed)
     trees = {name: parse(text) for name, text in texts.items()}
+    holders = {name: list(_setup_holders(root, regional=regional)) for name, root in trees.items()}
     doomed: dict[str, set[tuple[int, int]]] = {name: set() for name in texts}
     words: dict[str, set[tuple[int, int]]] = {name: set() for name in texts}
     changed = True
     while changed:
         changed = False
-        for name, root in trees.items():
-            holders = list(_record_holders(root))
-            countries = root.block("countries", "countries")
-            if countries is not None:
-                holders = [countries]
-            for holder in holders:
+        for name, record_holders in holders.items():
+            for holder, introduces_ids in record_holders:
                 keyed = Counter(record.key for record in holder.entries if record.key)
                 for record in holder.entries:
                     span = (record.start, record.end)
@@ -436,7 +455,9 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
                         continue
                     if mentions(record, ids):
                         doomed[name].add(span)
-                        unique = record.key is not None and keyed[record.key] == 1
+                        unique = (
+                            introduces_ids and record.key is not None and keyed[record.key] == 1
+                        )
                         if unique and isinstance(record.value, Block):
                             ids.add(record.key or "")
                         changed = True

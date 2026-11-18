@@ -52,6 +52,37 @@ def test_a_removed_capital_still_retires_the_country_and_its_dependents() -> Non
     assert "dependency" not in result.texts["12_diplomacy.txt"]
 
 
+def test_retired_saint_does_not_retire_the_religion_or_its_other_members() -> None:
+    texts = {
+        "05_characters.txt": """character_db = {
+            old_saint = { birth = gone_city }
+            kept_saint = { birth = kept_city }
+        }""",
+        "06_pops.txt": """locations = {
+            kept_city = { define_pop = { religion = shared_faith } }
+        }""",
+        "13_religion.txt": """religion_manager = {
+            shared_faith = {
+                saint = { character = old_saint }
+                saint = { character = kept_saint }
+                timed_modifier = { modifier = kept_modifier }
+            }
+        }
+        building_manager = { cardinal = { location = gone_city } }""",
+    }
+    result = prune_setup(texts, {"gone_city"}, {}, regional=True)
+    assert result.texts["06_pops.txt"] == texts["06_pops.txt"]
+    assert "old_saint" in result.removed_ids
+    assert "shared_faith" not in result.removed_ids
+    assert "old_saint" not in result.texts["13_religion.txt"]
+    religion = parse(result.texts["13_religion.txt"]).block("religion_manager", "shared_faith")
+    assert religion is not None
+    assert religion.block("saint") is not None
+    assert religion.block("timed_modifier") is not None
+    assert "kept_saint" in result.texts["13_religion.txt"]
+    assert "gone_city" not in result.texts["13_religion.txt"]
+
+
 def test_a_country_retired_in_a_later_pass_does_not_keep_nested_word_edits() -> None:
     texts = {
         "10_countries.txt": (
