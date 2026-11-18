@@ -378,7 +378,7 @@ def retain_country_territory(
         kind = body.first("type")
         if kind is not None and kind.value == "pop":
             continue
-        owned = _owned_locations(body)
+        owned = owned_locations(body)
         retained = owned - removed
         if not retained:
             continue
@@ -397,7 +397,8 @@ def retain_country_territory(
     return edits.apply(text)
 
 
-def _owned_locations(country: Block) -> set[str]:
+def owned_locations(country: Block) -> set[str]:
+    """The locations a 1337 country owns, including conquered land."""
     return {
         word.value
         for entry in country.entries

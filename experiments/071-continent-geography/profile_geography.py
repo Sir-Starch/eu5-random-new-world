@@ -6,11 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from functools import partial
 from pathlib import Path
 from time import perf_counter
 from typing import TYPE_CHECKING
 
 import numpy as np
+from morocco_start import morocco_trials
 
 from rnw.continent_domains import CONTINENTS, plan_domains
 from rnw.eu5_biomes import (
@@ -25,6 +27,7 @@ from rnw.eu5_biomes import (
 from rnw.eu5_canvas import NEW_WORLD, place_islands
 from rnw.eu5_islands import moved_pixels_of
 from rnw.eu5_map import load_map
+from rnw.eu5_morocco import DEFAULT_MOROCCO_POLICY, MoroccoPolicy
 from rnw.eu5_nw_export import TEMPLATES
 from rnw.eu5_seas import current_bands, read_waters
 from rnw.eu5_terrain import DecalStore
@@ -89,6 +92,7 @@ def profile(  # noqa: PLR0915 - the prototype records each phase.
     seed: int,
     *,
     materials: bool = False,
+    morocco: tuple[MoroccoPolicy, ...] = (),
 ) -> dict[str, object]:
     started = perf_counter()
     threads = configure()
@@ -103,22 +107,20 @@ def profile(  # noqa: PLR0915 - the prototype records each phase.
         "calibrate sizes",
         lambda: size_model(game, templates, original_heights),  # noqa: F821
     )
+    vanilla = None
+    if materials or morocco:
+        vanilla = timed(
+            "vanilla location statistics",
+            lambda: vanilla_locations(game.labels, original_heights),  # noqa: F821
+        )
     training = None
     if materials:
-        training = (
-            timed(
-                "vanilla location statistics",
-                lambda: vanilla_locations(game.labels, original_heights),  # noqa: F821
-            ),
-            timed(
-                "vanilla climate for biomes",
-                lambda: climate_grid(
-                    np.array([kind is CellClass.SEA for kind in game.classes], dtype=bool)[
-                        game.labels
-                    ],
-                    original_heights,  # noqa: F821
-                    seasonal=True,
-                ),
+        training = timed(
+            "vanilla climate for biomes",
+            lambda: climate_grid(
+                np.array([kind is CellClass.SEA for kind in game.classes], dtype=bool)[game.labels],
+                original_heights,  # noqa: F821
+                seasonal=True,
             ),
         )
     labels = game.labels.copy()
@@ -185,6 +187,20 @@ def profile(  # noqa: PLR0915 - the prototype records each phase.
             regions[key]["passable_border_pixels"] = int(
                 np.count_nonzero(domain.land_interface & passable[world.labels])
             )
+        if key == "africa" and morocco and vanilla is not None:
+            regions[key]["morocco"] = timed(
+                "Morocco startup options",
+                partial(
+                    morocco_trials,
+                    game_dir,
+                    game,
+                    vanilla,
+                    domain,
+                    world,
+                    seed=seed,
+                    policies=morocco,
+                ),
+            )
         del world, bands
     sea = np.array([kind is CellClass.SEA for kind in kinds], dtype=bool)
     climate = timed(
@@ -206,14 +222,14 @@ def profile(  # noqa: PLR0915 - the prototype records each phase.
         changed_protected += int(
             np.count_nonzero((labels[rows] != game.labels[rows]) & protected[game.labels[rows]])
         )
-    if training is not None:
+    if training is not None and vanilla is not None:
         cells = _composed_cells(kinds, retained, contacts, samples)
         before = perf_counter()
         biomes, _ = assign_biomes(
             game_map=game,
             templates=templates,
-            vanilla=training[0],
-            vanilla_grid=training[1],
+            vanilla=vanilla,
+            vanilla_grid=training,
             final_grid=climate,
             cells=cells,
             seed=seed,
@@ -251,8 +267,14 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--materials", action="store_true")
     parser.add_argument("--preset", action="append", default=[], metavar="CONTINENT=PRESET")
+    parser.add_argument(
+        "--morocco", action="append", choices=tuple(MoroccoPolicy), type=MoroccoPolicy
+    )
     args = parser.parse_args()
     presets = dict.fromkeys(args.continents)
+    if args.morocco and "africa" not in presets:
+        parser.error("--morocco requires Africa to be selected")
+    morocco = tuple(args.morocco or ([DEFAULT_MOROCCO_POLICY] if "africa" in presets else []))
     for value in args.preset:
         continent, equals, preset = value.partition("=")
         if not equals or continent not in presets or not preset:
@@ -263,7 +285,10 @@ def main() -> None:
             parser.error(f"More than one preset specified for {continent}")
         presets[continent] = preset
     print(
-        json.dumps(profile(args.game_dir, presets, args.seed, materials=args.materials), indent=2)
+        json.dumps(
+            profile(args.game_dir, presets, args.seed, materials=args.materials, morocco=morocco),
+            indent=2,
+        )
     )
 
 

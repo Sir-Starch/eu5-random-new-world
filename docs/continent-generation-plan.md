@@ -67,6 +67,28 @@ The regional setup pass binds character birthplaces and dynasty homes to
 present locations, then trims optional kinship links when a character is
 retired. Only named identities can propagate a retirement to other files.
 
+### Morocco's Iberian holdings
+
+When Africa is generated, the 1337 start offers three choices for Ronda,
+Algeciras, Gibraltar and Marbella.
+
+1. **Keep Morocco (default).** Morocco retains its Iberian holdings, its
+   tag and its start government. It receives the 86 passable generated
+   African locations closest to those four holdings. Distance compares
+   centres on the wrapped raster and crosses water. Choose the location
+   nearest vanilla Fez from those 86 as the African capital. Reserve the
+   locations before building the other African polities.
+2. **Independent Algeciras.** The four locations form a Sunni Andalusi
+   emirate centred on Algeciras. The normal tag allocator assigns it a
+   fresh tag. Morocco retires from this start.
+3. **Join Castile.** Castile integrates the four locations and keeps its
+   own capital. Morocco retires from this start.
+
+All three options use the existing population cohorts in Iberia. The
+choice belongs to Africa's settings. The offline prototype exercises it
+on one map, with player controls and mod serialization scheduled for the
+combined exporter.
+
 ## One generation pipeline
 
 1. **Plan the domains together.** Read and calibrate the installation once.
