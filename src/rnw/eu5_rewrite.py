@@ -39,6 +39,14 @@ LOCATION_REFERENCES: Final[frozenset[str]] = OWNED_LOCATIONS | {
     "control",
     "our_cores_conquered_by_others",
 }
+PERSONAL_PLACES: Final[tuple[tuple[str, str, str], ...]] = (
+    ("04_dynasties.txt", "dynasty_manager", "home"),
+    ("05_characters.txt", "character_db", "birth"),
+)
+KINSHIP: Final[frozenset[str]] = frozenset({"father", "mother", "spouse"})
+IDENTITY_MANAGERS: Final[frozenset[str]] = frozenset(
+    {"dynasty_manager", "character_db", "religious_order_manager"}
+)
 
 
 def _delete(edits: Edits, text: str, entry: Entry) -> None:
@@ -330,29 +338,24 @@ class SetupResult:
     removed_ids: set[str]
 
 
-def _record_holders(root: Block) -> Iterable[Block]:
-    """Blocks whose children are independent records (managers and their lists)."""
-    for top in root.entries:
-        if isinstance(top.value, Block):
-            yield top.value
-
-
-def _setup_holders(root: Block, *, regional: bool) -> Iterable[tuple[Block, bool]]:
+def _setup_holders(name: str, root: Block, *, regional: bool) -> Iterable[tuple[Block, bool]]:
     """Each record holder and whether its keys introduce dependent identities."""
     countries = root.block("countries", "countries")
     if countries is not None:
-        yield countries, True
+        yield countries, not regional or name == "10_countries.txt"
         return
-    religions = root.block("religion_manager") if regional else None
-    for holder in _record_holders(root):
-        if holder is religions:
+    for top in root.entries:
+        holder = top.value
+        if not isinstance(holder, Block):
+            continue
+        if regional and name == "13_religion.txt" and top.key == "religion_manager":
             # The religion definitions remain installed. Only the individual setup entries
             # name removable saints or modifiers, and those keys are statement types.
             for record in holder.entries:
                 if isinstance(record.value, Block):
                     yield record.value, False
         else:
-            yield holder, True
+            yield holder, not regional or top.key in IDENTITY_MANAGERS
 
 
 def retain_country_territory(
@@ -419,6 +422,64 @@ def _cut_location_words(text: str, field: Entry, removed: set[str], edits: Edits
             edits.delete(word)
 
 
+def prune_regional_setup(  # noqa: PLR0913 - bound geography, surviving seats and generated populations.
+    texts: dict[str, str],
+    removed: set[str],
+    pops_added: dict[str, list[str]],
+    *,
+    location_replacements: Mapping[str, str],
+    replacement_capitals: Mapping[str, str],
+    final_locations: set[str],
+) -> SetupResult:
+    """Resolve territorial and personal geography before retiring dependent records."""
+    prepared = texts.copy()
+    country_file = "10_countries.txt"
+    prepared[country_file] = retain_country_territory(
+        prepared[country_file], removed, replacement_capitals
+    )
+    for name, manager, field_name in PERSONAL_PLACES:
+        if name not in prepared:
+            continue
+        text = prepared[name]
+        holder = parse(text).block(manager)
+        if holder is None:
+            message = f"No {manager} block in {name}"
+            raise ValueError(message)
+        edits = Edits()
+        for record in holder.entries:
+            field = record.value.first(field_name) if isinstance(record.value, Block) else None
+            if field is None or not isinstance(field.value, str) or field.value not in removed:
+                continue
+            old = field.value
+            target = location_replacements.get(old)
+            if target is None or target in removed or target not in final_locations:
+                message = f"{name}: {record.key} needs a replacement for {field_name} {old}"
+                raise ValueError(message)
+            offset = field.end - len(old)
+            edits.deletions.append((offset, field.end))
+            edits.insert(offset, target)
+        prepared[name] = edits.apply(text)
+    return prune_setup(prepared, removed, pops_added, regional=True)
+
+
+def _gone_kin(record: Entry, ids: set[str]) -> list[Entry]:
+    if not isinstance(record.value, Block):
+        return []
+    return [
+        field
+        for field in record.value.entries
+        if field.key in KINSHIP and isinstance(field.value, str) and field.value in ids
+    ]
+
+
+def _mentions_except(record: Entry, ids: set[str], ignored: list[Entry]) -> bool:
+    if ignored and isinstance(record.value, Block):
+        return record.key in ids or any(
+            mentions(field, ids) for field in record.value.entries if field not in ignored
+        )
+    return mentions(record, ids)
+
+
 def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup files.
     texts: dict[str, str],
     removed: set[str],
@@ -432,18 +493,21 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
     organisations are removed word by word (an organisation whose members all vanish is
     removed). Keys of deleted records (characters, dynasties, tags) join the removed set
     so dependent records disappear too. Generated locations get empty pop entries.
-    Regional replacement checks religion setup entries individually, preserving the
-    religion holder and all its independent entries.
+    Regional replacement checks religion setup entries individually and deletes optional
+    kinship fields that point to a retired character.
     """
     ids = set(removed)
     trees = {name: parse(text) for name, text in texts.items()}
-    holders = {name: list(_setup_holders(root, regional=regional)) for name, root in trees.items()}
+    holders = {
+        name: list(_setup_holders(name, root, regional=regional)) for name, root in trees.items()
+    }
     doomed: dict[str, set[tuple[int, int]]] = {name: set() for name in texts}
     words: dict[str, set[tuple[int, int]]] = {name: set() for name in texts}
     changed = True
     while changed:
         changed = False
         for name, record_holders in holders.items():
+            characters = regional and name == "05_characters.txt"
             for holder, introduces_ids in record_holders:
                 keyed = Counter(record.key for record in holder.entries if record.key)
                 for record in holder.entries:
@@ -453,13 +517,19 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
                     if name.startswith("15_") and isinstance(record.value, Block):
                         changed |= _prune_members(record, ids, words[name], doomed[name])
                         continue
-                    if mentions(record, ids):
+                    kin = _gone_kin(record, ids) if characters else []
+                    kin_spans = {line_span(texts[name], entry.start, entry.end) for entry in kin}
+                    if _mentions_except(record, ids, kin):
+                        words[name].difference_update(kin_spans)
                         doomed[name].add(span)
                         unique = (
                             introduces_ids and record.key is not None and keyed[record.key] == 1
                         )
                         if unique and isinstance(record.value, Block):
                             ids.add(record.key or "")
+                        changed = True
+                    elif kin_spans - words[name]:
+                        words[name].update(kin_spans)
                         changed = True
     out: dict[str, str] = {}
     deleted: dict[str, int] = {}

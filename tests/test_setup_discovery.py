@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from rnw.eu5_remap import remap_text
-from rnw.eu5_rewrite import prune_setup, retain_country_territory
+from rnw.eu5_rewrite import prune_regional_setup, prune_setup, retain_country_territory
 from rnw.pdx import parse
 
 
@@ -81,6 +81,97 @@ def test_retired_saint_does_not_retire_the_religion_or_its_other_members() -> No
     assert religion.block("timed_modifier") is not None
     assert "kept_saint" in result.texts["13_religion.txt"]
     assert "gone_city" not in result.texts["13_religion.txt"]
+
+
+def test_regional_setup_preserves_a_mixed_country_and_its_ruler() -> None:
+    texts = {
+        "04_dynasties.txt": "dynasty_manager = { house = { name = house home = old_city } }",
+        "05_characters.txt": """character_db = {
+            past = { tag = EXT birth = old_city }
+            monarch = {
+                tag = MIX birth = old_city dynasty = house father = past spouse = partner
+            }
+            partner = { tag = OUT birth = retained_town spouse = monarch }
+        }""",
+        "10_countries.txt": """countries = { countries = {
+            MIX = {
+                capital = old_city
+                own_control_conquered = { old_city new_capital }
+                government = { ruler = monarch }
+            }
+            EXT = { capital = old_town own_core = { old_town } }
+            OUT = { capital = retained_town own_core = { retained_town } }
+        } }""",
+    }
+    result = prune_regional_setup(
+        texts,
+        {"old_city", "old_town"},
+        {},
+        location_replacements={"old_city": "new_city"},
+        final_locations={"new_city", "new_capital", "retained_town"},
+        replacement_capitals={"MIX": "new_capital"},
+    )
+    assert result.removed_ids == {"old_city", "old_town", "past", "EXT"}
+    countries = parse(result.texts["10_countries.txt"]).block("countries", "countries")
+    assert countries is not None
+    assert countries.block("OUT") is not None
+    mix = countries.block("MIX")
+    assert mix is not None
+    assert (capital := mix.first("capital")) is not None
+    assert capital.value == "new_capital"
+    assert (owned := mix.block("own_control_conquered")) is not None
+    assert [word.value for word in owned.words()] == ["new_capital"]
+    chars = parse(result.texts["05_characters.txt"]).block("character_db")
+    assert chars is not None
+    assert chars.block("past") is None
+    monarch = chars.block("monarch")
+    assert monarch is not None
+    assert (birth := monarch.first("birth")) is not None
+    assert birth.value == "new_city"
+    assert monarch.first("father") is None
+    assert monarch.first("spouse") is not None
+    assert "home = new_city" in result.texts["04_dynasties.txt"]
+
+
+@pytest.mark.parametrize("replacement", [{}, {"old_city": "old_city"}, {"old_city": "unknown"}])
+def test_regional_setup_requires_an_existing_destination_for_personal_places(
+    replacement: dict[str, str],
+) -> None:
+    texts = {
+        "04_dynasties.txt": "dynasty_manager = { house = { home = old_city } }",
+        "10_countries.txt": "countries = { countries = { } }",
+    }
+    with pytest.raises(ValueError, match="house needs a replacement for home old_city"):
+        _ = prune_regional_setup(
+            texts,
+            {"old_city"},
+            {},
+            location_replacements=replacement,
+            final_locations={"new_city"},
+            replacement_capitals={},
+        )
+
+
+def test_regional_pruning_does_not_use_statement_types_or_advisory_rows_as_ids() -> None:
+    sources = {
+        "10_countries.txt": (
+            "countries = { countries = {"
+            "  OUT = { type = army capital = kept_city }"
+            "  EXT = { capital = gone_city }"
+            "} }"
+        ),
+        "25_area_preferences.txt": (
+            "countries = { countries = { OUT = { preference = gone_city } } }"
+        ),
+        "27_armies.txt": (
+            "unit_manager = { army = { tag = EXT } } unit_manager = { army = { tag = OUT } }"
+        ),
+    }
+    result = prune_setup(sources, {"gone_city"}, {}, regional=True)
+    assert result.removed_ids == {"gone_city", "EXT"}
+    assert "OUT = {" in result.texts["10_countries.txt"]
+    assert "OUT = {" not in result.texts["25_area_preferences.txt"]
+    assert "army = { tag = OUT }" in result.texts["27_armies.txt"]
 
 
 def test_a_country_retired_in_a_later_pass_does_not_keep_nested_word_edits() -> None:
