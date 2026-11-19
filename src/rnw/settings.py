@@ -255,6 +255,7 @@ class RegionalSettings:
     natives: NativeSettings
     resources: tuple[tuple[str, int], ...] = ()
     morocco: MoroccoPolicy | None = None
+    require_asia_connection: bool = False
 
     def document(self) -> dict[str, object]:
         data: dict[str, object] = {
@@ -266,6 +267,8 @@ class RegionalSettings:
             data["resources"] = dict(self.resources)
         if self.morocco is not None:
             data["morocco"] = self.morocco.value
+        if self.require_asia_connection:
+            data["require_asia_connection"] = True
         return data
 
 
@@ -665,7 +668,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     fallback, band = REGIONAL_PRESETS[key]
     allowed = {"preset", "new_world", "natives", "resources"}
     if key == "africa":
-        allowed.add("morocco")
+        allowed.update(("morocco", "require_asia_connection"))
     if unknown := fields_.keys() - allowed:
         message = f"Unknown {key} settings: {', '.join(sorted(unknown))}"
         raise SettingsError(message)
@@ -690,6 +693,10 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     morocco = (
         _morocco_policy(fields_.get("morocco", DEFAULT_MOROCCO_POLICY)) if key == "africa" else None
     )
+    connection = fields_.get("require_asia_connection", False)
+    if type(connection) is not bool:
+        message = "Africa's land connection requirement must be on or off"
+        raise SettingsError(message)
     return RegionalSettings(
         key,
         preset,
@@ -701,6 +708,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
         ),
         resources,
         morocco,
+        connection,
     )
 
 

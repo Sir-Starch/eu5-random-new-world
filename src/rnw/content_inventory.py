@@ -112,14 +112,23 @@ def world_footprint(
     tags: AbstractSet[str],
 ) -> Footprint:
     """Describe selected geographic identities and exactly the tags the start retires."""
-    places = [item for item in locations if item.continent in continents or item.key in removed]
+    places = tuple(locations)
+    selected = [item for item in places if item.continent in continents]
+    lost = [item for item in places if item.key in removed]
+    retained = [item for item in places if item.key not in removed]
     return Footprint(
         {
-            "location": frozenset(item.key for item in places),
-            "province": frozenset(item.province for item in places),
-            "area": frozenset(item.area for item in places),
-            "region": frozenset(item.region for item in places),
-            "subcontinent": frozenset(item.subcontinent for item in places),
+            "location": frozenset(item.key for item in selected) | {item.key for item in lost},
+            # A shore can lose a sea zone while its province, area and region
+            # retain their identities and their historical uses inland.
+            "province": frozenset(item.province for item in selected)
+            | ({item.province for item in lost} - {item.province for item in retained}),
+            "area": frozenset(item.area for item in selected)
+            | ({item.area for item in lost} - {item.area for item in retained}),
+            "region": frozenset(item.region for item in selected)
+            | ({item.region for item in lost} - {item.region for item in retained}),
+            "subcontinent": frozenset(item.subcontinent for item in selected)
+            | ({item.subcontinent for item in lost} - {item.subcontinent for item in retained}),
         },
         frozenset(tags),
     )

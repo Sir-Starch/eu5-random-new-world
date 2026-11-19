@@ -86,6 +86,15 @@ Oceania includes Australia, New Zealand, New Guinea and Hawaii. The islands the
 game places in Indonesia remain in Asia. All selected continents join one map and
 one 1337 start. A continent's coast can shift when another continent is enabled.
 
+The continents share open-ocean space, including the waters south of Africa and
+Oceania. The presets still control the land share and arrangement of each
+continent. Combined worlds paint new shallows from their actual shores and seas.
+
+An African world can reach western Asia by land at a place chosen from the seed.
+Turn on **Require a land connection to Asia** to make that connection in every
+African world. African shores can also approach Europe closely enough for an
+army crossing over one navigable strait.
+
 When generating Africa, **Morocco's Iberian holdings** offers four outcomes for
 Ronda, Algeciras, Gibraltar and Marbella.
 

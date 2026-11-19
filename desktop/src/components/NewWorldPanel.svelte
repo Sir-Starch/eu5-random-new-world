@@ -111,6 +111,11 @@
                 <option value={policy}>{t(`continent.morocco.${policy}`)}</option>
               {/each}
             </select>
+            <div class="wide">
+              <Check checked={region.require_asia_connection} disabled={locked}
+                label={t("continent.africa.asia_connection")}
+                onchange={(required) => app.call("set_asia_connection", { required })} />
+            </div>
           {/if}
         </div>
       {/each}

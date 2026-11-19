@@ -17,13 +17,15 @@ from rnw.eu5_nw_export import (
     _replacement_water_links,  # pyright: ignore[reportPrivateUsage]
     settled_biomes,
 )
-from rnw.eu5_seas import Coast
+from rnw.eu5_seas import Coast, mediterranean_crossing
 from rnw.model import CellClass
 from rnw.newworld import derive_world
 from rnw.ports import ForeignCoast, pair_lengths, relabel
 
 if TYPE_CHECKING:
     from rnw.eu5_map import Eu5Map
+    from rnw.eu5_newworld import Plan
+    from rnw.eu5_seas import Water
 
 
 def _game() -> Eu5Map:
@@ -147,3 +149,44 @@ def test_cut_coastal_route_needs_a_new_navigable_connection() -> None:
     assert _replacement_water_links(game, lost, links, frozenset({"africa"}), ()) == {(0, 1)}
     assert not _replacement_water_links(game, lost, links, frozenset({"africa"}), (1,))
     assert not _replacement_water_links(game, lost, links, frozenset({"oceania"}), ())
+
+
+def test_mediterranean_crossing_uses_the_retained_and_generated_shores() -> None:
+    installed = np.ones((100, 164), dtype=np.int32)
+    installed[:, :74] = 0
+    generated = np.full(installed.shape, -1, dtype=np.int32)
+    generated[:, 74:81] = 0
+    generated[:, 81:] = 1
+    world = derive_world(generated, (CellClass.SEA, CellClass.LAND), np.zeros_like(generated))
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                labels=installed,
+                keys=("european", "old_sea"),
+                continents=("europe", "africa"),
+                classes=(CellClass.LAND, CellClass.SEA),
+            ),
+        ),
+    )
+    plan = cast(
+        "Plan",
+        cast(
+            "object",
+            SimpleNamespace(
+                cells=[
+                    SimpleNamespace(key="new_sea", continent="africa"),
+                    SimpleNamespace(key="new_coast", continent="africa"),
+                ]
+            ),
+        ),
+    )
+    water = cast(
+        "Water", cast("object", SimpleNamespace(coast=SimpleNamespace(world=world), zones=set()))
+    )
+    result = mediterranean_crossing(game, water, plan, (50, 81))
+    assert result is not None
+    assert result.row(100).startswith("european;new_coast;sea;new_sea;")
+    assert result.start[1] == 73
+    assert result.stop[1] == 81

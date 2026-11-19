@@ -83,6 +83,40 @@ def _fixed(rows: int) -> Callable[..., int]:
     return answer
 
 
+def test_shared_water_follows_the_new_shelf_and_fades_across_the_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    old = np.ones((1024, 4096), dtype=bool)
+    old[300:580, 700:1050] = False
+    current = np.ones_like(old)
+    current[300:580, 1700:2050] = False
+    inland = np.zeros_like(old)
+    inland[300:580, 2070:2270] = True
+    source = np.full((512, 2048, 4), [30, 55, 92, 160], dtype=np.uint8)
+    source[130:310, 330:550, :3] = [40, 120, 154]
+    captured: list[np.ndarray] = []
+
+    def capture(_data: bytes, result: np.ndarray, _changed: np.ndarray) -> bytes:
+        captured.append(result)
+        return b"synthetic"
+
+    def decode(_data: bytes) -> np.ndarray:
+        return source
+
+    monkeypatch.setattr(eu5_water, "_decode", decode)
+    monkeypatch.setattr(eu5_water, "rewrite", capture)
+    for height in (51, 127):
+        monkeypatch.setattr(eu5_water, "band_rows", _fixed(height))
+        _ = eu5_water._regional_color(  # pyright: ignore[reportPrivateUsage]
+            b"synthetic", old, current, inland
+        )
+    result, other = captured
+    assert np.array_equal(result, other)
+    assert result[218, 435, 1] < source[218, 435, 1] - 30
+    assert result[218, 1035, 1] > source[218, 1035, 1] + 30
+    assert np.array_equal(result[:, 1536:], source[:, 1536:])
+
+
 def _decode_stub(raw: bytes) -> np.ndarray:
     return _decoded(raw, ROWS, COLUMNS)
 

@@ -75,6 +75,7 @@ if TYPE_CHECKING:
     from rnw.settings import NewWorldSettings
 
 PERMILLE: Final[int] = 1000
+STRAIT_LANDING: Final[int] = 2
 # The centre control lifts the land density by up to CENTRE_LIFT elevation units in the middle of
 # the canvas, rising over the distance from its edge (to the deepest interior, but at most
 # CENTRE_REACH_PX); the land share does not change, only where the land lies.
@@ -146,6 +147,9 @@ class NewWorld:
     # the south, in ascending order (empty for any other world): the barrier itself, which the
     # wasteland plan keeps impassable (``rnw.barrens``). ``rnw.ports.relabel`` renumbers it.
     barrier: NDArray[np.int64] = field(default_factory=lambda: np.zeros(0, dtype=np.int64))
+    # Playable cells along a generated overland contact with retained land.
+    land_link: NDArray[np.int64] = field(default_factory=lambda: np.zeros(0, dtype=np.int64))
+    strait_landing: tuple[int, int] | None = None
     # How the land drains (epoch 64, ``epoch.RIVERS_FIRST``): the plan its rivers were drawn along
     # when the cells were grown, which the export draws them along again; None before.
     drainage: DrainagePlan | None = None
@@ -885,6 +889,122 @@ def _path(
     return path.reshape(height, width)
 
 
+@dataclass(frozen=True, slots=True, eq=False)
+class Approach:
+    """The section of generated land that connects the chosen shore to the interior."""
+
+    box: tuple[slice, slice]
+    path: NDArray[np.bool_]
+    point: tuple[int, int]
+
+
+def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed define the coast.
+    land: NDArray[np.bool_],
+    domain: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    interface: NDArray[np.bool_],
+    *,
+    settings: NewWorldSettings,
+    seed: int,
+) -> Approach | None:
+    """Grow a broad irregular approach from a seeded shore to existing generated land."""
+    step = max(8, settings.location_px // 2)
+    sites = np.argwhere(interface & domain)
+    core = np.argwhere(land[::step, ::step]) * step
+    if sites.size == 0 or core.size == 0:
+        return None
+    _, unique = np.unique(sites // (step * 4), axis=0, return_index=True)
+    sites = sites[unique]
+    nearest = core[
+        _native.nearest_rows(np.ascontiguousarray(core), np.ascontiguousarray(sites), 1)[:, 0]
+    ]
+    distance = np.max(np.abs(nearest - sites), axis=1)
+    key = derive_seed(seed, "africa_land_approach")
+    candidates = sorted(
+        range(len(sites)),
+        key=lambda i: (
+            int(distance[i])
+            + mix64(key ^ (int(sites[i, 0]) << 32) ^ int(sites[i, 1])) % (12 * step),
+            i,
+        ),
+    )
+    height, width = land.shape
+    for index in candidates:
+        row, col = map(int, sites[index])
+        radius = int(distance[index]) + 8 * step
+        box = (
+            slice(max(0, row - radius), min(height, row + radius + 1)),
+            slice(max(0, col - radius), min(width, col + radius + 1)),
+        )
+        target = land[box]
+        allowed = domain[box]
+        start = np.zeros(target.shape, dtype=bool)
+        point = row - box[0].start, col - box[1].start
+        start[point] = True
+        path = start if target[point] else _path(start, target, allowed)
+        if not path.any():
+            continue
+        reach = max(settings.coast_margin_px, 2 * step)
+        distance_to_path = distance_from(path, 2 * reach, octagonal=True)
+        wobble = _field(
+            seed,
+            "africa_land_approach_coast",
+            shape=path.shape,
+            period=4 * reach,
+            octaves=3,
+            persistence_permille=500,
+        )
+        apron = allowed & (distance_to_path <= reach + wobble * reach // NOISE_SCALE)
+        land[box] |= apron | path
+        shore[box] &= ~(apron | path)
+        return Approach(box, path, (row, col))
+    return None
+
+
+def _link_cells(labels: NDArray[np.int32], approaches: tuple[Approach, ...]) -> NDArray[np.int64]:
+    return np.unique(
+        np.concatenate([np.empty(0, dtype=np.int32), *(labels[a.box][a.path] for a in approaches)])
+    ).astype(np.int64)
+
+
+def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
+    land: NDArray[np.bool_],
+    ocean: NDArray[np.bool_],
+    domain: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    *,
+    interface: NDArray[np.bool_] | None,
+    strait: NDArray[np.uint8] | None,
+    settings: NewWorldSettings,
+    seed: int,
+) -> tuple[tuple[Approach, ...], tuple[int, int] | None]:
+    links: list[Approach] = []
+    if interface is not None:
+        approach = _land_approach(land, domain, shore, interface, settings=settings, seed=seed)
+        if approach is None:
+            message = "The African canvas has no continuous approach to a passable Asian location"
+            raise ValueError(message)
+        links.append(approach)
+    landing = None
+    if strait is not None:
+        reserved_sea = strait == 1
+        shore |= reserved_sea
+        approach = _land_approach(
+            land,
+            domain & ~reserved_sea,
+            shore,
+            strait == STRAIT_LANDING,
+            settings=settings,
+            seed=derive_seed(seed, "mediterranean_approach"),
+        )
+        if approach is not None:
+            links.append(approach)
+            landing = approach.point
+    if links:
+        ocean &= ~land
+    return tuple(links), landing
+
+
 def stray_strait(
     domain: NDArray[np.bool_],
     land: NDArray[np.bool_],
@@ -1324,7 +1444,7 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
 
 
 @measured
-def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the domain, seed, settings and the extras.
+def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     domain: NDArray[np.bool_],
     *,
     seed: int,
@@ -1341,6 +1461,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     sizes: SizeModel | None = None,
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
+    land_interface: NDArray[np.bool_] | None = None,
+    strait: NDArray[np.uint8] | None = None,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
@@ -1403,6 +1525,16 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     ocean &= domain
     lakes &= domain
     shore = _off_limits(domain, settings, outside_land)
+    approaches, landing = _regional_approaches(
+        land,
+        ocean,
+        domain,
+        shore,
+        interface=land_interface,
+        strait=strait,
+        settings=settings,
+        seed=seed,
+    )
     land, ocean, _ = pinch(land, ocean, shore)
     # Narrowing can detach a small pocket from the ocean. Classify the finished coasts,
     # including existing lakes, before any cell, port or relief field gives it an identity.
@@ -1517,8 +1649,13 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     pixels, _, _, total, _ = _cell_sums(labels, relief, count)
     mean_relief = total // np.maximum(1, pixels)
     land_ids = [index for index, kind in enumerate(kinds) if kind is CellClass.LAND]
+    linked = _link_cells(labels, approaches)
     wasteland = len(land_ids) * settings.wasteland_permille // PERMILLE
-    ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
+    protected = set(linked.tolist())
+    ranked = sorted(
+        (index for index in land_ids if index not in protected),
+        key=lambda index: (-int(mean_relief[index]), index),
+    )
     for index in ranked[:wasteland]:
         kinds[index] = CellClass.WASTELAND
     # Every land location touching a polar map edge is impassable, including
@@ -1538,6 +1675,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
         world,
         moves=np.array(moves, dtype=np.int64).reshape(-1, 2),
         drainage=drainage,
+        land_link=linked,
+        strait_landing=landing,
         **({} if barrier is None else {"barrier": barrier}),
     )
 

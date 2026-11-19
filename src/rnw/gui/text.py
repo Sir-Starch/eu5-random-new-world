@@ -33,6 +33,7 @@ STRINGS: Final[dict[str, str]] = {
     "continent.morocco.emirate": "Independent Algeciras",
     "continent.morocco.castile": "Join Castile",
     "continent.morocco.granada": "Join Granada",
+    "continent.africa.asia_connection": "Require a land connection to Asia",
     "control.natives.turbulence_permille": "Historical turbulence",
     "control.natives.turbulence_permille.about": (
         "How often conflict and political change occur during "

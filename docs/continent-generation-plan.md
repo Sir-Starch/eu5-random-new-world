@@ -32,13 +32,14 @@ regional resource trial, and the installed 1337 data audit.
 ## Geography and the starting map
 
 Africa covers the game's `africa` continent, including Egypt, Sinai and the
-Atlantic islands it assigns to Africa. A land route between Africa and Asia can
-form where the generated land reaches the existing boundary. Its presence is a
-result of the geography. Asia keeps its land, locations and coastline.
-The planner allows contact at the existing land interface and protects other
-retained shores. A route is established by passable land in the final map.
-At that interface the coast penalty eases over one ramp, so the ordinary
-terrain field can reach the retained land. Local river routing treats the
+Atlantic islands it assigns to Africa. A seed can select a dry approach to
+western Asia, along its nearby coastline or at the existing land interface.
+The **Require a land connection to Asia** option always constructs a passable
+approach. The generated shore and land cells follow the resulting terrain.
+The final adjacency check requires a direct border between passable locations.
+Nearby European shores can admit a separate approach with a short navigable
+strait. Only a crossing validated against the pixels on both shores and the
+single sea zone between them enters the game map. Local river routing treats
 retained terrain as a closed boundary. The composed climate uses the
 installation's heights on the retained side.
 
@@ -95,7 +96,10 @@ The offline setup trial exercised all four choices on the same map.
 1. **Plan the domains together.** Read and calibrate the installation once.
    Use a registry of continent definitions that supplies the vanilla footprint,
    coast and contact policy, supported presets and societal calibration. Resolve
-   overlapping claims before generating land. Build compact, wrap-aware windows
+   overlapping ocean claims by distance from substantial land, with a common
+   allowance for room in the open oceans. Africa and Oceania can use southern
+   waters to the edge of the map. Keep the sea zones of named tolls and
+   protect old shore contacts that a partial claim would sever. Build compact, wrap-aware windows
    or row bands for the actual domains, with a halo only where a kernel needs
    surrounding geography. A bounding rectangle across all active continents
    would spend work and memory on the oceans between them.

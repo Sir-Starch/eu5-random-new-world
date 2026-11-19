@@ -321,3 +321,39 @@ save serialization. The Tunis, discovery, missing identity and Moroccan
 rivalry diagnostics did not recur. There was no new crash report. The
 same river-source warnings and some law and parliament warnings remain
 in the log. This observation covers startup.
+
+## Ocean allocation and coastal contacts on 6HGZ
+
+[V-EXEC 2026-11-19, EU5 1.4.9 / Steam build 26655995] The three continents
+now share open-ocean space, with reach into southern waters. The shared
+plan removes isolated scraps of water, leaves partially claimed zones
+whole where a cut would sever the retained shore, and preserves installed
+toll zones and the fixed naval positions used by retained events. A
+scripted reference to an area that disappears follows the area binding.
+
+Measured by counting land pixels in the written maps:
+
+| Same seed and regional presets | America | Africa | Oceania | America / Africa |
+|---|---:|---:|---:|---:|
+| 6HGZ Load Fix | 18,091,960 | 7,097,617 | 2,324,672 | 2.55 |
+| 6HGZ Regional Coasts | 10,937,548 | 10,396,079 | 3,772,957 | 1.05 |
+
+The overlap with original Oceania falls from 0.468 to 0.050 by Jaccard
+index. The new African land reaches the bottom raster row and Oceanian
+land reaches within 54 rows. The combined exporter paints shelves and
+enclosed seas from the finished shore and basin fields, fading into the
+installed water texture beyond the changed geography.
+
+The seed chooses an approach to Asia in 40% of the optional cases. The
+required switch constructs an approach while planning the coast and
+requires a passable foreign land contact during verification. This world
+uses the required switch. It has 13 direct passable location adjacencies
+to Asia along the southern Yemeni coast, including Aden, and one crossing
+to Europe. The latter connects Esgueira on the Portuguese coast to the new
+African shore across one six-pixel sea segment.
+The map passed the retained-contact, port, and script checks with 27,421
+locations. Cold generation took 234.5 seconds with 24 threads, and
+all 1,461 canonical files were verified in the installed copy. The
+America-only reference on the same installed build reproduced all 884
+canonical files byte for byte.
+[Installation details](../INSTALLED.md).

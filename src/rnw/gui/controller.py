@@ -429,6 +429,9 @@ class Controller:
         if policy in {mode.value for mode in MoroccoPolicy}:
             self._edit_region("africa", {"morocco": policy})
 
+    def set_asia_connection(self, *, required: bool) -> None:
+        self._edit_region("africa", {"require_asia_connection": required})
+
     def set_region_value(self, region: str, key: str, number: int | None) -> None:
         control = controls.REGION_BY_KEY.get(key)
         if (

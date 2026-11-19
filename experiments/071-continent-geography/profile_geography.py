@@ -31,7 +31,7 @@ from rnw.eu5_canvas import NEW_WORLD, place_islands
 from rnw.eu5_history import installed_rules
 from rnw.eu5_history_build import build_history_start
 from rnw.eu5_islands import moved_pixels_of
-from rnw.eu5_map import DEFINITIONS, PORTS, load_map
+from rnw.eu5_map import DEFAULT_MAP, DEFINITIONS, PORTS, load_map
 from rnw.eu5_morocco import algeciras, reserve_morocco
 from rnw.eu5_natives import (
     regional_populations,
@@ -55,6 +55,7 @@ from rnw.eu5_nw_export import (
     composed_bindings,
     composed_land_character,
     composed_rivers,
+    missing_area_keys,
     settled_biomes,
     vanilla_localization_keys,
     verify_country_tags,
@@ -63,6 +64,7 @@ from rnw.eu5_nw_export import (
 )
 from rnw.eu5_oceans import emitted_cells, plan_oceans
 from rnw.eu5_regional_history import project_regional_start, shared_routes, simulate_region
+from rnw.eu5_rewrite import sound_toll_locations
 from rnw.eu5_seas import current_bands, read_ports, read_waters, settle_coast, shape_water
 from rnw.eu5_start import combine_starts
 from rnw.eu5_terrain import DecalStore
@@ -520,6 +522,7 @@ def _shared_water(  # noqa: PLR0913, PLR0915 - measure the stages from coast thr
             lambda: plan_oceans(game, canvas, world, plan, hierarchy, water.zones, keys),
         )
         plan.oceans = ocean_plan
+        plan.dropped_areas = missing_area_keys(hierarchy, removed - ocean_plan.retained, plan)
         report.update(ocean_plan.stats)
         report["final_location_ids"] = (
             len(game.keys) - len(removed - ocean_plan.retained) + len(emitted_cells(plan))
@@ -656,7 +659,11 @@ def profile(  # noqa: C901, PLR0912, PLR0913, PLR0915 - the prototype records ea
     )
     if societies and NEW_WORLD in presets:
         native_options[NEW_WORLD] = build_settings(presets[NEW_WORLD] or "continents").natives
-    domains = timed("plan continent domains", lambda: plan_domains(game, settings))
+    tolls = sound_toll_locations((game_dir / DEFAULT_MAP).read_text(encoding="utf-8-sig"))
+    domains = timed(
+        "plan continent domains",
+        lambda: plan_domains(game, settings, seed=seed, retained_tolls=tolls),
+    )
     text = (game_dir / TEMPLATES).read_text(encoding="utf-8-sig")
     templates = template_attributes(text)
     store = DecalStore(game_dir, game.labels.shape)
@@ -712,6 +719,8 @@ def profile(  # noqa: C901, PLR0912, PLR0913, PLR0915 - the prototype records ea
             map_rows=(domain.first_row, game.labels.shape[0]),
             sea_bands=bands,
             outside_land=domain.contact_land,
+            land_interface=domain.land_interface if domain.join_asia else None,
+            strait=domain.strait,
         )
         if canvas is not None:
             moved = moved_pixels_of(place_islands(game, canvas, world.moves))

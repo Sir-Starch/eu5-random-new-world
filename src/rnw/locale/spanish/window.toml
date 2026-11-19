@@ -3301,6 +3301,10 @@ text = '''Oceanía'''
 source = "6c2ae46b1a7ee90a"
 text = '''Selecciona al menos un continente.'''
 
+["continent.africa.asia_connection"]
+source = "a936e75dbefa2ad8"
+text = "Exigir una conexión terrestre con Asia"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Posesiones ibéricas de Marruecos'''

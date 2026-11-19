@@ -17,6 +17,7 @@ from rnw.continent_domains import (
     Domain,
     _coastal_claim,  # pyright: ignore[reportPrivateUsage]
     _coastal_waters,  # pyright: ignore[reportPrivateUsage]
+    _protected_sea,  # pyright: ignore[reportPrivateUsage]
     plan_domains,
 )
 from rnw.eu5_biomes import EQUATOR_ROW, block_features, climate_grid, land_features, latitude_tenths
@@ -127,6 +128,51 @@ def test_original_african_land_interface_and_oceanian_wrap() -> None:
     assert oceania.first_row > 0
     rows = slice(205 - oceania.first_row, 228 - oceania.first_row)
     assert np.all(oceania.footprint[rows, oceania.seam - 1 : oceania.seam + 1])
+
+
+def test_shared_southern_ocean_and_seeded_african_boundary() -> None:
+    game = _map()
+    selected = {member: CONTINENTS[member].geography() for member in CONTINENTS}
+    america, africa, oceania = plan_domains(game, selected, seed=42, require_asia_connection=True)
+    assert africa.join_asia
+    assert africa.land_interface is not None
+    assert africa.land_interface.any()
+    assert oceania.rows.stop == game.labels.shape[0]
+    assert oceania.mask[-1].any()
+    assert america.mask.sum() < select_canvas(game, 1600, expanded=True).mask.sum()
+    plans = plan_domains(game, selected, seed=42)
+    assert not plans[1].join_asia
+    assert plans[1].land_interface is None
+
+
+def test_a_partly_claimed_retained_gulf_keeps_its_whole_shore() -> None:
+    labels = np.zeros((20, 24), dtype=np.int32)
+    labels[5:15, 10:16] = 1
+    labels[5:15, 6:10] = 2
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("ocean", "shore", "gulf"),
+                labels=labels,
+                continents=("indian_ocean_continent", "asia", "asia"),
+                classes=(CellClass.SEA, CellClass.LAND, CellClass.SEA),
+                ambiguous=np.array([True, False, False]),
+            ),
+        ),
+    )
+    claim = np.zeros(labels.shape, dtype=bool)
+    claim[5:15, 9] = True
+    protected = _protected_sea(game, claim, {"africa": CONTINENTS["africa"].geography()})
+    assert protected.tolist() == [False, False, True]
+
+
+def test_an_unselected_navigational_toll_reserves_its_sea_zone() -> None:
+    game = _map()
+    settings = {"africa": CONTINENTS["africa"].geography()}
+    (domain,) = plan_domains(game, settings, retained_tolls={"ocean"})
+    assert np.array_equal(domain.mask, domain.footprint)
 
 
 def test_america_only_uses_the_current_canvas() -> None:

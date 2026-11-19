@@ -3301,6 +3301,10 @@ text = '''오세아니아'''
 source = "6c2ae46b1a7ee90a"
 text = '''대륙을 하나 이상 선택하세요.'''
 
+["continent.africa.asia_connection"]
+source = "a936e75dbefa2ad8"
+text = "아시아와의 육상 연결 필수"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''모로코의 이베리아 영토'''

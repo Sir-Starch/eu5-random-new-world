@@ -230,6 +230,7 @@ class WastelandSettings:
     barrier: NDArray[np.bool_]
     groups: Mapping[str, str]
     biome_ok: Callable[[str, str, str], bool]
+    land_connection: frozenset[int] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -372,10 +373,17 @@ class _Planner:
             int(self.land[cell] and not self.wasteland[cell]) for cell in range(count)
         )
         sinks = bytearray(
-            int(bool(passable[cell]) and bool(terrain.coastal[cell])) for cell in range(count)
+            int(
+                bool(passable[cell]) and (terrain.coastal[cell] or cell in settings.land_connection)
+            )
+            for cell in range(count)
         )
         self.reach = _Reach(self.adjacency, passable, sinks)
-        self.free = [cell for cell in range(count) if self.land[cell] and not self.wasteland[cell]]
+        self.free = [
+            cell
+            for cell in range(count)
+            if self.land[cell] and not self.wasteland[cell] and cell not in settings.land_connection
+        ]
         self.scores: dict[str, NDArray[np.int64]] = {}
         self.pools: dict[Class, list[int]] = {}
         self.members: dict[Class, set[int]] = {}

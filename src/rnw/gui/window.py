@@ -949,6 +949,13 @@ class MainWindow(QMainWindow):
 
         _ = self.morocco_policy.currentIndexChanged.connect(picked_morocco)
         layout.addRow(self.morocco_label, self.morocco_policy)
+        self.asia_connection: QCheckBox = QCheckBox(text("continent.africa.asia_connection"))
+
+        def connection_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a positional bool.
+            self.controller.set_asia_connection(required=checked)
+
+        _ = self.asia_connection.toggled.connect(connection_toggled)
+        layout.addRow(self.asia_connection)
         return group
 
     def _advanced_tab(self) -> QScrollArea:
@@ -2012,6 +2019,11 @@ class MainWindow(QMainWindow):
                 self.morocco_policy.setVisible(enabled)
                 self.morocco_label.setVisible(enabled)
                 self.morocco_policy.setEnabled(not busy)
+                _ = self.asia_connection.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+                self.asia_connection.setChecked(settings.require_asia_connection)
+                _ = self.asia_connection.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+                self.asia_connection.setVisible(enabled)
+                self.asia_connection.setEnabled(not busy)
             if enabled:
                 defaults = self.controller.region_settings(name, defaults=True)
                 _, rows = self.regional_controls[name]

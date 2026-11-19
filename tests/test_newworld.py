@@ -171,6 +171,23 @@ def test_land_can_reach_a_retained_neighbor_without_a_forced_bridge() -> None:
     assert passable == [False, True]
 
 
+def test_required_asian_approach_stays_playable_through_the_generated_land() -> None:
+    domain = np.zeros((300, 520), dtype=bool)
+    domain[18:282, 16:388] = True
+    asia = np.zeros_like(domain)
+    asia[140:224, 388:508] = True
+    allowed = np.zeros_like(domain)
+    allowed[175:196, 387] = True
+    settings = replace(SMALL, feature_px=140, land_permille=310, wasteland_permille=90)
+    world = generate_new_world(
+        domain, seed=3, settings=settings, sizes=SIZES, outside_land=asia, land_interface=allowed
+    )
+    assert len(world.land_link) > 0
+    assert all(world.classes[cell] is CellClass.LAND for cell in world.land_link)
+    assert np.any(np.isin(world.labels[allowed], world.land_link))
+    assert np.all(world.labels[asia] == -1)
+
+
 def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:
     """A drawn continent is continuous even when its display crosses both map edges."""
     domain = np.ones((160, 400), dtype=bool)

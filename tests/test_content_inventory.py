@@ -28,7 +28,9 @@ from rnw.content_inventory import (
     references,
     scan,
     summarize,
+    world_footprint,
 )
+from rnw.geography import Location
 from rnw.pdx import parse
 
 if TYPE_CHECKING:
@@ -50,6 +52,21 @@ STAGE_OF = {
     "river_union": "N3",
 }
 KNOWN_CARRIERS = frozenset(STAGE_OF)
+
+
+def test_replacing_foreign_water_keeps_the_living_parents_of_its_shore() -> None:
+    locations = (
+        Location("old_water", "europe", "west", "coast", "shore", "water_province"),
+        Location("inland", "europe", "west", "coast", "shore", "land_province"),
+        Location("redrawn", "africa", "north", "african_coast", "new_shore", "african_province"),
+    )
+    result = world_footprint(locations, continents={"africa"}, removed={"old_water"}, tags=set())
+    assert result.keys["location"] == {"old_water", "redrawn"}
+    assert result.keys["province"] == {"water_province", "african_province"}
+    assert result.keys["area"] == {"new_shore"}
+    assert result.keys["region"] == {"african_coast"}
+    assert result.keys["subcontinent"] == {"north"}
+
 
 DEFINITIONS = """america = {
 \tnorth_america = {

@@ -41,6 +41,7 @@ from rnw.eu5_newworld import outside_contacts
 from rnw.eu5_oceans import emitted_cells
 from rnw.lanes import Course, plan_lanes
 from rnw.model import CellClass
+from rnw.newworld import derive_world
 from rnw.ports import ForeignCoast, relabel, settle_seas
 from rnw.sea_routes import cyclic_end, navigation_links
 from rnw.seas import Topography, Waters, analyse, inland_seas
@@ -353,6 +354,7 @@ class Water:
     shortcuts: int = 0
     completed: int = 0
     uncurrented: int = 0
+    external_crossings: tuple[ExternalCrossing, ...] = ()
 
 
 def shape_water(coast: Coast) -> Water:
@@ -623,6 +625,70 @@ class Crossing:
     through: int
     start: tuple[int, int]
     stop: tuple[int, int]
+
+
+@dataclass(frozen=True, slots=True)
+class ExternalCrossing:
+    """A generated African shore and a retained European shore across one sea zone."""
+
+    europe: str
+    africa: str
+    sea: str
+    start: tuple[int, int]
+    stop: tuple[int, int]
+
+    def row(self, height: int) -> str:
+        y1, x1 = self.start
+        y2, x2 = self.stop
+        return (
+            f"{self.europe};{self.africa};sea;{self.sea};"
+            f"{x1};{height - 1 - y1};{x2};{height - 1 - y2};xxx"
+        )
+
+
+def mediterranean_crossing(
+    game_map: Eu5Map, water: Water, plan: Plan, landing: tuple[int, int]
+) -> ExternalCrossing | None:
+    """Use the normal crossing detector on both sides of a cropped African approach."""
+    row, column = landing
+    reach = CROSSING_PX + 8
+    if column < reach or column + reach >= game_map.labels.shape[1]:
+        return None
+    top = max(0, row - reach)
+    left = column - reach
+    rows = slice(top, row + reach + 1)
+    columns = slice(left, column + reach + 1)
+    world = water.coast.world
+    offset = len(game_map.keys)
+    generated = world.labels[rows, columns]
+    composite = np.where(generated >= 0, generated + offset, game_map.labels[rows, columns])
+    identities, compact = np.unique(composite, return_inverse=True)
+    names = game_map.keys + tuple(cell.key for cell in plan.cells)
+    classes = game_map.classes + world.classes
+    types = tuple(classes[int(cell)] for cell in identities)
+    local = derive_world(
+        compact.reshape(composite.shape).astype(np.int32), types, np.zeros_like(composite)
+    )
+    for section in sorted(crossing_sections(local), key=lambda s: (s.squared, s.start, s.stop)):
+        europe, africa, sea = (
+            int(identities[cell]) for cell in (section.first, section.second, section.through)
+        )
+        if (
+            europe >= offset
+            or game_map.continents[europe] != "europe"
+            or africa < offset
+            or plan.cells[africa - offset].continent != "africa"
+            or (game_map.ambiguous[sea] if sea < offset else sea - offset in water.zones)
+        ):
+            continue
+        return ExternalCrossing(
+            names[europe],
+            names[africa],
+            names[sea],
+            (section.start[0] + top, section.start[1] + left),
+            (section.stop[0] + top, section.stop[1] + left),
+        )
+    return None
 
 
 def crossings(world: NewWorld) -> list[Crossing]:

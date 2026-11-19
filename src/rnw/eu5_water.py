@@ -30,6 +30,7 @@ from PIL import Image
 
 from rnw import _native
 from rnw.dds import rewrite
+from rnw.fields import upsample
 from rnw.parallel import band_rows
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
@@ -68,6 +69,11 @@ SMOOTH: Final[int] = 3
 # original sea starts there, so the shelf must have reached the far sea by then.
 TAIL: Final[int] = 3
 TAIL_OF: Final[int] = 4
+DEPTH_GRID: Final[int] = 16
+SHELF_BLOCKS: Final[int] = 13
+BLEND_BLOCKS: Final[int] = 26
+TINT_SCALE: Final[int] = 256
+SHELF_RGB: Final[tuple[int, int, int]] = (40, 111, 142)
 
 
 def _downsample(mask: NDArray[np.bool_], factor: int, *, any_true: bool) -> NDArray[np.bool_]:
@@ -325,6 +331,87 @@ def _lakes(data: bytes, canvas: NDArray[np.bool_]) -> tuple[bytes, int]:
     return b"".join(kept), len(data) // LAKE_RECORD - len(kept)
 
 
+def _pool(mask: NDArray[np.bool_]) -> NDArray[np.bool_]:
+    height, width = mask.shape
+    step = DEPTH_GRID
+    padded = np.pad(mask, ((0, -height % step), (0, -width % step)))
+    return padded.reshape(-(-height // step), step, -(-width // step), step).any(axis=(1, 3))
+
+
+def _interpolate(
+    grid: NDArray[np.int64], first: int, last: int, width: int, step: int
+) -> NDArray[np.int64]:
+    """Bilinear texture bands, continuous in the map's wrapped longitude."""
+    top, skip = divmod(first, step)
+    height = skip + last - first
+    rows = np.minimum(np.arange(top, top + height // step + 2, dtype=np.int64), grid.shape[0] - 1)
+    columns = np.arange(width // step + 2, dtype=np.int64) % grid.shape[1]
+    # Doubling before the native interpolation rounds to nearest after it.
+    interpolated = upsample(2 * grid[np.ix_(rows, columns)], step, (height, width))
+    return (interpolated[skip:] + 1) // 2
+
+
+def _smooth_weight(distance: NDArray[np.int32], width: int) -> NDArray[np.int64]:
+    value = np.maximum(0, width - distance.astype(np.int64)) * TINT_SCALE // width
+    return value * value * (3 * TINT_SCALE - 2 * value) // TINT_SCALE**2
+
+
+@measured
+def _regional_color(
+    data: bytes,
+    vanilla_water: NDArray[np.bool_],
+    new_water: NDArray[np.bool_],
+    inland: NDArray[np.bool_],
+) -> tuple[bytes, int]:
+    """Colour the final shelf and blend into the installed sea beyond the changed shores.
+
+    Old shallow water does not supply the open-ocean background. Both the new shelf
+    and the fade are continuous fields. A paint boundary cannot follow a location,
+    canvas or the former outline of a replaced continent.
+    """
+    image = _decode(data)
+    previous = _downsample(vanilla_water, 2, any_true=False)
+    current = _downsample(new_water, 2, any_true=False)
+    inland_water = _pool(_downsample(inland, 2, any_true=True))
+    influence = _pool(previous != current)
+    if not influence.any():
+        return data, 0
+    fade = _smooth_weight(
+        distance_from(influence, BLEND_BLOCKS, octagonal=True, wrap_x=True), BLEND_BLOCKS
+    )
+    shelf = _smooth_weight(
+        distance_from(_pool(~current), SHELF_BLOCKS, octagonal=True, wrap_x=True), SHELF_BLOCKS
+    )
+    # Smooth the open-to-enclosed transition where an inland sea meets straits.
+    basin = _smooth_weight(distance_from(inland_water, 4, octagonal=True, wrap_x=True), 4)
+    depth = np.maximum(shelf, basin // 2)
+    height, width = current.shape
+    old_depth = distance_from(_pool(~previous), SHELF_BLOCKS, octagonal=True, wrap_x=True)
+    ocean = (old_depth >= SHELF_BLOCKS).astype(np.uint8)
+    ocean = np.repeat(np.repeat(ocean, DEPTH_GRID, axis=0), DEPTH_GRID, axis=1)[:height, :width]
+    strip = band_rows(width * STRIP_ROW_BYTES, workers=1, floor=STRIP_FLOOR, ceiling=STRIP_CEILING)
+    grid = _background_grid(*_open_water_cells(image, ocean, 1, strip))
+    result = image.copy()
+    changed = np.zeros(current.shape, dtype=bool)
+    for first in range(0, height, strip):
+        checkpoint()
+        last = min(height, first + strip)
+        scope = _interpolate(fade, first, last, width, DEPTH_GRID) * current[first:last]
+        if not scope.any():
+            continue
+        shelf_mix = _interpolate(depth, first, last, width, DEPTH_GRID)
+        for channel in range(image.shape[2]):
+            background = _interpolate(grid[..., channel], first, last, width, GRID)
+            shallow = SHELF_RGB[channel] if channel < len(SHELF_RGB) else background
+            target = (background * (TINT_SCALE - shelf_mix) + shallow * shelf_mix) // TINT_SCALE
+            original = image[first:last, :, channel]
+            result[first:last, :, channel] = (
+                (original * (TINT_SCALE - scope) + target * scope + TINT_SCALE // 2) // TINT_SCALE
+            ).astype(np.uint8)
+        changed[first:last] = np.any(result[first:last] != image[first:last], axis=2)
+    return rewrite(data, result, changed), int(np.count_nonzero(changed))
+
+
 def water_outputs(  # noqa: PLR0913, PLR0917 - the textures need the masks, the seed and the moved groups.
     game_dir: Path,
     vanilla_water: NDArray[np.bool_],
@@ -332,6 +419,8 @@ def water_outputs(  # noqa: PLR0913, PLR0917 - the textures need the masks, the 
     canvas: NDArray[np.bool_],
     seed: int,
     moved: Moved | None = None,
+    *,
+    inland: NDArray[np.bool_] | None = None,
 ) -> tuple[dict[str, bytes], dict[str, int]]:
     """Mod copies of the water colour map, foam map and lake mesh list.
 
@@ -339,15 +428,19 @@ def water_outputs(  # noqa: PLR0913, PLR0917 - the textures need the masks, the 
     """
     root = game_dir / "game/in_game"
     masks = (vanilla_water, new_water, canvas)
-    color, color_px = _rebuild(
-        (root / WATER_COLOR).read_bytes(),
-        factor=2,
-        reach=COLOR_REACH,
-        masks=masks,
-        seed=seed,
-        stream="water_color",
-        moved=moved,
-    )
+    color_data = (root / WATER_COLOR).read_bytes()
+    if inland is None:
+        color, color_px = _rebuild(
+            color_data,
+            factor=2,
+            reach=COLOR_REACH,
+            masks=masks,
+            seed=seed,
+            stream="water_color",
+            moved=moved,
+        )
+    else:
+        color, color_px = _regional_color(color_data, vanilla_water, new_water, inland)
     foam, foam_px = _rebuild(
         (root / FOAM).read_bytes(),
         factor=4,

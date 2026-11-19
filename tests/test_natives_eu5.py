@@ -300,6 +300,13 @@ def test_named_colour_values_are_not_location_references() -> None:
     assert "dabaca" in referenced_words("in_game/common/x.txt", "a = dabaca\n")
 
 
+def test_population_identity_names_do_not_count_as_locations() -> None:
+    template = "new_home = { culture = retired_place religion = local_faith }"
+    pops = "locations = { new_home = { define_pop = { culture = retired_place } } }"
+    assert referenced_words("in_game/map_data/location_templates.txt", template) == {"new_home"}
+    assert referenced_words("main_menu/setup/1337/06_pops.txt", pops) == {"new_home"}
+
+
 def test_land_graph_links_shores_and_scores_farming() -> None:
     """Sea coasts count as coastal, lakes only link shores; poles cannot farm."""
     classes = (CellClass.LAND, CellClass.LAND, CellClass.LAKE, CellClass.LAND, CellClass.SEA)

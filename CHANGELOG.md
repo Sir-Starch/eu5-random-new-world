@@ -9,6 +9,10 @@ worlds and saves are not rewritten or migrated.
   world. Both added continents have their own presets, detailed settings and
   local cultures, faiths and societies. Africa offers four outcomes for
   Morocco's holdings in Iberia, with keeping Morocco as the default.
+  Selected continents share open oceans, including the southern waters.
+  New coastal shallows follow the generated shore. Africa can form a
+  seed-dependent land connection to Asia or a navigable strait crossing to
+  Europe. A checkbox makes the Asian connection required.
 
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size

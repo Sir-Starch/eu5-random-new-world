@@ -68,6 +68,8 @@ ARRAYS: Final[tuple[str, ...]] = (
     "spread",
     "moves",
     "barrier",
+    "land_link",
+    "strait_landing",
     "edges",
     "drainage",
     "drainage_seam",
@@ -112,7 +114,7 @@ def _hash_file(path: Path) -> str:
         return hashlib.file_digest(handle, "sha256").hexdigest()
 
 
-def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geography input.
+def cache_key(  # noqa: C901, PLR0913, PLR0917 - hash each independent geography input.
     domain: NDArray[np.bool_],
     seed: int,
     settings: NewWorldSettings,
@@ -128,6 +130,8 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     *,
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
+    land_interface: NDArray[np.bool_] | None = None,
+    strait: NDArray[np.uint8] | None = None,
 ) -> str:
     # The first number is the layout of the construction (11: the drainage plan the rivers are
     # drawn along; 10: the game's location sizes the cells are spaced by; 9: the epoch the world
@@ -171,11 +175,17 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
             digest.update(grid.tobytes())
     if map_rows is not None:
         digest.update(f"map_rows={map_rows}".encode("ascii"))
-    if outside_land is not None:
-        digest.update(b"outside_land")
-        for row in range(0, len(outside_land), STRIP):
+    for name, neighbor in (
+        (b"outside_land", outside_land),
+        (b"land_interface", land_interface),
+        (b"strait", strait),
+    ):
+        if neighbor is None:
+            continue
+        digest.update(name)
+        for row in range(0, len(neighbor), STRIP):
             checkpoint()
-            digest.update(outside_land[row : row + STRIP].tobytes())
+            digest.update(neighbor[row : row + STRIP].tobytes())
     return digest.hexdigest()
 
 
@@ -508,6 +518,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
+    land_interface: NDArray[np.bool_] | None = None,
+    strait: NDArray[np.uint8] | None = None,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
@@ -535,6 +547,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             sizes=sizes,
             map_rows=map_rows,
             outside_land=outside_land,
+            land_interface=land_interface,
+            strait=strait,
         )
     )
     target = None if cache is None or key is None else cache / key
@@ -568,6 +582,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         on_placed=on_placed,
         map_rows=map_rows,
         outside_land=outside_land,
+        land_interface=land_interface,
+        strait=strait,
     )
     if not regional:
         world = seal_pockets(world)
@@ -588,6 +604,8 @@ def _write(target: Path, world: NewWorld) -> None:
         "spread": world.spread,
         "moves": world.moves,
         "barrier": world.barrier,
+        "land_link": world.land_link,
+        "strait_landing": np.array(world.strait_landing or (-1, -1), dtype=np.int64),
     }
     with TemporaryDirectory(prefix=".land-", dir=target.parent) as temporary:
         stage = Path(temporary)
@@ -665,6 +683,7 @@ def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
             )
             for index in range(0, edge_bytes, 8)
         )
+        landing_y, landing_x = _i64(target, "strait_landing", (2,)).tolist()
         return NewWorld(
             labels=_i32(target, "labels", shape),
             classes=classes,
@@ -677,6 +696,8 @@ def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
             edges=edges,
             moves=_i64(target, "moves", ((target / "moves").stat().st_size // 16, 2)),
             barrier=_i64(target, "barrier", ((target / "barrier").stat().st_size // 8,)),
+            land_link=_i64(target, "land_link", ((target / "land_link").stat().st_size // 8,)),
+            strait_landing=None if landing_y < 0 else (landing_y, landing_x),
             drainage=_drainage(target, shape),
         )
     except (OSError, ValueError, TypeError, KeyError, IndexError) as error:

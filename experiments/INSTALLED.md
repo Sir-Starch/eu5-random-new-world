@@ -6,6 +6,20 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-19, **1.3.0 development / epoch 64 — regional ocean balance and crossings** (C547).
+[V-EXEC] Installed `RNW: 6HGZ Regional Coasts` in `rnw_exp_world_lilsm56plj`
+for EU5 1.4.9 / build 26655995. The reported 6HGZ seed and regional presets
+were rebuilt with the Asian land connection required. All 1,461 canonical
+files match the record (`115681c8…6817856`). The country-selection map is
+visible. The [continent experiment](071-continent-geography/README.md#ocean-allocation-and-coastal-contacts-on-6hgz)
+records the area, crossing and timing checks.
+
+The new `rnw_exp_hub` passed both offscreen Wine generator self-tests and
+installed-file verification. Candidate
+`local_data/continent-rebalance-20261119/hub-final/rnw_exp_hub`.
+Backup `.rnw-hub-backups/1.3.0-1795106663068278411`. Windows wheel SHA-256
+`43e252b59f4c6f0cd2900f4f208a3e7f50957f83157b4e176ce1c886593341ff`.
+
 2026-11-19, **1.3.0 development / epoch 64 — 6HGZ startup fix** (C546).
 [V-EXEC] Installed `RNW: 6HGZ Load Fix` in `rnw_exp_world_aipmwdfiwn` in the
 Steam Proton profile for EU5 1.4.9 / Steam build 26655995. The original 6HGZ

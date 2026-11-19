@@ -68,6 +68,7 @@ LIST_KEYS: Final[frozenset[str]] = frozenset(
         "province_definition",
         "provinces",
         "map_id",
+        "area",
         "areas",
         "discovered_areas",
     }

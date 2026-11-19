@@ -3301,6 +3301,10 @@ text = '''Океания'''
 source = "6c2ae46b1a7ee90a"
 text = '''Выберите хотя бы один континент.'''
 
+["continent.africa.asia_connection"]
+source = "a936e75dbefa2ad8"
+text = "Обязательное сухопутное соединение с Азией"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Иберийские владения Марокко'''

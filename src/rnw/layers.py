@@ -66,7 +66,11 @@ def land_key(settings: Settings, seed: int) -> str:
     document: tuple[object, ...] = (seed, settings.mask.id, shape)
     if settings.continents.regions:
         regional = [
-            (r.key, _land_settings(replace(r.new_world, reveal_at_start=0)))
+            (
+                r.key,
+                _land_settings(replace(r.new_world, reveal_at_start=0))
+                + ([("require_asia_connection", True)] if r.require_asia_connection else []),
+            )
             for r in settings.continents.regions
         ]
         if settings.continents.america:

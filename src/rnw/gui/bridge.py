@@ -134,6 +134,7 @@ class Bridge:
                 _str(p, "region"), _str(p, "key"), None
             ),
             "set_morocco": lambda p: c.set_morocco(_str(p, "policy")),
+            "set_asia_connection": lambda p: c.set_asia_connection(required=_bool(p, "required")),
             "set_seed": lambda p: c.set_seed(_str(p, "value")),
             "randomize": lambda _p: c.randomize(),
             "randomize_settings": lambda _p: c.randomize_settings(),

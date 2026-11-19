@@ -109,6 +109,16 @@ def test_removed_map_ids_are_dropped_not_remapped() -> None:
     assert new.split("map_id = {")[1].split("}")[0].split() == ["kept", "other"]
 
 
+def test_scripted_geography_rebinds_a_missing_area_in_its_singular_list() -> None:
+    text = "sea = { area = { old_sea_area retained_sea_area } }\n"
+    remap = GeographicRemap(
+        {"old_sea_area": "unrelated_location"}, {}, {"old_sea_area": "new_sea_area"}
+    )
+    result, count = remap_text(text, remap)
+    assert count == 1
+    assert result == "sea = { area = { new_sea_area retained_sea_area } }\n"
+
+
 def _write(root: Path, relative: str, text: str) -> None:
     path = root / relative
     path.parent.mkdir(parents=True, exist_ok=True)

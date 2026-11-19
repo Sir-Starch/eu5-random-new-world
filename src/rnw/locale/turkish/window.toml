@@ -3301,6 +3301,10 @@ text = '''Okyanusya'''
 source = "6c2ae46b1a7ee90a"
 text = '''En az bir kıta seçin.'''
 
+["continent.africa.asia_connection"]
+source = "a936e75dbefa2ad8"
+text = "Asya ile kara bağlantısı zorunlu olsun"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Fas’ın İberya toprakları'''

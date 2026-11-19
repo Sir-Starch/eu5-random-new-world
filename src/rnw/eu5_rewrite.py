@@ -194,6 +194,16 @@ def rewrite_class_lists(text: str, removed: set[str], additions: dict[str, list[
     return edits.apply(text)
 
 
+def sound_toll_locations(text: str) -> frozenset[str]:
+    """The named sea and land endpoints of installed navigational tolls."""
+    tolls = parse(text).block("sound_toll")
+    if tolls is None:
+        return frozenset()
+    return frozenset(
+        word for row in tolls.entries for word in (row.key, row.value) if isinstance(word, str)
+    )
+
+
 def rewrite_templates(text: str, removed: set[str], lines: list[str]) -> str:
     """Remove removed location templates and append generated template lines."""
     root = parse(text)

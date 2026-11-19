@@ -377,6 +377,7 @@ def _regions(c: Controller, selection: dict[str, bool]) -> dict[str, object]:
         result[name] = {
             "preset": settings.preset,
             "morocco": settings.morocco.value if settings.morocco is not None else "",
+            "require_asia_connection": settings.require_asia_connection,
             "controls": [
                 {
                     **_control_info(control, controls.region_value(control, defaults)),

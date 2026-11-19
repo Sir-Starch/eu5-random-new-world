@@ -260,6 +260,7 @@ from rnw.eu5_rewrite import (
     rewrite_named_colors,
     rewrite_override_locators,
     rewrite_templates,
+    sound_toll_locations,
 )
 from rnw.eu5_rivers import RiverRasterError, encode_rivers, watershed_spans
 from rnw.eu5_seas import (
@@ -271,6 +272,7 @@ from rnw.eu5_seas import (
     Water,
     current_bands,
     current_text,
+    mediterranean_crossing,
     read_ports,
     read_waters,
     settle_coast,
@@ -379,7 +381,7 @@ from rnw.rivers import (
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.rng import derive_seed
 from rnw.sea_corridors import corridor_paths, draw_corridors
-from rnw.seas import Shape, inland_seas
+from rnw.seas import Shape, Topography, inland_seas
 from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
 from rnw.settings import MoroccoPolicy, ResourceSettings, canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
@@ -776,12 +778,15 @@ def composed_land_character(  # noqa: PLR0913 - common map, calibration and inde
         )
         wasteland_regions[name] = WastelandRegion(
             cells,
-            wasteland_settings(
-                rules,
-                materials,
-                budget=land * parameters.wasteland_permille // 1000,
-                polar=polar[first : first + land],
-                barrier=barrier,
+            replace(
+                wasteland_settings(
+                    rules,
+                    materials,
+                    budget=land * parameters.wasteland_permille // 1000,
+                    polar=polar[first : first + land],
+                    barrier=barrier,
+                ),
+                land_connection=frozenset(local.land_link.tolist()),
             ),
             derive_seed(seed, "continent", name),
         )
@@ -990,7 +995,7 @@ def _crossing_rows(plan: Plan, canvas: Canvas, water: Water) -> list[str]:
         rows.append(
             f"{first};{second};sea;{through};{columns[0]};{start_y};{columns[1]};{stop_y};xxx"
         )
-    return rows
+    return rows + [crossing.row(height) for crossing in water.external_crossings]
 
 
 def _port_contacts(
@@ -1457,12 +1462,16 @@ def _replacement_water_links(
     """A cut contact at a selected coast can go through its new navigable waters."""
     offset = len(game_map.keys)
     linked: set[tuple[int, int]] = set()
-    for first, target in lost:
-        if not any(game_map.continents[node] in generated_continents for node in (first, target)):
+    for low, high in lost:
+        first, target = (high, low) if game_map.classes[high] is CellClass.LAND else (low, high)
+        coast = game_map.classes[first] is CellClass.LAND
+        if not coast and not any(
+            game_map.continents[node] in generated_continents for node in (first, target)
+        ):
             continue
         if any(
             game_map.classes[node] is not CellClass.SEA or bool(game_map.ambiguous[node])
-            for node in (first, target)
+            for node in ((target,) if coast else (first, target))
         ):
             continue
         pending = deque(neighbours.get(first, ()))
@@ -1470,7 +1479,7 @@ def _replacement_water_links(
         while pending:
             cell = pending.popleft()
             if cell == target:
-                linked.add((first, target))
+                linked.add((min(first, target), max(first, target)))
                 break
             if cell >= offset and cell - offset not in closed and cell not in seen:
                 seen.add(cell)
@@ -1479,7 +1488,10 @@ def _replacement_water_links(
 
 
 def _sea_neighbours(
-    game_map: Eu5Map, world: NewWorld, contacts: Collection[tuple[int, int]]
+    game_map: Eu5Map,
+    world: NewWorld,
+    contacts: Collection[tuple[int, int]],
+    shores: Collection[int] = (),
 ) -> tuple[NDArray[np.bool_], dict[int, list[int]]]:
     sea = np.fromiter(
         (kind is CellClass.SEA for kinds in (game_map.classes, world.classes) for kind in kinds),
@@ -1490,10 +1502,14 @@ def _sea_neighbours(
         if sea[first] and sea[second]:
             neighbours.setdefault(first, []).append(second)
             neighbours.setdefault(second, []).append(first)
+        elif first in shores and sea[second]:
+            neighbours.setdefault(first, []).append(second)
+        elif second in shores and sea[first]:
+            neighbours.setdefault(second, []).append(first)
     return sea, neighbours
 
 
-def _check_world(  # noqa: PLR0913, PLR0917 - checks the raster and the hierarchy together.
+def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster and hierarchy together.
     game_map: Eu5Map,
     canvas: Canvas,
     world: NewWorld,
@@ -1546,7 +1562,12 @@ def _check_world(  # noqa: PLR0913, PLR0917 - checks the raster and the hierarch
         and not held[pair[1]]
         and (old_world[pair[0]] or old_world[pair[1]])
     ]
-    sea, neighbours = _sea_neighbours(game_map, world, after)
+    shores = (
+        {cell for pair in lost for cell in pair if game_map.classes[cell] is CellClass.LAND}
+        if world.wrap_x
+        else set[int]()
+    )
+    sea, neighbours = _sea_neighbours(game_map, world, after, shores)
     linked = (
         _replacement_water_links(game_map, lost, neighbours, generated_continents, impassable)
         if world.wrap_x
@@ -1597,6 +1618,15 @@ def _check_world(  # noqa: PLR0913, PLR0917 - checks the raster and the hierarch
     if world.wrap_x:
         stats["selected_coastal_water_links_replaced"] = len(linked)
         stats["impassable_ocean_borders_changed"] = len(impassable_ocean_edges)
+        if "africa" in generated_continents:
+            stats["africa_asia_land_contacts"] = sum(
+                low < vanilla_count <= high
+                and continents[low] == "asia"
+                and game_map.classes[low] is CellClass.LAND
+                and plan.cells[high - vanilla_count].continent == "africa"
+                and world.classes[high - vanilla_count] is CellClass.LAND
+                for low, high in after
+            )
     return stats, frozenset(low for low, high in after if low < vanilla_count <= high)
 
 
@@ -1622,6 +1652,16 @@ def _removed_areas(
         if location.area in wanted:
             areas.setdefault(location.area, []).append(key)
     return {area: members for area, members in areas.items() if all(k in removed for k in members)}
+
+
+def missing_area_keys(
+    hierarchy: Mapping[str, Location], removed: set[str], plan: Plan
+) -> list[str]:
+    """Original areas with no remaining or generated member on the composed map."""
+    removed_areas = {hierarchy[key].area for key in removed if key in hierarchy}
+    retained_areas = {place.area for key, place in hierarchy.items() if key not in removed}
+    used_areas = {cell.area for cell in emitted_cells(plan)}
+    return sorted(removed_areas - retained_areas - used_areas)
 
 
 def composed_bindings(  # noqa: PLR0913 - finished coast and original geographic keys.
@@ -2742,8 +2782,16 @@ def referenced_words(path: str, text: str) -> set[str]:
     """Identifier-like words of a script text, without comments.
 
     Named colours count only their keys: a colour such as ``dabaca`` can spell a
-    location key (vanilla has one) without referring to it.
+    location key (vanilla has one) without referring to it. Location templates
+    and population records name locations only in their respective record keys.
     """
+    if path in {_mod_path(TEMPLATES), _mod_path(f"{SETUP_DIR}/06_pops.txt")}:
+        root = parse(text)
+        holder = root if path == _mod_path(TEMPLATES) else root.block("locations")
+        if holder is None:
+            message = f"{path} has no location records"
+            raise NewWorldExportError(message)
+        return {entry.key for entry in holder.entries if entry.key is not None}
     text = re.sub(r"#[^\n]*", "", text)
     if path == _mod_path(NAMED_COLORS):
         text = "\n".join(line.split("=", 1)[0] for line in text.splitlines())
@@ -2839,6 +2887,13 @@ def verify_map_texts(
         )
     except SeaError as error:
         raise NewWorldExportError(str(error)) from error
+    if water.external_crossings:
+        rows = outputs[_mod_path(ADJACENCIES)].decode("utf-8-sig").splitlines()
+        for crossing in water.external_crossings:
+            if rows.count(crossing.row(canvas.shape[0])) != 1:
+                message = "A crossing between Africa and Europe was not written exactly once"
+                raise NewWorldExportError(message)
+        checks["africa_europe_straits"] = len(water.external_crossings)
     return checks
 
 
@@ -3871,6 +3926,7 @@ def _water_textures(  # noqa: PLR0913 - read the fixed map plus the new mask and
     *,
     seed: int,
     moved: Moved | None,
+    regional_water: Water | None = None,
 ) -> dict[str, int]:
     codes = _codes(game_map, canvas, world)
     canvas_world = codes != OUTSIDE
@@ -3879,7 +3935,16 @@ def _water_textures(  # noqa: PLR0913 - read the fixed map plus the new mask and
     )[game_map.labels]
     new_water = vanilla_water.copy()
     new_water[canvas_world] = codes[canvas_world] == WATER_CODE
-    files, stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed, moved)
+    inland = None
+    if regional_water is not None:
+        enclosed = np.array(
+            [kind is Topography.INLAND_SEA for kind in regional_water.waters.topography] + [False],
+            dtype=bool,
+        )
+        inland = enclosed[world.labels]
+    files, stats = water_outputs(
+        game_dir, vanilla_water, new_water, canvas_world, seed, moved, inland=inland
+    )
     spool.update(files)
     return stats
 
@@ -4226,8 +4291,16 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     sizes: SizeModel,
     land_mask: LandMask | None,
     cache_dir: Path | None,
+    require_asia_connection: bool,
+    retained_tolls: Collection[str],
 ) -> tuple[WorldRegion, ...]:
-    domains = plan_domains(game_map, geography)
+    domains = plan_domains(
+        game_map,
+        geography,
+        seed=seed,
+        require_asia_connection=require_asia_connection,
+        retained_tolls=retained_tolls,
+    )
 
     def build(domain: Domain) -> WorldRegion:
         checkpoint()
@@ -4251,6 +4324,8 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             algorithm=algorithm,
             map_rows=(domain.first_row, game_map.labels.shape[0]),
             outside_land=domain.contact_land,
+            land_interface=domain.land_interface if domain.join_asia else None,
+            strait=domain.strait,
         )
         return WorldRegion(domain, world)
 
@@ -4262,9 +4337,23 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     if memory is None or memory < EXPORT_MEMORY + background or stage_workers() == 1:
         return tuple(build(domain) for domain in domains)
 
-    def other_regions() -> tuple[WorldRegion, ...]:
+    def quiet_build(domain: Domain) -> WorldRegion:
         with quiet_stages():
-            return tuple(build(domain) for domain in additional)
+            return build(domain)
+
+    if (
+        len(additional) > 1
+        and stage_workers() >= len(domains)
+        and memory >= EXPORT_MEMORY + background + first.mask.size * REGIONAL_BYTES_PER_PIXEL
+    ):
+        pending = [
+            stages.prepare(f"{domain.continent.key} geography", partial(quiet_build, domain))
+            for domain in additional
+        ]
+        return build(first), *(future.result() for future in pending)
+
+    def other_regions() -> tuple[WorldRegion, ...]:
+        return tuple(quiet_build(domain) for domain in additional)
 
     others = stages.prepare("other continents geography", other_regions)
     main = build(first)
@@ -4317,6 +4406,10 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
             sizes=sizes,
             land_mask=land_mask,
             cache_dir=cache_dir,
+            require_asia_connection=any(
+                region.require_asia_connection for region in settings.continents.regions
+            ),
+            retained_tolls=sound_toll_locations(_read(game_dir, DEFAULT_MAP)),
         ),
     )
     composed = run_stage("select canvas", lambda: compose_regions(game_map, regions))
@@ -4359,7 +4452,9 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
     world = shapes.coast.world
     water_textures = stages.submit(
         "water textures",
-        lambda: _water_textures(spool, game_dir, game_map, canvas, world, seed=seed, moved=None),
+        lambda: _water_textures(
+            spool, game_dir, game_map, canvas, world, seed=seed, moved=None, regional_water=shapes
+        ),
     )
     rivers = stages.submit(
         "biomes and rivers", lambda: composed_rivers(canvas.shape, regions, seed)
@@ -4386,9 +4481,20 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
             seed=seed,
         ),
     )
+    for region in regions:
+        if (landing := region.world.strait_landing) is None:
+            continue
+        r, c = landing
+        point = (
+            r + region.domain.first_row,
+            (c + region.domain.first_column) % region.domain.map_width,
+        )
+        if (crossing := mediterranean_crossing(game_map, shapes, plan, point)) is not None:
+            shapes = replace(shapes, external_crossings=(crossing,))
     removed = vanilla.removed
     if plan.oceans is not None:
         removed = removed - plan.oceans.retained
+    plan.dropped_areas = missing_area_keys(hierarchy, removed, plan)
     _check_identity_budget(game_map, removed, plan)
     final = _final_labels(game_map, canvas, world)
     checks, neighbours = run_stage(
@@ -4405,6 +4511,12 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
             inland_sizes={name: inland_sea_min_area(knobs) for name, knobs in geography.items()},
         ),
     )
+    if (
+        any(region.domain.join_asia for region in regions)
+        and not checks["africa_asia_land_contacts"]
+    ):
+        message = "The African land approach does not join a passable Asian location"
+        raise NewWorldExportError(message)
     return _ExportGeography(
         game_map,
         canvas,

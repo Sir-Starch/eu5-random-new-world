@@ -3301,6 +3301,10 @@ text = '''大洋洲'''
 source = "6c2ae46b1a7ee90a"
 text = '''请至少选择一个大洲。'''
 
+["continent.africa.asia_connection"]
+source = "a936e75dbefa2ad8"
+text = "必须与亚洲陆路相连"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''摩洛哥在伊比利亚的领地'''

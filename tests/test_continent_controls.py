@@ -24,6 +24,7 @@ def test_continent_presets_and_overrides_travel_independently(tmp_path: Path) ->
     controller.set_region_preset("africa", "continents")
     controller.set_region_value("africa", "resources.coffee", 1500)
     controller.set_morocco("castile")
+    controller.set_asia_connection(required=True)
     controller.set_region_value("oceania", "natives.state_share_permille", 24)
     controller.set_region_value("oceania", "resources.coffee", 1500)
     controller.set_continent("america", enabled=False)
@@ -33,6 +34,8 @@ def test_continent_presets_and_overrides_travel_independently(tmp_path: Path) ->
     assert africa.preset == "continents"
     assert africa.resources == (("coffee", 1500),)
     assert africa.morocco is MoroccoPolicy.CASTILE
+    assert africa.require_asia_connection
+    assert not oceania.require_asia_connection
     assert oceania.natives.state_share_permille == 24
     assert oceania.resources == ()
     assert not restored.continent_selection()["america"]
@@ -57,6 +60,9 @@ def test_land_versions_distinguish_regional_geography(tmp_path: Path) -> None:
     controller.set_region_value("africa", "resources.coffee", 200)
     controller.set_morocco("granada")
     assert land_key(controller.world_code().settings(), 17) == original
+    controller.set_asia_connection(required=True)
+    assert land_key(controller.world_code().settings(), 17) != original
+    controller.set_asia_connection(required=False)
     controller.set_region_value("africa", "new_world.land_permille", 500)
     assert land_key(controller.world_code().settings(), 17) != original
     assert (

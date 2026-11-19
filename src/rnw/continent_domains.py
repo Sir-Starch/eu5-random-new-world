@@ -14,12 +14,13 @@ import numpy as np
 from rnw.eu5_canvas import NEW_WORLD, CanvasError, roll_for, select_canvas
 from rnw.model import CellClass
 from rnw.progress import checkpoint
+from rnw.rng import SplitMix64, derive_seed
 from rnw.settings import PRESETS, REGIONAL_PRESETS, NewWorldSettings
-from rnw.topology import distance_from, label_components
+from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 from rnw.watersheds import DENSITY_STEP
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Collection, Mapping
 
     from numpy.typing import NDArray
 
@@ -30,6 +31,19 @@ REFERENCE_WIDTH: Final[int] = 16_384
 BAND_ROWS: Final[int] = 256
 RETAINED_SHORE_PX: Final[int] = 160
 CONTINENTAL_SHORE_AREA_PX: Final[int] = 131_072
+OCEAN_GRID_COLUMNS: Final[int] = 512
+OPEN_OCEAN_BAND_PX: Final[int] = 1850
+# In a shared world no regional shelf gets more than this fraction of the full
+# map as new ocean. Existing land is always taken in full.
+SHARED_OCEAN_DIVISOR: Final[int] = 6
+AFRICA_LAND_CHANCE: Final[int] = 40
+EUROPE_STRAIT_CHANCE: Final[int] = 35
+EUROPE_STRAIT_GAP: Final[int] = 7
+# Fixed sea positions of the War of the Straits, the Battle of Lepanto and
+# the installed exploration test. Their retained coasts keep these anchors.
+NAVAL_ANCHORS: Final[frozenset[str]] = frozenset(
+    {"cape_lecton", "dardanelles", "gulf_patras", "favaritx_cape"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,6 +102,9 @@ class Domain:
     # Dry land of the eligible retained neighbor throughout the regional window.
     contact_land: NDArray[np.bool_] | None = None
     legacy_canvas: Canvas | None = None
+    join_asia: bool = False
+    # 1 keeps water at the European shore, 2 admits an African landing.
+    strait: NDArray[np.uint8] | None = None
 
     def spans(self) -> tuple[tuple[slice, slice], ...]:
         """Regional and world column spans in west-to-east order."""
@@ -175,6 +192,71 @@ def _read(labels: NDArray[np.int32], first: int, width: int) -> NDArray[np.int32
     return np.concatenate((labels[:, first:], labels[:, : stop - labels.shape[1]]), axis=1)
 
 
+@dataclass(frozen=True, slots=True, eq=False)
+class OceanClaims:
+    """One coarse, wrapped claim for every open-water block in the map."""
+
+    owners: NDArray[np.int8]
+    step: int
+
+    def rows(self, rows: NDArray[np.int64]) -> NDArray[np.int64]:
+        return rows // (2 * self.step)
+
+    def columns(self, columns: NDArray[np.int64]) -> NDArray[np.int64]:
+        return columns // self.step
+
+
+def _ocean_claims(
+    game_map: Eu5Map, selected: Mapping[str, NewWorldSettings], sea: NDArray[np.bool_]
+) -> OceanClaims:
+    """Divide competing ocean claims by distance to substantial land on a shared grid.
+
+    A distant island retains its footprint and a local coast. It cannot reserve an
+    ocean sector for its continent. Taller blocks give all continents room towards the
+    poles without letting a fringe island dominate a whole latitude band.
+    """
+    labels = game_map.labels
+    height, width = labels.shape
+    step = max(1, width // OCEAN_GRID_COLUMNS)
+    rows = np.minimum(np.arange(0, height, 2 * step, dtype=np.int64) + step, height - 1)
+    columns = np.minimum(np.arange(0, width, step, dtype=np.int64) + step // 2, width - 1)
+    sample = labels[np.ix_(rows, columns)]
+    best = np.full(sample.shape, max(sample.shape) + 1, dtype=np.int32)
+    owners = np.full(sample.shape, -1, dtype=np.int8)
+    minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // (2 * step**2))
+    for number, key in enumerate(CONTINENTS):
+        if key not in selected:
+            continue
+        land = (_membership(game_map, key) & ~sea)[sample]
+        parts = label_components(land.astype(np.int32), wrap_x=True)
+        sizes = np.bincount(parts[land], minlength=int(parts.max()) + 1)
+        largest = int(sizes.max(initial=0))
+        mainland = land & (sizes >= min(largest, minimum))[parts]
+        settings = selected[key]
+        reach = settings.ocean_band_px
+        if key != NEW_WORLD:
+            reach = reach * OPEN_OCEAN_BAND_PX // REGIONAL_PRESETS[key][1]
+        if key == NEW_WORLD and (settings.expand_oceans or settings.landform):
+            reach = max(reach, OPEN_OCEAN_BAND_PX)
+        radius = reach * width // (REFERENCE_WIDTH * step)
+        distance = distance_from(mainland, radius + 1, octagonal=True, wrap_x=True)
+        claim = (distance <= radius) & (distance < best)
+        owners[claim] = number
+        best[claim] = distance[claim]
+    if len(selected) > 1:
+        quota = sample.size // SHARED_OCEAN_DIVISOR
+        marine = sea[sample]
+        for number in range(len(CONTINENTS)):
+            own = (owners == number) & marine
+            scores = best[own]
+            if len(scores) > quota:
+                # Retire the farthest shell together, so a tied distance never
+                # produces a straight row boundary to make a quota exact.
+                cutoff = int(np.partition(scores, quota)[quota])
+                owners[own & (best >= cutoff)] = -1
+    return OceanClaims(owners, step)
+
+
 def _interface(inside: NDArray[np.bool_], neighbor: NDArray[np.bool_]) -> NDArray[np.bool_]:
     """Original solid land contacts in the continuous regional window."""
     touching = np.zeros(inside.shape, dtype=bool)
@@ -207,37 +289,57 @@ def _coastal_waters(
     return marine & claim
 
 
-def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are independent inputs.
+def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast contacts.
     game_map: Eu5Map,
     continent: Continent,
-    settings: NewWorldSettings,
-    occupied: NDArray[np.bool_],
+    number: int,
+    claims: OceanClaims,
     *,
     sea: NDArray[np.bool_],
     solid: NDArray[np.bool_],
+    join_asia: bool | None,
+    europe_strait: bool,
 ) -> Domain:
     labels = game_map.labels
     map_height, map_width = labels.shape
-    reach = settings.ocean_band_px * map_width // REFERENCE_WIDTH
+    reach = continent.island_band_px * map_width // REFERENCE_WIDTH
     member = _membership(game_map, continent.key) & ~sea
     source = member[labels]
-    first, width = _extent(source.any(axis=0), reach + 1)
+    owner = claims.owners == number
+    owner_cols = owner.any(axis=0)[claims.columns(np.arange(map_width, dtype=np.int64))]
+    owner_rows = owner.any(axis=1)[claims.rows(np.arange(map_height, dtype=np.int64))]
+    first, width = _extent(source.any(axis=0) | owner_cols, reach + 1)
     active_rows = np.flatnonzero(source.any(axis=1))
     del source
     # Keep the regional density grid aligned to map rows, and leave a halo past
     # the last possible sea pixel. The world rows still determine the latitude.
     top = max(0, (int(active_rows[0]) - reach - 1) // DENSITY_STEP * DENSITY_STEP)
     end = min(map_height, -(-(int(active_rows[-1]) + reach + 2) // DENSITY_STEP) * DENSITY_STEP)
+    owned_rows = np.flatnonzero(owner_rows)
+    if owned_rows.size:
+        top = min(top, int(owned_rows[0]) // DENSITY_STEP * DENSITY_STEP)
+        end = min(
+            map_height, max(end, -(-(int(owned_rows[-1]) + 1) // DENSITY_STEP) * DENSITY_STEP)
+        )
     local = _read(labels[top:end], first, width)
     footprint = member[local]
     marine = sea[local]
-    claim = _coastal_waters(
-        footprint,
-        marine,
-        reach,
-        continent.island_band_px * map_width // REFERENCE_WIDTH,
-        max(1, CONTINENTAL_SHORE_AREA_PX * map_width**2 // REFERENCE_WIDTH**2),
-    )
+    open_sea = np.fromiter(
+        (
+            name == continent.key or name.endswith("_ocean_continent")
+            for name in game_map.continents
+        ),
+        dtype=bool,
+    )[local]
+    local_owners = claims.owners[
+        np.ix_(
+            claims.rows(np.arange(top, end, dtype=np.int64)),
+            claims.columns(np.arange(first, first + width, dtype=np.int64) % map_width),
+        )
+    ]
+    coast = _coastal_waters(footprint, marine, reach, reach, 0)
+    candidate = marine & ((local_owners == number) | ((local_owners < 0) & coast))
+    claim = candidate & open_sea
     # The original footprint has priority over sea claims. Keep ocean room around
     # other land, including the islands of continental shelves and adjacent Asia.
     guard = max(1, RETAINED_SHORE_PX * map_width // REFERENCE_WIDTH)
@@ -258,31 +360,70 @@ def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are
             first,
             width,
         )
-    claim &= near > guard
-    del near
     neighbor = (
         None
-        if continent.land_neighbor is None
+        if continent.land_neighbor is None or join_asia is False
         else (_membership(game_map, continent.land_neighbor) & solid)[local]
     )
+    close = near > guard
+    del near
     interface = None
+    strait = None
+    inland = footprint & solid[local]
+    near_africa = _near_african_shores(inland, map_width) if join_asia or europe_strait else None
+    passable = np.fromiter((kind is CellClass.LAND for kind in game_map.classes), dtype=bool)
     if neighbor is not None:
-        passable = np.fromiter((kind is CellClass.LAND for kind in game_map.classes), dtype=bool)
-        interface = _interface(footprint & solid[local], neighbor & passable[local])
-    domain = Domain(
+        contact = inland
+        if join_asia and near_africa is not None:
+            # Permit approach within the African domain along western Asia's
+            # contiguous shore as well as across the old overland boundary.
+            asian_shore = neighbor & near_africa
+            approach = distance_from(asian_shore, guard + 1, octagonal=True) <= guard
+            close |= approach
+            claim |= candidate & approach
+            contact = inland | (claim & close)
+        interface = _interface(contact, neighbor & passable[local])
+    if europe_strait and near_africa is not None:
+        europe = (_membership(game_map, "europe") & passable)[local] & near_africa
+        near_europe = distance_from(europe, guard + 1, octagonal=True)
+        gap = min(guard, EUROPE_STRAIT_GAP)
+        close |= near_europe <= guard
+        claim |= candidate & (near_europe <= guard)
+        landing = claim & (near_europe == gap)
+        if landing.any():
+            strait = np.where(landing, 2, near_europe < gap).astype(np.uint8)
+    claim &= close
+    mask = _attached_ocean(footprint, claim)
+    if interface is not None:
+        interface &= mask
+    if strait is not None:
+        strait[~mask] = 0
+    return Domain(
         continent,
         first,
         map_width,
-        footprint | claim,
+        mask,
         footprint,
         first_row=top,
         land_interface=interface,
         contact_land=neighbor,
+        join_asia=bool(join_asia),
+        strait=strait,
     )
-    for columns, original in domain.spans():
-        domain.mask[:, columns] &= ~occupied[domain.rows, original]
-        occupied[domain.rows, original] |= domain.mask[:, columns]
-    return domain
+
+
+def _attached_ocean(footprint: NDArray[np.bool_], claim: NDArray[np.bool_]) -> NDArray[np.bool_]:
+    """Keep shelves continuous with the continent or with one of its outlying islands."""
+    mask = footprint | claim
+    parts = label_components(mask.astype(np.int32))
+    anchored = np.zeros(int(parts.max()) + 1, dtype=bool)
+    anchored[parts[footprint]] = True
+    return mask & anchored[parts]
+
+
+def _near_african_shores(footprint: NDArray[np.bool_], width: int) -> NDArray[np.bool_]:
+    reach = max(1, width * 720 // REFERENCE_WIDTH)
+    return distance_from(footprint, reach + 1, octagonal=True) <= reach
 
 
 def _claim_america(
@@ -290,6 +431,7 @@ def _claim_america(
     selected: Mapping[str, NewWorldSettings],
     occupied: NDArray[np.bool_],
     sea: NDArray[np.bool_],
+    claims: OceanClaims,
 ) -> Domain:
     source = _legacy_domain(game_map, selected[NEW_WORLD])
     mask = source.mask.copy()
@@ -303,10 +445,18 @@ def _claim_america(
     )
     for columns, original in source.spans():
         for top in range(0, mask.shape[0], BAND_ROWS):
-            rows = slice(top, top + BAND_ROWS)
+            rows = slice(top, min(top + BAND_ROWS, mask.shape[0]))
             labels = game_map.labels[rows, original]
             marine[rows, columns] = sea[labels]
             allowed = source.footprint[rows, columns] | marine[rows, columns]
+            if not selected[NEW_WORLD].landform:
+                owners = claims.owners[
+                    np.ix_(
+                        claims.rows(np.arange(rows.start, rows.stop, dtype=np.int64)),
+                        claims.columns(np.arange(original.start, original.stop, dtype=np.int64)),
+                    )
+                ]
+                allowed &= source.footprint[rows, columns] | (owners == 0)
             mask[rows, columns] &= allowed & ~occupied[rows, original] & ~retained[labels]
     return Domain(
         source.continent,
@@ -317,8 +467,70 @@ def _claim_america(
     )
 
 
-def plan_domains(game_map: Eu5Map, selected: Mapping[str, NewWorldSettings]) -> tuple[Domain, ...]:
-    """Plan selected regions once, giving new regional shores priority over wide American seas.
+def _protected_sea(
+    game_map: Eu5Map, occupied: NDArray[np.bool_], selected: Mapping[str, NewWorldSettings]
+) -> NDArray[np.bool_]:
+    """Leave a partly claimed sea zone whole if the cut would sever a retained shore."""
+    labels = game_map.labels
+    size = len(game_map.keys)
+    kept = np.empty_like(labels)
+    inside = np.zeros(size, dtype=np.int64)
+    outside = np.zeros(size, dtype=np.int64)
+    for top in range(0, len(labels), BAND_ROWS):
+        checkpoint()
+        rows = slice(top, top + BAND_ROWS)
+        mask = occupied[rows]
+        block = labels[rows]
+        kept[rows] = np.where(mask, -1, block)
+        inside += np.bincount(block[mask], minlength=size)
+        outside += np.bincount(block[~mask], minlength=size)
+    previous = set(unpack_pairs(adjacency_pairs(labels, wrap_x=True)))
+    remaining = set(unpack_pairs(adjacency_pairs(kept, wrap_x=True)))
+    cut = (inside > 0) & (outside > 0)
+    foreign = [
+        name not in selected and not name.endswith("_ocean_continent")
+        for name in game_map.continents
+    ]
+    protect = np.zeros(size, dtype=bool)
+    for first, second in previous - remaining:
+        if not (outside[first] and outside[second] and (foreign[first] or foreign[second])):
+            continue
+        for cell in (first, second):
+            if (
+                cut[cell]
+                and game_map.classes[cell] is CellClass.SEA
+                and not game_map.ambiguous[cell]
+            ):
+                protect[cell] = True
+    return protect
+
+
+def _keep_coastal_waters(game_map: Eu5Map, domain: Domain, protected: NDArray[np.bool_]) -> Domain:
+    mask = domain.mask.copy()
+    for crop, original in domain.spans():
+        mask[:, crop] &= ~protected[game_map.labels[domain.rows, original]]
+    if np.array_equal(mask, domain.mask):
+        return domain
+    if domain.continent.key != NEW_WORLD:
+        mask = _attached_ocean(domain.footprint, mask)
+    interface, strait = domain.land_interface, domain.strait
+    return replace(
+        domain,
+        mask=mask,
+        land_interface=None if interface is None else interface & mask,
+        strait=None if strait is None else np.where(mask, strait, 0).astype(np.uint8),
+    )
+
+
+def plan_domains(
+    game_map: Eu5Map,
+    selected: Mapping[str, NewWorldSettings],
+    *,
+    seed: int | None = None,
+    require_asia_connection: bool = False,
+    retained_tolls: Collection[str] = (),
+) -> tuple[Domain, ...]:
+    """Plan selected regions once, dividing shared oceans before generating any land.
 
     Preserve the legacy canvas for America on its own. In a combined world, each region
     exclusively owns its vanilla land footprint and the unclaimed coastal water placed in its
@@ -338,12 +550,49 @@ def plan_domains(game_map: Eu5Map, selected: Mapping[str, NewWorldSettings]) -> 
     )
     occupied = np.zeros(game_map.labels.shape, dtype=bool)
     planned: dict[str, Domain] = {}
-    for key, continent in CONTINENTS.items():
+    claims = _ocean_claims(game_map, selected, sea)
+    connect = (
+        None
+        if seed is None
+        else require_asia_connection
+        or SplitMix64(derive_seed(seed, "africa", "asia_connection")).below(100)
+        < AFRICA_LAND_CHANCE
+    )
+    strait = seed is not None and (
+        SplitMix64(derive_seed(seed, "africa", "europe_strait")).below(100) < EUROPE_STRAIT_CHANCE
+    )
+    for number, (key, continent) in enumerate(CONTINENTS.items()):
         if key != NEW_WORLD and key in selected:
             checkpoint()
-            planned[key] = _claim(
-                game_map, continent, selected[key], occupied, sea=sea, solid=solid
+            domain = _claim(
+                game_map,
+                continent,
+                number,
+                claims,
+                sea=sea,
+                solid=solid,
+                join_asia=connect if key == "africa" else None,
+                europe_strait=strait and key == "africa",
             )
+            for columns, original in domain.spans():
+                domain.mask[:, columns] &= ~occupied[domain.rows, original]
+                occupied[domain.rows, original] |= domain.mask[:, columns]
+            planned[key] = domain
     if NEW_WORLD in selected:
-        planned[NEW_WORLD] = _claim_america(game_map, selected, occupied, sea)
-    return tuple(planned[key] for key in CONTINENTS if key in planned)
+        america = _claim_america(game_map, selected, occupied, sea, claims)
+        planned[NEW_WORLD] = america
+        for crop, original in america.spans():
+            occupied[america.rows, original] |= america.mask[:, crop]
+    protected = _protected_sea(game_map, occupied, selected)
+    protected |= np.fromiter(
+        (
+            (key in retained_tolls or key in NAVAL_ANCHORS) and continent not in selected and is_sea
+            for key, continent, is_sea in zip(game_map.keys, game_map.continents, sea, strict=True)
+        ),
+        dtype=bool,
+    )
+    return tuple(
+        _keep_coastal_waters(game_map, planned[key], protected)
+        for key in CONTINENTS
+        if key in planned
+    )
