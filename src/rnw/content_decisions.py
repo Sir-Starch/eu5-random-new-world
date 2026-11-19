@@ -65,6 +65,10 @@ REASONS: Final[Mapping[str, str]] = {
         "Gated by a retired tag, or owned by one: nothing can reach or consume it, so it "
         "stays as it is."
     ),
+    "country_gate": (
+        "The mechanic requires an original country tag in its eligibility conditions. "
+        "No generated country starts with any of those tags."
+    ),
     "retired": (
         "Retired by the exporter with its country: the events of retired tags, the "
         "modifiers only they applied, the historical base values of removed locations."
@@ -84,6 +88,11 @@ REASONS: Final[Mapping[str, str]] = {
     "canal": (
         "The Panama canal chain needs the vanilla isthmus; removed together, never positionally."
     ),
+    "suez": (
+        "The Suez canal chain needs the vanilla isthmus and its fixed entry points. "
+        "The generated border between Africa and Asia already determines land and sea access."
+    ),
+    "absent_start": "This startup effect assigns offices and actions to the old 1337 countries.",
     "frontier": (
         "Settling the unowned land beside a country: vanilla names the regions whose land "
         "countries border it, and every generated American region can hold one, so the "
@@ -667,6 +676,488 @@ def _table() -> dict[str, Verdict]:
 
 TABLE: Final[Mapping[str, Verdict]] = _table()
 CARRIERS: Final[Mapping[str, Carrier]] = _carriers()
+
+
+def _regional_table() -> dict[str, Verdict]:
+    """Decisions that apply when Africa or Oceania is generated."""
+    table = _Table()
+    add = table.add
+    add("common/advances", NEUTRALIZE, "suez", "suez_canal_advance")
+    add(
+        "common/advances",
+        KEEP,
+        "positional",
+        """
+        african_sturdy_grains_advance baghlah_advance bound_by_service community_of_the_faithful
+        courtly_competition eastern_african_trade expanded_grazing_grounds expanded_slave_trade
+        gifts_and_hostages intercontinental_trade iron_working land_of_the_ancestors
+        mining_tradition nomadic_tendencies overnight_army people_of_ornaments ranching
+        regnal_chronicles saquiyah skilled_cavalry_raids the_sahel_trade unlock_dhow unlock_galiot
+        wandering_scholars
+        """,
+    )
+    add(
+        "common/decisions",
+        NEUTRALIZE,
+        "suez",
+        "build_suez_canal close_suez_canal_to_enemies open_suez_canal_to_all",
+    )
+    add("common/scripted_geography", NEUTRALIZE, "suez", "suez_canal_footprint")
+    add("gfx/map", NEUTRALIZE, "suez", "suez_canal")
+    add(
+        "common/area_preferences",
+        KEEP,
+        "positional",
+        """
+        castile_conquer_maghreb dutch_explore_cape_route dutch_explore_gold_coast
+        england_explore_india ethiopia_colonization ethiopia_conquest explore_african_coast
+        ottoman_expansion_crescent_egypt ottoman_expansion_maghreb
+        """,
+    )
+    add(
+        "common/holy_sites",
+        KEEP,
+        "homeland",
+        """
+        alexandria_episcopal_see alexandria_holy_city_gnostic andalusian_mosque_fez
+        koutoubia_marrakesh_holy_site mosque_of_uqba_kairouan moulay_idriss_zerhoun
+        oracle_of_ammon_holy_site qarawiyyin_fez_holy_site saint_katrine_monastery
+        serapeum_holy_site sidi_bou_said sidi_boumediene_tlemcen tin_mal_mosque zaytuna_tunis
+        """,
+    )
+    add("common/diseases", KEEP, "positional", "bubonic_plague egyptian_plague")
+    add("common/goods", KEEP, "positional", "camels")
+    add(
+        "common/formable_countries",
+        REBIND,
+        "culture",
+        """
+        AIR_f ALG_f BEJ_f ETH_f HAU_f KON_f MAL_f MIR_f
+        MOR_f MSI_f NTR_f NUB_f SKO_f SOI_f TRG_f TUN_f
+        """,
+    )
+    add("common/formable_countries", KEEP, "positional", "CTH_f EGY_f KOA_f ROM_f")
+    add("common/formable_countries", KEEP, "inert", "DAH_f")
+    add(
+        "common/building_types",
+        KEEP,
+        "positional",
+        """
+        caravan_stop fulani_cattle_rearing_pen funduq maghreb_palm_irrigation slave_center
+        trans_saharan_trade_outposts
+        """,
+    )
+    add(
+        "common/building_types",
+        NEUTRALIZE,
+        "identity",
+        """
+        ablaq_palace great_enclosure great_hill_complex great_valley_complex
+        monument_bou_inania_madrasa monument_chellah monument_dar_al_makhzen
+        monument_great_mosque_algiers monument_hassan_tower monument_kairouan_mosque
+        monument_kasbah_udayas monument_ksar_ait_benhaddou monument_mansourah_tlemcen
+        monument_qarawiyyin qalat_al_mashwar walls_of_benin
+        """,
+    )
+    add("common/decisions", NEUTRALIZE, "identity", "mam_ablaq_palace_decision")
+    add("common/decisions", KEEP, "lost", "hafsid_caliphate_decision")
+    add("common/decisions", KEEP, "positional", "maghreb_masters_of_the_sahara oran_fatwa_decision")
+    add(
+        "common/expedition_types",
+        KEEP,
+        "positional",
+        "cape_route_to_india_expedition hajj_caravan_expedition pilgrimage_expedition",
+    )
+    add(
+        "common/area_preferences",
+        KEEP,
+        "positional",
+        "portugal_explore_middle_east timurids_anatolian_conquest",
+    )
+    add("common/cabinet_actions", KEEP, "positional", "oma_zanzibar_integration")
+    add("common/casus_belli", KEEP, "positional", "cb_free_the_mudejar")
+    add("common/advances", KEEP, "generic", "arm_highland_fortresses")
+    add("common/customizable_localization", KEEP, "generic", "country_name_construction")
+    add("common/international_organizations", KEEP, "positional", "ilkhanate")
+    add("common/religious_order_types", KEEP, "positional", "iberian_military_order_type")
+    add("common/script_values", KEEP, "positional", "bfts_gra_strait_maritime_pull")
+    add("common/script_values", KEEP, "generic", "slave_market_max_level")
+    add(
+        "common/situations",
+        KEEP,
+        "positional",
+        "battle_for_the_strait golden_century rise_of_timur",
+    )
+    add(
+        "common/tests",
+        KEEP,
+        "positional",
+        "early_colonization_started ottoman_empire_important_locations portugese_south_africa",
+    )
+    add("common/unit_types", KEEP, "positional", "a_bedouin_cavalry")
+    add("gfx/images", KEEP, "illustration", "d009_monuments")
+    add("menu/dlc", KEEP, "generic", "across_the_pillars")
+    add(
+        "menu/scripted_triggers",
+        KEEP,
+        "positional",
+        "coa_def_african_colonies_trigger coa_def_bars_crescents_flag_trigger",
+    )
+    add(
+        "common/scripted_geography",
+        KEEP,
+        "positional",
+        """
+        caliphate_of_cordoba_geography d009_maghreb_coastal_geography
+        gafsa_sphere_of_influence_geography ibadi_heartland_of_the_maghreb ifriqiya_geography
+        justinian_borders_geography mare_nostrum_geography mediterranean_sea_geography
+        roman_borders_geography sahara_desert_geography sahel_gold_geography
+        umayyad_caliphate_geography umayyad_reconquest_geography
+        """,
+    )
+    add(
+        "common/scripted_triggers",
+        KEEP,
+        "positional",
+        """
+        artillery_institution_plausible_location banking_plausible_location
+        confessionalism_plausible_location discovered_route_to_india
+        enlightenment_plausible_location global_trade_plausible_location
+        hajj_caravan_routes_via_bab_el_mandeb hajj_caravan_routes_via_cairo
+        hajj_caravan_routes_via_jeddah industrialization_plausible_location
+        is_endemic_bubonic_plague_location is_endemic_typhus_location
+        manufactories_plausible_location military_revolution_plausible_location
+        new_world_plausible_location pike_and_shot_plausible_location
+        scientific_revolution_plausible_location unit_camelry_region_trigger
+        unit_moa_hunter_location_trigger
+        """,
+    )
+    _regional_society(table)
+    _regional_events(table)
+    _retired_morocco(table)
+    return table.rows
+
+
+def _regional_society(table: _Table) -> None:
+    add = table.add
+    add(
+        "common/scripted_country_names",
+        KEEP,
+        "positional",
+        """
+        new_south_wales_scripted_country_name new_zealand_scripted_country_name
+        swan_river_colony_scripted_country_name
+        """,
+    )
+    add("common/historical_scores", KEEP, "country_gate", "hs_mansa_musa")
+    add(
+        "common/generic_actions",
+        KEEP,
+        "positional",
+        """
+        adu_charter_saharan_trade_house cross_the_strait launch_a_cabalgada
+        legacy_of_rustamids move_ow_good_to_new_location petition_for_the_bula_de_cruzada
+        proclaim_the_ghazw raid_the_shores rot_select_core_region summon_volunteers_of_the_faith
+        """,
+    )
+    add(
+        "common/estate_privileges",
+        KEEP,
+        "positional",
+        "local_tribal_strongholds maghrebi_zawiya_endowment mellah_charter",
+    )
+    add(
+        "common/laws",
+        KEEP,
+        "positional",
+        "amazigh_familial_connections bayaa_succession_law legal_code_law piracy_law",
+    )
+    add("common/laws", KEEP, "generic", "maritime_law medieval_levy_law mining_law")
+    add(
+        "common/on_action",
+        KEEP,
+        "positional",
+        "maghrebi_location_conversion on_location_changed_owner on_pre_winning_war",
+    )
+    add("common/on_action", KEEP, "generic", "on_location_occupied on_siege_won")
+    add("common/scripted_relations", KEEP, "positional", "parias_payments")
+    add(
+        "common/town_rights",
+        KEEP,
+        "positional",
+        "guich_charter_town_rights sale_arsenal_town_rights",
+    )
+    add("common/languages", KEEP, "name", "korean_language")
+    add(
+        "common/scripted_triggers",
+        KEEP,
+        "positional",
+        """
+        can_summon_iberian_military_orders controls_and_owns_pentarchy has_all_pentarchy
+        has_all_pentarchy_except has_pentarchy_modifier is_geographically_correct
+        is_pentarchy_seat rustamid_legacy_trigger
+        """,
+    )
+    add("common/scripted_triggers", KEEP, "country_gate", "is_hafsid_governor_trigger")
+    add(
+        "common/scripted_effects",
+        KEEP,
+        "positional",
+        """
+        add_all_possible_pentarchies add_pentarchy_modifier enable_treasure_voyages
+        remove_pentarchy_modifier
+        """,
+    )
+    add("common/scripted_effects", NEUTRALIZE, "absent_start", "maghreb_set_up")
+    add(
+        "common/scripted_effects",
+        KEEP,
+        "positional",
+        """
+        create_familial_governor_in_location_effect hafsid_succession_effect
+        hafsid_succession_unite_two_countries
+        """,
+    )
+    add("common/decisions", KEEP, "positional", "tur_eunuch_viziers_decision")
+    add("common/decisions", NEUTRALIZE, "identity", "zan_husuni_kubwa_decision")
+    add("common/estate_privileges", KEEP, "country_gate", "control_over_the_coinage")
+    add("common/estate_privileges", KEEP, "positional", "kbo_lake_chad_trade_privilege")
+    add(
+        "common/government_reforms",
+        KEEP,
+        "country_gate",
+        "zimbabwe_royal_cattle_control zmw_council_of_senior_wives",
+    )
+    add("common/government_reforms", KEEP, "lost", "INJECT:tle_support_of_banu_al_wad")
+    add("common/parliament_types", KEEP, "country_gate", "ahl_al_hall_wal_aqd_parliament")
+    add(
+        "common/rebel_demands",
+        KEEP,
+        "inert",
+        "rebel_demand_flavor_zmw_1 rebel_demand_flavor_zmw_2",
+    )
+    add(
+        "menu/achievements",
+        KEEP,
+        "positional",
+        "endured_atlas getting_things_strait holy_flush saladin_legacy",
+    )
+    add("menu/achievements", KEEP, "country_gate", "african_trade family_matters")
+
+
+def _regional_events(table: _Table) -> None:
+    """Keep events with living regional gates and retire accounts of lost places."""
+    add = table.add
+    add(
+        "events",
+        KEEP,
+        "positional",
+        """
+        d009_morisco_diaspora.2 d009_morisco_diaspora.3 d009_morisco_diaspora.5
+        d009_morisco_diaspora.8 d009_morisco_diaspora.10
+        d009_sephardi_morocco.1 d009_sephardi_morocco.2 d009_sephardi_morocco.3
+        d009_sephardi_morocco.4 d009_sephardi_morocco.6 d009_sephardi_morocco.7
+        d009_sephardi_morocco.8 d009_sephardi_morocco.9 d009_sephardi_morocco.10
+        flavor_por.9 flavor_por.11 flavor_por.29 flavor_por.31 flavor_por.51
+        flavor_por.55 flavor_por.60 flavor_por.61 flavor_por.64
+        flavor_mor.12 flavor_mor.16 flavor_mor.18 flavor_mor.27 flavor_mor.28 flavor_mor.1100
+        flavor_mam.15 flavor_mam.30 flavor_mam.39 flavor_mam.44 flavor_mam.48
+        flavor_mam.53 flavor_mam.54 flavor_mam.55 flavor_mam.70
+        flavor_tur.10 flavor_tur.17 flavor_tur.22 flavor_tur.23 flavor_tur.24 flavor_tur.25
+        flavor_tur.79 flavor_tur.106 flavor_tur.107 flavor_tur.145
+        flavor_tur.149 flavor_tur.150 flavor_tur.204 flavor_tur.213
+        """,
+    )
+    add(
+        "events",
+        NEUTRALIZE,
+        "identity",
+        """
+        flavor_mam.2 flavor_mam.8 flavor_mam.23 flavor_mam.27 flavor_mam.33 flavor_mam.34
+        flavor_mam.36 flavor_mam.37 flavor_mam.40 flavor_mam.41 flavor_mam.45 flavor_mam.58
+        flavor_mam.59 flavor_mam.61 flavor_mam.78 flavor_mam.79 flavor_mam.100
+        flavor_mor.1 flavor_mor.4 flavor_mor.24 flavor_mor.25 flavor_mor.33
+        flavor_tur.78 flavor_tur.182
+        """,
+    )
+    _regional_diplomacy_events(table)
+
+
+def _regional_diplomacy_events(table: _Table) -> None:
+    add = table.add
+    add(
+        "events",
+        KEEP,
+        "positional",
+        """
+        battle_for_the_strait_events.3 battle_for_the_strait_events.4
+        cache_locations_in_maghreb_for_andalusian_migration
+        cape_route_to_india_events.2 cape_route_to_india_events.3 cape_route_to_india_events.15
+        cape_route_to_india_events.28 cape_route_to_india_events.29
+        flavor_cas.1001 flavor_cas.1002 flavor_cas.1005 flavor_cas.1600 flavor_cas.1601
+        flavor_eng.155 flavor_eng.156 flavor_eng.216 flavor_eng.226 flavor_eng.227 flavor_eng.236
+        flavor_eng.239 flavor_eng_diplomacy.1300
+        flavor_gra.1 flavor_gra.16 flavor_gra.1200
+        flavor_kni.3 flavor_kni.17 flavor_ned.6 flavor_oma.5 flavor_oma.11
+        flavor_mor_maghrebi_wars.1001 flavor_mor_maghrebi_wars.1004 flavor_mor_maghrebi_wars.1100
+        flavor_ven.30 flavor_ven.79 flavor_ven.1000 flavor_ven.1001
+        flavor_ven_tur_conflict.1000 flavor_ven_tur_conflict.1001 flavor_ven_tur_conflict.1002
+        golden_century_events.43 great_pirate_era.2 great_pirate_era.3 great_pirate_era.4
+        is_barbary_state maghrebi_cultural_change_events.1004
+        maghrebi_culture.3 maghrebi_culture.4 maghrebi_culture.6 maghrebi_culture.7
+        maghrebi_culture.8 maghrebi_culture.10 maghrebi_culture.11 maghrebi_culture.12
+        maghrebi_culture.13 maghrebi_culture.18 maghrebi_culture.20 maghrebi_culture.22
+        maghrebi_culture.23 maghrebi_culture.24 maghrebi_culture.25 maghrebi_culture.26
+        maghrebi_culture.27 maghrebi_culture.28
+        miaphysite_flavor.1 miaphysite_flavor.3 miaphysite_flavor.9 miaphysite_flavor.11
+        miaphysite_flavor.13 miaphysite_flavor.15 miaphysite_flavor.31
+        pacific_crossing_events.2 pacific_crossing_events.19 pacific_crossing_events.20
+        western_ocean_voyage_events.2
+        """,
+    )
+    add(
+        "events",
+        NEUTRALIZE,
+        "identity",
+        """
+        earthquake_events.9 earthquake_events.38 earthquake_events.41 earthquake_events.56
+        flavor_eth.60
+        """,
+    )
+    add(
+        "events",
+        KEEP,
+        "positional",
+        """
+        decline_of_mali_12_location_trigger decline_of_mali_14_location_trigger
+        decline_of_mali_15_location_trigger exceptional_gift_giraffe_trigger
+        fall_of_delhi.20 fall_of_delhi.21 flavor_ara.39 flavor_dah.1 flavor_dah.2
+        flavor_dan.1000 flavor_eth.90 flavor_flo.51 flavor_fra.2022
+        flavor_gen_tun.1 flavor_gen_tun.2 flavor_gen_tun.3 flavor_ira.20 flavor_mll.11
+        flavor_mos.109 flavor_tle.8 innovativeness_events.11 innovativeness_events.16
+        location_sikhism_influence_areas mysticism_vs_jurisprudence.2 prices.1
+        qa_debug.28 rise_of_timur.3 rise_of_timur.9 rise_of_timur.100
+        """,
+    )
+    add(
+        "events",
+        KEEP,
+        "country_gate",
+        """
+        GFS_ahmed_buffs crisis_of_the_sayfawa_dynasty.1 crisis_of_the_sayfawa_dynasty.6
+        crisis_of_the_sayfawa_dynasty.7 decline_of_mali.8 flavor_kbo.12 flavor_mal.25
+        flavor_tle.1 flavor_tle.2 flavor_tle.6 flavor_tun.7 flavor_zmw.1001
+        """,
+    )
+    add(
+        "events",
+        NEUTRALIZE,
+        "identity",
+        """
+        flavor_eth.201 flavor_eth.202 flavor_eth.203 flavor_eth.204 flavor_eth.210
+        ibn_battuta_events.6
+        """,
+    )
+
+
+def _retired_morocco(table: _Table) -> None:
+    """Shared Andalusi mechanics and clauses guarded by the existence of Morocco."""
+    add = table.add
+    add("common/advances", KEEP, "generic", "gra_taifa_subjects")
+    add("common/ai_scripted_expansion_score", KEEP, "generic", "castile_spares_christian_iberia")
+    add(
+        "common/ai_scripted_expansion_target",
+        KEEP,
+        "generic",
+        "bfts_contest_granada castile_contest_moroccan_iberia",
+    )
+    add("common/building_types", KEEP, "generic", "qadi_office saharan_trade_house")
+    add(
+        "common/bureaucracies",
+        KEEP,
+        "generic",
+        "dar_al_tiraz_bureaucracy qadi_al_jamaa_bureaucracy",
+    )
+    add("common/cabinet_actions", KEEP, "generic", "cas_pressure_andalusi_court")
+    add("common/casus_belli", KEEP, "generic", "cb_demand_andalusi_submission")
+    add("common/country_interactions", KEEP, "generic", "cas_demand_war_entry")
+    add("common/decisions", KEEP, "generic", "gc_decision")
+    add("common/expedition_types", KEEP, "generic", "gold_caravan_expedition")
+    add(
+        "common/generic_actions",
+        KEEP,
+        "generic",
+        """
+        adu_build_qadi_office adu_dispatch_gold_caravan adu_integrate_natives adu_muster_the_ghuzat
+        adu_proclaim_a_fatwa adu_proclaim_crown_al_andalus cas_reduce_granadan_sovereignty
+        claim_andalusi_inheritance gra_reduce_moroccan_influence invoke_ummayad_legacy
+        spa_enforce_conformity
+        """,
+    )
+    add(
+        "common/generic_actions",
+        KEEP,
+        "country_gate",
+        """
+        mor_attract_andalusi_craftsmen mor_force_tribute mor_garrison_granadan_strongholds
+        mor_invite_granadan_advisor mor_invite_granadan_scholars mor_vassalize_granada
+        """,
+    )
+    add("common/on_action", KEEP, "generic", "on_ending_war")
+    add("common/peace_treaties", KEEP, "generic", "peace_andalusi_submission")
+    add("common/religious_schools", KEEP, "lost", "isawiyya_school")
+    add("common/scripted_diplomatic_objectives", KEEP, "generic", "bfts_court_granada")
+    add("common/scripted_effects", KEEP, "generic", "bfts_seed_subject_year_count_effect")
+    add(
+        "common/scripted_triggers",
+        KEEP,
+        "generic",
+        """
+        battle_for_the_strait_castile_holds_the_strait battle_for_the_strait_contender_eliminated
+        battle_for_the_strait_morocco_holds_the_strait
+        battle_for_the_strait_morocco_requirements_met can_demand_andalusi_submission
+        has_ascendancy_over_granada is_battle_for_the_strait_principal
+        """,
+    )
+    add("common/subject_types", KEEP, "generic", "tributary")
+    add("common/tests", KEEP, "generic", "morocco_has_left_iberia")
+    add("common/town_rights", KEEP, "generic", "taifa_al_rais_town_rights")
+    add("gfx/images", KEEP, "generic", "d009_golden_century_illustration")
+    add("menu/achievements", KEEP, "generic", "crossing_the_pillars")
+    add("menu/scripted_triggers", KEEP, "country_gate", "coa_def_MOR_ensign_trigger")
+    add(
+        "events",
+        KEEP,
+        "generic",
+        """
+        battle_for_the_strait_events.1 battle_for_the_strait_events.5 battle_for_the_strait_events.8
+        battle_for_the_strait_events.31 battle_for_the_strait_events.40
+        battle_for_the_strait_events.43 battle_for_the_strait_events.44
+        battle_for_the_strait_events.56 battle_for_the_strait_events.60
+        battle_for_the_strait_events.61
+        d009_convivencia.1 d009_iberian_order_events.53 d009_sephardi_catastrophe.1
+        flavor_cas.15 flavor_cas.152 flavor_gra.15 flavor_tur.1300
+        golden_century_events.1 golden_century_events.2 golden_century_events.3
+        golden_century_events.6 golden_century_events.24 golden_century_events.25
+        golden_century_events.26 golden_century_events.27 golden_century_events.28
+        golden_century_events.33 golden_century_events.40 golden_century_events.41
+        golden_century_events.42 golden_century_events.44 golden_century_events.45
+        golden_century_events.46 golden_century_events.47 golden_century_events.48
+        golden_century_events.49
+        """,
+    )
+    add(
+        "events",
+        NEUTRALIZE,
+        "identity",
+        """
+        flavor_cas_rio_salado.1 flavor_cas_rio_salado.3 flavor_cas_rio_salado.4
+        flavor_cas_rio_salado.5 flavor_mor.37 ibn_battuta_events.7
+        """,
+    )
+
+
+REGIONAL_TABLE: Final[Mapping[str, Verdict]] = dict(TABLE) | _regional_table()
 
 
 def decide(

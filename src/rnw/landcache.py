@@ -125,6 +125,9 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     algorithm: int = epoch.CURRENT,
     seam: int | None = None,
     sizes: SizeModel | None = None,
+    *,
+    map_rows: tuple[int, int] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> str:
     # The first number is the layout of the construction (11: the drainage plan the rivers are
     # drawn along; 10: the game's location sizes the cells are spaced by; 9: the epoch the world
@@ -166,6 +169,13 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
         digest.update(b"hints")
         for grid in hints.grids():
             digest.update(grid.tobytes())
+    if map_rows is not None:
+        digest.update(f"map_rows={map_rows}".encode("ascii"))
+    if outside_land is not None:
+        digest.update(b"outside_land")
+        for row in range(0, len(outside_land), STRIP):
+            checkpoint()
+            digest.update(outside_land[row : row + STRIP].tobytes())
     return digest.hexdigest()
 
 
@@ -496,12 +506,15 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     seam: int | None = None,
     sizes: SizeModel | None = None,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
+    map_rows: tuple[int, int] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
     A world not yet made starts from the land stage of its sketch when one is kept.
     ``template`` is the Americas on the canvas (``Canvas.template``) that Omerika reads.
-    ``algorithm``, ``seam`` and ``sizes`` are ``generate_new_world``'s. ``on_placed`` is
+    The algorithm, seam, size model, global rows and neighbouring land enter the cache key.
+    ``on_placed`` is
     notified once on both a made and a kept world; it never forms part of the cache identity.
     """
     key = (
@@ -520,6 +533,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             algorithm=algorithm,
             seam=seam,
             sizes=sizes,
+            map_rows=map_rows,
+            outside_land=outside_land,
         )
     )
     target = None if cache is None or key is None else cache / key
@@ -530,28 +545,31 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             on_placed(tuple((int(row), int(column)) for row, column in world.moves.tolist()))
         return world
     stage = None
-    if cache is not None and drawn is None:
+    regional = map_rows is not None or outside_land is not None
+    if cache is not None and drawn is None and not regional:
         shape = (int(domain.shape[0]), int(domain.shape[1]))
         digest = domain_digest(domain, template if settings.template_permille else None)
         stage = read_stage(cache, stage_key(digest, seed, settings), shape)
-    world = seal_pockets(
-        generate_new_world(
-            domain.copy(),
-            seed=seed,
-            settings=settings,
-            drawn=drawn,
-            sea_bands=sea_bands,
-            groups=groups,
-            stage=stage,
-            template=template,
-            lakes_drawn=lakes_drawn,
-            hints=hints,
-            algorithm=algorithm,
-            seam=seam,
-            sizes=sizes,
-            on_placed=on_placed,
-        )
+    world = generate_new_world(
+        domain.copy(),
+        seed=seed,
+        settings=settings,
+        drawn=drawn,
+        sea_bands=sea_bands,
+        groups=groups,
+        stage=stage,
+        template=template,
+        lakes_drawn=lakes_drawn,
+        hints=hints,
+        algorithm=algorithm,
+        seam=seam,
+        sizes=sizes,
+        on_placed=on_placed,
+        map_rows=map_rows,
+        outside_land=outside_land,
     )
+    if not regional:
+        world = seal_pockets(world)
     if target is not None and cache is not None:
         _write(target, world)
         prune(cache)

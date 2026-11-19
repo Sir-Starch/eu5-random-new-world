@@ -98,6 +98,19 @@ def test_cache_identity_contains_every_geography_input() -> None:
     assert landcache.cache_key(domain, 42, SMALL, None) != original
 
 
+def test_regional_cache_distinguishes_latitude_and_retained_land() -> None:
+    domain = np.ones((160, 192), dtype=np.bool_)
+    coast = np.zeros_like(domain)
+    north = landcache.cache_key(domain, 42, SMALL, None, map_rows=(48, 420), outside_land=coast)
+    assert north != landcache.cache_key(
+        domain, 42, SMALL, None, map_rows=(92, 420), outside_land=coast
+    )
+    coast[80, 191] = True
+    assert north != landcache.cache_key(
+        domain, 42, SMALL, None, map_rows=(48, 420), outside_land=coast
+    )
+
+
 def test_the_americas_template_is_part_of_the_identity_only_of_a_world_that_reads_it() -> None:
     domain = np.ones((160, 192), dtype=np.bool_)
     template = np.zeros_like(domain)

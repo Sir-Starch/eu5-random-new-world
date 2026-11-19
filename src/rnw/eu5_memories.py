@@ -105,7 +105,12 @@ def _window(seed: int, family: str, bearer: str) -> tuple[int, int, int]:
 
 
 def select(
-    plan: FinalStartPlan, content: ContentPlan, fallen: Sequence[Fallen], seed: int
+    plan: FinalStartPlan,
+    content: ContentPlan,
+    fallen: Sequence[Fallen],
+    seed: int,
+    *,
+    regional: Sequence[FinalStartPlan] = (),
 ) -> tuple[Memory, ...]:
     """The memory events of a world: one per country of its strongest memory, and the heirs'.
 
@@ -113,10 +118,13 @@ def select(
     longer exists among the world's names is passed over. ``fallen`` are the fallen realms of the
     content's facts; each restoration's heirs remember theirs.
     """
-    history = plan.history
-    if history is None:
+    histories = [source.history for source in regional or (plan,) if source.history is not None]
+    if not histories:
         return ()
-    events = {event.key: event for event in history.events}
+    events = {event.key: event for history in histories for event in history.events}
+    if len(events) != sum(len(history.events) for history in histories):
+        message = "Regional history events must have distinct identities"
+        raise RecallError(message)
     best: dict[str, tuple[tuple[int, int, str], Memory]] = {}
     for opinion in plan.historical_opinions:
         place = opinion.place

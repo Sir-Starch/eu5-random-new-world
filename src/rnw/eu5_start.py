@@ -162,6 +162,13 @@ def combine_starts(plans: Sequence[FinalStartPlan]) -> FinalStartPlan:
         rivals=tuple(pair for plan in plans for pair in plan.rivals),
         confederations=tuple(group for plan in confederations for group in plan.confederations),
         confederation_date=next(iter(dates), ""),
+        archetypes={
+            "groups": [
+                {"kind": group.kind, "tags": list(group.members)}
+                for plan in plans
+                for group in plan.historical_groups
+            ]
+        },
         protections=tuple(pair for plan in plans for pair in plan.protections),
         exchanges=tuple(pair for plan in plans for pair in plan.exchanges),
         historical_opinions=tuple(

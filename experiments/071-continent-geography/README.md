@@ -122,10 +122,15 @@ With Africa (Continents) and Oceania
 the independence of America's world map. On this coast, the port matcher
 follows adjoining water to the nearest sea with an eligible port.
 
-Script rewrites, texture export and generator integration still need the
-combined export path. The
-[implementation plan](../../docs/continent-generation-plan.md) describes the
-scope of the end-to-end timing.
+[V-EXEC 2026-11-19, EU5 1.4.9 / Steam build 26655995] The export adapter
+wrote one complete offline mod for seed 42 with Africa and Oceania. It
+validated 27,191 location definitions, 4,059 ports, 337 lanes, 298 new
+countries and 1,080 content consumers, including installed DLC. The run
+took about 128 seconds with 24 workers and reached 9.1 GiB peak RSS.
+The America-only reference reproduced byte-for-byte after the export stages
+were shared. This comparison has different continent selections and seeds.
+The [implementation plan](../../docs/continent-generation-plan.md) describes
+the controlled timings still needed to set a performance budget.
 
 ### Africa and Asia
 

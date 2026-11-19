@@ -38,6 +38,8 @@ def overseas_flags(
     hierarchy: Mapping[str, Location],
     impassable: Collection[str],
     exempt: Collection[str] = (),
+    *,
+    oceans: Collection[str] = OCEANS,
 ) -> NDArray[np.uint8]:
     """Per location: 1 for a passable American one, 2 for a passable Old World one, else 0.
 
@@ -52,7 +54,7 @@ def overseas_flags(
             continue
         if location.continent == NEW_WORLD:
             flags[number] = AMERICAN
-        elif location.continent not in OCEANS:
+        elif location.continent not in oceans:
             flags[number] = OLD_WORLD
     return flags
 

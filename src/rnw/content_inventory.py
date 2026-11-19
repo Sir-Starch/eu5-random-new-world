@@ -33,6 +33,8 @@ if TYPE_CHECKING:
     from collections.abc import Set as AbstractSet
     from pathlib import Path
 
+    from rnw.geography import Location
+
 GEOGRAPHY: Final[tuple[str, ...]] = ("location", "province", "area", "region", "subcontinent")
 # A consumer can name a retired tag, a replaced key, or state only retired objects set.
 KINDS: Final[tuple[str, ...]] = ("tag", *GEOGRAPHY, "state")
@@ -94,11 +96,33 @@ class Consumer:
     files: tuple[str, ...]
     refs: Mapping[str, tuple[str, ...]]
     retired: bool = False
+    country_gated: bool = False
 
     @property
     def key(self) -> str:
         """The consumer's identifier in the decision table."""
         return f"{self.category}:{self.ident}"
+
+
+def world_footprint(
+    locations: Iterable[Location],
+    *,
+    continents: AbstractSet[str],
+    removed: AbstractSet[str],
+    tags: AbstractSet[str],
+) -> Footprint:
+    """Describe selected geographic identities and exactly the tags the start retires."""
+    places = [item for item in locations if item.continent in continents or item.key in removed]
+    return Footprint(
+        {
+            "location": frozenset(item.key for item in places),
+            "province": frozenset(item.province for item in places),
+            "area": frozenset(item.area for item in places),
+            "region": frozenset(item.region for item in places),
+            "subcontinent": frozenset(item.subcontinent for item in places),
+        },
+        frozenset(tags),
+    )
 
 
 def read_footprint(
@@ -244,6 +268,7 @@ def scan(
     retired: Mapping[str, Iterable[str]] | None = None,
     *,
     trees: Trees | None = None,
+    tagged_gates: bool = False,
 ) -> dict[str, Consumer]:
     """Every top-level script object that names replaced content, by decision key.
 
@@ -264,12 +289,17 @@ def scan(
     merged: dict[str, tuple[set[str], dict[str, set[str]]]] = {}
     sources: dict[str, str] = {}
     where: dict[str, str] = {}
+    country_gated: dict[str, bool] = {}
     for relative, (text, root) in parsed.items():
         category = category_of(relative)
         for entry in root.entries:
             if entry.key is None or not isinstance(entry.value, Block):
                 continue
             key = f"{category}:{entry.key}"
+            if tagged_gates:
+                country_gated[key] = country_gated.get(key, True) and positive_tag_gate(
+                    entry.value, category, footprint.tags
+                )
             body = text[entry.start : entry.end]
             _ = sources.setdefault(key, "")
             sources[key] += body
@@ -299,9 +329,41 @@ def scan(
             tuple(sorted(files or ({where[key]} if key in where else set()))),
             {kind: tuple(sorted(names)) for kind, names in sorted(refs.items())},
             key in gone,
+            country_gated.get(key, False),
         )
         for key, (files, refs) in sorted(merged.items())
     }
+
+
+def positive_tag_gate(body: Block, category: str, tags: AbstractSet[str]) -> bool:
+    """Check whether a vanilla gate requires a retired country to qualify."""
+    field = {
+        "events": "trigger",
+        "common/building_types": "country_potential",
+        "common/disasters": "can_start",
+        "common/unit_types": "country_potential",
+    }.get(category, "potential")
+    if category == "common/decisions" and (countries := body.block("tags")) is not None:
+        words = [entry.value for entry in countries.words()]
+        if words and all(isinstance(word, str) and word in tags for word in words):
+            return True
+    gate = body.block(field)
+    return gate is not None and _requires_any_tag(gate, tags)
+
+
+def _requires_any_tag(block: Block, tags: AbstractSet[str], *, all_choices: bool = False) -> bool:
+    required: list[bool] = []
+    for entry in block.entries:
+        value = entry.value
+        if entry.op not in {"=", "=="}:
+            required.append(False)
+        elif isinstance(value, str):
+            required.append(entry.key in {"tag", "has_or_had_tag"} and value in tags)
+        elif entry.key in {"AND", "OR", "hidden_trigger"}:
+            required.append(_requires_any_tag(value, tags, all_choices=entry.key == "OR"))
+        else:
+            required.append(False)
+    return bool(required) and (all(required) if all_choices else any(required))
 
 
 def residuals(

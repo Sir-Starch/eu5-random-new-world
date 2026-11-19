@@ -23,11 +23,13 @@ from rnw.content_inventory import (
     Consumer,
     category_of,
     lost_states,
+    positive_tag_gate,
     read_footprint,
     references,
     scan,
     summarize,
 )
+from rnw.pdx import parse
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -118,6 +120,25 @@ def _install(root: Path) -> Path:
     _write(game, "in_game/common/estate_privileges/rewards.txt", PRIVILEGE)
     _write(game, "in_game/common/scripted_triggers/keywords.txt", KEYWORDS)
     return root
+
+
+@pytest.mark.parametrize(
+    ("expression", "required"),
+    [
+        ("tag = AAA some_trigger = yes", True),
+        ("OR = { tag = AAA AND = { tag = BBB some_trigger = yes } }", True),
+        ("OR = { tag = AAA some_trigger = yes }", False),
+        ("NOT = { tag = AAA }", False),
+        ("tag != AAA", False),
+        ("scope:other_country = { tag = AAA }", False),
+    ],
+)
+def test_positive_tag_gate_requires_the_country_in_every_eligible_branch(
+    expression: str, *, required: bool
+) -> None:
+    tags = {"AAA", "BBB"}
+    body = parse(f"potential = {{ {expression} }}")
+    assert positive_tag_gate(body, "common/advances", tags) is required
 
 
 def test_the_footprint_is_the_american_keys_and_the_tags_that_go_with_them(tmp_path: Path) -> None:

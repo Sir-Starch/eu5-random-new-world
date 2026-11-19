@@ -23,7 +23,7 @@ Only the lines of the objects named are touched; every other byte of a file stay
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 from rnw.content_decisions import Decision
@@ -48,13 +48,17 @@ GATES: Final[Mapping[str, str]] = {
     "common/advances": "potential",
     "common/generic_actions": "potential",
     "common/formable_countries": "potential",
+    "common/building_types": "country_potential",
+    "common/scripted_effects": "",
     "common/scripted_country_names": "country_trigger",
 }
 # Objects that need no edit once the ones that offer them are guarded.
 UNGATED: Final[frozenset[str]] = frozenset(
     {"common/scripted_geography", "gfx/map", "menu/achievements"}
 )
-NEUTRALIZED_REASONS: Final[frozenset[str]] = frozenset({"identity", "canal"})
+NEUTRALIZED_REASONS: Final[frozenset[str]] = frozenset(
+    {"identity", "canal", "suez", "absent_start"}
+)
 ALWAYS_NO: Final[str] = "always = no"
 FORMABLES: Final[str] = "common/formable_countries"
 GAME_START: Final[str] = "common/on_action:on_game_start"
@@ -108,7 +112,7 @@ def guard_targets(
     targets: list[Target] = []
     for key, consumer in consumers.items():
         verdict = verdicts[key]
-        if verdict is None or verdict.reason not in NEUTRALIZED_REASONS:
+        if consumer.retired or verdict is None or verdict.reason not in NEUTRALIZED_REASONS:
             continue
         if verdict.decision not in {Decision.NEUTRALIZE, Decision.REPLACE}:
             continue
@@ -129,6 +133,9 @@ def _gate_edit(text: str, entry: Entry, gate: str, edits: Edits) -> None:
     if not isinstance(block, Block):
         message = f"{entry.key} is not a block"
         raise ContentError(message)
+    if not gate:
+        edits.deletions.append((block.open + 1, block.close))
+        return
     existing = block.first(gate)
     if existing is None:
         line = text.rfind("\n", 0, block.close) + 1
@@ -307,8 +314,8 @@ def matches(
     )
 
 
-def territory_size(block: Block, hierarchy: Mapping[str, Location]) -> int:
-    """How many vanilla locations the territory lists of a formable cover."""
+def _territory_keys(block: Block, hierarchy: Mapping[str, Location]) -> set[str]:
+    """Which vanilla locations the territory lists of a formable cover."""
     wanted: dict[str, set[str]] = {}
     for entry in block.entries:
         if entry.key in TERRITORY_KEYS and isinstance(entry.value, Block):
@@ -324,7 +331,12 @@ def territory_size(block: Block, hierarchy: Mapping[str, Location]) -> int:
             or key in wanted.get("locations", ())
         ):
             found.add(key)
-    return len(found)
+    return found
+
+
+def territory_size(block: Block, hierarchy: Mapping[str, Location]) -> int:
+    """How many vanilla locations the territory lists of a formable cover."""
+    return len(_territory_keys(block, hierarchy))
 
 
 def _list(keys: Sequence[str]) -> str:
@@ -339,6 +351,7 @@ class Basis:
     candidates: Sequence[Place]
     traits: Mapping[str, tuple[str, frozenset[str]]]
     hierarchy: Mapping[str, Location]
+    continents: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass(frozen=True, slots=True)
@@ -364,12 +377,19 @@ def rebind_formable(
         message = f"{entry.key} has no potential to read a culture from"
         raise ContentError(message)
     selector = selector_of(text[potential.start : potential.end])
-    size = territory_size(vanilla, basis.hierarchy)
+    original = _territory_keys(vanilla, basis.hierarchy)
+    size = len(original)
     if size == 0:
         message = f"{entry.key}: the vanilla territory names no known location"
         raise ContentError(message)
+    continents = {basis.hierarchy[key].continent for key in original}
     ranked = sorted(
-        (place for place in basis.candidates if matches(selector, place, basis.traits)),
+        (
+            place
+            for place in basis.candidates
+            if (not basis.continents or basis.continents.get(place.key) in continents)
+            and matches(selector, place, basis.traits)
+        ),
         key=lambda place: (-place.population, place.key),
     )
     chosen = ranked[:size]
@@ -540,6 +560,17 @@ def rebind_frontier(text: str, american: Mapping[str, frozenset[str]]) -> tuple[
     return edits.apply(text), len(replaced)
 
 
+def _bind_nahuatl_start(
+    scripts: Scripts, file: str, candidates: Sequence[Place], remap: Mapping[str, str]
+) -> bool:
+    if not file:
+        message = f"{GAME_START} is no longer to be rebound"
+        raise ContentError(message)
+    nahuatl = [place for place in candidates if place.religion == NAHUATL]
+    seat = max(nahuatl, key=lambda place: (place.population, place.key)).key if nahuatl else None
+    return rebind_game_start(scripts, file, old_seat=remap[TENOCHTITLAN], seat=seat)
+
+
 def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the world and the remap.
     game_dir: Path,
     scripts: dict[str, bytes],
@@ -549,6 +580,8 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     remap: Mapping[str, str],
     *,
     sea_areas: Sequence[str] = (),
+    american_geography: bool = True,
+    continents: Mapping[str, str] | None = None,
 ) -> dict[str, object]:
     """Write every decision of the table that edits scripts into ``scripts``; return the counts.
 
@@ -556,12 +589,14 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     The result names what each rebound formable was bound to, so the report shows it.
     """
     store = Scripts(script_files(game_dir), scripts)
-    basis = Basis(candidates, culture_traits(game_dir), hierarchy)
+    basis = Basis(candidates, culture_traits(game_dir), hierarchy, continents or {})
     rebound: dict[str, list[str]] = {}
     seat_file = ""
     frontier = 0
     for key, consumer in checked.consumers.items():
         if checked.verdicts[key].decision is not Decision.REBIND:
+            continue
+        if not american_geography and key in {GAME_START, DISCOVERY, FRONTIER}:
             continue
         if consumer.category == FORMABLES:
             rebound.setdefault(consumer.files[0], []).append(consumer.ident)
@@ -585,12 +620,9 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
             message = f"{rebinding.formable} is bound to places that are not generated: {stray[:5]}"
             raise ContentError(message)
     guarded = guard_scripts(store, [*guard_targets(checked.consumers, checked.verdicts), *thin])
-    nahuatl = [place for place in basis.candidates if place.religion == NAHUATL]
-    seat = max(nahuatl, key=lambda place: (place.population, place.key)).key if nahuatl else None
-    if not seat_file:
-        message = f"{GAME_START} is no longer to be rebound"
-        raise ContentError(message)
-    start_bound = rebind_game_start(store, seat_file, old_seat=remap[TENOCHTITLAN], seat=seat)
+    start_bound = american_geography and _bind_nahuatl_start(
+        store, seat_file, basis.candidates, remap
+    )
     changed = store.changed()
     for relative, data in changed.items():
         try:

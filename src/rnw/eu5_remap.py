@@ -58,7 +58,7 @@ SCRIPT_FILES: Final[tuple[str, ...]] = (
     "game/in_game/gfx/map/map_objects/dynamic_game_objects.txt",
 )
 VALUE_KEYS: Final[frozenset[str]] = frozenset(
-    {"location", "connected_location", "only_in_location", "area"}
+    {"location", "connected_location", "only_in_location", "location_key", "area"}
 )
 LIST_KEYS: Final[frozenset[str]] = frozenset(
     {

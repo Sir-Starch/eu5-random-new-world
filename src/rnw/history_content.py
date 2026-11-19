@@ -9,7 +9,7 @@ from rnw.content import RANK_LEVELS, Fallen, HistoricalFacts
 from rnw.history_model import END, Action, Factor, HistoryError, Outcome
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
     from rnw.eu5_start import FinalStartPlan
     from rnw.history_model import Actor, History
@@ -76,6 +76,25 @@ def facts(plan: FinalStartPlan) -> HistoricalFacts | None:
         fallen(plan, tags),
         plan.confederations,
         frozenset((min(a, b), max(a, b)) for a, b in plan.alliances),
+    )
+
+
+def composed_facts(plans: Sequence[FinalStartPlan]) -> HistoricalFacts:
+    """Collect the distinct regional historical facts for one set of stories."""
+    histories = [found for plan in plans if (found := facts(plan)) is not None]
+    realms = tuple(realm for history in histories for realm in history.fallen)
+    unique = {realm.key for realm in realms}
+    if len(histories) != len(plans) or len(unique) != len(realms):
+        message = "Combined stories require distinct, completed regional histories"
+        raise HistoryError(message)
+    return HistoricalFacts(
+        {key: causes for history in histories for key, causes in history.cooperation.items()},
+        frozenset(pair for history in histories for pair in history.hostile),
+        {key: cause for history in histories for key, cause in history.dependencies.items()},
+        frozenset(contact for history in histories for contact in history.contacts),
+        realms,
+        tuple(group for history in histories for group in history.confederations),
+        frozenset(pair for history in histories for pair in history.alliances),
     )
 
 

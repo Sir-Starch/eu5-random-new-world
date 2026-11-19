@@ -11,11 +11,16 @@ import numpy as np
 
 from rnw.continent_domains import CONTINENTS, Domain
 from rnw.continent_world import WorldRegion, compose_regions
+from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_newworld import outside_contacts, regional_geometry
-from rnw.eu5_nw_export import _replacement_water_links  # pyright: ignore[reportPrivateUsage]
+from rnw.eu5_nw_export import (
+    _replacement_water_links,  # pyright: ignore[reportPrivateUsage]
+    settled_biomes,
+)
+from rnw.eu5_seas import Coast
 from rnw.model import CellClass
 from rnw.newworld import derive_world
-from rnw.ports import pair_lengths
+from rnw.ports import ForeignCoast, pair_lengths, relabel
 
 if TYPE_CHECKING:
     from rnw.eu5_map import Eu5Map
@@ -74,6 +79,28 @@ def test_distinct_labels_across_the_wrap_share_a_real_border() -> None:
     world = derive_world(data, (CellClass.LAND,) * 3, np.zeros_like(data), wrap_x=True)
     assert (0, 1) in world.edges
     assert pair_lengths(world)[0, 1] == 2
+
+
+def test_biome_tables_follow_the_final_cell_numbers_after_coastal_folds() -> None:
+    labels = np.array([[0, 1, 2, 2, 3]], dtype=np.int32)
+    world = derive_world(
+        labels, (CellClass.LAND, CellClass.SEA, CellClass.SEA, CellClass.LAKE), labels
+    )
+    final, translated = relabel(world, {2: 1})
+    coast = Coast(
+        final, ForeignCoast(), {}, {}, frozenset(), frozenset(), 1, source_cells=translated
+    )
+    biomes = CellBiomes(
+        ("temperate", "cold", "arid", "tropical"),
+        ("woods", "", "", ""),
+        ("flatland", "", "", ""),
+        ("wool", "", "", ""),
+    )
+    result = settled_biomes(biomes, world, coast)
+    assert result.climate == ("temperate", "arid", "tropical")
+    assert result.vegetation == ("woods", "", "")
+    assert result.topography == ("flatland", "", "")
+    assert result.raw_material == ("wool", "", "")
 
 
 def test_cut_retained_sea_records_each_connected_remainder() -> None:

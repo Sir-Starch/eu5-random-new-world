@@ -12,7 +12,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
-from rnw.content_decisions import TABLE, Verdict, decide, missing
+from rnw.content_decisions import KEEP, REGIONAL_TABLE, TABLE, Verdict, decide
 from rnw.content_inventory import (
     Consumer,
     Footprint,
@@ -55,39 +55,55 @@ class Checked:
         }
 
 
-def check_decisions(
+def check_decisions(  # noqa: PLR0913 - the installed programs and the replaced content are explicit.
     game_dir: Path,
     *,
     events: Iterable[str],
     modifiers: Iterable[str],
     removed_tags: Iterable[str],
-    table: Mapping[str, Verdict] = TABLE,
+    table: Mapping[str, Verdict] | None = None,
+    footprint: Footprint | None = None,
 ) -> Checked:
     """The consumers with their decisions; raises ``ValueError`` on a missing decision.
 
     ``events`` and ``modifiers`` are the objects the exporter retired, ``removed_tags`` the
-    tags it removed, which the footprint of the vanilla Americas must cover.
+    tags it removed, which the supplied footprint must cover. The legacy export
+    uses the vanilla American footprint.
     """
-    footprint = read_footprint(game_dir)
+    regional = footprint is not None
+    if table is None:
+        table = REGIONAL_TABLE if regional else TABLE
+    if footprint is None:
+        footprint = read_footprint(game_dir)
     outside = sorted(set(removed_tags) - footprint.tags)
     if outside:
-        message = f"Tags retired outside the American footprint: {', '.join(outside)}"
+        name = "content" if regional else "American"
+        message = f"Tags retired outside the {name} footprint: {', '.join(outside)}"
         raise ValueError(message)
     trees = Trees()
-    consumers = scan(game_dir, footprint, {"events": events, MODIFIERS: modifiers}, trees=trees)
-    undecided = missing(consumers.values(), footprint.tags, table)
+    consumers = scan(
+        game_dir,
+        footprint,
+        {"events": events, MODIFIERS: modifiers},
+        trees=trees,
+        tagged_gates=regional,
+    )
+    undecided: list[str] = []
+    verdicts: dict[str, Verdict] = {}
+    for key, consumer in consumers.items():
+        verdict = decide(consumer, footprint.tags, table)
+        if verdict is None and consumer.country_gated and tuple(consumer.refs) == ("tag",):
+            verdict = Verdict(KEEP, "country_gate")
+        if verdict is None:
+            undecided.append(key)
+        else:
+            verdicts[key] = verdict
     if undecided:
         shown = ", ".join(undecided[:SHOWN]) + (" ..." if len(undecided) > SHOWN else "")
         message = (
             f"{len(undecided)} script objects naming the replaced content have no decision: {shown}"
         )
         raise ValueError(message)
-    verdicts: dict[str, Verdict] = {}
-    for key, consumer in consumers.items():
-        verdict = decide(consumer, footprint.tags, table)
-        if verdict is None:  # pragma: no cover - ``missing`` returned nothing
-            raise ValueError(key)
-        verdicts[key] = verdict
     return Checked(footprint, consumers, verdicts, trees)
 
 
