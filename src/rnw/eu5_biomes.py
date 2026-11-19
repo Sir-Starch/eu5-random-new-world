@@ -62,6 +62,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.barrens import Calibration
     from rnw.eu5_map import Eu5Map
 
 PERMILLE: Final[int] = 1000
@@ -1746,6 +1747,15 @@ class MaterialRegion:
 
 
 @dataclass(frozen=True, slots=True)
+class WastelandRegion:
+    """A slice of the common land vote and its own wasteland budget."""
+
+    cells: range
+    settings: WastelandSettings
+    seed: int
+
+
+@dataclass(frozen=True, slots=True)
 class CellBiomes:
     """Template attributes per generated cell ("" where a field does not apply)."""
 
@@ -2057,6 +2067,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     ground: SizeModel | None = None,
     pooled_resources: bool = False,
     regional_resources: Mapping[str, MaterialRegion] | None = None,
+    regional_wastelands: Mapping[str, WastelandRegion] | None = None,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics.
 
@@ -2075,6 +2086,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     ``pooled_resources`` (epoch 64, ``epoch.POOLED_RESOURCES``) the raw materials are drawn from
     pooled classes (``_raw_materials``). A composed world supplies ``regional_resources``
     so each continent uses its own vanilla pools, weights and seed after the common biome vote.
+    Regional wasteland plans also share that vote and the terrain calibration.
     """
     count = len(cells.kinds)
     old = _old_world(game_map)
@@ -2144,10 +2156,9 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         if cells.ruggedness is None
         else _voted_grounds(land_cells.tolist(), cells, vegetation=vegetation, ground=ground)
     )
-    plan = (
-        None
-        if wastelands is None
-        else _plan_wastelands(
+    plan = None
+    if wastelands is not None or regional_wastelands is not None:
+        plan = _plan_wastelands(
             game_map=game_map,
             attributes=attributes,
             vanilla=vanilla,
@@ -2159,8 +2170,8 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
             edges=edges,
             settings=wastelands,
             seed=seed,
+            regions=regional_wastelands,
         )
-    )
     if plan is not None:
         cells = replace(cells, kinds=plan.kinds)
     topography = _topographies(
@@ -2306,8 +2317,9 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     features: tuple[NDArray[np.int64], NDArray[np.int64]],
     grounds: dict[int, str] | None,
     edges: NDArray[np.int64],
-    settings: WastelandSettings,
+    settings: WastelandSettings | None,
     seed: int,
+    regions: Mapping[str, WastelandRegion] | None = None,
 ) -> WastelandPlan:
     """The wasteland plan of ``rnw.barrens`` for the cells, the climate and vegetation chosen and
     the voted ground of every land cell (``grounds``)."""
@@ -2316,6 +2328,16 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         raise ValueError(message)
     if cells.ruggedness is None or grounds is None:
         message = "The wasteland plan needs the ruggedness and the voted ground of the cells"
+        raise ValueError(message)
+    if (settings is None) == (regions is None):
+        message = "Choose either one wasteland plan or the separate regional plans"
+        raise ValueError(message)
+    if settings is not None:
+        groups = settings.groups
+    elif regions:
+        groups = next(iter(regions.values())).settings.groups
+    else:
+        message = "Choose at least one region for the wasteland plan"
         raise ValueError(message)
     pixels = np.zeros(len(game_map.keys), dtype=np.int64)
     known = min(pixels.size, vanilla.pixels.size)
@@ -2328,7 +2350,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         coastal=coastal_locations(game_map, vanilla.pairs),
         pixels=pixels,
         include=old,
-        groups=settings.groups,
+        groups=groups,
     )
     climate, vegetation = fields
     rain, latitude = features
@@ -2347,11 +2369,56 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         rain=rain,
         latitude=latitude,
         coastal=cells.coastal,
-        polar=settings.polar,
-        barrier=settings.barrier,
+        polar=settings.polar if settings is not None else np.zeros(0, dtype=bool),
+        barrier=settings.barrier if settings is not None else np.zeros(0, dtype=bool),
         edges=edges,
     )
-    return plan_wastelands(terrain, calibration, settings, seed=seed)
+    if settings is not None:
+        return plan_wastelands(terrain, calibration, settings, seed=seed)
+    return _regional_barrens(terrain, calibration, regions or {})
+
+
+def _regional_barrens(
+    terrain: Terrain, calibration: Calibration, regions: Mapping[str, WastelandRegion]
+) -> WastelandPlan:
+    kinds = list(terrain.kinds)
+    topography: dict[int, str] = {}
+    stats: dict[str, object] = {}
+    covered = np.zeros(len(kinds), dtype=bool)
+    for name, region in regions.items():
+        span = region.cells
+        start, stop = span.start, span.stop
+        choose = slice(start, stop)
+        if span.step != 1 or not 0 <= start < stop <= len(kinds) or covered[choose].any():
+            message = f"Invalid wasteland cells for {name}"
+            raise SettingsError(message)
+        covered[choose] = True
+        settings = region.settings
+        edges = terrain.edges[(terrain.edges[:, 0] >= start) & (terrain.edges[:, 1] < stop)]
+        local = Terrain(
+            terrain.kinds[choose],
+            terrain.climate[choose],
+            terrain.vegetation[choose],
+            terrain.ground[choose],
+            terrain.height[choose],
+            terrain.spread[choose],
+            terrain.rugged[choose],
+            terrain.pixels[choose],
+            terrain.rain[choose],
+            terrain.latitude[choose],
+            terrain.coastal[choose],
+            settings.polar,
+            settings.barrier,
+            edges - start,
+        )
+        plan = plan_wastelands(local, calibration, settings, seed=region.seed)
+        kinds[choose] = plan.kinds
+        topography.update({start + cell: ground for cell, ground in plan.topography.items()})
+        stats[name] = plan.stats
+    if any(kind in LAND_KINDS and not found for kind, found in zip(kinds, covered, strict=True)):
+        message = "Generated land cells lack a regional wasteland plan"
+        raise SettingsError(message)
+    return WastelandPlan(tuple(kinds), topography, stats)
 
 
 def coastal_locations(game_map: Eu5Map, pairs: NDArray[np.int64]) -> NDArray[np.bool_]:

@@ -49,20 +49,41 @@ def build(plan: FinalStartPlan, keys: KeySpace, locations: Sequence[str]) -> Wri
 
     ``locations`` are the world's location keys (the archive's places, ``history_archive``).
     """
-    if plan.history is None:
-        msg = "Historical text needs a projected history"
-        raise HistoryError(msg)
-    tags = tuple(sorted(country.tag for country in plan.countries))
-    require(set(tags) == set(plan.history_tags.values()), "History text has different living tags")
-    events = {event.key: event for event in plan.history.events}
-    texts: dict[str, game_texts.Entry] = {
-        opinion.key: history_text.opinion_text(opinion, plan.names, events[opinion.cause])
-        for opinion in plan.historical_opinions
-    }
-    biases = "".join(
-        f"{opinion.key} = {{ value = {opinion.value} yearly_decay = {opinion.yearly_decay} }}\n"
-        for opinion in plan.historical_opinions
-    )
+    return build_combined((plan,), keys, locations)
+
+
+def _history_data(
+    plans: Sequence[FinalStartPlan],
+) -> tuple[tuple[str, ...], dict[str, game_texts.Entry], str]:
+    tags: set[str] = set()
+    texts: dict[str, game_texts.Entry] = {}
+    biases: list[str] = []
+    for plan in plans:
+        if plan.history is None:
+            msg = "Historical text needs a projected history"
+            raise HistoryError(msg)
+        current = {country.tag for country in plan.countries}
+        require(
+            current == set(plan.history_tags.values()) and not tags.intersection(current),
+            "History text has different or repeated living tags",
+        )
+        tags.update(current)
+        events = {event.key: event for event in plan.history.events}
+        for opinion in plan.historical_opinions:
+            require(opinion.key not in texts, "Two histories use the same bias key")
+            texts[opinion.key] = history_text.opinion_text(
+                opinion, plan.names, events[opinion.cause]
+            )
+            decay = opinion.yearly_decay
+            biases.append(f"{opinion.key} = {{ value = {opinion.value} yearly_decay = {decay} }}\n")
+    return tuple(sorted(tags)), texts, "".join(biases)
+
+
+def build_combined(
+    plans: Sequence[FinalStartPlan], keys: KeySpace, locations: Sequence[str]
+) -> WrittenHistory:
+    """Write one history feature for the living countries of every selected continent."""
+    tags, texts, biases = _history_data(plans)
     files = {BIAS_FILE: biases.encode("utf-8-sig")}
     if not tags:
         return WrittenHistory(files, texts, {})
@@ -116,7 +137,10 @@ def build(plan: FinalStartPlan, keys: KeySpace, locations: Sequence[str]) -> Wri
     )
     for key in static:
         texts[key] = game_texts.Text(key)
-    texts.update((chronicle_keys[tag], story) for tag, story in stories(plan, locations).items())
+    for plan in plans:
+        texts.update(
+            (chronicle_keys[tag], story) for tag, story in stories(plan, locations).items()
+        )
     files.update(
         (path, text.encode("utf-8-sig"))
         for path, text in ((TRIGGER_FILE, trigger), (DECISION_FILE, decision), (EVENT_FILE, event))

@@ -170,8 +170,13 @@ def summary(locations: tuple[Location, ...]) -> dict[str, int]:
 
 def read_named_colors(path: Path) -> tuple[tuple[str, int], ...]:
     """Read all observed named-color declarations, including inline comments."""
+    return parse_named_colors(path.read_text(encoding="utf-8-sig"))
+
+
+def parse_named_colors(text: str) -> tuple[tuple[str, int], ...]:
+    """Read the declared location keys and RGB colours."""
     pairs: list[tuple[str, int]] = []
-    for line_number, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
+    for line_number, line in enumerate(text.splitlines(), 1):
         bare = line.partition("#")[0].strip()
         if not bare:
             continue

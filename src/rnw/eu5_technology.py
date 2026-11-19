@@ -136,7 +136,8 @@ def majority(members: Sequence[str], weights: Sequence[int]) -> str:
     return min(sums, key=lambda name: (-sums[name], name)) if sums else ""
 
 
-def _own_level(block: Block, levels: Mapping[str, int]) -> int | None:
+def starting_technology(block: Block, levels: Mapping[str, int]) -> int | None:
+    """Starting technology from a country entry and the templates it includes."""
     own = block.first("starting_technology_level")
     if own is not None and isinstance(own.value, str) and own.value.isdigit():
         return int(own.value)
@@ -174,7 +175,7 @@ def vanilla_state_levels(
     found = [
         level
         for _, block in american_states(setup_text, american)
-        if (level := _own_level(block, levels)) is not None
+        if (level := starting_technology(block, levels)) is not None
     ]
     if not found:
         message = "No vanilla American landed country has a starting technology level"

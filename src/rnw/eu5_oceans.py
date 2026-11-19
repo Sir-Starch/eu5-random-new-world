@@ -21,6 +21,8 @@ from rnw.model import CellClass
 from rnw.wording import reference
 
 if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
     from rnw.eu5_canvas import Canvas, OceanRemainder
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_newworld import Plan
@@ -47,7 +49,8 @@ def _neighbours(part: OceanRemainder, canvas: Canvas, world: NewWorld) -> set[in
             for other_row in (row - 1, row + 1):
                 if 0 <= other_row < height:
                     found.update(np.unique(world.labels[other_row, low:high]).tolist())
-        for column in (left - 1, right):
+        for adjacent in (left - 1, right):
+            column = adjacent % width if world.wrap_x else adjacent
             if 0 <= column < width:
                 found.add(int(world.labels[row, column]))
     found.discard(-1)
@@ -103,7 +106,8 @@ def _overlap(game_map: Eu5Map, canvas: Canvas, world: NewWorld, cells: set[int])
     eligible[list(cells)] = True
     closed = game_map.ambiguous & np.array(
         [
-            kind is CellClass.SEA and name in OCEANS
+            kind is CellClass.SEA
+            and (name.endswith("_ocean_continent") if world.wrap_x else name in OCEANS)
             for kind, name in zip(game_map.classes, game_map.continents, strict=True)
         ],
         dtype=bool,
@@ -145,10 +149,18 @@ class _Components:
 
 
 def _groups(
-    canvas: Canvas, world: NewWorld, owners: dict[int, int], candidates: set[int]
+    canvas: Canvas,
+    world: NewWorld,
+    owners: dict[int, int],
+    candidates: set[int],
+    *,
+    blocked: NDArray[np.bool_],
 ) -> dict[int, dict[int, list[int]]]:
     """Connected final components, treating retained water as graph nodes."""
-    touching = [_neighbours(part, canvas, world) & candidates for part in canvas.ocean_parts]
+    touching = [
+        _neighbours(part, canvas, world) & candidates if blocked[part.source] else set[int]()
+        for part in canvas.ocean_parts
+    ]
     # A source reached at the boundary takes precedence over positional naming.
     boundary: dict[int, set[int]] = {}
     for part, cells in zip(canvas.ocean_parts, touching, strict=True):
@@ -221,9 +233,17 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
 ) -> OceanPlan:
     """Join connected closed water by source name; preserve every other final component."""
     result = OceanPlan()
-    candidates = {cell for cell in closed if plan.cells[cell].continent in OCEANS}
+    candidates = {
+        cell
+        for cell in closed
+        if (
+            plan.cells[cell].continent.endswith("_ocean_continent")
+            if world.wrap_x
+            else plan.cells[cell].continent in OCEANS
+        )
+    }
     owners = _overlap(game_map, canvas, world, candidates)
-    groups = _groups(canvas, world, owners, candidates)
+    groups = _groups(canvas, world, owners, candidates, blocked=game_map.ambiguous)
     count = len(world.classes)
     used = {int(value) for value in game_map.colors.tolist()} | {cell.color for cell in plan.cells}
     color_cursor = 1
@@ -248,7 +268,7 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
             # Preserve the principal vanilla identity and every substantive or
             # generated component. Tiny isolated remainders may instead join an
             # actually adjacent, navigable sea location without inventing an ocean.
-            if number and len(nodes) == 1 and nodes[0] >= count:
+            if number and len(nodes) == 1 and nodes[0] >= count and not world.wrap_x:
                 part = canvas.ocean_parts[nodes[0] - count]
                 if part.pixels < typical_area:
                     color = _adjacent_navigable_color(part, game_map, canvas, world, plan, closed)
@@ -280,6 +300,8 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
             result.sources[name] = original
             if number:
                 plan.province_names[province] = reference(original)
+                if bool(game_map.ambiguous[source]):
+                    result.closed_extra.add(name)
             _apply_component(
                 result, plan, canvas, world, identity, nodes, int(game_map.colors[source])
             )

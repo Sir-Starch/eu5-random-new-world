@@ -34,12 +34,25 @@ def adjacency_pairs(
 
 def adjacency_lengths(
     labels: NDArray[np.int32],
+    *,
+    wrap_x: bool = False,
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Sorted unique touching label pairs (packed like ``adjacency_pairs``) and their lengths.
 
     A length is the number of 4-neighbour pixel contacts between the two labels.
     """
-    return _native.adjacency_lengths(np.ascontiguousarray(labels, dtype=np.int32))
+    pairs, lengths = _native.adjacency_lengths(np.ascontiguousarray(labels, dtype=np.int32))
+    if not wrap_x or not labels.size:
+        return pairs, lengths
+    left, right = labels[:, 0].astype(np.int64), labels[:, -1].astype(np.int64)
+    across = left != right
+    low, high = np.minimum(left, right)[across], np.maximum(left, right)[across]
+    seam = (low << PAIR_SHIFT) | (high & LOW_BITS)
+    unique, positions = np.unique(np.concatenate((pairs, seam)), return_inverse=True)
+    totals = np.zeros(unique.size, dtype=np.int64)
+    np.add.at(totals, positions[: pairs.size], lengths)
+    np.add.at(totals, positions[pairs.size :], 1)
+    return unique, totals
 
 
 def unpack_pairs(pairs: NDArray[np.int64]) -> list[tuple[int, int]]:

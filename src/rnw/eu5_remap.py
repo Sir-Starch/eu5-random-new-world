@@ -38,6 +38,7 @@ from rnw.progress import checkpoint
 from rnw.timing import measured
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from collections.abc import Set as AbstractSet
     from pathlib import Path
 
@@ -102,6 +103,14 @@ class RemapAccess:
     closed_seas: frozenset[int] = frozenset()
 
 
+@dataclass(frozen=True, slots=True)
+class RemapRegions:
+    """Original continent membership and the periodic longitude of a composed map."""
+
+    continents: Mapping[str, str]
+    width: int
+
+
 class GeographicRemap(dict[str, str]):
     """Bindings by geographic scope; vanilla can reuse a name across scopes."""
 
@@ -127,12 +136,31 @@ def _scope_map(remap: dict[str, str], scope: str) -> dict[str, str]:
     return remap.locations
 
 
-def _role_pool(pool: NDArray[np.int64], role: str, access: RemapAccess) -> NDArray[np.int64]:
+def _role_pool(
+    pool: NDArray[np.int64], role: str, access: RemapAccess, plan: Plan, continent: str
+) -> NDArray[np.int64]:
+    if continent:
+        pool = np.array(
+            [i for i in map(int, pool) if plan.cells[i].continent == continent], dtype=np.int64
+        )
     if role == "port":
         return np.array([i for i in pool.tolist() if i in access.port_cells], dtype=np.int64)
     if role == "water":
         return np.array([i for i in pool.tolist() if i not in access.closed_seas], dtype=np.int64)
     return pool
+
+
+def _nearest_locations(
+    centres: NDArray[np.int64], queries: NDArray[np.int64], width: int
+) -> NDArray[np.int64]:
+    if width <= 0:
+        return _native.nearest_rows(centres, queries, 1)[:, 0]
+    offsets = np.array([[0, -width], [0, 0], [0, width]], dtype=np.int64)
+    copies = queries[:, None, :] + offsets[None, :, :]
+    possible = _native.nearest_rows(centres, copies.reshape(-1, 2), 1).reshape(-1, 3)
+    distances = ((copies - centres[possible]) ** 2).sum(axis=2)
+    closest = distances == distances.min(axis=1, keepdims=True)
+    return np.where(closest, possible, len(centres)).min(axis=1)
 
 
 @measured
@@ -144,6 +172,7 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
     *,
     access: RemapAccess,
     areas: dict[str, list[str]] | None = None,
+    regions: RemapRegions | None = None,
 ) -> GeographicRemap:
     """Map removed location (and province) keys to generated keys.
 
@@ -160,8 +189,8 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
         by_family[family] = np.array(members, dtype=np.int64)
     # The family and access role define a pool once. Every query still chooses the
     # exact squared-distance minimum; equal distances keep the pool's first index.
-    pools: dict[tuple[frozenset[CellClass], str], NDArray[np.int64]] = {}
-    groups: dict[tuple[frozenset[CellClass], str], list[int]] = {}
+    pools: dict[tuple[frozenset[CellClass], str, str], NDArray[np.int64]] = {}
+    groups: dict[tuple[frozenset[CellClass], str, str], list[int]] = {}
     for index, (key, kind, _row, _column) in enumerate(removed):
         role = (
             "port"
@@ -170,9 +199,12 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
             if key in access.navigable_keys
             else "all"
         )
-        group = FAMILY[kind], role
+        continent = (
+            regions.continents[key] if regions is not None and kind is not CellClass.SEA else ""
+        )
+        group = FAMILY[kind], role, continent
         if group not in pools:
-            pools[group] = _role_pool(by_family[FAMILY[kind]], role, access)
+            pools[group] = _role_pool(by_family[FAMILY[kind]], role, access, plan, continent)
         if not pools[group].size:
             message = f"No generated replacement preserves the geographic role of {key}"
             raise RemapError(message)
@@ -181,7 +213,9 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
     for group, indices in groups.items():
         pool = pools[group]
         queries = np.array([(removed[i][2], removed[i][3]) for i in indices], dtype=np.int64)
-        nearest = _native.nearest_rows(np.ascontiguousarray(centres[pool]), queries, 1)[:, 0]
+        nearest = _nearest_locations(
+            np.ascontiguousarray(centres[pool]), queries, 0 if regions is None else regions.width
+        )
         mapped_cells[indices] = pool[nearest]
     for index, (key, _kind, _row, _column) in enumerate(removed):
         remap[key] = plan.cells[int(mapped_cells[index])].key

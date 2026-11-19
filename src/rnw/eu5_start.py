@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from rnw.history_model import Action, Factor, History
     from rnw.wording import Name
 
@@ -118,3 +120,52 @@ class FinalStartPlan:
     historical_groups: tuple[HistoricalGroup, ...] = ()
     history: History | None = None
     history_tags: dict[str, str] = field(default_factory=dict)
+
+
+def _merge_records[T](records: Sequence[dict[str, T]]) -> dict[str, T]:
+    combined: dict[str, T] = {}
+    for record in records:
+        if overlap := combined.keys() & record.keys():
+            message = f"Regional starts assign {min(overlap)} more than once"
+            raise ValueError(message)
+        combined.update(record)
+    return combined
+
+
+def combine_starts(plans: Sequence[FinalStartPlan]) -> FinalStartPlan:
+    """Assemble the world's setup while each chronicle keeps its own historical causes."""
+    countries = tuple(country for plan in plans for country in plan.countries)
+    tags = {country.tag for country in countries}
+    owners = [location for country in countries for location in country.members]
+    if len(tags) != len(countries) or len(owners) != len(set(owners)):
+        message = "Combined regional starts have shared country tags or owned locations"
+        raise ValueError(message)
+    confederations = [plan for plan in plans if plan.confederations]
+    dates = {plan.confederation_date for plan in confederations}
+    if len(dates) > 1:
+        message = "Regional confederations disagree about the shared start date"
+        raise ValueError(message)
+    return FinalStartPlan(
+        pops=_merge_records([plan.pops for plan in plans]),
+        countries=countries,
+        ranks=_merge_records([plan.ranks for plan in plans]),
+        markets=tuple(place for plan in plans for place in plan.markets),
+        holy_sites=_merge_records([plan.holy_sites for plan in plans]),
+        names=_merge_records([plan.names for plan in plans]),
+        vassals=tuple(pair for plan in plans for pair in plan.vassals),
+        complexity=_merge_records([plan.complexity for plan in plans]),
+        population=_merge_records([plan.population for plan in plans]),
+        stats={"continents": [plan.stats for plan in plans]},
+        roads=tuple(edge for plan in plans for edge in plan.roads),
+        opinions=tuple(opinion for plan in plans for opinion in plan.opinions),
+        alliances=tuple(pair for plan in plans for pair in plan.alliances),
+        rivals=tuple(pair for plan in plans for pair in plan.rivals),
+        confederations=tuple(group for plan in confederations for group in plan.confederations),
+        confederation_date=next(iter(dates), ""),
+        protections=tuple(pair for plan in plans for pair in plan.protections),
+        exchanges=tuple(pair for plan in plans for pair in plan.exchanges),
+        historical_opinions=tuple(
+            opinion for plan in plans for opinion in plan.historical_opinions
+        ),
+        historical_groups=tuple(group for plan in plans for group in plan.historical_groups),
+    )

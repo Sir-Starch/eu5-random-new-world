@@ -766,6 +766,7 @@ def bootstrap_societies(  # noqa: PLR0913 - calibrated inputs plus the history p
     target: int,
     state_floor: StateFloor,
     size_permille: int = PERMILLE,
+    reserved: NDArray[np.bool_] | None = None,
 ) -> Societies:
     """1037's ordinary polities, without any extraordinary outcome assigned in advance.
 
@@ -784,6 +785,7 @@ def bootstrap_societies(  # noqa: PLR0913 - calibrated inputs plus the history p
         state_floor=state_floor,
         state_locations=max(1, settings.state_locations * size_permille // PERMILLE),
         empire_chance=0,
+        reserved=reserved,
     )
 
 
@@ -796,6 +798,7 @@ def _generate_societies(  # noqa: PLR0913 - shared calibration, with independent
     state_floor: StateFloor,
     state_locations: int,
     empire_chance: int,
+    reserved: NDArray[np.bool_] | None = None,
 ) -> Societies:
     count = len(graph.capacity)
     moves = _Graph(graph)
@@ -806,9 +809,10 @@ def _generate_societies(  # noqa: PLR0913 - shared calibration, with independent
     food = _food(moves, graph.potential, reach // 2)
     hearths = _hearths(moves, food, wanted=wanted, reach=reach, rng=rng)
     complexity = _complexity(moves, hearths, graph.potential, reach=reach, rng=rng)
+    available = np.ones(count, dtype=bool) if reserved is None else ~reserved
     state_land, complexity = _state_land(
         complexity,
-        graph.capacity > 0,
+        (graph.capacity > 0) & available,
         settings.state_share_permille,
         spread=settings.state_spread_permille,
         moves=moves,
@@ -834,7 +838,7 @@ def _generate_societies(  # noqa: PLR0913 - shared calibration, with independent
         )
         culture[members] = inner[members] + zones
         zones += made
-    inhabited = population > 0
+    inhabited = (population > 0) & available
     territory = _Territory.of(graph, moves, seed)
     agrarian = peasants * PERMILLE >= population * state_floor.share
     eligible = (peasants >= state_floor.peasants) & agrarian

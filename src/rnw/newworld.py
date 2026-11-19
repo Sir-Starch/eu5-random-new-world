@@ -149,6 +149,8 @@ class NewWorld:
     # How the land drains (epoch 64, ``epoch.RIVERS_FIRST``): the plan its rivers were drawn along
     # when the cells were grown, which the export draws them along again; None before.
     drainage: DrainagePlan | None = None
+    # A composed raster uses the game's full longitude, with adjacency across its cut.
+    wrap_x: bool = False
 
 
 def _field(  # noqa: PLR0913 - a field is defined by its stream, shape, octaves and warp.
@@ -1583,7 +1585,11 @@ def _cell_sums(
 
 
 def derive_world(
-    labels: NDArray[np.int32], kinds: tuple[CellClass, ...], elevation: NDArray[np.int32]
+    labels: NDArray[np.int32],
+    kinds: tuple[CellClass, ...],
+    elevation: NDArray[np.int32],
+    *,
+    wrap_x: bool = False,
 ) -> NewWorld:
     """Compute sizes, centres, interior points and contacts for a labelled world."""
     count = len(kinds)
@@ -1593,9 +1599,11 @@ def derive_world(
     variance = np.maximum(0, square - mean_elevation * mean_elevation)
     spread = np.floor(np.sqrt(variance.astype(np.float64))).astype(np.int64)
     centroids = np.stack([rows // np.maximum(1, pixels), columns // np.maximum(1, pixels)], axis=1)
+    if wrap_x:
+        _wrap_centres(labels, centroids, pixels)
     edges = tuple(
         (first, second)
-        for first, second in unpack_pairs(adjacency_pairs(labels))
+        for first, second in unpack_pairs(adjacency_pairs(labels, wrap_x=wrap_x))
         if first >= 0 and second >= 0
     )
     return NewWorld(
@@ -1610,7 +1618,30 @@ def derive_world(
         mean_elevation=mean_elevation,
         spread=spread,
         edges=edges,
+        wrap_x=wrap_x,
     )
+
+
+def _wrap_centres(
+    labels: NDArray[np.int32], centroids: NDArray[np.int64], pixels: NDArray[np.int64]
+) -> None:
+    """Measure spanning cells in the opposite frame so they do not centre mid-ocean."""
+    linked = (labels[:, 0] >= 0) & (labels[:, 0] == labels[:, -1])
+    keys = np.unique(labels[:, 0][linked])
+    if not keys.size:
+        return
+    width = int(labels.shape[1])
+    half = width // 2
+    chosen = np.zeros(pixels.size + 1, dtype=bool)
+    chosen[keys] = True
+    sums = np.zeros(pixels.size, dtype=np.int64)
+    for first in range(0, labels.shape[0], 256):
+        rows = labels[first : first + 256]
+        r, c = np.nonzero(chosen[rows])
+        sums += np.bincount(rows[r, c], weights=(c + half) % width, minlength=pixels.size).astype(
+            np.int64
+        )
+    centroids[keys, 1] = (sums[keys] // pixels[keys] - half) % width
 
 
 def unported_cells(world: NewWorld) -> list[int]:

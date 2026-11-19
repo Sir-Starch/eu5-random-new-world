@@ -176,6 +176,7 @@ class Coast:
     shore: frozenset[int]
     merged: int
     designed: frozenset[int] = frozenset()
+    source_cells: tuple[int, ...] = ()
 
     def renumbered(self, world: NewWorld, cell_of: Sequence[int], keep: Collection[int]) -> Coast:
         """This coast in ``world``, whose cells are the old ones folded as ``cell_of`` says.
@@ -191,6 +192,7 @@ class Coast:
             frozenset(cell_of[cell] for cell in self.shore if cell in keep),
             self.merged,
             frozenset(cell_of[cell] for cell in self.designed if cell in keep),
+            tuple(cell_of[cell] for cell in self.source_cells),
         )
 
 
@@ -206,7 +208,9 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
 ) -> Coast:
     """Settle the sea cells of ``world`` against ports; collect the game's lanes beside it."""
     contacts = outside_contacts(game_map, canvas, world, len(game_map.keys))
-    settled = settle_seas(world, foreign_coast(game_map, world, contacts, ports, removed))
+    settled = settle_seas(
+        world, foreign_coast(game_map, world, contacts, ports, removed), shared_coast=world.wrap_x
+    )
     samples: dict[int, list[Vector]] = {}
     docks: set[int] = set()
     shore: set[int] = set()
@@ -248,6 +252,7 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         frozenset(shore),
         settled.merged,
         frozenset(designed_cells),
+        settled.cell_of if world.wrap_x else (),
     )
 
 

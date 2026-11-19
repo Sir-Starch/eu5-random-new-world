@@ -1,5 +1,8 @@
 """The start rule for Morocco's retained Iberian holdings when Africa is regenerated."""
 
+# NumPy scalar conversions are typed dynamically.
+# pyright: reportAny=false
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,6 +15,7 @@ from rnw.eu5_rewrite import (
     prune_regional_setup,
 )
 from rnw.eu5_start import Country
+from rnw.model import CellClass
 from rnw.pdx import Block, Edits, parse
 from rnw.rng import derive_seed
 from rnw.settings import DEFAULT_MOROCCO_POLICY, MoroccoPolicy
@@ -20,8 +24,10 @@ from rnw.societies import STATE
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from rnw.eu5_newworld import Plan
     from rnw.eu5_rewrite import SetupResult
     from rnw.loc_keys import KeySpace
+    from rnw.newworld import NewWorld
 
 MOROCCO: Final[str] = "MOR"
 CASTILE: Final[str] = "CAS"
@@ -80,6 +86,21 @@ def plan_morocco(
     owned = tuple(ranked[:AFRICAN_HOLDINGS])
     capital = min(owned, key=lambda key: (_distance(africa[key], original["fez"], width), key))
     return MoroccoStart(policy, owned, capital)
+
+
+def reserve_morocco(
+    plan: Plan,
+    world: NewWorld,
+    original: Mapping[str, Point],
+    policy: MoroccoPolicy,
+) -> MoroccoStart:
+    """Reserve 1337 ownership against the finished passable African locations."""
+    africa = {
+        cell.key: (int(world.centroids[i, 0]), int(world.centroids[i, 1]))
+        for i, cell in enumerate(plan.cells)
+        if cell.kind is CellClass.LAND and cell.continent == "africa"
+    }
+    return plan_morocco(africa, original, int(world.labels.shape[1]), policy)
 
 
 def algeciras(

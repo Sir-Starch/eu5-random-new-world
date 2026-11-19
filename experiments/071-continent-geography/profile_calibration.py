@@ -14,6 +14,7 @@ from rnw.eu5_biomes import material_frequencies, template_attributes, vanilla_lo
 from rnw.eu5_map import load_map
 from rnw.eu5_natives import regional_populations
 from rnw.eu5_nw_export import TEMPLATES
+from rnw.eu5_technology import histogram
 from rnw.parallel import configure
 from rnw.timing import timed
 
@@ -53,6 +54,11 @@ def main() -> None:
                 )
             ),
             "settled_climate_density": profile.density,
+            "state_technology": histogram(profile.state_levels),
+            "minimum_state_peasants": profile.state_floor.peasants if profile.state_floor else None,
+            "minimum_state_peasant_share": profile.state_floor.share
+            if profile.state_floor
+            else None,
             "landed_templates": sorted(
                 {culture.state_include for culture in profile.cultures.values()} - {""}
             ),

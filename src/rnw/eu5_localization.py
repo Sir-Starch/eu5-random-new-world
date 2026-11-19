@@ -22,11 +22,14 @@ class LocalizationError(ValueError):
     """An installed map-name file cannot supply an unambiguous replacement."""
 
 
-def map_name_files(game_dir: Path, language: str, names: dict[str, str]) -> dict[str, bytes]:
+def map_name_files(
+    game_dir: Path, language: str, names: dict[str, str], *, include_provinces: bool = False
+) -> dict[str, bytes]:
     """Only requested values change; keys, other texts, BOMs and line endings stay intact.
 
     These files override the same paths as vanilla. An extra ``replace/`` file instead defines
     each reused key twice; EU5 1.4.4 logs duplicate-key warnings for those files (C256).
+    Some African sea areas are localized in the province catalogue in EU5 1.4.9.
     """
     if not names:
         return {}
@@ -44,7 +47,8 @@ def map_name_files(game_dir: Path, language: str, names: dict[str, str]) -> dict
         value = names[key].replace("\\", "\\\\").replace('"', '\\"')
         return f'{match["prefix"]}"{value}"'
 
-    for stem in MAP_NAMES:
+    catalogues = (*MAP_NAMES, "province_names") if include_provinces else MAP_NAMES
+    for stem in catalogues:
         relative = f"main_menu/localization/{language}/{stem}_l_{language}.yml"
         path = game_dir / "game" / relative
         raw = path.read_bytes()

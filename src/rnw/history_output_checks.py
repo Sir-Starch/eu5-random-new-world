@@ -15,7 +15,7 @@ from rnw.history_model import HistoryError
 from rnw.pdx import Block, parse
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
     from rnw.eu5_start import FinalStartPlan
 
@@ -51,13 +51,18 @@ def _values(block: Block, expected: Mapping[str, str]) -> None:
 
 def verify_text(plan: FinalStartPlan, written: writer.WrittenHistory) -> None:
     """Check bias values, live scopes, voluntary activation and localization binding."""
-    tags = {country.tag for country in plan.countries}
+    verify_combined_text((plan,), written)
+
+
+def verify_combined_text(plans: Sequence[FinalStartPlan], written: writer.WrittenHistory) -> None:
+    """Check the history script shared by all generated countries."""
+    tags = {country.tag for plan in plans for country in plan.countries}
     paths = {writer.BIAS_FILE}
     if tags:
         paths.update((writer.TRIGGER_FILE, writer.DECISION_FILE, writer.EVENT_FILE))
     require(set(written.files) == paths, "Historical output has unexpected files or startup hooks")
     biases = parse(written.files[writer.BIAS_FILE].decode("utf-8-sig"))
-    opinions = {opinion.key: opinion for opinion in plan.historical_opinions}
+    opinions = {opinion.key: opinion for plan in plans for opinion in plan.historical_opinions}
     _shape(biases, set(opinions))
     for key, opinion in opinions.items():
         _values(

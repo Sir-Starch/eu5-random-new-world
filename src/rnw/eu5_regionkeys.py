@@ -334,8 +334,9 @@ def physical_keys(  # noqa: PLR0913 - the two physical models and their installe
     world: NewWorld,
     biomes: CellBiomes,
     pixels: Sequence[int],
+    continent: str = NEW_WORLD,
 ) -> KeyMatcher:
-    """Templates from the installed Americas and the finished, resource-free biome fields.
+    """Templates from the selected vanilla continent and the finished biome fields.
 
     Pixel counts come from existing tables. Coastal means a contact with sea (not lake).
     Lake templates have a lake relief rather than the biome model's empty land field.
@@ -347,7 +348,7 @@ def physical_keys(  # noqa: PLR0913 - the two physical models and their installe
         location = hierarchy.get(key)
         if (
             location is None
-            or location.continent != NEW_WORLD
+            or location.continent != continent
             or game_map.classes[label] not in LAND
         ):
             continue
@@ -361,6 +362,8 @@ def physical_keys(  # noqa: PLR0913 - the two physical models and their installe
             raise RegionKeyError(message) from error
         for name in (location.region, location.area):
             members.setdefault(name, []).append(trait)
+        if continent != NEW_WORLD:
+            members.setdefault(location.subcontinent, []).append(trait)
     generated_pixels = cast("list[int]", world.pixels.tolist())
     generated = {
         cell: Trait(

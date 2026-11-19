@@ -19,6 +19,7 @@ from rnw.eu5_newworld import (
     _land_areas,  # pyright: ignore[reportPrivateUsage]
     _protect_ocean_boundary,  # pyright: ignore[reportPrivateUsage]
     _reserve,  # pyright: ignore[reportPrivateUsage]
+    _retained_pockets,  # pyright: ignore[reportPrivateUsage]
     _sea_areas,  # pyright: ignore[reportPrivateUsage]
     _SeaArea,  # pyright: ignore[reportPrivateUsage]
     _Tally,  # pyright: ignore[reportPrivateUsage]
@@ -550,6 +551,24 @@ def test_inland_seas_get_separate_connected_areas_of_their_dominant_shore() -> N
     ]
     _check_pieces(graph, areas, depth=2, exempt=set())
     _check_shores(graph, areas, {"north": [0, 1, 2, 5], "south": [3, 6, 7]})
+
+
+def test_sea_cutouts_continue_the_retained_water_they_physically_touch() -> None:
+    graph = _grid(5, 2, gap_column=2)
+    cells = [0, 1, 3, 4, 5, 6, 8, 9]
+    coast = {"african_region": [0]}
+    remaining = _SeaArea(
+        "bay", "tunis", coastal=True, replaced=0, centre=(50, 0), remaining=frozenset({90})
+    )
+    parents = {"bay": ("tunis", "north_africa", "africa")}
+    areas, assigned, roots = _retained_pockets(
+        graph, cells, coast, contacts={(90, 4)}, seas=[remaining], parents=parents
+    )
+    assert assigned == {3, 4, 8, 9}
+    assert roots == {4}
+    assert [area.name for area in areas] == ["bay"]
+    assert areas[0].parents == parents["bay"]
+    _check_shores(graph, areas, {"tunis": [0]}, roots)
 
 
 def test_passable_old_world_sea_gets_connected_ocean_hierarchy() -> None:

@@ -88,8 +88,10 @@ from rnw.eu5_biomes import (
     CellBiomes,
     ClimateGrid,
     Generated,
+    MaterialRegion,
     SizeModel,
     VanillaLocations,
+    WastelandRegion,
     assign_biomes,
     biome_of,
     biome_rules,
@@ -189,6 +191,7 @@ from rnw.eu5_map import (
     open_png,
     read_class_lists,
 )
+from rnw.eu5_morocco import apply_morocco_start
 from rnw.eu5_mountains import mountain_relief
 from rnw.eu5_natives import (
     COUNTRY_DIR,
@@ -213,7 +216,7 @@ from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
 from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
 from rnw.eu5_regionkeys import physical_keys
-from rnw.eu5_remap import RemapAccess, build_remap, remap_scripts, remap_text
+from rnw.eu5_remap import RemapAccess, RemapRegions, build_remap, remap_scripts, remap_text
 from rnw.eu5_reveal import RevealError
 from rnw.eu5_reveal import files as reveal_files
 from rnw.eu5_reveal import verify as verify_reveal
@@ -221,7 +224,9 @@ from rnw.eu5_rewrite import (
     HierarchyAdditions,
     drop_block_entries,
     insert_into_block,
+    prune_regional_setup,
     prune_setup,
+    retained_capitals,
     rewrite_class_lists,
     rewrite_csv,
     rewrite_definitions,
@@ -289,11 +294,11 @@ from rnw.eu5_treaty import adapt as adapt_treaty
 from rnw.eu5_treaty import coordinates as treaty_coordinates
 from rnw.eu5_water import water_outputs
 from rnw.game_texts import Text, localize, untranslated
-from rnw.geography import parse_locations, read_locations, read_named_colors
+from rnw.geography import parse_locations, parse_named_colors, read_locations, read_named_colors
 from rnw.history_content import country_starts
 from rnw.history_content import facts as historical_content_facts
 from rnw.history_model import Factor, Military
-from rnw.history_output_checks import verify_diplomacy
+from rnw.history_output_checks import verify_combined_text, verify_diplomacy
 from rnw.history_output_checks import verify_text as verify_history_text
 from rnw.history_plan_checks import validate_projection
 from rnw.landmask import Fitted, LandMask, fit_drawing
@@ -342,20 +347,29 @@ from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.timing import measured
-from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
+from rnw.topology import (
+    adjacency_pairs,
+    component_counts,
+    distance_from,
+    label_components,
+    unpack_pairs,
+)
 from rnw.watersheds import domain_climate, domain_rivers
 from rnw.wording import render
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
     from concurrent.futures import Future
     from pathlib import Path
 
     from numpy.typing import NDArray
 
     from rnw.barrens import WastelandSettings
+    from rnw.continent_world import ComposedWorld, WorldRegion
     from rnw.eu5_islands import Moved
+    from rnw.eu5_morocco import MoroccoStart
     from rnw.eu5_remap import GeographicRemap
+    from rnw.eu5_rewrite import SetupResult
     from rnw.eu5_start import Country, FinalStartPlan
     from rnw.game_texts import Entry
     from rnw.geography import Location
@@ -365,6 +379,7 @@ if TYPE_CHECKING:
 
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
 MAX_LOCATIONS: Final[int] = 32_000
+AMERICAN_GENERATION: Final[frozenset[str]] = frozenset({NEW_WORLD})
 RIVER_CLASSES: Final[int] = 16
 # Vanilla uses widths 4, 5, 11 and 15 on 61.5%, 23.9%, 8.1% and 6.2% of Old World river
 # pixels [V-EXEC C59]; valleys are cut in proportion (vanilla rivers lie a median 318
@@ -675,6 +690,109 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
     return replace(world, classes=(*biomes.kinds, *world.classes[count:])), biomes, stats
 
 
+def composed_land_character(  # noqa: PLR0913 - common map, calibration and independent land plans.
+    game_map: Eu5Map,
+    shared: ComposedWorld,
+    islands: Sequence[WorldRegion],
+    *,
+    geography: Mapping[str, NewWorldSettings],
+    resources: Mapping[str, Mapping[str, int]],
+    vanilla: VanillaClimate,
+    attributes: dict[str, dict[str, str]],
+    game_dir: Path,
+    seed: int,
+    material_seed: int,
+    sizes: SizeModel,
+) -> tuple[ComposedWorld, CellBiomes, dict[str, object]]:
+    """Vote on all terrain once, with each continent's own wasteland and resource settings."""
+    canvas, world = shared.canvas, shared.world
+    count = _land_count(world)
+    grid = _final_climate(game_map, canvas, world, _final_labels(game_map, canvas, world), vanilla)
+    rules = biome_rules(_read(game_dir, BIOME_DEFINITIONS))
+    materials = material_counts(_read(game_dir, TERRAIN_MATERIALS))
+    resource_regions: dict[str, MaterialRegion] = {}
+    wasteland_regions: dict[str, WastelandRegion] = {}
+    polar = np.zeros(count, dtype=bool)
+    touches = np.unique(world.labels[[0, -1], :])
+    polar[touches[(touches >= 0) & (touches < count)]] = True
+    for region in islands:
+        local = region.world
+        name = region.domain.continent.key
+        land = _land_count(local)
+        first = int(shared.cell_ids[name][0])
+        cells = range(first, first + land)
+        parameters = geography[name]
+        barrier = np.zeros(land, dtype=bool)
+        barrier[local.barrier] = True
+        resource_regions[name] = MaterialRegion(
+            cells,
+            derive_seed(material_seed, "continent", name),
+            resources.get(name, {}),
+            parameters.precious_permille,
+        )
+        wasteland_regions[name] = WastelandRegion(
+            cells,
+            wasteland_settings(
+                rules,
+                materials,
+                budget=land * parameters.wasteland_permille // 1000,
+                polar=polar[first : first + land],
+                barrier=barrier,
+            ),
+            derive_seed(seed, "continent", name),
+        )
+    biomes, stats = assign_biomes(
+        game_map=game_map,
+        templates=attributes,
+        vanilla=vanilla.locations,
+        vanilla_grid=vanilla.grid,
+        final_grid=grid,
+        cells=_generated(
+            canvas,
+            world,
+            count,
+            surface=_surface(game_map, canvas, world, seed),
+            ground=(sizes, grid),
+        ),
+        seed=seed,
+        open_climate=True,
+        ground=sizes,
+        pooled_resources=True,
+        regional_resources=resource_regions,
+        regional_wastelands=wasteland_regions,
+    )
+    if biomes.kinds is None:
+        message = "The composed wasteland plans did not classify the land cells"
+        raise NewWorldExportError(message)
+    kinds = (*biomes.kinds, *world.classes[count:])
+    waters = water_climates(
+        game_map,
+        templates=attributes,
+        vanilla=vanilla.locations,
+        vanilla_grid=vanilla.grid,
+        final_grid=grid,
+        cells=_generated(canvas, world),
+    )
+    return (
+        replace(shared, world=replace(world, classes=kinds)),
+        _with_waters(biomes, waters, len(kinds)),
+        stats,
+    )
+
+
+def settled_biomes(biomes: CellBiomes, source: NewWorld, coast: Coast) -> CellBiomes:
+    """Keep each surviving cell's climate, with merged water taking its largest part's climate."""
+    largest = [-1] * len(coast.world.classes)
+    for old, new in enumerate(coast.source_cells):
+        previous = largest[new]
+        if previous < 0 or source.pixels[old] > source.pixels[previous]:
+            largest[new] = old
+    if min(largest, default=0) < 0:
+        message = "A settled location has no source for its climate"
+        raise NewWorldExportError(message)
+    return replace(biomes, climate=tuple(biomes.climate[i] for i in largest))
+
+
 def _template_bodies(text: str) -> dict[str, str]:
     root = parse(text)
     return {
@@ -820,6 +938,24 @@ def _crossing_rows(plan: Plan, canvas: Canvas, water: Water) -> list[str]:
     return rows
 
 
+def _port_contacts(
+    world: NewWorld, land: NDArray[np.bool_], sea: NDArray[np.bool_]
+) -> NDArray[np.int64]:
+    labels = world.labels
+    width = labels.shape[1]
+    contacts = _native.coastal_pixels(np.ascontiguousarray(labels), land, sea)
+    if not world.wrap_x:
+        return contacts
+    across: list[NDArray[np.int64]] = []
+    for shore, water in ((0, width - 1), (width - 1, 0)):
+        bank, neighbour = labels[:, shore], labels[:, water]
+        rows = np.flatnonzero(land[bank] & sea[neighbour])
+        across.append(
+            np.column_stack((bank[rows], neighbour[rows], rows * width + shore)).astype(np.int64)
+        )
+    return np.concatenate((contacts, *across))
+
+
 @measured
 def _ports(
     plan: Plan,
@@ -844,8 +980,7 @@ def _ports(
     width = labels.shape[1]
     land = np.array([cell.kind is CellClass.LAND for cell in plan.cells] + [False])
     sea = np.array([cell.kind is CellClass.SEA for cell in plan.cells] + [False])
-    contacts = _native.coastal_pixels(np.ascontiguousarray(labels), land, sea)
-    land_cells, sea_cells, pixels = contacts.T
+    land_cells, sea_cells, pixels = _port_contacts(world, land, sea).T
     rows_out: list[str] = []
     positions: dict[int, tuple[int, int]] = {}
     if land_cells.size:
@@ -861,15 +996,18 @@ def _ports(
             hi = np.searchsorted(packed_sorted, key, side="right")
             candidates = pixels_sorted[lo:hi]
             centre = world.interior[land_cell]
-            distance = (candidates // width - centre[0]) ** 2 + (
-                candidates % width - centre[1]
-            ) ** 2
+            horizontal = np.abs(candidates % width - centre[1])
+            if world.wrap_x:
+                horizontal = np.minimum(horizontal, width - horizontal)
+            distance = (candidates // width - centre[0]) ** 2 + horizontal**2
             pixel = int(candidates[int(np.argmin(distance))])
             row, column = divmod(pixel, width)
             x = int(_world_columns(canvas, np.array([column], dtype=np.int64))[0])
             dock_row, dock_column = row, column
             for d_row, d_column in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                 r, c = row + d_row, column + d_column
+                if world.wrap_x:
+                    c %= width
                 if 0 <= r < labels.shape[0] and 0 <= c < width and int(labels[r, c]) == sea_cell:
                     dock_row, dock_column = r, c
                     break
@@ -996,12 +1134,14 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
 
 
-def _localization(
+def _localization(  # noqa: PLR0913 - the world names come from three typed sources.
     game_dir: Path,
     plan: Plan,
     extra: Mapping[str, Entry],
     renamed: Mapping[str, Name],
     languages: tuple[str, ...],
+    *,
+    include_provinces: bool = False,
 ) -> dict[str, bytes]:
     """The world's names and texts, written in each language (``wording``, ``translations``)."""
     names: dict[str, Entry] = {cell.key: cell.name for cell in emitted_cells(plan)}
@@ -1018,7 +1158,9 @@ def _localization(
         files[f"{base}/rnw_new_world_l_{language}.yml"] = _yaml(language, localize(names, language))
         written = {key: render(name, language) for key, name in overrides.items()}
         try:
-            files.update(map_name_files(game_dir, language, written))
+            files.update(
+                map_name_files(game_dir, language, written, include_provinces=include_provinces)
+            )
         except LocalizationError as error:
             raise NewWorldExportError(str(error)) from error
     return files
@@ -1163,6 +1305,8 @@ def _check_overseas_contacts(
     plan: Plan,
     impassable: set[int] | frozenset[int],
     contacts: set[tuple[int, int]],
+    *,
+    oceans: frozenset[str] = OCEANS,
 ) -> None:
     """Reject passable map contacts that destroy American overseas eligibility."""
     passable = [kind is not CellClass.WASTELAND for kind in game_map.classes]
@@ -1177,8 +1321,8 @@ def _check_overseas_contacts(
         if passable[first]
         and passable[second]
         and (
-            (memberships[first] == NEW_WORLD and memberships[second] not in OCEANS | {NEW_WORLD})
-            or (memberships[second] == NEW_WORLD and memberships[first] not in OCEANS | {NEW_WORLD})
+            (memberships[first] == NEW_WORLD and memberships[second] not in oceans | {NEW_WORLD})
+            or (memberships[second] == NEW_WORLD and memberships[first] not in oceans | {NEW_WORLD})
         )
     ]
     if bad:
@@ -1219,11 +1363,21 @@ def _check_written_contacts(
         raise NewWorldExportError(message)
 
 
-def _inland_sea_cells(world: NewWorld, settings: NewWorldSettings) -> frozenset[int]:
+def _inland_sea_cells(
+    world: NewWorld,
+    settings: NewWorldSettings,
+    *,
+    by_continent: Mapping[str, int] | None = None,
+    plan: Plan | None = None,
+) -> frozenset[int]:
     """Allow substantial, physically enclosed seas; a small basin should have been a lake."""
     basins = inland_seas(world)
-    minimum = inland_sea_min_area(settings)
     for basin in basins:
+        minimum = (
+            by_continent[plan.cells[basin[0]].continent]
+            if by_continent is not None and plan is not None
+            else inland_sea_min_area(settings)
+        )
         area = sum(int(world.pixels[cell]) for cell in basin)
         if area < minimum:
             message = f"An inland sea has only {area} pixels (minimum {minimum}); expected a lake"
@@ -1231,7 +1385,53 @@ def _inland_sea_cells(world: NewWorld, settings: NewWorldSettings) -> frozenset[
     return frozenset(cell for basin in basins for cell in basin)
 
 
-def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and hierarchy.
+def _replacement_water_links(
+    game_map: Eu5Map,
+    lost: list[tuple[int, int]],
+    neighbours: Mapping[int, list[int]],
+    generated_continents: frozenset[str],
+    closed: Collection[int],
+) -> set[tuple[int, int]]:
+    """A cut contact at a selected coast can go through its new navigable waters."""
+    offset = len(game_map.keys)
+    linked: set[tuple[int, int]] = set()
+    for first, target in lost:
+        if not any(game_map.continents[node] in generated_continents for node in (first, target)):
+            continue
+        if any(
+            game_map.classes[node] is not CellClass.SEA or bool(game_map.ambiguous[node])
+            for node in (first, target)
+        ):
+            continue
+        pending = deque(neighbours.get(first, ()))
+        seen = {first}
+        while pending:
+            cell = pending.popleft()
+            if cell == target:
+                linked.add((first, target))
+                break
+            if cell >= offset and cell - offset not in closed and cell not in seen:
+                seen.add(cell)
+                pending.extend(neighbours.get(cell, ()))
+    return linked
+
+
+def _sea_neighbours(
+    game_map: Eu5Map, world: NewWorld, contacts: Collection[tuple[int, int]]
+) -> tuple[NDArray[np.bool_], dict[int, list[int]]]:
+    sea = np.fromiter(
+        (kind is CellClass.SEA for kinds in (game_map.classes, world.classes) for kind in kinds),
+        dtype=bool,
+    )
+    neighbours: dict[int, list[int]] = {}
+    for first, second in contacts:
+        if sea[first] and sea[second]:
+            neighbours.setdefault(first, []).append(second)
+            neighbours.setdefault(second, []).append(first)
+    return sea, neighbours
+
+
+def _check_world(  # noqa: PLR0913, PLR0917 - checks the raster and the hierarchy together.
     game_map: Eu5Map,
     canvas: Canvas,
     world: NewWorld,
@@ -1239,6 +1439,9 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
     plan: Plan,
     impassable: set[int] | frozenset[int],
     settings: NewWorldSettings,
+    *,
+    generated_continents: frozenset[str] = AMERICAN_GENERATION,
+    inland_sizes: Mapping[str, int] | None = None,
 ) -> tuple[dict[str, int], frozenset[int]]:
     """Connectivity, sea reachability and Old World contact preservation.
 
@@ -1250,7 +1453,7 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
     if unported:
         message = f"{len(unported)} land cells reach no port, e.g. cell {unported[0]}"
         raise NewWorldExportError(message)
-    parts = label_components(world.labels)
+    parts = label_components(world.labels, wrap_x=world.wrap_x)
     owner = np.full(int(parts.max()) + 1, -1, dtype=np.int64)
     owner[parts.ravel()] = world.labels.ravel()
     per_cell = np.bincount(owner[owner >= 0], minlength=count)
@@ -1260,10 +1463,16 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
     vanilla_count = len(game_map.keys)
     before = set(unpack_pairs(adjacency_pairs(game_map.labels, wrap_x=True)))
     after = set(unpack_pairs(adjacency_pairs(final, wrap_x=True)))
-    _check_overseas_contacts(game_map, plan, impassable, after)
     continents = game_map.continents
+    oceans = (
+        frozenset(key for key in continents if key.endswith("_ocean_continent"))
+        if world.wrap_x
+        else OCEANS
+    )
+    if NEW_WORLD in generated_continents:
+        _check_overseas_contacts(game_map, plan, impassable, after, oceans=oceans)
     old_world = np.array(
-        [name not in OCEANS and name != NEW_WORLD for name in continents], dtype=bool
+        [name not in oceans and name not in generated_continents for name in continents], dtype=bool
     )
     held = _held(game_map, canvas)
     lost = [
@@ -1275,20 +1484,16 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
         and not held[pair[1]]
         and (old_world[pair[0]] or old_world[pair[1]])
     ]
-    if lost:
-        message = f"{len(lost)} Old World contacts were lost, e.g. {lost[:3]}"
-        raise NewWorldExportError(message)
-    sea = np.concatenate(
-        [
-            np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool),
-            np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool),
-        ]
+    sea, neighbours = _sea_neighbours(game_map, world, after)
+    linked = (
+        _replacement_water_links(game_map, lost, neighbours, generated_continents, impassable)
+        if world.wrap_x
+        else set[tuple[int, int]]()
     )
-    neighbours: dict[int, list[int]] = {}
-    for first, second in after:
-        if sea[first] and sea[second]:
-            neighbours.setdefault(first, []).append(second)
-            neighbours.setdefault(second, []).append(first)
+    missing = sorted(set(lost) - linked)
+    if missing:
+        message = f"{len(missing)} Old World contacts were lost, e.g. {missing[:3]}"
+        raise NewWorldExportError(message)
     start = [i for i in range(vanilla_count) if sea[i] and old_world[i] and not canvas.removed[i]]
     seen = set(start)
     queue = deque(start)
@@ -1297,7 +1502,7 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
             if other not in seen:
                 seen.add(other)
                 queue.append(other)
-    inland = _inland_sea_cells(world, settings)
+    inland = _inland_sea_cells(world, settings, by_continent=inland_sizes, plan=plan)
     orphan = [
         i
         for i in range(vanilla_count, vanilla_count + count)
@@ -1320,6 +1525,8 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
         "generated_inland_sea_zones": len(inland),
         "land_cells_without_port_access": 0,
     }
+    if world.wrap_x:
+        stats["selected_coastal_water_links_replaced"] = len(linked)
     return stats, frozenset(low for low, high in after if low < vanilla_count <= high)
 
 
@@ -1345,6 +1552,70 @@ def _removed_areas(
         if location.area in wanted:
             areas.setdefault(location.area, []).append(key)
     return {area: members for area, members in areas.items() if all(k in removed for k in members)}
+
+
+def composed_bindings(  # noqa: PLR0913 - finished coast and original geographic keys.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    water: Water,
+    plan: Plan,
+    hierarchy: dict[str, Location],
+    *,
+    geometry: VanillaGeometry,
+    removed: set[str],
+    vanilla_ports: Mapping[str, VanillaPort],
+) -> tuple[tuple[list[str], dict[int, tuple[int, int]]], GeographicRemap]:
+    """Find the final port rows and replacements for all removed geographic identities."""
+    world = water.coast.world
+    ports = _ports(plan, world, canvas, water.coast.foreign, vanilla_ports)
+    remap = build_remap(
+        [
+            (game_map.keys[i], game_map.classes[i], int(geometry.rows[i]), int(geometry.columns[i]))
+            for i in np.flatnonzero(canvas.removed).tolist()
+            if game_map.keys[i] in removed
+        ],
+        plan,
+        world.centroids,
+        _removed_provinces(hierarchy, removed),
+        areas=_removed_areas(hierarchy, removed, plan.dropped_areas),
+        access=RemapAccess(
+            port_keys=frozenset(vanilla_ports),
+            port_cells=frozenset(ports[1]),
+            navigable_keys=frozenset(
+                key
+                for i, key in enumerate(game_map.keys)
+                if game_map.classes[i] is CellClass.SEA and not game_map.ambiguous[i]
+            ),
+            closed_seas=water.zones,
+        ),
+        regions=RemapRegions(
+            dict(zip(game_map.keys, game_map.continents, strict=True)), canvas.shape[1]
+        ),
+    )
+    return ports, remap
+
+
+def check_composed_map(
+    game_map: Eu5Map,
+    canvas: Canvas,
+    plan: Plan,
+    water: Water,
+    geography: Mapping[str, NewWorldSettings],
+) -> dict[str, int]:
+    """Run the geographic export checks against one finished multi-continent map."""
+    world = water.coast.world
+    counts, _ = _check_world(
+        game_map,
+        canvas,
+        world,
+        _final_labels(game_map, canvas, world),
+        plan,
+        water.zones,
+        next(iter(geography.values())),
+        generated_continents=frozenset(geography),
+        inland_sizes={name: inland_sea_min_area(settings) for name, settings in geography.items()},
+    )
+    return counts
 
 
 def _setup_texts(game_dir: Path) -> dict[str, str]:
@@ -1563,6 +1834,125 @@ def _insert_setup_additions(
     return text
 
 
+def map_identity_files(
+    game_dir: Path, plan: Plan, water: Water, removed: set[str]
+) -> dict[str, bytes]:
+    """Write the named colours, hierarchy and location classes from one plan."""
+    outputs: dict[str, bytes] = {}
+    outputs[_mod_path(NAMED_COLORS)] = _encode(
+        game_dir,
+        NAMED_COLORS,
+        rewrite_named_colors(
+            _read(game_dir, NAMED_COLORS), removed, [(c.key, c.color) for c in emitted_cells(plan)]
+        ),
+    )
+    outputs[_mod_path(DEFINITIONS)] = _encode(
+        game_dir,
+        DEFINITIONS,
+        rewrite_definitions(_read(game_dir, DEFINITIONS), removed, _additions(plan)),
+    )
+    lists = {
+        "sea_zones": [c.key for c in emitted_cells(plan) if c.kind is CellClass.SEA],
+        "lakes": [c.key for c in emitted_cells(plan) if c.kind is CellClass.LAKE],
+        "impassable_mountains": [
+            cell.key
+            for index, cell in enumerate(plan.cells)
+            if (cell.kind is CellClass.WASTELAND or index in water.zones)
+            and (plan.oceans is None or cell.key not in plan.oceans.retained)
+        ],
+    }
+    lists["impassable_mountains"] = list(dict.fromkeys(lists["impassable_mountains"]))
+    if plan.oceans is not None:
+        lists["impassable_mountains"].extend(
+            cell.key for cell in plan.oceans.extra if cell.key in plan.oceans.closed_extra
+        )
+    outputs[_mod_path(DEFAULT_MAP)] = _encode(
+        game_dir, DEFAULT_MAP, rewrite_class_lists(_read(game_dir, DEFAULT_MAP), removed, lists)
+    )
+    return outputs
+
+
+@dataclass(frozen=True, slots=True)
+class ComposedStart:
+    """The regional histories and the decisions about retained territory."""
+
+    histories: tuple[FinalStartPlan, ...]
+    remap: GeographicRemap
+    morocco: MoroccoStart | None = None
+    emirate: Country | None = None
+
+
+def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its bound identities.
+    start: ComposedStart | None,
+    texts: dict[str, str],
+    natives: FinalStartPlan,
+    *,
+    game_map: Eu5Map,
+    geometry: VanillaGeometry,
+    plan: Plan,
+    removed: set[str],
+    gone: set[str],
+) -> SetupResult:
+    written = pop_lines(natives.pops)
+    if start is None:
+        return prune_setup(texts, gone, {c.key: written.get(c.key, []) for c in plan.cells})
+    pops = {c.key: written.get(c.key, []) for c in emitted_cells(plan)}
+    original = {
+        key: (int(row), int(column))
+        for key, row, column in zip(game_map.keys, geometry.rows, geometry.columns, strict=True)
+    }
+    final = set(game_map.keys).difference(removed) | {cell.key for cell in emitted_cells(plan)}
+    replacements = retained_capitals(
+        texts[COUNTRIES_FILE],
+        gone,
+        original,
+        game_map.labels.shape[1],
+        preferred={"MAM": "damascus"},
+    )
+    if start.morocco is not None:
+        holdings = set(start.morocco.africa)
+        if holdings - written.keys() or any(
+            holdings.intersection(country.members) for country in natives.countries
+        ):
+            message = "Morocco's reserved holdings must have populations and no generated owner"
+            raise NewWorldExportError(message)
+        return apply_morocco_start(
+            start.morocco,
+            texts,
+            gone,
+            pops,
+            location_replacements=start.remap.locations,
+            replacement_capitals=replacements,
+            final_locations=final,
+            emirate=start.emirate,
+        )
+    return prune_regional_setup(
+        texts,
+        gone,
+        pops,
+        location_replacements=start.remap.locations,
+        replacement_capitals=replacements,
+        final_locations=final,
+    )
+
+
+def _history_outputs(
+    natives: FinalStartPlan, loc_keys: KeySpace, plan: Plan, composed: ComposedStart | None
+) -> eu5_history_text.WrittenHistory | None:
+    locations = tuple(cell.key for cell in plan.cells)
+    if composed is not None:
+        history = eu5_history_text.build_combined(
+            composed.histories, loc_keys, tuple(dict.fromkeys(locations))
+        )
+        verify_combined_text(composed.histories, history)
+        return history
+    if natives.history is None:
+        return None
+    history = eu5_history_text.build(natives, loc_keys, locations)
+    verify_history_text(natives, history)
+    return history
+
+
 def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the shared plan.
     game_dir: Path,
     *,
@@ -1583,6 +1973,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     new_world_keys: set[str],
     resources_seed: int,
     area_replacements: dict[str, str],
+    composed: ComposedStart | None = None,
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     bodies = _template_bodies(_read(game_dir, TEMPLATES))
     donors = _donor_map(
@@ -1611,35 +2002,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
     removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
     gone = removed | (removed_provinces - kept_provinces) | set(plan.dropped_areas)
-    outputs: dict[str, bytes] = {}
-    outputs[_mod_path(NAMED_COLORS)] = _encode(
-        game_dir,
-        NAMED_COLORS,
-        rewrite_named_colors(
-            _read(game_dir, NAMED_COLORS), removed, [(c.key, c.color) for c in emitted_cells(plan)]
-        ),
-    )
-    outputs[_mod_path(DEFINITIONS)] = _encode(
-        game_dir,
-        DEFINITIONS,
-        rewrite_definitions(_read(game_dir, DEFINITIONS), removed, _additions(plan)),
-    )
-    lists = {
-        "sea_zones": [c.key for c in emitted_cells(plan) if c.kind is CellClass.SEA],
-        "lakes": [c.key for c in emitted_cells(plan) if c.kind is CellClass.LAKE],
-        "impassable_mountains": [
-            cell.key
-            for index, cell in enumerate(plan.cells)
-            if (cell.kind is CellClass.WASTELAND or index in water.zones)
-            and (plan.oceans is None or cell.key not in plan.oceans.retained)
-        ],
-    }
-    lists["impassable_mountains"] = list(dict.fromkeys(lists["impassable_mountains"]))
-    if plan.oceans is not None:
-        lists["impassable_mountains"].extend(cell.key for cell in plan.oceans.extra)
-    outputs[_mod_path(DEFAULT_MAP)] = _encode(
-        game_dir, DEFAULT_MAP, rewrite_class_lists(_read(game_dir, DEFAULT_MAP), removed, lists)
-    )
+    outputs = map_identity_files(game_dir, plan, water, removed)
     outputs[_mod_path(TEMPLATES)] = _encode(
         game_dir,
         TEMPLATES,
@@ -1685,22 +2048,21 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     override = _read(game_dir, LOCATOR_OVERRIDE)
     if (rewritten := rewrite_override_locators(override, removed)) != override:
         outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
-    history_text = (
-        eu5_history_text.build(natives, loc_keys, tuple(cell.key for cell in plan.cells))
-        if natives.history is not None
-        else None
-    )
+    history_text = _history_outputs(natives, loc_keys, plan, composed)
     if history_text is not None:
-        verify_history_text(natives, history_text)
         outputs.update(history_text.files)
-    written_pops = pop_lines(natives.pops)
-    setup = prune_setup(
+    setup = _rewrite_setup(
+        composed,
         {
             name: remap_text(text, area_replacements)[0]
             for name, text in _setup_texts(game_dir).items()
         },
-        gone,
-        {c.key: written_pops.get(c.key, []) for c in plan.cells},
+        natives,
+        game_map=game_map,
+        geometry=geometry,
+        plan=plan,
+        removed=removed,
+        gone=gone,
     )
     ai_decisions = _ai_assignment_records(game_dir, natives, world, plan)
     ai_records = ai_assignments(ai_decisions)
@@ -1727,7 +2089,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         if name == DEVELOPMENT_FILE:
             setup_text = drop_block_entries(setup_text, ("development",), new_world_keys)
         setup_text = _insert_setup_additions(name, setup_text, additions, ai_records)
-        if name == "12_diplomacy.txt" and natives.history is not None:
+        if name == "12_diplomacy.txt" and history_text is not None:
             verify_diplomacy(
                 natives, setup_text, _read(game_dir, relative), gone | setup.removed_ids
             )
@@ -1740,7 +2102,10 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         outputs[_mod_path(BASE_VALUES)] = _encode(
             game_dir, BASE_VALUES, drop_block_entries(_read(game_dir, BASE_VALUES), (), retired)
         )
-    outputs[DEFINITION_FILE] = country_definitions(natives.countries)
+    countries = natives.countries
+    if composed is not None and composed.emirate is not None:
+        countries += (composed.emirate,)
+    outputs[DEFINITION_FILE] = country_definitions(countries)
     languages = official_languages(game_dir)
     if used:
         outputs[OUTPUT_PLACES] = modifiers_file(used, payloads(game_dir))
@@ -1749,12 +2114,13 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
             game_dir,
             plan,
             {
-                **country_names(natives.countries),
+                **country_names(countries),
                 **{key: Text(key) for key in place_texts(used)},
                 **(history_text.texts if history_text is not None else {}),
             },
             natives.names,
             languages,
+            include_provinces=composed is not None,
         )
     )
     stats: dict[str, object] = {
@@ -1962,6 +2328,68 @@ def _rasters(
     return rgb, rivers
 
 
+def check_composed_rasters(  # noqa: PLR0913 - the output map, its setup and its river raster.
+    game_dir: Path,
+    game_map: Eu5Map,
+    canvas: Canvas,
+    water: Water,
+    plan: Plan,
+    *,
+    river_codes: NDArray[np.uint8],
+) -> dict[str, int]:
+    """Check the actual output colours and rivers in memory, with the ocean runs painted."""
+    world = water.coast.world
+    removed = {game_map.keys[i] for i in np.flatnonzero(canvas.removed).tolist()}
+    if plan.oceans is not None:
+        removed -= plan.oceans.retained
+    _check_identity_budget(game_map, removed, plan)
+    candidate = replace(game_map, rgb=game_map.rgb.copy(), rivers=game_map.rivers.copy())
+    rgb, rivers = _rasters(candidate, canvas, world, plan, river_codes)
+    outside = differing_pixels(rgb, game_map.rgb) & ~canvas.mask
+    if plan.oceans is not None:
+        plan.oceans.paint(outside, canvas, clear=True)
+    if outside.any() or np.any((rivers != game_map.rivers) & ~canvas.mask):
+        message = "Generated rasters changed locations or rivers outside their planned footprints"
+        raise NewWorldExportError(message)
+    emitted = emitted_cells(plan)
+    retained = [
+        (key, color)
+        for key, color in zip(game_map.keys, game_map.colors.tolist(), strict=True)
+        if key not in removed
+    ]
+    tables = map_identity_files(game_dir, plan, water, removed)
+    named = parse_named_colors(tables[_mod_path(NAMED_COLORS)].decode("utf-8-sig"))
+    defined = parse_locations(tables[_mod_path(DEFINITIONS)].decode("utf-8-sig"))
+    keys = [*(key for key, _ in retained), *(cell.key for cell in emitted)]
+    expected = dict(retained) | {cell.key: cell.color for cell in emitted}
+    original_hierarchy = parse_locations(_read(game_dir, DEFINITIONS))
+    expected_definitions = ({c.key for c in original_hierarchy} - removed) | {
+        cell.key for cell in emitted
+    }
+    wrong_colors = sorted(dict(named).items() ^ expected.items())
+    missing_keys = sorted({c.key for c in defined} ^ expected_definitions)
+    if wrong_colors or missing_keys or len(named) != len(keys):
+        message = (
+            f"Combined map tables disagree ({len(named)} names for {len(keys)} keys, "
+            f"{len(wrong_colors)} color bindings, {len(missing_keys)} hierarchy keys). "
+            f"Examples: {wrong_colors[:3]} {missing_keys[:5]}"
+        )
+        raise NewWorldExportError(message)
+    colors = np.array([expected[key] for key in keys], dtype=np.int64)
+    labels = labels_from_rgb(rgb, colors)
+    components = component_counts(labels, wrap_x=True, label_count=len(colors))
+    changed_oceans = plan.oceans.sources if plan.oceans is not None else {}
+    broken = [
+        key
+        for number, key in enumerate(keys)
+        if components[number] != 1 and (number >= len(retained) or key in changed_oceans)
+    ]
+    if broken:
+        message = f"Generated raster location {broken[0]} is disconnected or missing"
+        raise NewWorldExportError(message)
+    return {"location_colors": len(colors), "connected_new_location_colors": len(emitted)}
+
+
 def _basin_rain(
     shape: tuple[int, int], left: int, canvas: Canvas, climate: ClimateGrid
 ) -> NDArray[np.int64]:
@@ -2075,8 +2503,21 @@ def _rivers(
     else:
         rivers = _river_basins(land, elevation, canvas, climate, seed, lakes=lakes)
     del lakes
+    return _river_rasters(
+        rivers, land, ~land, elevation, seam=(canvas.roll - canvas.col0) % canvas.shape[1]
+    )
+
+
+def _river_rasters(
+    rivers: Rivers,
+    land: NDArray[np.bool_],
+    water: NDArray[np.bool_],
+    elevation: NDArray[np.int32],
+    *,
+    seam: int,
+) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
     classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
-    problems = network_problems(rivers.role, ~land)
+    problems = network_problems(rivers.role, water)
     if any(problems.values()):
         message = f"generated rivers break the raster rules: {problems}"
         raise NewWorldExportError(message)
@@ -2085,7 +2526,7 @@ def _rivers(
             rivers,
             classes,
             RIVER_WIDTH_CODES,
-            seam=(canvas.roll - canvas.col0) % canvas.shape[1],
+            seam=seam,
         )
     except RiverRasterError as exc:
         raise NewWorldExportError(str(exc)) from exc
@@ -2104,6 +2545,59 @@ def _rivers(
     stats["width_pixels"] = {
         str(code): int(np.count_nonzero(codes == code)) for code in RIVER_WIDTH_CODES
     }
+    return codes, carved, stats
+
+
+def composed_rivers(
+    shape: tuple[int, int], regions: Sequence[WorldRegion], seed: int
+) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
+    """Draw each existing watershed once and place it in the assembled world."""
+    codes = np.full(shape, RIVER_LAND, dtype=np.uint8)
+    carved = np.zeros(shape, dtype=np.int32)
+    stats: dict[str, object] = {}
+    for region in regions:
+        domain, world = region.domain, region.world
+        name = domain.continent.key
+        local_seed = seed if name == NEW_WORLD else derive_seed(seed, "continent", name)
+        seam = domain.watershed_seam
+        plan = world.drainage
+        if plan is None or plan.seam != seam:
+            message = f"The drainage plan of {name} has the wrong watershed boundary"
+            raise NewWorldExportError(message)
+        land = np.array(
+            [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
+        )[world.labels]
+        lakes = np.array([kind is CellClass.LAKE for kind in world.classes] + [False])[world.labels]
+        rain = domain_climate(
+            land, lakes, world.elevation, row0=domain.first_row, outside_land=domain.contact_land
+        ).rain
+        try:
+            rivers = domain_rivers(
+                land,
+                plan,
+                lakes=lakes,
+                rain=rain,
+                seed=local_seed,
+                outside_land=domain.contact_land,
+            )
+        except RiverGenerationError as error:
+            message = f"{name}: {error}"
+            raise NewWorldExportError(message) from error
+        water = ~land
+        if domain.contact_land is not None:
+            water &= ~domain.contact_land
+        local, valleys, details = _river_rasters(
+            rivers,
+            land,
+            water,
+            world.elevation,
+            seam=world.labels.shape[1] + 1 if seam is None else seam,
+        )
+        stats[name] = details
+        for crop, original in domain.spans():
+            mask = domain.mask[:, crop]
+            np.copyto(codes[domain.rows, original], local[:, crop], where=mask)
+            np.copyto(carved[domain.rows, original], valleys[:, crop], where=mask)
     return codes, carved, stats
 
 
@@ -2156,6 +2650,57 @@ def _verify_texts(outputs: dict[str, bytes], plan: Plan, removed: set[str]) -> d
         message = f"Removed locations are still referenced: {leftovers}"
         raise NewWorldExportError(message)
     return {"definition_locations": len(keys), "template_locations": len(template_keys)}
+
+
+def verify_map_texts(
+    outputs: dict[str, bytes], plan: Plan, canvas: Canvas, water: Water, removed: set[str]
+) -> dict[str, object]:
+    """Check the written locations, ports, straits and sea routes against the same plan."""
+    checks = _verify_texts(outputs, plan, removed)
+    coast = water.coast
+    world = coast.world
+    try:
+        checks.update(
+            verify_seas(
+                (
+                    outputs[_mod_path(PORTS)].decode("utf-8-sig"),
+                    outputs[_mod_path(TEMPLATES)].decode("utf-8-sig"),
+                    outputs[_mod_path(DEFAULT_MAP)].decode("utf-8-sig"),
+                ),
+                plan,
+                world,
+                coast,
+                water,
+            )
+        )
+        checks.update(
+            verify_locators(
+                {
+                    name: outputs[_mod_path(f"{MAP_OBJECTS}/{name}")].decode("utf-8-sig")
+                    for name in (*NO_UNITS, VFX_LOCATORS)
+                },
+                plan,
+                water,
+                all_locations=frozenset(
+                    location.key
+                    for location in parse_locations(
+                        outputs[_mod_path(DEFINITIONS)].decode("utf-8-sig")
+                    )
+                ),
+            )
+        )
+        checks.update(
+            verify_crossings(
+                outputs[_mod_path(ADJACENCIES)].decode("utf-8-sig"),
+                plan,
+                world,
+                canvas,
+                water.crossings,
+            )
+        )
+    except SeaError as error:
+        raise NewWorldExportError(str(error)) from error
+    return checks
 
 
 def vanilla_localization_keys(game_dir: Path) -> set[str]:
@@ -3577,48 +4122,7 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
         text_stats["stories"] = written.stats
         text_stats.update(_add_reveal(texts, enabled=bool(settings.new_world.reveal_at_start)))
         checkpoint()
-        text_checks = _verify_texts(texts, plan, removed)
-        try:
-            text_checks.update(
-                verify_seas(
-                    (
-                        texts[_mod_path(PORTS)].decode("utf-8-sig"),
-                        texts[_mod_path(TEMPLATES)].decode("utf-8-sig"),
-                        texts[_mod_path(DEFAULT_MAP)].decode("utf-8-sig"),
-                    ),
-                    plan,
-                    world,
-                    coast,
-                    shapes,
-                )
-            )
-            text_checks.update(
-                verify_locators(
-                    {
-                        name: texts[_mod_path(f"{MAP_OBJECTS}/{name}")].decode("utf-8-sig")
-                        for name in (*NO_UNITS, VFX_LOCATORS)
-                    },
-                    plan,
-                    shapes,
-                    all_locations=frozenset(
-                        location.key
-                        for location in parse_locations(
-                            texts[_mod_path(DEFINITIONS)].decode("utf-8-sig")
-                        )
-                    ),
-                )
-            )
-            text_checks.update(
-                verify_crossings(
-                    texts[_mod_path(ADJACENCIES)].decode("utf-8-sig"),
-                    plan,
-                    world,
-                    canvas,
-                    shapes.crossings,
-                )
-            )
-        except SeaError as error:
-            raise NewWorldExportError(str(error)) from error
+        text_checks = verify_map_texts(texts, plan, canvas, shapes, removed)
         text_checks.update(_verify_natives(natives, plan))
         text_checks.update(verify_technology(texts, natives, vanilla_start.result()))
         text_checks.update(

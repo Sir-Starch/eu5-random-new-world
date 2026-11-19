@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from rnw.eu5_newworld import Plan, PlannedCell
-from rnw.eu5_remap import RemapAccess, RemapError, build_remap, remap_text
+from rnw.eu5_remap import RemapAccess, RemapError, RemapRegions, build_remap, remap_text
 from rnw.model import CellClass
 
 
@@ -150,6 +150,21 @@ def test_a_dropped_area_without_any_compatible_location_is_an_error() -> None:
             access=RemapAccess(),
             areas={"lost_area": ["absent"]},
         )
+
+
+def test_wrapped_bindings_preserve_continent_on_land_and_access_at_sea() -> None:
+    plan = _plan()
+    plan.cells[0] = replace(plan.cells[0], continent="asia")
+    plan.cells[1] = replace(plan.cells[1], continent="oceania")
+    result = build_remap(
+        [("island", CellClass.LAND, 0, 0), ("current", CellClass.SEA, 0, 0)],
+        plan,
+        np.array([[0, 0], [0, 98], [0, 5], [0, 99]], dtype=np.int64),
+        {},
+        access=RemapAccess(navigable_keys=frozenset({"current"}), closed_seas=frozenset({2})),
+        regions=RemapRegions({"island": "oceania"}, 100),
+    )
+    assert result.locations == {"island": "harbour", "current": "lane"}
 
 
 def test_batched_role_mapping_equals_reference_with_ties_and_shared_scopes() -> None:

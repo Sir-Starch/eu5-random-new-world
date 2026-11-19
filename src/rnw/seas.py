@@ -141,10 +141,14 @@ def _step(scale: int) -> int:
     return max(MIN_STEP, min(MAX_STEP, scale // STEP_SCALES))
 
 
-def _closing(land: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
+def _closing(land: NDArray[np.bool_], radius: int, *, wrap_x: bool = False) -> NDArray[np.bool_]:
     """Land with every gap narrower than two radii filled: dilated by the radius, then eroded."""
     pad = radius + 2
-    padded = np.pad(land, pad)
+    padded = (
+        np.pad(np.pad(land, ((0, 0), (pad, pad)), mode="wrap"), ((pad, pad), (0, 0)))
+        if wrap_x
+        else np.pad(land, pad)
+    )
     limit = 8 * pad
     near = euclidean_distance(padded, limit) <= 8 * radius
     far = euclidean_distance(~near, limit) > 8 * radius
@@ -295,7 +299,7 @@ def _pockets(
     return pockets
 
 
-def _exterior(lab: NDArray[np.int32], count: int) -> NDArray[np.bool_]:
+def _exterior(lab: NDArray[np.int32], count: int, *, wrap_x: bool = False) -> NDArray[np.bool_]:
     """Cells that touch the world outside the generated domain: the game's own water, or the
     edge of the domain's picture, beyond which the map goes on."""
     flags = np.zeros(count, dtype=bool)
@@ -303,9 +307,14 @@ def _exterior(lab: NDArray[np.int32], count: int) -> NDArray[np.bool_]:
     for first in range(0, height, 256):
         stop = min(height, first + 256)
         block = lab[max(0, first - 1) : min(height, stop + 1)]
-        outside = np.pad(
-            block < 0, ((int(first == 0), int(stop == height)), (1, 1)), constant_values=True
+        before, after = int(first == 0), int(stop == height)
+        outside = block < 0
+        outside = (
+            np.pad(outside, ((0, 0), (1, 1)), mode="wrap")
+            if wrap_x
+            else np.pad(outside, ((0, 0), (1, 1)), constant_values=True)
         )
+        outside = np.pad(outside, ((before, after), (0, 0)), constant_values=True)
         near = outside[:-2, 1:-1] | outside[2:, 1:-1]
         near |= outside[1:-1, :-2] | outside[1:-1, 2:]
         labels = lab[first:stop]
@@ -320,7 +329,7 @@ def inland_seas(world: NewWorld) -> tuple[tuple[int, ...], ...]:
     ocean route that still reaches retained geography is never an inland-sea exemption.
     """
     sea = np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)
-    exterior = _exterior(world.labels, len(sea))
+    exterior = _exterior(world.labels, len(sea), wrap_x=world.wrap_x)
     return tuple(
         tuple(group) for group in _components(sea, _neighbours(world)) if not exterior[group].any()
     )
@@ -348,11 +357,15 @@ def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
     lab = np.ascontiguousarray(world.labels[step // 2 :: step, step // 2 :: step])
     land_pixels = np.append(solid, False)[lab]
     water = ~land_pixels
-    narrow_at = _closing(land_pixels, round(NARROW_SCALES * scale / step)) & water
-    enclosed_at = _closing(land_pixels, round(ENCLOSED_SCALES * scale / step)) & water
+    narrow_at = _closing(land_pixels, round(NARROW_SCALES * scale / step), wrap_x=world.wrap_x)
+    enclosed_at = _closing(land_pixels, round(ENCLOSED_SCALES * scale / step), wrap_x=world.wrap_x)
+    narrow_at &= water
+    enclosed_at &= water
     narrow = sea & _shares(lab, narrow_at, water, count)
     enclosed = sea & _shares(lab, enclosed_at, water, count) & ~narrow
-    enclosed |= _pockets(sea & ~narrow & ~enclosed, _exterior(lab, count), sea_links)
+    enclosed |= _pockets(
+        sea & ~narrow & ~enclosed, _exterior(lab, count, wrap_x=world.wrap_x), sea_links
+    )
     inland = {cell for basin in inland_seas(world) for cell in basin}
     # A closed basin is a sea in its own right, including when settlement folded it into
     # one large cell; it is neither an ocean current nor a passage to another water.

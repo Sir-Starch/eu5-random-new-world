@@ -72,10 +72,60 @@ RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_
   /path/to/eu5 africa oceania --seed 42 --preset africa=continents --materials
 ```
 
-The production ocean identities, shoreline integrations, native histories, script
-rewrites and texture export still need the combined export path. See the
-[implementation plan](../../docs/continent-generation-plan.md) for the scope of
-the end-to-end measurement.
+## One map and one 1337 setup trial
+
+[V-EXEC 2026-11-18, EU5 1.4.9 / Steam build 26655995] With seed 17,
+Continents for America, Supercontinent for Africa and Archipelago for
+Oceania, the map planner assigns **27,881** final location identities against
+the game's 32,000 limit. It plans 1,831 generated ports, 387 ocean lanes,
+13 generated straits and 12,033 geographic location bindings. No unchanged
+continent's land pixels were replaced. Generated cells were connected
+across the map wrap and generated open seas reached retained water.
+A cut offshore contact at the edge of the African canvas had a navigable
+replacement through generated sea cells. The American overseas check
+passed with broad ocean areas separating America from other continents.
+
+The same game and map inputs supported all four Morocco outcomes. The
+default reserves the first 86 passable African locations before the
+African polity bootstrap and all 86 get populations. Independent
+Algeciras, Castile and Granada each receive exactly the same four
+Iberian holdings on the map. The setup trial recalculates each option
+with the same geography and geographic bindings.
+
+| Continent | Populated locations | Cultures | Religions | State territories | Tribal territories |
+|---|---:|---:|---:|---:|---:|
+| Africa | 1,757 | 87 | 23 | 134 | 119 |
+| Oceania | 848 | 65 | 11 | 7 | 72 |
+
+The preliminary societies use the installed continent's population profiles
+and landed states' farming baseline. In Africa, 129 of the 131 local states
+with a known starting technology have level 3. In Oceania, three have level 1
+and one has level 3. These measurements describe the local bootstrap before
+history, political serialization and game loading.
+
+```sh
+RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_geography.py \
+  /path/to/eu5 america africa oceania --seed 17 --game-land --seas --societies \
+  --morocco restore --morocco emirate --morocco castile --morocco granada
+```
+
+[V-EXEC 2026-11-19, same game build] The three saved histories project 630
+American, 225 African and 74 Oceanian countries for seed 17. Their 929
+chronicles share four history files. The common writer builds 116 files with
+8,581 populated locations, including all 86 holdings reserved for Morocco.
+Country definitions and the 1337 setup agree, with the same three tags without
+start records as vanilla. Six reused African sea areas take their names from
+the installed province catalogue, which the writer overrides in place.
+
+With Africa (Continents) and Oceania
+(Archipelago) alone, seed 42 yields 27,200 final identities and confirms
+the independence of America's world map. On this coast, the port matcher
+follows adjoining water to the nearest sea with an eligible port.
+
+Script rewrites, texture export and generator integration still need the
+combined export path. The
+[implementation plan](../../docs/continent-generation-plan.md) describes the
+scope of the end-to-end timing.
 
 ### Africa and Asia
 

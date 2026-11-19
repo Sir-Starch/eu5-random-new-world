@@ -202,12 +202,14 @@ class _Projection:
         include = country_template(
             vanilla, culture, level=level, coastal=coast, empire=tag in self.great or lord
         )
+        regional = vanilla.regional_templates is not None
+        direct = regional and include == "" and actor.tenure is Tenure.LAND
         require(
-            include in vanilla.templates and include in vanilla.governments,
+            direct or (include in vanilla.templates and include in vanilla.governments),
             f"Missing usable history template {include}",
         )
         governments = vanilla.history_governments or vanilla.governments
-        fields = governments[include]
+        fields = (("type", "monarchy"),) if direct else governments[include]
         laws: tuple[tuple[str, str], ...] = ()
         parliament = ""
         if actor.tenure is Tenure.LAND:
@@ -221,11 +223,14 @@ class _Projection:
                 laws, parliament = institutions.laws, institutions.parliament
             elif (
                 actor.authority is Authority.COUNCIL
+                and (not regional or (not lord and tag not in self.great))
                 and level is not None
                 and level >= calibration.republic_level
             ):
                 include, fields = calibration.republic_include, calibration.republic_government
-                require(include in vanilla.templates, "Missing history republic template")
+                require(
+                    regional or include in vanilla.templates, "Missing history republic template"
+                )
             elif dict(fields).get("type") != "monarchy":
                 # Institutional choice precedes donor style. A donor's republic is
                 # not an advantage or an instruction to change a ruler's authority.
@@ -473,9 +478,10 @@ def _centres(
         key = projection.inputs.keys[node]
         culture, _ = projection.identity(key)
         info = projection.inputs.vanilla.cultures[culture]
-        setup = (
-            (info.city_setup or DEFAULT_CITY) if rank == CITY else (info.town_setup or DEFAULT_TOWN)
-        )
+        regional = projection.inputs.vanilla.regional_templates
+        city = DEFAULT_CITY if regional is None else regional.city
+        town = DEFAULT_TOWN if regional is None else regional.town
+        setup = (info.city_setup or city) if rank == CITY else (info.town_setup or town)
         setups[key] = rank, setup
     return setups, tuple(projection.inputs.keys[node] for node in sorted(markets))
 

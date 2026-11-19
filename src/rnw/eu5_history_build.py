@@ -24,12 +24,15 @@ from rnw.progress import checkpoint
 from rnw.societies import bootstrap_societies
 
 if TYPE_CHECKING:
+    from collections.abc import Collection, Sequence
+
     import numpy as np
     from numpy.typing import NDArray
 
     from rnw.eu5_biomes import CellBiomes
     from rnw.eu5_newworld import Plan
     from rnw.eu5_start import FinalStartPlan
+    from rnw.history_model import Route
     from rnw.loc_keys import KeySpace
     from rnw.newworld import NewWorld
     from rnw.settings import NativeSettings
@@ -46,6 +49,8 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
     seed: int,
     loc_keys: KeySpace,
     algorithm: int = CURRENT,
+    selection: Collection[int] | None = None,
+    routes: Sequence[Route] | None = None,
 ) -> FinalStartPlan:
     # Societies, the simulation, its causal replay and the projection build millions of
     # acyclic records; the cyclic collector would only walk them again (C506).
@@ -60,6 +65,8 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
             seed=seed,
             loc_keys=loc_keys,
             algorithm=algorithm,
+            selection=selection,
+            routes=routes,
         )
 
 
@@ -74,8 +81,10 @@ def _build_history_start(  # noqa: PLR0913 - as build_history_start
     seed: int,
     loc_keys: KeySpace,
     algorithm: int = CURRENT,
+    selection: Collection[int] | None = None,
+    routes: Sequence[Route] | None = None,
 ) -> FinalStartPlan:
-    graph, cells = native.land_graph(world, biomes, river_pixels, vanilla)
+    graph, cells = native.land_graph(world, biomes, river_pixels, vanilla, selection=selection)
     cells = replace(
         cells,
         family=[
@@ -90,18 +99,26 @@ def _build_history_start(  # noqa: PLR0913 - as build_history_start
     rules = replace(
         rules, empire_locations=max(rules.empire_locations, 4 * settings.state_locations)
     )
-    routes = physical_routes(
-        PhysicalMap(
-            keys,
-            tuple(cells.cells),
-            tuple(int(cost) for cost in graph.cost),
-            world.classes,
-            world.edges,
-        ),
-        max_sea_steps=rules.max_sea_steps,
-        checkpoint=checkpoint,
-    )
-    graph = routed_graph(graph, keys, routes)
+    if routes is None:
+        regional_routes = physical_routes(
+            PhysicalMap(
+                keys,
+                tuple(cells.cells),
+                tuple(int(cost) for cost in graph.cost),
+                world.classes,
+                world.edges,
+            ),
+            max_sea_steps=rules.max_sea_steps,
+            checkpoint=checkpoint,
+        )
+    else:
+        selected_keys = set(keys)
+        regional_routes = tuple(
+            route
+            for route in routes
+            if route.first in selected_keys and route.second in selected_keys
+        )
+    graph = routed_graph(graph, keys, regional_routes)
     societies = bootstrap_societies(
         graph,
         settings,
@@ -147,7 +164,7 @@ def _build_history_start(  # noqa: PLR0913 - as build_history_start
             {keys[node]: plan.cells[cell].region for node, cell in enumerate(cells.cells)},
             pops,
             technology,
-            routes,
+            regional_routes,
             rules,
             highland=tuple(
                 keys[node]

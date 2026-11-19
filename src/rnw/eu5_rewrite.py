@@ -408,6 +408,44 @@ def owned_locations(country: Block) -> set[str]:
     }
 
 
+def retained_capitals(
+    text: str,
+    removed: set[str],
+    points: Mapping[str, tuple[int, int]],
+    width: int,
+    *,
+    preferred: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """Locate new seats for countries that retain land after their capital is replaced."""
+    countries = parse(text).block("countries", "countries")
+    if countries is None:
+        message = "Missing the 1337 country records"
+        raise ValueError(message)
+    seats: dict[str, str] = {}
+    for entry in countries.entries:
+        if entry.key is None or not isinstance(entry.value, Block):
+            continue
+        capital = entry.value.first("capital")
+        kept = owned_locations(entry.value) - removed
+        if not kept or capital is None or not isinstance(capital.value, str):
+            continue
+        if capital.value not in removed:
+            continue
+        chosen = (preferred or {}).get(entry.key)
+        if chosen in kept:
+            seats[entry.key] = chosen
+            continue
+        row, column = points[capital.value]
+
+        def distance(place: str, row: int = row, column: int = column) -> tuple[int, str]:
+            north, east = points[place]
+            across = abs(column - east) % width
+            return (row - north) ** 2 + min(across, width - across) ** 2, place
+
+        seats[entry.key] = min(kept, key=distance)
+    return seats
+
+
 def _cut_location_words(text: str, field: Entry, removed: set[str], edits: Edits) -> None:
     if not isinstance(field.value, Block):
         return

@@ -76,12 +76,14 @@ from rnw.eu5_technology import (
     family_shares,
     homeland_distance,
     majority,
+    starting_technology,
     state_levels,
     technology_report,
     template_for_level,
     vanilla_state_levels,
     without_families,
 )
+from rnw.history_routes import routed_graph
 from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
 from rnw.pdx import Block, parse
@@ -96,6 +98,7 @@ from rnw.societies import (
     LandGraph,
     Societies,
     StateFloor,
+    bootstrap_societies,
     generate_societies,
     hearth_domains,
     regional_markets,
@@ -113,6 +116,7 @@ if TYPE_CHECKING:
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_newworld import Plan, VanillaGeometry
     from rnw.geography import Location
+    from rnw.history_model import Route
     from rnw.loc_keys import KeySpace
     from rnw.newworld import NewWorld
     from rnw.settings import NativeSettings
@@ -265,6 +269,9 @@ class RegionalPopulation:
     religions: dict[str, tuple[tuple[int, ...], int]]
     places: tuple[tuple[str, str], ...]
     languages: dict[str, tuple[str, str]]
+    state_levels: tuple[int, ...]
+    state_floor: StateFloor | None
+    template_levels: dict[str, int]
 
     @property
     def population_per_location(self) -> int:
@@ -279,6 +286,16 @@ class HolySite:
     location: str
     religion: str
     importance: int
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalTemplates:
+    """Usable local government and settlement precedents for projection."""
+
+    monarchies: tuple[str, ...]
+    tribe: str
+    city: str
+    town: str
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -307,6 +324,7 @@ class VanillaNatives:
     history_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
     history_governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
     law_book: LawBook | None = None
+    regional_templates: RegionalTemplates | None = None
 
 
 def _milli(value: str) -> int:
@@ -678,7 +696,23 @@ def regional_populations(
         message = f"No vanilla land locations in {', '.join(missing)}"
         raise NativesError(message)
     pops = _pops(_text(game_dir, f"{SETUP}/06_pops.txt"))
-    countries = _countries(_text(game_dir, f"{SETUP}/10_countries.txt"), complete_ownership=True)
+    setup = _text(game_dir, f"{SETUP}/10_countries.txt")
+    countries = _countries(setup, complete_ownership=True)
+    landed = parse(setup).block("countries", "countries")
+    if landed is None:
+        message = "Missing the 1337 country records"
+        raise NativesError(message)
+    country_blocks = {
+        entry.key: entry.value
+        for entry in landed.entries
+        if entry.key and isinstance(entry.value, Block)
+    }
+    levels = template_levels(
+        {
+            path.stem: path.read_text(encoding="utf-8-sig")
+            for path in sorted((game_dir / TEMPLATE_DIR).glob("*.txt"))
+        }
+    )
     tag_cultures, _ = _definitions(game_dir)
     towns = parse(_text(game_dir, f"{SETUP}/07_cities_and_buildings.txt")).block("locations")
     place_names = _location_names(game_dir)
@@ -708,6 +742,9 @@ def regional_populations(
         if not cultures or "" in cultures or "" in religions:
             message = f"Incomplete 1337 culture or religion populations in {continent}"
             raise NativesError(message)
+        technology, floor = regional_state_baseline(
+            members, local, countries_here, country_blocks, levels
+        )
         profiles[continent] = RegionalPopulation(
             land_locations=len(keys),
             owned_locations=len(members & terrain.owned),
@@ -721,12 +758,51 @@ def regional_populations(
                 if key in place_names and local.get(key)
             ),
             languages={},
+            state_levels=technology,
+            state_floor=floor,
+            template_levels=levels,
         )
     languages = _languages(game_dir, {name for p in profiles.values() for name in p.cultures})
     return {
         name: replace(profile, languages={key: languages[key] for key in profile.cultures})
         for name, profile in profiles.items()
     }
+
+
+def regional_state_baseline(
+    members: set[str],
+    pops: dict[str, list[tuple[str, int, str, str]]],
+    countries: dict[str, tuple[str, list[str], list[str]]],
+    blocks: dict[str, Block],
+    levels: dict[str, int],
+) -> tuple[tuple[int, ...], StateFloor | None]:
+    """Use the land and technology of states with seats within this region."""
+    technology: list[int] = []
+    people: list[tuple[int, int]] = []
+    for tag, (kind, locations, _) in countries.items():
+        if kind != "land":
+            continue
+        block = blocks[tag]
+        seat = block.first("capital")
+        if seat is None or not isinstance(seat.value, str) or seat.value not in members:
+            continue
+        level = starting_technology(block, levels)
+        if level is not None:
+            technology.append(level)
+        cohorts = [row for key in set(locations) & members for row in pops.get(key, ())]
+        total = sum(row[1] for row in cohorts)
+        farming = sum(amount for pop, amount, _, _ in cohorts if pop == "peasants")
+        if farming > 0:
+            people.append((total, farming))
+    floor = (
+        StateFloor(
+            peasants=min(farming for _, farming in people),
+            share=max(1, min(farming * PERMILLE // total for total, farming in people)),
+        )
+        if people
+        else None
+    )
+    return tuple(sorted(technology)), floor
 
 
 def vanilla_natives(
@@ -1162,10 +1238,19 @@ class _Cells:
 
 
 def land_graph(
-    world: NewWorld, biomes: CellBiomes, river_pixels: NDArray[np.int64], vanilla: VanillaNatives
+    world: NewWorld,
+    biomes: CellBiomes,
+    river_pixels: NDArray[np.int64],
+    vanilla: VanillaNatives | RegionalPopulation,
+    *,
+    selection: Collection[int] | None = None,
 ) -> tuple[LandGraph, _Cells]:
     """Capacity, farming potential, travel cost and contacts of generated land."""
-    land = [i for i, kind in enumerate(world.classes) if kind is CellClass.LAND]
+    land = [
+        i
+        for i, kind in enumerate(world.classes)
+        if kind is CellClass.LAND and (selection is None or i in selection)
+    ]
     position = np.full(len(world.classes), -1, dtype=np.int64)
     position[land] = np.arange(len(land))
     water = np.array([kind in {CellClass.SEA, CellClass.LAKE} for kind in world.classes])
@@ -1228,9 +1313,7 @@ def land_graph(
             int(world.pixels[cell]) * vanilla.density.get(climate[n], 0) // PERMILLE
             * dense // PERMILLE * wet // PERMILLE
         )  # fmt: skip
-        cost.append(
-            TOPOGRAPHY_COST.get(topography[n], STEP_COST) + VEGETATION_COST.get(vegetation[n], 0)
-        )
+        cost.append(land_travel_cost(topography[n], vegetation[n]))
     graph = LandGraph(
         capacity=np.array(capacity, dtype=np.int64),
         potential=np.array(potential, dtype=np.int64),
@@ -1249,6 +1332,11 @@ def land_graph(
         seas=seas,
     )
     return graph, cells
+
+
+def land_travel_cost(topography: str, vegetation: str) -> int:
+    """The common movement cost of entering a generated land location."""
+    return TOPOGRAPHY_COST.get(topography, STEP_COST) + VEGETATION_COST.get(vegetation, 0)
 
 
 def _zone_homelands(
@@ -1274,6 +1362,66 @@ def _zone_homelands(
             )
         )
     return out
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class RegionalSocieties:
+    """Population and polities before regional history, from the common physical map."""
+
+    graph: LandGraph
+    cells: _Cells
+    societies: Societies
+    cultures: list[str]
+    religions: list[str]
+    pops: dict[str, list[PopCohort]]
+
+
+def regional_societies(  # noqa: PLR0913 - physical cells, local calibration and player settings.
+    world: NewWorld,
+    plan: Plan,
+    biomes: CellBiomes,
+    river_pixels: NDArray[np.int64],
+    *,
+    continent: str,
+    vanilla: RegionalPopulation,
+    settings: NativeSettings,
+    seed: int,
+    reserved: Collection[str] = (),
+    routes: Sequence[Route] | None = None,
+) -> RegionalSocieties:
+    """Use local cultural and religious profiles on a slice of the shared world."""
+    if vanilla.state_floor is None:
+        message = f"No regional agrarian baseline for {continent}"
+        raise NativesError(message)
+    selection = {i for i, cell in enumerate(plan.cells) if cell.continent == continent}
+    graph, cells = land_graph(world, biomes, river_pixels, vanilla, selection=selection)
+    keys = [plan.cells[cell].key for cell in cells.cells]
+    if routes is not None:
+        places = set(keys)
+        graph = routed_graph(
+            graph,
+            keys,
+            [route for route in routes if route.first in places and route.second in places],
+        )
+    cells = replace(cells, family=[""] * len(keys))
+    held = np.array([key in reserved for key in keys], dtype=bool)
+    societies = bootstrap_societies(
+        graph,
+        settings,
+        seed=seed,
+        target=vanilla.population_per_location * len(keys),
+        state_floor=vanilla.state_floor,
+        reserved=held,
+    )
+    religions, cultures, _ = _identities(societies, cells, vanilla, seed, settled=held)
+    return RegionalSocieties(
+        graph,
+        cells,
+        societies,
+        cultures,
+        religions,
+        _pop_cohorts(societies, keys, religions, cultures),
+    )
 
 
 def match_homelands(
@@ -1386,7 +1534,20 @@ def _include(
 ) -> str:
     """Template of a state of ``level`` or, without one, of a tribe, with its coast variant."""
     info = vanilla.cultures.get(culture)
-    if level is None:
+    regional = vanilla.regional_templates
+    if regional is not None:
+        if level is None:
+            name = (info.tribe_include if info else "") or regional.tribe
+        else:
+            candidates = [
+                candidate
+                for candidate in regional.monarchies
+                if vanilla.levels.get(candidate, 0) <= level <= vanilla.levels.get(candidate, 0) + 1
+                and (not empire or vanilla.levels.get(candidate, -1) >= vanilla.overlord_level)
+            ]
+            own = info.state_include if info else ""
+            name = own if own in candidates else next(iter(candidates), "")
+    elif level is None:
         name = (info.tribe_include if info else "") or DEFAULT_TRIBE
     else:
         name = template_for_level(
@@ -1396,7 +1557,7 @@ def _include(
             advanced=ADVANCED_STATE,
             default=DEFAULT_STATE,
         )
-    if empire and vanilla.levels.get(name, -1) < vanilla.overlord_level:
+    if regional is None and empire and vanilla.levels.get(name, -1) < vanilla.overlord_level:
         # A great empire leads vassals, which a lord without a starting technology cannot (C99).
         name = ADVANCED_STATE
     base = name.removesuffix(NO_COAST)
@@ -1407,20 +1568,87 @@ def _include(
     return name
 
 
-def _identities(
+def regional_projection_inputs(
+    base: VanillaNatives,
+    profile: RegionalPopulation,
+    continent: str,
+) -> VanillaNatives:
+    """Use the common EU5 rules with local identities and compatible local templates."""
+    if profile.state_floor is None or base.archetypes is None or base.empire is None:
+        message = f"Missing historical projection calibration for {continent}"
+        raise NativesError(message)
+    governments = base.history_governments or base.governments
+    landed = Counter(c.state_include for c in profile.cultures.values() if c.state_include)
+    tribal = Counter(c.tribe_include for c in profile.cultures.values() if c.tribe_include)
+    town = Counter(c.town_setup for c in profile.cultures.values() if c.town_setup)
+    city = Counter(c.city_setup for c in profile.cultures.values() if c.city_setup)
+
+    def candidates(counts: Counter[str], government: str) -> tuple[str, ...]:
+        return tuple(
+            template
+            for template in sorted(counts, key=lambda name: (-counts[name], name))
+            if dict(governments.get(template, ())).get("type") == government
+        )
+
+    monarchies = candidates(landed, "monarchy")
+    tribes = candidates(tribal, "tribe")
+    if not monarchies or not tribes:
+        message = f"No installed local monarchy or tribal template for {continent}"
+        raise NativesError(message)
+    regional = RegionalTemplates(
+        monarchies,
+        tribes[0],
+        city.most_common(1)[0][0] if city else "south_east_asia_city",
+        town.most_common(1)[0][0] if town else "south_east_asia_town",
+    )
+    levels = sorted(set(profile.state_levels))
+    capable = [
+        level
+        for level in levels
+        if any(
+            base.overlord_level <= base.levels.get(name, 0) <= level <= base.levels.get(name, 0) + 1
+            for name in monarchies
+        )
+    ]
+    if not capable:
+        message = f"No local government can represent a great realm in {continent}"
+        raise NativesError(message)
+    return replace(
+        base,
+        density=profile.density,
+        population_per_location=profile.population_per_location,
+        cultures=profile.cultures,
+        religions=profile.religions,
+        places=profile.places,
+        languages=profile.languages,
+        families=Families({}, {}),
+        state_levels=profile.state_levels,
+        state_floor=profile.state_floor,
+        empire=replace(base.empire, level=capable[-1], largest=()),
+        archetypes=replace(
+            base.archetypes,
+            republic_include="",
+            republic_government=(("type", "republic"),),
+        ),
+        regional_templates=regional,
+    )
+
+
+def _identities(  # noqa: PLR0913 - identity matching uses the terrain, settlement and profiles.
     societies: Societies,
     cells: _Cells,
-    vanilla: VanillaNatives,
+    vanilla: VanillaNatives | RegionalPopulation,
     seed: int,
     *,
     with_families: bool = True,
+    settled: NDArray[np.bool_] | None = None,
 ) -> tuple[list[str], list[str], NDArray[np.bool_]]:
     """Religion per religion zone and culture per culture zone; state land mask.
 
     Without ``with_families`` the regional families weigh nothing, as with a family weight of
     0; the report compares the cultures this chooses with the ones the families choose.
     """
-    state = np.zeros(len(cells.cells), dtype=bool)
+    state = np.zeros(len(cells.cells), dtype=bool) if settled is None else settled.copy()
     for polity in societies.polities:
         if polity.kind == STATE:
             state[list(polity.members)] = True

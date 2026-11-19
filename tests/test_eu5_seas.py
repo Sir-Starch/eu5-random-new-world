@@ -348,13 +348,20 @@ def test_even_a_one_pixel_exterior_contact_excludes_an_inland_sea() -> None:
 
 
 @pytest.mark.parametrize("height", [1, 255, 256, 257, 513])
-def test_exact_exterior_contacts_across_strip_boundaries(height: int) -> None:
+@pytest.mark.parametrize("wrap_x", [False, True])
+def test_exact_exterior_contacts_across_strip_boundaries(height: int, *, wrap_x: bool) -> None:
     labels = np.random.default_rng(height).integers(-1, 9, (height, 13), dtype=np.int32)
-    outside = np.pad(labels < 0, 1, constant_values=True)
-    near = outside[:-2, 1:-1] | outside[2:, 1:-1]
-    near |= outside[1:-1, :-2] | outside[1:-1, 2:]
+    outside = labels < 0
+    vertical = np.pad(outside, ((1, 1), (0, 0)), constant_values=True)
+    near = vertical[:-2] | vertical[2:]
+    horizontal = (
+        np.pad(outside, ((0, 0), (1, 1)), mode="wrap")
+        if wrap_x
+        else np.pad(outside, ((0, 0), (1, 1)), constant_values=True)
+    )
+    near |= horizontal[:, :-2] | horizontal[:, 2:]
     expected = set(labels[near & (labels >= 0)].tolist())
-    assert set(np.flatnonzero(_exterior(labels, 9)).tolist()) == expected
+    assert set(np.flatnonzero(_exterior(labels, 9, wrap_x=wrap_x)).tolist()) == expected
 
 
 def test_a_reachable_lane_ending_in_closed_ocean_stops_the_export() -> None:

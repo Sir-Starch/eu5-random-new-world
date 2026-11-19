@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import heapq
 import itertools
+from collections import Counter
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
@@ -33,6 +34,7 @@ from rnw.eu5_regionkeys import (
     AREA_PLACE_WEIGHT,
     REGION_PLACE_WEIGHT,
     minimum_assignment,
+    physical_keys,
     place_distance,
     standard,
     unstandard,
@@ -61,10 +63,11 @@ from rnw.wastelands import location_units
 from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Mapping, Sequence
 
     from numpy.typing import NDArray
 
+    from rnw.continent_domains import Domain
     from rnw.eu5_biomes import CellBiomes
     from rnw.eu5_canvas import Canvas, OceanRemainder
     from rnw.eu5_map import Eu5Map
@@ -112,6 +115,7 @@ LAND_FAMILY: Final[frozenset[CellClass]] = frozenset(
     {CellClass.LAND, CellClass.WASTELAND, CellClass.LAKE}
 )
 LEVELS: Final[tuple[str, ...]] = ("province", "area", "region", "subcontinent")
+NO_CELLS: Final[frozenset[int]] = frozenset()
 
 
 class IdentityError(ValueError):
@@ -140,6 +144,7 @@ class OceanPlan:
     retained: set[str] = field(default_factory=set)
     extra: list[PlannedCell] = field(default_factory=list)
     sources: dict[str, str] = field(default_factory=dict)
+    closed_extra: set[str] = field(default_factory=set)
     patches: list[tuple[OceanRemainder, int]] = field(default_factory=list)
     anchors: dict[str, tuple[int, int]] = field(default_factory=dict)
     stats: dict[str, int] = field(default_factory=dict)
@@ -184,7 +189,7 @@ class VanillaGeometry:
 
 
 def vanilla_geometry(
-    game_map: Eu5Map, canvas: Canvas, hierarchy: dict[str, Location]
+    game_map: Eu5Map, canvas: Canvas, hierarchy: dict[str, Location], *, wrap_x: bool = False
 ) -> VanillaGeometry:
     """Pixel-weighted centroid of every vanilla label on the rolled raster."""
     count = len(game_map.keys)
@@ -192,17 +197,51 @@ def vanilla_geometry(
     pixels = np.maximum(1, np.bincount(game_map.labels.ravel(), minlength=count))
     row_sum = np.zeros(count, dtype=np.float64)
     column_sum = np.zeros(count, dtype=np.float64)
+    crossing = (
+        np.intersect1d(game_map.labels[:, 0], game_map.labels[:, -1])
+        if wrap_x
+        else np.empty(0, dtype=np.int32)
+    )
     for start in range(0, height, 1024):
         block = canvas.rolled(game_map.labels, slice(start, start + 1024))
         rows = np.repeat(np.arange(start, start + block.shape[0], dtype=np.int64), width)
         columns = np.tile(np.arange(width, dtype=np.int64), block.shape[0])
         row_sum += np.bincount(block.ravel(), weights=rows, minlength=count)
         column_sum += np.bincount(block.ravel(), weights=columns, minlength=count)
+        if crossing.size:
+            left = np.bincount(block[:, : width // 2].ravel(), minlength=count)
+            column_sum[crossing] += width * left[crossing]
     areas = tuple(hierarchy[key].area if key in hierarchy else "" for key in game_map.keys)
     return VanillaGeometry(
         rows=(row_sum.astype(np.int64) // pixels),
-        columns=(column_sum.astype(np.int64) // pixels),
+        columns=(column_sum.astype(np.int64) // pixels) % width,
         areas=areas,
+        pixels=pixels,
+    )
+
+
+def regional_geometry(
+    game_map: Eu5Map, domain: Domain, hierarchy: dict[str, Location]
+) -> VanillaGeometry:
+    """Measure retained hierarchy keys in this domain's continuous coordinates."""
+    count = len(game_map.keys)
+    pixels = np.zeros(count, dtype=np.int64)
+    row_sum = np.zeros(count, dtype=np.float64)
+    column_sum = np.zeros(count, dtype=np.float64)
+    for local, original in domain.spans():
+        for first in range(0, domain.mask.shape[0], 256):
+            stop = min(first + 256, domain.mask.shape[0])
+            r, c = np.nonzero(domain.footprint[first:stop, local])
+            rows = slice(domain.first_row + first, domain.first_row + stop)
+            labels = game_map.labels[rows, original][r, c]
+            pixels += np.bincount(labels, minlength=count)
+            row_sum += np.bincount(labels, weights=r + first, minlength=count)
+            column_sum += np.bincount(labels, weights=c + int(local.start), minlength=count)
+    safe = np.maximum(pixels, 1)
+    return VanillaGeometry(
+        rows=row_sum.astype(np.int64) // safe,
+        columns=column_sum.astype(np.int64) // safe,
+        areas=tuple(hierarchy[key].area if key in hierarchy else "" for key in game_map.keys),
         pixels=pixels,
     )
 
@@ -227,6 +266,7 @@ class _Tally:
     children: dict[str, set[str]] = field(default_factory=dict)
     count: dict[str, int] = field(default_factory=dict)
     sums: dict[str, list[int]] = field(default_factory=dict)
+    continent: str = NEW_WORLD
 
     def add(self, chain: tuple[str, ...], row: int, column: int, pixels: int) -> None:
         """Count one location under every key of ``chain`` (outermost first)."""
@@ -266,7 +306,22 @@ def _vanilla_land(
     geometry: VanillaGeometry,
     pixels: NDArray[np.int64],
 ) -> _Tally:
-    """Subcontinents, regions and land areas of the vanilla New World.
+    return _land_tally(
+        game_map, hierarchy, geometry, pixels, canvas.removed, col0=canvas.col0, continent=NEW_WORLD
+    )
+
+
+def _land_tally(  # noqa: PLR0913 - scope and geometry are independent.
+    game_map: Eu5Map,
+    hierarchy: dict[str, Location],
+    geometry: VanillaGeometry,
+    pixels: NDArray[np.int64],
+    removed: NDArray[np.bool_],
+    *,
+    col0: int,
+    continent: str,
+) -> _Tally:
+    """Subcontinents, regions and land areas of one replaced continent.
 
     The generated hierarchy replaces all of them, so a vanilla location left on the
     map under one of these keys would end up in a generated area or region.
@@ -277,15 +332,15 @@ def _vanilla_land(
         for location in hierarchy.values()
         if game_map.classes[index[location.key]] is CellClass.SEA
     }
-    tally = _Tally(canvas.col0)
+    tally = _Tally(col0, continent=continent)
     for location in hierarchy.values():
-        if location.continent != NEW_WORLD or location.area in sea_areas:
+        if location.continent != continent or location.area in sea_areas:
             continue
         label = index[location.key]
-        if not canvas.removed[label]:
+        if not removed[label]:
             message = f"Vanilla location {location.key} stays on the map in {location.area}"
             raise IdentityError(message)
-        chain = (NEW_WORLD, location.subcontinent, location.region, location.area)
+        chain = (continent, location.subcontinent, location.region, location.area)
         tally.add(
             chain, int(geometry.rows[label]), int(geometry.columns[label]), int(pixels[label])
         )
@@ -324,13 +379,14 @@ def _in_order(found: list[list[int]], order: list[int]) -> list[list[int]]:
     return parts
 
 
-def _placed(
+def _placed(  # noqa: PLR0913 - graph, source positions and their partition budgets.
     graph: ContactGraph,
     members: list[int],
     count: int,
     places: list[tuple[int, int]],
     *,
     minimum: Sequence[int] = (),
+    weights: Sequence[int] = (),
 ) -> list[list[int]]:
     """``count`` compact parts, grown from sources laid out as the vanilla ``places`` lie.
 
@@ -354,15 +410,45 @@ def _placed(
         gap = ((graph.centres[free] - np.array(unstandard(point, spots))) ** 2).sum(axis=1)
         sources[number] = int(free[int(np.argmin(gap))])
         taken.add(sources[number])
+    targets = [1] * count
+    for source, weight in zip(chosen, weights, strict=bool(weights)):
+        targets[source] = weight
     parts, _ = balanced_parts(
         graph,
         members,
         [[source] for source in sources],
-        [1] * count,
+        targets,
         movable=[True] * count,
         minimum=minimum,
     )
     return parts
+
+
+def _continent_parts(  # noqa: PLR0913 - graph, geography and physical templates.
+    graph: ContactGraph,
+    cells: list[int],
+    tally: _Tally,
+    keys: list[str],
+    *,
+    physical: KeyMatcher,
+    algorithm: int,
+) -> list[list[int]]:
+    if tally.continent == NEW_WORLD:
+        return _bands(graph, cells, tally, keys, algorithm)
+    minimum = [sum(len(tally.children[region]) for region in tally.children[key]) for key in keys]
+    places = [tally.centre(key) for key in keys]
+    parts = _placed(
+        graph, cells, len(keys), places, minimum=minimum, weights=[tally.count[key] for key in keys]
+    )
+    pairing = physical.pair(
+        parts,
+        keys,
+        centres=[centre_of(graph, part) for part in parts],
+        places=places,
+        place_weight=REGION_PLACE_WEIGHT,
+        minimum=dict(zip(keys, minimum, strict=True)),
+    )
+    return _in_order(parts, pairing)
 
 
 def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and physical matching.
@@ -387,9 +473,13 @@ def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and ph
     rebalanced after scoring.
     """
     areas: list[_Area] = []
-    subcontinents = sorted(tally.children[NEW_WORLD])
+    subcontinents = sorted(tally.children[tally.continent])
     for subcontinent, sub_cells in zip(
-        subcontinents, _bands(graph, cells, tally, subcontinents, algorithm), strict=True
+        subcontinents,
+        _continent_parts(
+            graph, cells, tally, subcontinents, physical=physical, algorithm=algorithm
+        ),
+        strict=True,
     ):
         regions = sorted(tally.children[subcontinent])
         needs = [len(tally.children[region]) for region in regions]
@@ -418,7 +508,9 @@ def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and ph
             for part, key in zip(parts, pairing, strict=True):
                 name = vanilla[key] if key >= 0 else keys.next("rnw_area_", 4)
                 provinces = split(graph, part, max(1, _rounded(len(part), province_size)))
-                areas.append(_Area(name, (region, subcontinent, NEW_WORLD), provinces, key < 0))
+                areas.append(
+                    _Area(name, (region, subcontinent, tally.continent), provinces, key < 0)
+                )
     return areas
 
 
@@ -437,8 +529,14 @@ class _SeaArea:
     remaining: frozenset[int]
 
 
-def _vanilla_seas(
-    game_map: Eu5Map, canvas: Canvas, hierarchy: dict[str, Location], geometry: VanillaGeometry
+def _vanilla_seas(  # noqa: PLR0913 - base geometry, region scope and retained shores.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    hierarchy: dict[str, Location],
+    geometry: VanillaGeometry,
+    *,
+    selected: Collection[str] = (NEW_WORLD,),
+    adjacent: Collection[int] = (),
 ) -> list[_SeaArea]:
     index = {key: number for number, key in enumerate(game_map.keys)}
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
@@ -447,21 +545,28 @@ def _vanilla_seas(
     for location in hierarchy.values():
         members.setdefault(location.area, []).append(index[location.key])
     names = sorted(
-        {hierarchy[game_map.keys[label]].area for label in np.flatnonzero(touched & sea).tolist()}
+        {
+            hierarchy[game_map.keys[label]].area
+            for label in set(np.flatnonzero(touched & sea).tolist()).union(adjacent)
+        }
     )
     seas: list[_SeaArea] = []
     for name in names:
         labels = members[name]
         first = hierarchy[game_map.keys[labels[0]]]
         replaced = [label for label in labels if canvas.removed[label]]
-        placed = replaced or [label for label in labels if canvas.trimmed[label]]
+        placed = (
+            replaced
+            or [label for label in labels if canvas.trimmed[label]]
+            or [label for label in labels if label in adjacent]
+        )
         row = sum(int(geometry.rows[label]) for label in placed) // len(placed)
         column = sum(int(geometry.columns[label]) for label in placed) // len(placed)
         seas.append(
             _SeaArea(
                 name,
                 first.region,
-                first.continent == NEW_WORLD,
+                first.continent in selected,
                 len(replaced),
                 (row, column - canvas.col0),
                 frozenset(label for label in labels if not canvas.removed[label]),
@@ -504,15 +609,22 @@ def outside_contacts(
     stop = canvas.col0 + int(canvas.mask.shape[1]) + 1
     columns = (np.arange(canvas.col0 - 1, stop, dtype=np.int64) - canvas.roll) % width
     contacts: set[tuple[int, int]] = set()
+    full = canvas.mask.shape[1] == width
+    if full:
+        columns = columns[1:-1]
     for start in range(0, height, STRIP_ROWS):
         rows = slice(start, min(height, start + STRIP_ROWS + 1))
-        generated = np.pad(world.labels[rows], ((0, 0), (1, 1)), constant_values=-1)
+        generated = (
+            world.labels[rows]
+            if full
+            else np.pad(world.labels[rows], ((0, 0), (1, 1)), constant_values=-1)
+        )
         combined = np.where(
             generated >= 0,
             generated + offset,
             np.take(game_map.labels[rows], columns, axis=1),
         ).astype(np.int32)
-        pairs = adjacency_pairs(combined)
+        pairs = adjacency_pairs(combined, wrap_x=full)
         low, high = pairs >> PAIR_SHIFT, pairs & LOW_BITS
         across = pairs[(low < offset) & (high >= offset)]
         contacts.update((low, high - offset) for low, high in unpack_pairs(across))
@@ -608,7 +720,7 @@ def _protect_ocean_boundary(
     return protected
 
 
-def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and parents.
+def _sea_areas(  # noqa: PLR0913, PLR0915 - sea areas read the vanilla seas, coasts and parents.
     graph: ContactGraph,
     cells: list[int],
     seas: list[_SeaArea],
@@ -618,6 +730,9 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     parents: dict[str, tuple[str, str, str]],
     keys: KeySpace,
     boundary: set[int] | None = None,
+    oceans_continents: Collection[str] = OCEANS,
+    compose: bool = False,
+    intercontinental: Collection[int] = (),
 ) -> tuple[list[_Area], set[str]]:
     """Independent coastal water joins its land region; the open ocean keeps its areas.
 
@@ -634,7 +749,15 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     boundary has no independent coastal sea; those zones stay in the protected ocean
     hierarchy instead.
     """
-    owner = {label: sea.name for sea in reversed(seas) for label in sea.remaining}
+    ocean_names = {
+        sea.name for sea in seas if not sea.coastal and parents[sea.name][2] in oceans_continents
+    }
+    owner = {
+        label: sea.name
+        for sea in reversed(seas)
+        if not compose or sea.name in ocean_names
+        for label in sea.remaining
+    }
     water = set(cells)
     touching: dict[int, set[str]] = {}
     for label, cell in contacts:
@@ -646,9 +769,7 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     oceans = [
         sea
         for sea in seas
-        if not sea.coastal
-        and parents[sea.name][2] in OCEANS
-        and (not sea.remaining or anchors.get(sea.name))
+        if sea.name in ocean_names and (not sea.remaining or anchors.get(sea.name))
     ]
     regions = sorted(coasts)
     shore = {zone for zones in coasts.values() for zone in zones}
@@ -676,12 +797,19 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
         sorted(anchors[sea.name]) if sea.remaining else start[sea.name] for sea in oceans
     ]
     original_sources = {cell for sources in ocean_sources for cell in sources}
+    common_oceans = [
+        number for number, sea in enumerate(oceans) if parents[sea.name][2] in oceans_continents
+    ]
+    protected_crossings = _protect_ocean_boundary(
+        graph, [ocean_sources[i] for i in common_oceans], shore, set(intercontinental)
+    )
     protected_oceans = _protect_ocean_boundary(graph, ocean_sources, shore, boundary or set())
+    protected_oceans.update(common_oceans[i] for i in protected_crossings)
     reserved_ocean = {cell for sources in ocean_sources for cell in sources} - original_sources
     for region in regions:
         coasts[region] = [cell for cell in coasts[region] if cell not in reserved_ocean]
         if not coasts[region]:
-            message = f"American region {region} has no coastal sea outside the ocean boundary"
+            message = f"Region {region} has no coastal sea outside the ocean boundary"
             raise IdentityError(message)
     shore = {zone for zones in coasts.values() for zone in zones}
     length = max(1, len(shore))
@@ -743,8 +871,13 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     return areas, {sea.name for sea in oceans if sea.remaining}
 
 
-def _check_shores(graph: ContactGraph, areas: list[_Area], coasts: dict[str, list[int]]) -> None:
-    """Every piece of a land region's water touches that region's land."""
+def _check_shores(
+    graph: ContactGraph,
+    areas: list[_Area],
+    coasts: dict[str, list[int]],
+    retained: Collection[int] = (),
+) -> None:
+    """Every piece touches that region's land or the retained water it continues."""
     water: dict[str, list[int]] = {}
     for area in areas:
         if area.parents[0] in coasts:
@@ -753,7 +886,8 @@ def _check_shores(graph: ContactGraph, areas: list[_Area], coasts: dict[str, lis
             )
     for region, cells in sorted(water.items()):
         shore = set(coasts[region])
-        if any(not shore & set(piece) for piece in pieces(graph, cells)):
+        shore.update(retained)
+        if any(not shore.intersection(piece) for piece in pieces(graph, cells)):
             message = f"Water of {region} has a piece away from the region's shore"
             raise IdentityError(message)
 
@@ -808,6 +942,149 @@ def _inland_areas(
     return areas
 
 
+def _retained_pockets(  # noqa: PLR0913 - physical sea pieces and the retained areas they meet.
+    graph: ContactGraph,
+    cells: list[int],
+    coasts: dict[str, list[int]],
+    *,
+    contacts: set[tuple[int, int]],
+    seas: list[_SeaArea],
+    parents: dict[str, tuple[str, str, str]],
+    oceans: Collection[str] = OCEANS,
+) -> tuple[list[_Area], set[int], set[int]]:
+    """Keep disconnected generation cutouts with the vanilla coastal waters around them.
+
+    This occurs where an international coast includes water in the selected continent's
+    hierarchy that also borders retained land. A cutout with no generated shore and no
+    open-ocean contact cannot be assigned by proximity to a different stretch of coast.
+    """
+    inside = set(cells)
+    sources = {label: sea for sea in seas for label in sea.remaining}
+    laid = {cell for water in coasts.values() for cell in water}
+    touches: dict[int, Counter[str]] = {}
+    for label, cell in contacts:
+        source = sources.get(label)
+        if source is None or cell not in inside:
+            continue
+        if parents[source.name][2] in oceans:
+            laid.add(cell)
+        else:
+            touches.setdefault(cell, Counter())[source.name] += 1
+    assigned: dict[str, list[list[int]]] = {}
+    used, roots = set[int](), set[int]()
+    for piece in pieces(graph, cells):
+        if laid.intersection(piece):
+            continue
+        totals: Counter[str] = Counter()
+        for cell in piece:
+            totals.update(touches.get(cell, ()))
+        if not totals:
+            message = f"Sea cutout at cell {piece[0]} has no coast or retained sea"
+            raise IdentityError(message)
+        name = min(totals, key=lambda key: (-totals[key], key))
+        roots.update(cell for cell in piece if cell in touches and name in touches[cell])
+        used.update(piece)
+        assigned.setdefault(name, []).extend(
+            split(graph, piece, max(1, _rounded(len(piece), SEA_PROVINCE_ZONES)))
+        )
+    return (
+        [_Area(key, parents[key], parts, new=False) for key, parts in sorted(assigned.items())],
+        used,
+        roots,
+    )
+
+
+def _land_partition(  # noqa: PLR0913 - cell graph, regional hierarchy and portable keys.
+    is_land: list[bool],
+    tally: _Tally,
+    units: LocationUnits,
+    province_size: int,
+    keys: KeySpace,
+    *,
+    physical: KeyMatcher,
+    algorithm: int,
+) -> list[_Area]:
+    representatives = [
+        cell for cell, flag in enumerate(is_land) if flag and units.owner[cell] == cell
+    ]
+    land = contact_graph(
+        units.centres,
+        units.edges,
+        [flag and units.owner[cell] == cell for cell, flag in enumerate(is_land)],
+    )
+    areas = _land_areas(
+        land, representatives, tally, province_size, keys, physical=physical, algorithm=algorithm
+    )
+    return [
+        replace(
+            area,
+            provinces=[
+                sorted(member for cell in province for member in units.members[cell])
+                for province in area.provinces
+            ],
+        )
+        for area in areas
+    ]
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalLand:
+    """Authoritative land partitions and their physical location units."""
+
+    areas: list[_Area]
+    units: LocationUnits
+    physical_keys: list[dict[str, object]]
+
+
+def plan_regional_land(  # noqa: PLR0913 - installed inputs and one generated region.
+    game_map: Eu5Map,
+    domain: Domain,
+    world: NewWorld,
+    hierarchy: dict[str, Location],
+    *,
+    attributes: dict[str, dict[str, str]],
+    pairs: Sequence[tuple[int, int]],
+    biomes: CellBiomes,
+    settings: NewWorldSettings,
+    keys: KeySpace,
+    algorithm: int = CURRENT,
+) -> RegionalLand:
+    """Assign the region's own hierarchy before the common water identity pass."""
+    continent = domain.continent.key
+    geometry = regional_geometry(game_map, domain, hierarchy)
+    tally = _land_tally(
+        game_map,
+        hierarchy,
+        geometry,
+        geometry.pixels,
+        geometry.pixels > 0,
+        col0=0,
+        continent=continent,
+    )
+    physical = physical_keys(
+        game_map,
+        hierarchy,
+        attributes,
+        pairs,
+        world=world,
+        biomes=biomes,
+        pixels=geometry.pixels.tolist(),
+        continent=continent,
+    )
+    units = _units(world, biomes)
+    is_land = [kind in LAND_FAMILY for kind in world.classes]
+    areas = _land_partition(
+        is_land, tally, units, settings.province_size, keys, physical=physical, algorithm=algorithm
+    )
+    _check_pieces(
+        contact_graph(world.centroids, world.edges, is_land),
+        areas,
+        depth=len(LEVELS) - 1,
+        exempt=set(),
+    )
+    return RegionalLand(areas, units, physical.assignments)
+
+
 def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas and world.
     game_map: Eu5Map,
     canvas: Canvas,
@@ -821,34 +1098,42 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     algorithm: int,
 ) -> tuple[list[_Area], set[str]]:
     """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
-    count = len(game_map.keys)
     is_land = [kind in LAND_FAMILY for kind in world.classes]
-    is_sea = [kind is CellClass.SEA for kind in world.classes]
-    land = contact_graph(
-        units.centres,
-        units.edges,
-        [flag and units.owner[cell] == cell for cell, flag in enumerate(is_land)],
-    )
-    sea = contact_graph(world.centroids, world.edges, is_sea)
-    areas = _land_areas(
-        land,
-        [cell for cell, flag in enumerate(is_land) if flag and units.owner[cell] == cell],
+    areas = _land_partition(
+        is_land,
         _vanilla_land(game_map, canvas, hierarchy, geometry, geometry.pixels),
+        units,
         settings.province_size,
         keys,
         physical=physical,
         algorithm=algorithm,
     )
-    areas = [
-        replace(
-            area,
-            provinces=[
-                sorted(member for cell in province for member in units.members[cell])
-                for province in area.provinces
-            ],
-        )
-        for area in areas
-    ]
+    sea_areas, anchored = _water_areas(
+        game_map, canvas, world, hierarchy, geometry, areas=areas, keys=keys
+    )
+    physical_land = contact_graph(world.centroids, world.edges, is_land)
+    # A subcontinent may hold two pieces of a landmass since epoch 63; before, one (bands).
+    one_piece_up_to = len(LEVELS) - (1 if algorithm >= SUBCONTINENT_WAISTS else 0)
+    _check_pieces(physical_land, areas, depth=one_piece_up_to, exempt=set())
+    return areas + sea_areas, anchored
+
+
+def _water_areas(  # noqa: PLR0913 - shared waters read the final coast and its land hierarchy.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    hierarchy: dict[str, Location],
+    geometry: VanillaGeometry,
+    *,
+    areas: list[_Area],
+    keys: KeySpace,
+    selected: Collection[str] = (NEW_WORLD,),
+    oceans_continents: frozenset[str] = OCEANS,
+    intercontinental: frozenset[int] = NO_CELLS,
+) -> tuple[list[_Area], set[str]]:
+    count = len(game_map.keys)
+    is_sea = [kind is CellClass.SEA for kind in world.classes]
+    sea = contact_graph(world.centroids, world.edges, is_sea)
     region_of = {
         cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
     }
@@ -857,8 +1142,18 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         cell
         for label, cell in contacts
         if game_map.classes[label] is CellClass.SEA
-        and game_map.continents[label] not in OCEANS | {NEW_WORLD}
+        and (is_sea[cell] or not world.wrap_x)
+        and game_map.continents[label] not in oceans_continents.union(selected)
     }
+    adjacent: set[int] = (
+        {
+            label
+            for label, cell in contacts
+            if is_sea[cell] and game_map.classes[label] is CellClass.SEA
+        }
+        if world.wrap_x
+        else set()
+    )
     basins = inland_seas(world)
     inland = {cell for basin in basins for cell in basin}
     all_coasts = _coasts(world, is_sea, region_of)
@@ -867,28 +1162,135 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
             region: [cell for cell in cells if cell not in inland]
             for region, cells in all_coasts.items()
         },
-        boundary,
+        boundary | intercontinental,
     )
     parents = _area_parents(hierarchy)
     parents.update({area.parents[0]: area.parents for area in areas})
+    seas = _vanilla_seas(
+        game_map, canvas, hierarchy, geometry, selected=selected, adjacent=adjacent
+    )
+    open_cells = [cell for cell, flag in enumerate(is_sea) if flag and cell not in inland]
+    pockets, assigned, roots = (
+        _retained_pockets(
+            sea,
+            open_cells,
+            coasts,
+            contacts=contacts,
+            seas=seas,
+            parents=parents,
+            oceans=oceans_continents,
+        )
+        if world.wrap_x
+        else ([], set[int](), set[int]())
+    )
+    retained_coasts = {area.name for area in pockets}
     sea_areas, anchored = _sea_areas(
         sea,
-        [cell for cell, flag in enumerate(is_sea) if flag and cell not in inland],
-        _vanilla_seas(game_map, canvas, hierarchy, geometry),
+        [cell for cell in open_cells if cell not in assigned],
+        [place for place in seas if place.name not in retained_coasts],
         contacts,
         coasts=coasts,
         parents=parents,
         keys=keys,
-        boundary=boundary,
+        boundary=boundary - assigned,
+        oceans_continents=oceans_continents,
+        compose=world.wrap_x,
+        intercontinental=intercontinental,
     )
+    anchored.update(retained_coasts)
+    sea_areas.extend(pockets)
     sea_areas.extend(_inland_areas(sea, basins, all_coasts, parents, keys))
-    physical_land = contact_graph(world.centroids, world.edges, is_land)
-    # A subcontinent may hold two pieces of a landmass since epoch 63; before, one (bands).
-    one_piece_up_to = len(LEVELS) - (1 if algorithm >= SUBCONTINENT_WAISTS else 0)
-    _check_pieces(physical_land, areas, depth=one_piece_up_to, exempt=set())
     _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
-    _check_shores(sea, sea_areas, all_coasts)
-    return areas + sea_areas, anchored
+    _check_shores(sea, sea_areas, all_coasts, roots)
+    return sea_areas, anchored
+
+
+def _units(world: NewWorld, biomes: CellBiomes) -> LocationUnits:
+    return location_units(
+        world,
+        list(
+            zip(
+                biomes.climate,
+                biomes.vegetation,
+                biomes.topography,
+                biomes.raw_material,
+                strict=True,
+            )
+        ),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _NamedAreas:
+    areas: list[_Area]
+    anchored: set[str]
+    owner: Sequence[int]
+    physical_keys: list[dict[str, object]]
+    continents: Collection[str] = (NEW_WORLD,)
+    oceans_continents: Collection[str] = OCEANS
+
+
+def plan_composed_identities(  # noqa: PLR0913 - regional assignments and the common finished coast.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    hierarchy: dict[str, Location],
+    *,
+    geometry: VanillaGeometry,
+    regions: Mapping[str, tuple[RegionalLand, Sequence[int]]],
+    topography: Sequence[str],
+    seed: int,
+    keys: KeySpace,
+    waters: Waters,
+    algorithm: int = CURRENT,
+) -> Plan:
+    """Assign one key and colour space after combining land and settling the shared seas."""
+    areas: list[_Area] = []
+    owner = list(range(len(world.classes)))
+    physical: list[dict[str, object]] = []
+    origins: dict[int, set[str]] = {}
+    for name, (regional, cells) in regions.items():
+        for cell in cells:
+            origins.setdefault(cell, set()).add(name)
+        areas.extend(
+            replace(area, provinces=[[cells[cell] for cell in p] for p in area.provinces])
+            for area in regional.areas
+        )
+        for cell, root in enumerate(regional.units.owner):
+            if cell != root:
+                owner[cells[cell]] = cells[root]
+        physical.extend(regional.physical_keys)
+    oceans = frozenset(name for name in game_map.continents if name.endswith("_ocean_continent"))
+    intercontinental = frozenset(
+        cell
+        for first, second in world.edges
+        if len(origins[first] | origins[second]) > 1
+        for cell in (first, second)
+        if world.classes[cell] is CellClass.SEA
+    )
+    sea_areas, anchored = _water_areas(
+        game_map,
+        canvas,
+        world,
+        hierarchy,
+        geometry,
+        areas=areas,
+        keys=keys,
+        selected=regions.keys(),
+        oceans_continents=oceans,
+        intercontinental=intercontinental,
+    )
+    return _name_areas(
+        game_map,
+        world,
+        hierarchy,
+        _NamedAreas(areas + sea_areas, anchored, owner, physical, regions.keys(), oceans),
+        seed=seed,
+        keys=keys,
+        waters=waters,
+        topography=topography,
+        algorithm=algorithm,
+    )
 
 
 def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, hierarchy and water.
@@ -915,27 +1317,43 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     body, and every piece of a region's water touches the region's land. Land is named at
     random; water is named for its shape (``seanames``): one sea, one name.
     """
-    units = location_units(
-        world,
-        list(
-            zip(
-                biomes.climate,
-                biomes.vegetation,
-                biomes.topography,
-                biomes.raw_material,
-                strict=True,
-            )
-        ),
-    )
+    units = _units(world, biomes)
     areas, anchored = _hierarchy(
         game_map, canvas, world, hierarchy, geometry, settings, keys, physical, units, algorithm
     )
-    plan = Plan(cells=[], anchored_sea_areas=sorted(anchored), physical_keys=physical.assignments)
+    return _name_areas(
+        game_map,
+        world,
+        hierarchy,
+        _NamedAreas(areas, anchored, units.owner, physical.assignments),
+        seed=seed,
+        keys=keys,
+        waters=waters,
+        topography=biomes.topography,
+        algorithm=algorithm,
+    )
+
+
+def _name_areas(  # noqa: PLR0913 - geography, seeds and water conventions for one key space.
+    game_map: Eu5Map,
+    world: NewWorld,
+    hierarchy: dict[str, Location],
+    named: _NamedAreas,
+    *,
+    seed: int,
+    keys: KeySpace,
+    waters: Waters,
+    topography: Sequence[str],
+    algorithm: int,
+) -> Plan:
+    plan = Plan(
+        cells=[], anchored_sea_areas=sorted(named.anchored), physical_keys=named.physical_keys
+    )
     province_names = NameGenerator(seed, "provinces")
     area_names = NameGenerator(seed, "areas")
     province_of = [""] * len(world.classes)
     area_of: list[_Area | None] = [None] * len(world.classes)
-    for area in areas:
+    for area in named.areas:
         water = world.classes[area.provinces[0][0]] is CellClass.SEA
         if area.new:
             plan.new_areas[area.name] = []
@@ -954,7 +1372,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     placed: list[Placement | None] = [
         None
         if (area := area_of[cell]) is None or kind is not CellClass.SEA
-        else Placement(province_of[cell], area.name, area.parents[2] in OCEANS)
+        else Placement(province_of[cell], area.name, area.parents[2] in named.oceans_continents)
         for cell, kind in enumerate(world.classes)
     ]
     sea = name_waters(world, waters, placed, seed=seed)
@@ -974,7 +1392,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
                 key=keys.next(KEY_PREFIX[kind], 5),
                 name=sea.cells[index]
                 if kind is CellClass.SEA
-                else _land_name(location_names.next(), kind, biomes.topography[index], algorithm),
+                else _land_name(location_names.next(), kind, topography[index], algorithm),
                 color=colors[index],
                 kind=kind,
                 province=province_of[index],
@@ -984,14 +1402,14 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
                 continent=continent,
             )
         )
-    plan.cells = [plan.cells[unit] for unit in units.owner]
+    plan.cells = [plan.cells[unit] for unit in named.owner]
     reused = {cell.area for cell in plan.cells} | {cell.region for cell in plan.cells}
     override_names = NameGenerator(seed, "overrides")
     for name in sorted(reused):
-        if name not in plan.display_overrides and _is_new_world(hierarchy, name):
+        if name not in plan.display_overrides and _in_continents(hierarchy, name, named.continents):
             plan.display_overrides[name] = override_names.next()
     vanilla_new_world_areas = {
-        location.area for location in hierarchy.values() if location.continent == NEW_WORLD
+        location.area for location in hierarchy.values() if location.continent in named.continents
     }
     plan.dropped_areas = sorted(vanilla_new_world_areas - {cell.area for cell in plan.cells})
     return plan
@@ -1013,8 +1431,8 @@ def _land_name(word: str, kind: CellClass, topography: str, algorithm: int) -> N
     return word if term is None else Phrase(term, word)
 
 
-def _is_new_world(hierarchy: dict[str, Location], name: str) -> bool:
+def _in_continents(hierarchy: dict[str, Location], name: str, continents: Collection[str]) -> bool:
     return any(
-        location.continent == NEW_WORLD and name in {location.area, location.region}
+        location.continent in continents and name in {location.area, location.region}
         for location in hierarchy.values()
     )

@@ -98,6 +98,19 @@ def test_water_beside_vanilla_land_with_a_port_of_its_own_cannot_be_settled() ->
         _ = settle_seas(world, ForeignCoast(held=frozenset({0})))
 
 
+def test_shared_coast_can_follow_contiguous_water_to_a_port() -> None:
+    world = block_world(["...A"], block=2)
+    settled = settle_seas(world, ForeignCoast(held=frozenset({0})), shared_coast=True)
+    assert settled.cell_of == (0, 0, 0, 1)
+    assert served(settled.world, settled.foreign).port == {1: 0}
+
+
+def test_shared_coast_cannot_cross_wasteland_to_find_a_port() -> None:
+    world = block_world([".w.A"], block=2)
+    with pytest.raises(PortError, match="vanilla land"):
+        _ = settle_seas(world, ForeignCoast(held=frozenset({0})), shared_coast=True)
+
+
 def test_the_second_sea_zone_of_a_land_joins_the_first_not_the_open_sea() -> None:
     """A land touches two sea cells, one open sea lies beyond: the two share the land's port."""
     layout = ["A.1", "A.1"]

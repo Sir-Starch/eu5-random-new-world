@@ -32,6 +32,7 @@ from rnw.eu5_natives import (
     new_tags,
     overlord_level,
     pop_lines,
+    regional_state_baseline,
     state_population_floor,
     template_governments,
     template_levels,
@@ -47,7 +48,7 @@ from rnw.loc_keys import KeySpace, key_hashes
 from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
 from rnw.newworld import NewWorld
-from rnw.pdx import parse
+from rnw.pdx import Block, parse
 from rnw.societies import STATE, TRIBE, Polity, Societies
 from rnw.wording import adjective, render
 from tests.fakes import synthetic_world
@@ -590,6 +591,32 @@ def test_state_floor_reads_only_american_landed_countries() -> None:
     assert floor.supports(2050, 250)
     assert not floor.supports(2000, 200)
     assert not floor.supports(10_000, 250)
+
+
+def test_regional_state_baseline_uses_local_seats_and_local_land() -> None:
+    entries = parse("""
+        AAA = { capital = local include = coast }
+        BBB = { capital = overseas starting_technology_level = 7 }
+    """)
+    blocks = {
+        entry.key: entry.value
+        for entry in entries.entries
+        if entry.key and isinstance(entry.value, Block)
+    }
+    pops = {
+        "local": [("peasants", 300, "c", "r"), ("tribesmen", 700, "c", "r")],
+        "overseas": [("peasants", 20_000, "c", "r")],
+    }
+    levels, floor = regional_state_baseline(
+        {"local"},
+        pops,
+        {"AAA": ("land", ["local", "overseas"], []), "BBB": ("land", ["local"], [])},
+        blocks,
+        {"coast": 3},
+    )
+    assert levels == (3,)
+    assert floor is not None
+    assert (floor.peasants, floor.share) == (300, 300)
 
 
 @pytest.mark.parametrize("pops", [{}, {"one": [("tribesmen", 1000, "c", "r")]}])

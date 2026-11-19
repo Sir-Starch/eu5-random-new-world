@@ -13,12 +13,14 @@ from rnw.eu5_morocco import (
     algeciras,
     apply_morocco_start,
     plan_morocco,
+    reserve_morocco,
 )
 from rnw.eu5_natives import COUNTRY_DIR, vanilla_colors
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_nw_export import vanilla_localization_keys
+from rnw.eu5_oceans import emitted_cells
 from rnw.eu5_remap import RemapAccess, build_remap
-from rnw.eu5_rewrite import PERSONAL_PLACES, owned_locations
+from rnw.eu5_rewrite import PERSONAL_PLACES, owned_locations, retained_capitals
 from rnw.geography import read_locations
 from rnw.loc_keys import KeySpace, key_hashes
 from rnw.model import CellClass
@@ -31,6 +33,8 @@ if TYPE_CHECKING:
     from rnw.continent_domains import Domain
     from rnw.eu5_biomes import VanillaLocations
     from rnw.eu5_map import Eu5Map
+    from rnw.eu5_newworld import VanillaGeometry
+    from rnw.eu5_remap import GeographicRemap
     from rnw.eu5_start import Country
     from rnw.newworld import NewWorld
 
@@ -49,14 +53,15 @@ def _personal_locations(texts: dict[str, str], removed: set[str]) -> set[str]:
     return sources
 
 
-def _algeciras(game_dir: Path, seed: int) -> Country:
+def _algeciras(game_dir: Path, seed: int, keys: KeySpace | None = None) -> Country:
     reserved = frozenset(
         entry.key
         for path in sorted((game_dir / COUNTRY_DIR).glob("*.txt"))
         for entry in parse(path.read_text(encoding="utf-8-sig")).entries
         if entry.key
     )
-    keys = KeySpace(key_hashes(vanilla_localization_keys(game_dir)))
+    if keys is None:
+        keys = KeySpace(key_hashes(vanilla_localization_keys(game_dir)))
     return algeciras(seed, reserved, keys, vanilla_colors(game_dir))
 
 
@@ -153,3 +158,62 @@ def morocco_trials(  # noqa: PLR0913 - installed data and the generated African 
             result.texts[COUNTRIES_FILE], african_keys, retired="MOR" in result.removed_ids
         )
     return results
+
+
+def map_morocco_trials(  # noqa: PLR0913 - each policy reads the same completed map and setup.
+    game_dir: Path,
+    game: Eu5Map,
+    plan: Plan,
+    world: NewWorld,
+    *,
+    geometry: VanillaGeometry,
+    removed: set[str],
+    remap: GeographicRemap,
+    keys: KeySpace,
+    seed: int,
+    policies: tuple[MoroccoPolicy, ...],
+) -> dict[str, dict[str, object]]:
+    """Check the actual identities chosen by final map and coast planning."""
+    texts = {
+        path.name: path.read_text(encoding="utf-8-sig")
+        for path in sorted((game_dir / SETUP_DIR).glob("*.txt"))
+    }
+    original = {
+        key: (int(geometry.rows[i]), int(geometry.columns[i])) for i, key in enumerate(game.keys)
+    }
+    africa = {cell.key for cell in plan.cells if cell.continent == "africa"}
+    final = (set(game.keys) - removed) | {cell.key for cell in emitted_cells(plan)}
+    discarded = removed | remap.provinces.keys() | remap.areas.keys()
+    capitals = retained_capitals(
+        texts[COUNTRIES_FILE],
+        discarded,
+        original,
+        game.labels.shape[1],
+        preferred={"MAM": "damascus"},
+    )
+    original_tags = _country_tags(texts[COUNTRIES_FILE])
+    emirate = _algeciras(game_dir, seed, keys) if MoroccoPolicy.EMIRATE in policies else None
+    out: dict[str, dict[str, object]] = {}
+    for policy in policies:
+        result = apply_morocco_start(
+            reserve_morocco(plan, world, original, policy),
+            texts,
+            discarded,
+            {},
+            location_replacements=remap.locations,
+            replacement_capitals=capitals,
+            final_locations=final,
+            emirate=emirate if policy is MoroccoPolicy.EMIRATE else None,
+        )
+        out[policy] = _recipient(
+            result.texts[COUNTRIES_FILE], africa, retired="MOR" in result.removed_ids
+        )
+        out[policy]["retired_country_tags"] = len(
+            original_tags - _country_tags(result.texts[COUNTRIES_FILE])
+        )
+    return out
+
+
+def _country_tags(text: str) -> set[str]:
+    countries = parse(text).block(*COUNTRIES_BLOCK)
+    return {entry.key for entry in countries.entries if entry.key} if countries else set()

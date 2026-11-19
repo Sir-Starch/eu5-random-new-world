@@ -59,3 +59,14 @@ def test_absent_or_duplicate_names_stop_generation(tmp_path: Path) -> None:
 
 def test_no_name_changes_need_no_localization_files(tmp_path: Path) -> None:
     assert map_name_files(tmp_path, "english", {}) == {}
+
+
+def test_regional_sea_area_name_is_replaced_in_the_province_catalogue(tmp_path: Path) -> None:
+    _ = _source(tmp_path, "area", b'l_english:\n a: "A"\n')
+    _ = _source(tmp_path, "region_names", b'l_english:\n r: "R"\n')
+    _ = _source(tmp_path, "location_names/location_names", b'l_english:\n sea: "Sea"\n')
+    provinces = b'l_english:\n shore_area: "Old Bay"\n other: "Other"\n'
+    path = _source(tmp_path, "province_names", provinces)
+    assert map_name_files(
+        tmp_path, "english", {"shore_area": "New Bay"}, include_provinces=True
+    ) == {path: provinces.replace(b"Old Bay", b"New Bay")}

@@ -164,7 +164,7 @@ def coast_links(
 
 def pair_lengths(world: NewWorld) -> dict[tuple[int, int], int]:
     """How many pixels of border every two touching cells share."""
-    pairs, counts = adjacency_lengths(world.labels)
+    pairs, counts = adjacency_lengths(world.labels, wrap_x=world.wrap_x)
     return {
         (first, second): length
         for (first, second), length in zip(unpack_pairs(pairs), counts.tolist(), strict=True)
@@ -188,14 +188,16 @@ class Settled:
     merged: int
 
 
-def settle_seas(world: NewWorld, foreign: ForeignCoast | None = None) -> Settled:
+def settle_seas(
+    world: NewWorld, foreign: ForeignCoast | None = None, *, shared_coast: bool = False
+) -> Settled:
     """``world`` with every coastal sea zone able to have a port of its own.
 
     A sea cell that no assignment can serve becomes one cell with a sea neighbour: preferably a
     cell that is served (nothing else changes), then another unserved one (the two share the
     shortage), then any; the longest shared border first. The world itself when nothing is
-    unserved. Raises ``PortError`` for a cell that stays unserved, which means vanilla land with
-    a port of its own touches generated water that has no land of its own.
+    unserved. On a shared coast, a zone that only touches retained land may reach a port by
+    folding along adjoining water. An unserved zone with no such route raises ``PortError``.
     """
     foreign = foreign or ForeignCoast()
     lengths = pair_lengths(world)
@@ -212,7 +214,9 @@ def settle_seas(world: NewWorld, foreign: ForeignCoast | None = None) -> Settled
         if not unserved:
             break
         sea = unserved[0]
-        target = _merge_target(sea, sea_links, needed, set(unserved), links)
+        target = _merge_target(
+            sea, sea_links, needed, set(unserved), links, shared_coast=shared_coast
+        )
         _merge(sea, target, sea_links, links, needed)
         merged[sea] = target
     if not merged:
@@ -221,15 +225,22 @@ def settle_seas(world: NewWorld, foreign: ForeignCoast | None = None) -> Settled
     return Settled(settled, foreign.renumbered(cell_of), cell_of, len(merged))
 
 
-def _merge_target(
+def _merge_target(  # noqa: PLR0913 - the merge uses every side of the coast graph.
     sea: int,
     sea_links: Mapping[int, Mapping[int, int]],
     needed: Collection[int],
     unserved: Collection[int],
     links: Mapping[int, Mapping[int, int]],
+    *,
+    shared_coast: bool,
 ) -> int:
     """The sea neighbour to fold ``sea`` into: a served one, an unserved one, any; longest first."""
     if not any(sea in seas for seas in links.values()):
+        if shared_coast:
+            port_seas = {cell for seas in links.values() for cell in seas}
+            first = _water_step_to_port(sea, sea_links, port_seas)
+            if first is not None:
+                return first
         message = (
             f"Sea cell {sea} touches vanilla land with a port of its own and no land of its own"
         )
@@ -244,6 +255,25 @@ def _merge_target(
         return group, -neighbours[other], other
 
     return min(neighbours, key=rank)
+
+
+def _water_step_to_port(
+    sea: int, sea_links: Mapping[int, Mapping[int, int]], port_seas: Collection[int]
+) -> int | None:
+    """Find the first step on the shortest water path, preferring a wider first border."""
+    neighbours = sea_links.get(sea, {})
+    first_steps = sorted(neighbours, key=lambda other: (-neighbours[other], other))
+    seen = {sea, *first_steps}
+    queue = deque((other, other) for other in first_steps)
+    while queue:
+        cell, first = queue.popleft()
+        if cell in port_seas:
+            return first
+        for other in sea_links[cell]:
+            if other not in seen:
+                seen.add(other)
+                queue.append((other, first))
+    return None
 
 
 def _merge(
@@ -294,7 +324,7 @@ def relabel(world: NewWorld, merged: Mapping[int, int]) -> tuple[NewWorld, tuple
     barrier = np.unique(np.array(moved, dtype=np.int64))
     return (
         replace(
-            derive_world(labels, kinds, world.elevation),
+            derive_world(labels, kinds, world.elevation, wrap_x=world.wrap_x),
             barrier=barrier,
             drainage=world.drainage,
         ),
