@@ -57,6 +57,8 @@ def test_policy_has_one_iberian_owner_and_never_changes_its_population(
     policy: MoroccoPolicy,
 ) -> None:
     start = plan_morocco(AFRICA, ORIGINAL, 1000, policy)
+    if policy is MoroccoPolicy.RESTORE:
+        start = replace(start, capital_province="province_of_morocco")
     emirate = algeciras(42, frozenset({"MOR", "CAS", "GRA"}), KeySpace(set()), frozenset())
     texts = {
         COUNTRIES_FILE: SETUP,
@@ -100,6 +102,9 @@ def test_policy_has_one_iberian_owner_and_never_changes_its_population(
         assert [word.value for word in integrated.words()] == list(IBERIAN_HOLDINGS)
     if policy is MoroccoPolicy.RESTORE:
         assert "MOR" not in result.removed_ids
+        assert (castile := countries.block("CAS")) is not None
+        assert (discoveries := castile.block("discovered_provinces")) is not None
+        assert [word.value for word in discoveries.words()] == [start.capital_province]
         assert f"capital = {start.capital}" in result.texts[COUNTRIES_FILE]
         assert "ruler = ruler_mor" in result.texts[COUNTRIES_FILE]
         assert f"birth = {start.capital}" in result.texts["05_characters.txt"]

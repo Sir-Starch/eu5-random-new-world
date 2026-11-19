@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 from rnw.eu5_natives import country_records, map_colors, new_tags
@@ -50,6 +50,7 @@ class MoroccoStart:
     policy: MoroccoPolicy
     africa: tuple[str, ...] = ()
     capital: str = ""
+    capital_province: str = ""
 
 
 def _distance(first: Point, second: Point, width: int) -> int:
@@ -100,7 +101,11 @@ def reserve_morocco(
         for i, cell in enumerate(plan.cells)
         if cell.kind is CellClass.LAND and cell.continent == "africa"
     }
-    return plan_morocco(africa, original, int(world.labels.shape[1]), policy)
+    start = plan_morocco(africa, original, int(world.labels.shape[1]), policy)
+    if start.capital:
+        province = next(cell.province for cell in plan.cells if cell.key == start.capital)
+        return replace(start, capital_province=province)
+    return start
 
 
 def algeciras(
@@ -168,6 +173,21 @@ def _verify_ownership(text: str, tag: str, expected: set[str]) -> None:
             raise MoroccoError(message)
 
 
+def _discover_capital(text: str, province: str) -> str:
+    # The vanilla rivalry survives and Castile already knew Morocco's old seat.
+    castile = _countries(text).block(CASTILE)
+    if castile is None or not province:
+        message = "Castile needs the new Moroccan capital's province for its starting rivalry"
+        raise MoroccoError(message)
+    edits = Edits()
+    known = castile.block("discovered_provinces")
+    if known is None:
+        edits.insert(castile.open + 1, f"\n\t\tdiscovered_provinces = {{ {province} }}\n")
+    elif all(word.value != province for word in known.words()):
+        edits.insert(known.close, f" {province} ")
+    return edits.apply(text)
+
+
 def apply_morocco_start(  # noqa: PLR0913 - the selected policy and its regional setup inputs.
     start: MoroccoStart,
     texts: dict[str, str],
@@ -208,7 +228,9 @@ def apply_morocco_start(  # noqa: PLR0913 - the selected policy and its regional
             raise MoroccoError(message)
         capitals[MOROCCO] = start.capital
         places["fez"] = start.capital
-        prepared[COUNTRIES_FILE] = _grant(text, MOROCCO, "own_control_core", start.africa)
+        prepared[COUNTRIES_FILE] = _discover_capital(
+            _grant(text, MOROCCO, "own_control_core", start.africa), start.capital_province
+        )
         recipient = MOROCCO
         expected.update(start.africa)
     else:

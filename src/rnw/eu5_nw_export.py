@@ -18,6 +18,7 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass, replace
 from functools import partial
 from itertools import pairwise
+from operator import attrgetter
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
@@ -233,7 +234,15 @@ from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
 from rnw.eu5_regional_history import project_regional_start, shared_routes, simulate_region
 from rnw.eu5_regionkeys import physical_keys
-from rnw.eu5_remap import RemapAccess, RemapRegions, build_remap, remap_scripts, remap_text
+from rnw.eu5_remap import (
+    RemapAccess,
+    RemapRegions,
+    build_remap,
+    mounted_text_files,
+    remap_discoveries,
+    remap_scripts,
+    remap_text,
+)
 from rnw.eu5_reveal import RevealError
 from rnw.eu5_reveal import files as reveal_files
 from rnw.eu5_reveal import verify as verify_reveal
@@ -401,7 +410,7 @@ if TYPE_CHECKING:
     from rnw.eu5_morocco import MoroccoStart
     from rnw.eu5_remap import GeographicRemap
     from rnw.eu5_rewrite import SetupResult
-    from rnw.eu5_start import Country, FinalStartPlan
+    from rnw.eu5_start import Country, FinalStartPlan, PopCohort
     from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.settings import NewWorldSettings, Settings
@@ -425,6 +434,7 @@ RIVER_VALLEY_DEPTHS: Final[tuple[int, ...]] = (350, 550, 850, 1150)
 RIVER_VALLEY_PX: Final[int] = 6
 MIN_LEVEL_PIXELS: Final[int] = 2000
 SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
+SETUP_TEMPLATES: Final[str] = "game/main_menu/setup/templates"
 # The game versions a world's mod says it supports, and the file of the inputs beside the world.
 SUPPORTED_GAME: Final[str] = "1.4.*"
 INPUTS_FILE: Final[str] = "inputs.json"
@@ -914,6 +924,8 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
     harbours: dict[str, int],
     places: dict[int, Spec],
     water: Water,
+    *,
+    regional_pops: Mapping[str, tuple[PopCohort, ...]] | None = None,
 ) -> list[str]:
     lines: list[str] = []
     seen: set[str] = set()
@@ -931,6 +943,10 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
                 ("raw_material", biomes.raw_material),
             ):
                 body = _set_field(body, name, values[index])
+            if regional_pops is not None and (cohorts := regional_pops.get(cell.key)):
+                primary = max(cohorts, key=attrgetter("amount"))
+                body = _set_field(body, "culture", primary.culture)
+                body = _set_field(body, "religion", primary.religion)
             body = HARBOR.sub("", body)
             if cell.key in harbours:
                 value = hundredths_text(harbours[cell.key])
@@ -1672,11 +1688,30 @@ def check_composed_map(
     return counts
 
 
-def _setup_texts(game_dir: Path) -> dict[str, str]:
-    return {
-        path.name: path.read_text(encoding="utf-8-sig")
-        for path in sorted((game_dir / SETUP_DIR).glob("*.txt"))
-    }
+def _setup_paths(game_dir: Path, *, regional: bool) -> dict[str, Path]:
+    if regional:
+        return {
+            path.name: path
+            for path in mounted_text_files(game_dir, (SETUP_DIR,)).values()
+            if path.parent.name == "1337"
+        }
+    return {path.name: path for path in sorted((game_dir / SETUP_DIR).glob("*.txt"))}
+
+
+def _setup_texts(sources: Mapping[str, Path]) -> dict[str, str]:
+    return {name: path.read_text(encoding="utf-8-sig") for name, path in sources.items()}
+
+
+def _discovery_outputs(game_dir: Path, remap: GeographicRemap | None) -> dict[str, bytes]:
+    if remap is None:
+        return {}
+    files: dict[str, bytes] = {}
+    for relative, source in mounted_text_files(game_dir, (SETUP_TEMPLATES,)).items():
+        original = source.read_text(encoding="utf-8-sig")
+        changed = remap_discoveries(original, remap)
+        if changed != original:
+            files[relative] = _encode(game_dir, source.relative_to(game_dir).as_posix(), changed)
+    return files
 
 
 def _read(game_dir: Path, relative: str) -> str:
@@ -1952,6 +1987,7 @@ def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its boun
     written = pop_lines(natives.pops)
     if start is None:
         return prune_setup(texts, gone, {c.key: written.get(c.key, []) for c in plan.cells})
+    texts[COUNTRIES_FILE] = remap_discoveries(texts[COUNTRIES_FILE], start.remap)
     kept = start.real_america
     restored = frozenset(() if kept is None else (game_map.keys[i] for i in kept.keep))
     pops = {cell.key: written.get(cell.key, []) for cell in emitted_cells(plan)}
@@ -2077,7 +2113,16 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         rewrite_templates(
             _read(game_dir, TEMPLATES),
             removed,
-            _template_lines(plan, donors, bodies, biomes, development.harbours, places, water),
+            _template_lines(
+                plan,
+                donors,
+                bodies,
+                biomes,
+                development.harbours,
+                places,
+                water,
+                regional_pops=None if composed is None else natives.pops,
+            ),
         ),
     )
     moved = shifts(game_map, canvas)
@@ -2128,12 +2173,15 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     history_text = _history_outputs(natives, loc_keys, society_plan, composed)
     if history_text is not None:
         outputs.update(history_text.files)
+    setup_paths = _setup_paths(game_dir, regional=composed is not None)
+    installed_setup = _setup_texts(setup_paths)
+    setup_texts = {
+        name: remap_text(text, area_replacements)[0] for name, text in installed_setup.items()
+    }
+    outputs.update(_discovery_outputs(game_dir, None if composed is None else composed.remap))
     setup = _rewrite_setup(
         composed,
-        {
-            name: remap_text(text, area_replacements)[0]
-            for name, text in _setup_texts(game_dir).items()
-        },
+        setup_texts,
         natives,
         game_map=game_map,
         geometry=geometry,
@@ -2161,17 +2209,15 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         "20_rivals.txt": (rival_lines(natives.rivals),),
     }
     for name, original_text in setup.texts.items():
-        relative = f"{SETUP_DIR}/{name}"
         setup_text = original_text
         if name == DEVELOPMENT_FILE:
             setup_text = drop_block_entries(setup_text, ("development",), new_world_keys)
         setup_text = _insert_setup_additions(name, setup_text, additions, ai_records)
         if name == "12_diplomacy.txt" and history_text is not None:
-            verify_diplomacy(
-                natives, setup_text, _read(game_dir, relative), gone | setup.removed_ids
-            )
-        if setup_text != _read(game_dir, relative):
-            outputs[_mod_path(relative)] = _encode(game_dir, relative, setup_text)
+            verify_diplomacy(natives, setup_text, installed_setup[name], gone | setup.removed_ids)
+        if setup_text != installed_setup[name]:
+            source = setup_paths[name].relative_to(game_dir).as_posix()
+            outputs[_mod_path(f"{SETUP_DIR}/{name}")] = _encode(game_dir, source, setup_text)
     outputs.update(country_definition_outputs(game_dir, setup.removed_ids))
     outputs.update(towns.files())
     retired = retired_base_modifiers(bodies, removed)

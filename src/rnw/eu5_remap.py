@@ -297,6 +297,26 @@ def remap_text(text: str, remap: dict[str, str]) -> tuple[str, int]:
     return (edits.apply(text) if count else text), count
 
 
+def remap_discoveries(text: str, remap: GeographicRemap) -> str:
+    """Bind the typed lists in a 1337 country file or one of its included templates."""
+    maps = {"discovered_areas": remap.areas, "discovered_provinces": remap.provinces}
+    if (remap.areas.keys() | remap.provinces.keys()).isdisjoint(WORD.findall(text)):
+        return text
+    root = parse(text)
+    countries = root.block("countries", "countries")
+    records = (
+        (root,)
+        if countries is None
+        else tuple(entry.value for entry in countries.entries if isinstance(entry.value, Block))
+    )
+    edits = Edits()
+    for record in records:
+        for entry in record.entries:
+            if entry.key in maps and isinstance(entry.value, Block):
+                _ = _list_edits(entry.value, maps[entry.key], edits, text, drop=False)
+    return edits.apply(text)
+
+
 def _with_labels(text: str, start: int) -> int:
     """``start`` moved up over the comment lines right above it, which name the entry."""
     while start > 0:
@@ -390,16 +410,23 @@ class ScriptRewrite:
 
 def script_files(game_dir: Path) -> dict[str, Path]:
     """Script files by mod path: the base game's and every DLC's, none twice."""
+    return mounted_text_files(game_dir, SCRIPT_ROOTS, SCRIPT_FILES)
+
+
+def mounted_text_files(
+    game_dir: Path, roots: tuple[str, ...], loose_files: tuple[str, ...] = ()
+) -> dict[str, Path]:
+    """Enumerate base and DLC inputs by the path they occupy in the game's virtual tree."""
     game = game_dir / "game"
     files: dict[str, Path] = {}
     for base in (game, *sorted((game / "dlc").glob("*"))):
         paths = [
             path
-            for root in SCRIPT_ROOTS
+            for root in roots
             if (base / root.removeprefix("game/")).is_dir()
             for path in sorted((base / root.removeprefix("game/")).rglob("*.txt"))
         ]
-        paths += [base / name.removeprefix("game/") for name in SCRIPT_FILES]
+        paths += [base / name.removeprefix("game/") for name in loose_files]
         for path in paths:
             if not path.is_file():
                 continue

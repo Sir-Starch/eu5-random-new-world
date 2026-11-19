@@ -259,8 +259,9 @@ def _society_texts(  # noqa: PLR0913 - every rewritten society file needs the sh
     holders = [
         cell.key for cell in plan.cells if cell.kind in {CellClass.LAND, CellClass.WASTELAND}
     ]
+    sources = nw._setup_paths(game_dir, regional=False)
     setup = prune_setup(
-        dict(nw._setup_texts(game_dir)), gone, {k: written_pops.get(k, []) for k in holders}
+        nw._setup_texts(sources), gone, {k: written_pops.get(k, []) for k in holders}
     )
     towns = plan_towns(game_dir, natives.ranks, development.initial, natives.population)
     ai_decisions = nw._ai_assignment_records(game_dir, natives, world, plan)

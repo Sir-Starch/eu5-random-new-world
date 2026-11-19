@@ -2,11 +2,73 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
-from rnw.eu5_remap import remap_text
+from rnw.eu5_nw_export import (
+    _discovery_outputs,  # pyright: ignore[reportPrivateUsage]
+    _setup_paths,  # pyright: ignore[reportPrivateUsage]
+)
+from rnw.eu5_remap import GeographicRemap, remap_discoveries, remap_text
 from rnw.eu5_rewrite import prune_regional_setup, prune_setup, retain_country_territory
 from rnw.pdx import parse
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+def test_regional_start_reads_dlc_town_rights_at_their_mounted_path(tmp_path: Path) -> None:
+    name = "25_city_rights.txt"
+    relative = f"main_menu/setup/1337/{name}"
+    source = tmp_path / "game/dlc/example" / relative
+    source.parent.mkdir(parents=True)
+    town_rights = "townrights_manager = { old_city = city_rights kept_city = city_rights }"
+    _ = source.write_text(town_rights, encoding="utf-8")
+    assert name not in _setup_paths(tmp_path, regional=False)
+    assert _setup_paths(tmp_path, regional=True) == {name: source}
+    result = prune_setup(
+        {name: source.read_text(encoding="utf-8")}, {"old_city"}, {}, regional=True
+    )
+    holder = parse(result.texts[name]).block("townrights_manager")
+    assert holder is not None
+    assert [entry.key for entry in holder.entries] == ["kept_city"]
+
+
+def test_discoveries_bind_the_same_provinces_in_templates_and_country_records(
+    tmp_path: Path,
+) -> None:
+    relative = "main_menu/setup/templates/expl_crossing.txt"
+    source = tmp_path / "game" / relative
+    source.parent.mkdir(parents=True)
+    template = (
+        "discovered_areas = { old_key kept_area }\n"
+        "discovered_provinces = { old_key same_target kept_province }\n"
+        "discovered_regions = { old_key }\n"
+    )
+    _ = source.write_text(template, encoding="utf-8-sig")
+    bindings = GeographicRemap(
+        {"old_key": "new_location"},
+        {"old_key": "new_province", "same_target": "new_province"},
+        {"old_key": "new_area"},
+    )
+    outputs = _discovery_outputs(tmp_path, bindings)
+    assert set(outputs) == {relative}
+    assert outputs[relative].startswith(b"\xef\xbb\xbf")
+    rewritten = outputs[relative].decode("utf-8-sig")
+    holder = parse(rewritten)
+    for field, words in (
+        ("discovered_areas", ["new_area", "kept_area"]),
+        ("discovered_provinces", ["new_province", "kept_province"]),
+        ("discovered_regions", ["old_key"]),
+    ):
+        block = holder.block(field)
+        assert block is not None
+        assert [word.value for word in block.words()] == words
+    assert (
+        remap_discoveries(f"countries = {{ countries = {{ KEEP = {{ {template} }} }} }}", bindings)
+        == f"countries = {{ countries = {{ KEEP = {{ {rewritten} }} }} }}"
+    )
 
 
 @pytest.mark.parametrize("remaining", ["kept_area", ""])

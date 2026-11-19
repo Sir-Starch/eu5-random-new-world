@@ -291,3 +291,33 @@ selects one variant.
 RNW_TIMING=1 uv run --locked python experiments/071-continent-geography/profile_geography.py \
   /path/to/eu5 africa --seed 17 --morocco restore --morocco emirate --morocco castile --morocco granada
 ```
+
+## Loading 6HGZ with Across the Pillars
+
+[V-GAME / V-LOCAL 2026-11-19, EU5 1.4.9 / Steam build 26655995] Two
+owner-run 1337 starts of the original world 6HGZ ended with an access
+violation at the same address. Both logs end with `unknown Location for
+tunis`. The mounted DLC file `25_d009_town_rights.txt` names 14 historical
+cities whose locations the world replaces. The offline audit also found 61
+missing discovery references in effective country setup and templates.
+The engine reported 846 failed lookups while applying the templates and
+42 owned locations with neither a starting culture nor a religion.
+
+[V-EXEC] The combined export now includes DLC setup in the territorial
+prune, binds areas and provinces in country discoveries, writes local
+culture and religion from the largest population cohort, and gives Castile
+knowledge of Morocco's relocated capital if their rivalry survives. The
+rebuilt world has zero dangling locations in city rights and zero dangling
+discovery references in the effective 1337 files. All 42 reported locations
+have both fields, matching their exported populations. The full export on 24
+threads took 223.1 seconds. The original seed and settings reproduce the
+same location raster, river raster and hierarchy. The installed build and
+hub are recorded in [INSTALLED](../INSTALLED.md).
+
+[V-GAME 2026-11-19, 11:43 CET] The owner-run retry enabled only
+`RNW: 6HGZ Load Fix` with the same DLC. EU5 processed the DLC town-rights
+file and reached the in-game state after 1337 initialization and startup
+save serialization. The Tunis, discovery, missing identity and Moroccan
+rivalry diagnostics did not recur. There was no new crash report. The
+same river-source warnings and some law and parliament warnings remain
+in the log. This observation covers startup.

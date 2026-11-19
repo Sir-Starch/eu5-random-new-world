@@ -6,6 +6,23 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-19, **1.3.0 development / epoch 64 — 6HGZ startup fix** (C546).
+[V-EXEC] Installed `RNW: 6HGZ Load Fix` in `rnw_exp_world_aipmwdfiwn` in the
+Steam Proton profile for EU5 1.4.9 / Steam build 26655995. The original 6HGZ
+installation and its code are retained. The corrected copy uses the same
+seed, settings and visible map at country selection. All 1,450 canonical
+file hashes match the record (`a21b6fdd…003e0b5`), including the optional
+selection cover kept in the recovery receipt. The 884-file America-only
+reference matches its epoch-64 golden. See the
+[startup investigation](071-continent-geography/README.md#loading-6hgz-with-across-the-pillars).
+
+The updated `rnw_exp_hub` passed both offscreen Wine self-tests and the
+updater's installed-file verification. Candidate
+`local_data/continent-crash-20261119/hub-final/rnw_exp_hub`.
+Backup `.rnw-hub-backups/1.3.0-1795084841360924816`. The Windows wheel SHA-256
+is `0dc248da13d7c08d56fc8023094336f5070d9edc02fc8137aa72ef35e6fbd7a6`.
+The locked checks passed with 3,653 Python and 39 Rust tests.
+
 2026-11-19, **1.3.0 development / epoch 64 — optional continent generation**.
 [V-EXEC] Installed `rnw_exp_world_al7zl2klp2` into the Steam Proton profile for
 EU5 1.4.9, Steam build 26655995. Seed 17 uses Continents for America,

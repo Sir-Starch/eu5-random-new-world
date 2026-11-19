@@ -617,6 +617,17 @@ synthetic fixtures, identifiers and hashes are committed. The
 [compatibility audit](compatibility-1-4-5.md) records the inspected interfaces and
 verification limits. No new distribution permission is inferred.
 
+### Follow-up: mounted 1337 setup and discovery templates (2026-11-19)
+
+[V-LOCAL / V-EXEC C546] Combined worlds read the installed DLC's named setup
+records at their mounted text paths. The city-rights manager keys are location
+identifiers. The country setup and its exploration templates name separate
+area and province lists. Generated overrides use the existing span-preserving
+setup rewrite and geographic bindings. Rights of removed cities are dropped.
+The offline audit resolves these references against the written definitions.
+Only original code and synthetic tests are shared. See the
+[6HGZ case](../../experiments/071-continent-geography/README.md#loading-6hgz-with-across-the-pillars).
+
 ## R-005 — Read-only TR46 save-state analysis
 
 **2026-10-25; original generator 0.12.3 / epoch 33 campaign, EU5 1.4.4 executable
