@@ -6,6 +6,26 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-19, **1.3.0 development / epoch 64 — optional continent generation**.
+[V-EXEC] Installed `rnw_exp_world_al7zl2klp2` into the Steam Proton profile for
+EU5 1.4.9, Steam build 26655995. Seed 17 uses Continents for America,
+Supercontinent for Africa, Archipelago for Oceania and the default Morocco
+policy. All 1,436 recorded mod files match the optimized build
+(`0131c8b7…a2320`). Morocco holds four Iberian and 86 African locations.
+The [continent generation experiment](071-continent-geography/README.md)
+records the timing, all seven continent combinations and the cache reroll.
+
+The local `rnw_exp_hub` passed both Wine offscreen generator self-tests and the
+updater's installed-file verification. Candidate
+`local_data/continent-export-20261118/hub-release-candidate/rnw_exp_hub`.
+Backup `.rnw-hub-backups/1.3.0-1795083328770302118`. Windows wheel SHA-256
+`11323be222255531fc18a3d5d33067c5425c8da13ad47f93d7df3273e61fd0e3`.
+Tauri window SHA-256
+`c7cd405399a00e3faf3896d7d4b744f2b45910712ef20001f19a7143874de9fb`.
+Locked checks passed with 3,651 Python and 39 native Rust tests. The desktop
+checks passed with 50 Svelte and five shell tests. The installed-game
+America-only reference matched its epoch-64 golden.
+
 2026-11-18, **1.3.0 development / epoch 64 — native wind transport** (C544).
 [V-EXEC] Updated the generator-only hub after moving the unchanged seasonal/legacy wind scans
 to bounded native strips. Locked checks pass (3,567 Python checks, 22 optional skips,

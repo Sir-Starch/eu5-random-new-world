@@ -181,6 +181,11 @@ memory limits overlap and the compose step collects each result in continent
 order. Climate, water, terrain, scripts and mod output still run on the single
 composed map.
 
+The resource reroll from the same application cache and at the same worker
+budget took 128.9 s. The location raster, river raster and location hierarchy
+matched byte for byte, and the resource templates changed. The
+[installation record](../INSTALLED.md) identifies the verified world and hub.
+
 ### Africa and Asia
 
 [V-EXEC 2026-11-18, same build and worker budget] The installed map has
