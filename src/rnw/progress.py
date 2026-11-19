@@ -15,6 +15,7 @@ from __future__ import annotations
 import threading
 import time
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
@@ -227,6 +228,7 @@ class Progress:
 
 
 _active: Progress | None = None
+_quiet_stages: Final[ContextVar[bool]] = ContextVar("quiet_stages", default=False)
 
 
 @contextmanager
@@ -261,6 +263,16 @@ def checkpoint() -> None:
         progress.checkpoint()
 
 
+@contextmanager
+def quiet_stages() -> Generator[None]:
+    """Keep timing and cancellation for a worker whose parent already shows its work."""
+    token = _quiet_stages.set(True)
+    try:
+        yield
+    finally:
+        _quiet_stages.reset(token)
+
+
 def run_stage[T](name: str, work: Callable[[], T]) -> T:
     """Run ``work`` as the stage ``name``: announced, timed and cancellable at its start."""
     with running(name):
@@ -271,7 +283,8 @@ def run_stage[T](name: str, work: Callable[[], T]) -> T:
 def running(name: str) -> Generator[None]:
     """Announce the stage ``name`` for the length of a ``with`` block."""
     progress = _active
-    if progress is None:
+    if progress is None or _quiet_stages.get():
+        checkpoint()
         yield
         return
     progress.begin(name)

@@ -21,6 +21,7 @@ import os
 import sys
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextvars import copy_context
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Self
 
@@ -378,7 +379,7 @@ class Stages:
     def _submit[T](self, work: Callable[[], T]) -> Future[T]:
         checkpoint()
         if self._pool is not None:
-            return self._pool.submit(work)
+            return self._pool.submit(copy_context().run, work)
         future: Future[T] = Future()
         try:
             future.set_result(work())

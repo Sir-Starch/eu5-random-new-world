@@ -100,6 +100,21 @@ def test_cancel_reaches_stages_on_other_threads() -> None:
             _ = stages.submit("script remap", lambda: None)
 
 
+def test_background_region_shares_the_parent_progress_and_can_cancel() -> None:
+    job, updates = _collect()
+    with (
+        progress.active(job),
+        progress.running("generate world"),
+        progress.quiet_stages(),
+        Stages(2) as stages,
+    ):
+        assert stages.submit("relief", lambda: "made").result() == "made"
+        job.cancel()
+        with pytest.raises(Cancelled):
+            progress.run_stage("land cells", lambda: None)
+    assert [update.stage for update in updates] == ["generate world", "generate world"]
+
+
 def test_every_stage_the_code_announces_has_a_label_and_a_weight() -> None:
     """A stage name used in the source but missing from the table would show as raw text."""
     import re  # noqa: PLC0415 - only this test reads the source

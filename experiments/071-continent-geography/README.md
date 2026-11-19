@@ -161,6 +161,26 @@ expanded American canvas. The composed planner now keeps the retained shelf's
 location pixels and scopes new ocean identities at the retained coast. Seed 17
 passed the full export with 24 threads in 211.6 s at 10.4 GiB peak RSS.
 
+All seven nonempty selections completed an offline export. A separate seed-17
+world using The Wall for America, Supercontinent for Africa and Archipelago for
+Oceania completed in 232.2 s with 10.9 GiB peak RSS.
+
+### Final application timing
+
+[V-EXEC 2026-11-19, same game build] The application's cold-cache generation of
+the reference three-continent world took 261.0 s before concurrent regional
+preparation and 214.7 s with it at 24 threads. The sequential run took another
+0.5 s to install the world. The geography stage fell from 128.3 s to 89.9 s and
+peak RSS rose from 10.9 GiB to 11.7 GiB. The two runs produced the same 1,436
+recorded mod files. An independent uncached rebuild at 16 threads also matched
+the installed world's record.
+
+One background worker prepares the smaller domains in sequence while the main
+thread prepares the first. They use the same native worker pool. Available
+memory limits overlap and the compose step collects each result in continent
+order. Climate, water, terrain, scripts and mod output still run on the single
+composed map.
+
 ### Africa and Asia
 
 [V-EXEC 2026-11-18, same build and worker budget] The installed map has

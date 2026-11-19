@@ -333,6 +333,7 @@ from rnw.newworld import (
 from rnw.parallel import (
     GIB,
     Stages,
+    available_memory,
     collector_paused,
     configure,
     cores,
@@ -343,7 +344,16 @@ from rnw.pdx import Block, parse
 from rnw.pictures import center_column, cover, tagged, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.ports import ForeignCoast, coast_links, pair_lengths, plan_ports
-from rnw.progress import Progress, active, checkpoint, mark_ready, run_stage, running, skip_stages
+from rnw.progress import (
+    Progress,
+    active,
+    checkpoint,
+    mark_ready,
+    quiet_stages,
+    run_stage,
+    running,
+    skip_stages,
+)
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
@@ -385,6 +395,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from rnw.barrens import WastelandSettings
+    from rnw.continent_domains import Domain
     from rnw.continent_world import ComposedWorld
     from rnw.eu5_islands import Moved
     from rnw.eu5_morocco import MoroccoStart
@@ -514,6 +525,8 @@ ARCHETYPE_FILES: Final[tuple[str, ...]] = (
 # (6.8 GiB on the continents preset since the strips of the written-map check, 8.1 GiB in
 # 1.2.0, ADR 0006), plus the margin the ADR keeps.
 EXPORT_MEMORY: Final[int] = 8 * GIB
+# A background region needs its raster fields, cells, and the native stage's scratch space.
+REGIONAL_BYTES_PER_PIXEL: Final[int] = 64
 
 
 class NewWorldExportError(ValueError):
@@ -4158,6 +4171,7 @@ def _composed_identities(  # noqa: PLR0913 - country-independent location geogra
 
 
 def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each physical window.
+    stages: Stages,
     game_map: Eu5Map,
     geography: Mapping[str, NewWorldSettings],
     *,
@@ -4167,8 +4181,9 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     land_mask: LandMask | None,
     cache_dir: Path | None,
 ) -> tuple[WorldRegion, ...]:
-    regions: list[WorldRegion] = []
-    for domain in plan_domains(game_map, geography):
+    domains = plan_domains(game_map, geography)
+
+    def build(domain: Domain) -> WorldRegion:
         checkpoint()
         name = domain.continent.key
         drawing = (
@@ -4191,8 +4206,23 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             map_rows=(domain.first_row, game_map.labels.shape[0]),
             outside_land=domain.contact_land,
         )
-        regions.append(WorldRegion(domain, world))
-    return tuple(regions)
+        return WorldRegion(domain, world)
+
+    if len(domains) == 1:
+        return (build(domains[0]),)
+    first, *additional = domains
+    memory = available_memory()
+    background = sum(domain.mask.size for domain in additional) * REGIONAL_BYTES_PER_PIXEL
+    if memory is None or memory < EXPORT_MEMORY + background or stage_workers() == 1:
+        return tuple(build(domain) for domain in domains)
+
+    def other_regions() -> tuple[WorldRegion, ...]:
+        with quiet_stages():
+            return tuple(build(domain) for domain in additional)
+
+    others = stages.prepare("other continents geography", other_regions)
+    main = build(first)
+    return (main, *others.result())
 
 
 def _replaced_development(hierarchy: Mapping[str, Location], removed: set[str]) -> set[str]:
@@ -4233,6 +4263,7 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
     regions = run_stage(
         "generate world",
         lambda: _regional_worlds(
+            stages,
             game_map,
             geography,
             seed=seed,

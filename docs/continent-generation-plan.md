@@ -86,10 +86,9 @@ Algeciras, Gibraltar and Marbella.
 4. **Join Granada.** The existing Emirate of Granada integrates the four
    locations under its existing ruler. Morocco retires from this start.
 
-All four options use the existing population cohorts in Iberia. The
-choice belongs to Africa's settings. The offline prototype exercises it
-on one map, with player controls and mod serialization scheduled for the
-combined exporter.
+All four options use the existing population cohorts in Iberia. The choice
+belongs to Africa's settings and is available in both windows and the CLI.
+The offline setup trial exercised all four choices on the same map.
 
 ## One generation pipeline
 
