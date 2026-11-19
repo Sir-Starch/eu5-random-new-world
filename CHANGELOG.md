@@ -5,6 +5,11 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Generate Africa and Oceania independently or alongside America in a single
+  world. Both added continents have their own presets, detailed settings and
+  local cultures, faiths and societies. Africa offers four outcomes for
+  Morocco's holdings in Iberia, with keeping Morocco as the default.
+
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size
   calibration across new worlds. The same seed and inputs produce the same world files.

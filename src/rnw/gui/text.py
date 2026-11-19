@@ -23,6 +23,16 @@ from rnw.worldfile import WorldFileError
 TITLE: Final[str] = "Random New World"
 GAME: Final[str] = "Europa Universalis V"
 STRINGS: Final[dict[str, str]] = {
+    "continent.title": "Continents",
+    "continent.america": "America",
+    "continent.africa": "Africa",
+    "continent.oceania": "Oceania",
+    "continent.choose": "Select at least one continent.",
+    "continent.morocco": "Morocco's Iberian holdings",
+    "continent.morocco.restore": "Keep Morocco",
+    "continent.morocco.emirate": "Independent Algeciras",
+    "continent.morocco.castile": "Join Castile",
+    "continent.morocco.granada": "Join Granada",
     "control.natives.turbulence_permille": "Historical turbulence",
     "control.natives.turbulence_permille.about": (
         "How often conflict and political change occur during "

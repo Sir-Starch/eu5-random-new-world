@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final
 from rnw.pdx import Block, Edits, Entry, line_span, parse
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Collection, Iterable, Mapping
 
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 CLASS_LIST_NAMES: Final[tuple[str, ...]] = (
@@ -469,6 +469,7 @@ def prune_regional_setup(  # noqa: PLR0913 - bound geography, surviving seats an
     location_replacements: Mapping[str, str],
     replacement_capitals: Mapping[str, str],
     final_locations: set[str],
+    surviving_places: Collection[str] = (),
 ) -> SetupResult:
     """Resolve territorial and personal geography before retiring dependent records."""
     prepared = texts.copy()
@@ -487,7 +488,12 @@ def prune_regional_setup(  # noqa: PLR0913 - bound geography, surviving seats an
         edits = Edits()
         for record in holder.entries:
             field = record.value.first(field_name) if isinstance(record.value, Block) else None
-            if field is None or not isinstance(field.value, str) or field.value not in removed:
+            if (
+                field is None
+                or not isinstance(field.value, str)
+                or field.value not in removed
+                or field.value in surviving_places
+            ):
                 continue
             old = field.value
             target = location_replacements.get(old)

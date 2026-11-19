@@ -2,6 +2,8 @@
 
 export interface ControlInfo {
   toggle?: boolean;
+  label?: string;
+  help?: string;
   key: string;
   group: string;
   low: number;
@@ -45,6 +47,9 @@ export interface ValueState {
 }
 
 export interface NewState {
+  continents: Record<string, boolean>;
+  regional_types: string[];
+  regions: Record<string, { preset: string; morocco: string; controls: ControlInfo[]; values: Record<string, ValueState> }>;
   choice: string;
   preset: string;
   mode: string | null;

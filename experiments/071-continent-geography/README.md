@@ -129,8 +129,37 @@ countries and 1,080 content consumers, including installed DLC. The run
 took about 128 seconds with 24 workers and reached 9.1 GiB peak RSS.
 The America-only reference reproduced byte-for-byte after the export stages
 were shared. This comparison has different continent selections and seeds.
-The [implementation plan](../../docs/continent-generation-plan.md) describes
-the controlled timings still needed to set a performance budget.
+The [implementation plan](../../docs/continent-generation-plan.md) describes the
+matched trials for setting a performance budget.
+
+### Full-export timing prototype
+
+[V-EXEC 2026-11-19, EU5 1.4.9 / Steam build 26655995] Full exports at seed 17
+used Continents for America, Supercontinent for Africa and Archipelago for
+Oceania. Both runs used 24 threads, four stage slots and fresh processes with
+no application cache. The table records the repeat pair after other generation
+and build work finished. The operating-system file cache was left in place.
+
+| Selection | Wall time | Peak RSS | Geography | Start | Terrain |
+|---|---:|---:|---:|---:|---:|
+| America | 165.0 s | 9.8 GiB | 71.0 s | 26.1 s | 46.9 s |
+| America, Africa and Oceania | 227.6 s | 11.3 GiB | 107.3 s | 38.8 s | 52.3 s |
+
+Stage durations overlap. The three-continent case has one instance each of the
+climate and biome assignment, sea planning, terrain export and scenario writer.
+Initial runs with overlapping development work took 186.3 and 310.6 seconds.
+Those observations show the effect of ambient workload on comparisons.
+The owner set a four-minute target for the combined case on this machine.
+
+A separate production export kept the installed American geography while
+regenerating its societies alongside Africa and Oceania. It passed the
+shared start and map checks. A scan across the full raster found zero changed
+pixels in the retained American land, lakes and wastelands.
+
+The America–Africa run exposed part of the vanilla Pacific shelf inside the
+expanded American canvas. The composed planner now keeps the retained shelf's
+location pixels and scopes new ocean identities at the retained coast. Seed 17
+passed the full export with 24 threads in 211.6 s at 10.4 GiB peak RSS.
 
 ### Africa and Asia
 

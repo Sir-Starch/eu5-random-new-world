@@ -60,7 +60,14 @@ def display_name(
     Metadata titles stay English (localization §2.9).
     """
     title = TITLES.get(preset, preset)
-    if origin == "chaos":
+    if settings is not None and settings.continents.regions:
+        names = [region.key.title() for region in settings.continents.regions]
+        if settings.continents.america:
+            names.insert(0, "America")
+        title = " & ".join(names)
+        if len(title) + TAG_LENGTH + 1 > MAX_NAME:
+            title = "Combined world"
+    elif origin == "chaos":
         title = "Total Chaos"
     elif origin in {"custom", "chaos_custom"}:
         title = "Custom world"

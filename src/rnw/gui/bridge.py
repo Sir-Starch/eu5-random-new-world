@@ -126,6 +126,14 @@ class Bridge:
             "discover": lambda _p: c.discover(),
             # the new world
             "set_choice": self.set_choice,
+            "set_continent": lambda p: c.set_continent(_str(p, "key"), enabled=_bool(p, "value")),
+            "set_region_preset": lambda p: c.set_region_preset(_str(p, "key"), _str(p, "preset")),
+            "set_region_value": self.set_region_value,
+            "set_region_position": self.set_region_position,
+            "reset_region_value": lambda p: c.set_region_value(
+                _str(p, "region"), _str(p, "key"), None
+            ),
+            "set_morocco": lambda p: c.set_morocco(_str(p, "policy")),
             "set_seed": lambda p: c.set_seed(_str(p, "value")),
             "randomize": lambda _p: c.randomize(),
             "randomize_settings": lambda _p: c.randomize_settings(),
@@ -249,6 +257,24 @@ class Bridge:
             message = f"Unknown setting {key!r}"
             raise BridgeError(message)
         self.controller.set_value(key, control.value_at(_int(params, "position")))
+
+    def set_region_value(self, params: Params) -> None:
+        from rnw.app import controls  # noqa: PLC0415 - deferred along with the other controls
+
+        key = _str(params, "key")
+        control = controls.REGION_BY_KEY.get(key)
+        if control is not None:
+            value = control.stored(_float(params, "value"))
+            self.controller.set_region_value(_str(params, "region"), key, value)
+
+    def set_region_position(self, params: Params) -> None:
+        from rnw.app import controls  # noqa: PLC0415 - deferred along with the other controls
+
+        key = _str(params, "key")
+        control = controls.REGION_BY_KEY.get(key)
+        if control is not None:
+            value = control.value_at(_int(params, "position"))
+            self.controller.set_region_value(_str(params, "region"), key, value)
 
     def set_install(self, params: Params) -> None:
         self.controller.install = _bool(params, "value")
@@ -650,23 +676,16 @@ def _protocol_stream() -> IO[str]:
     return os.fdopen(duplicate, "w", encoding="utf-8", newline="\n")
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Serve the window on standard input and output."""
-    parser = argparse.ArgumentParser(prog="rnw-bridge", description=DESCRIPTION)
-    _ = parser.add_argument("--data", type=Path, help="the generator's data folder")
-    _ = parser.add_argument(SELF_TEST, action="store_true", help="check the package and exit")
-    options = parser.parse_args(argv)
-    if bool(cast("object", options.self_test)):
-        return self_test()
+def _serve(data: Path | None, *, discover: bool = True) -> int:
     outgoing = _protocol_stream()
     incoming = open(sys.stdin.fileno(), encoding="utf-8", closefd=False)  # noqa: SIM115 - standard input
-    data = cast("Path | None", options.data)
     controller = Controller(data=data, program_folder=paths.program_directory())
     window.set_language(controller.window_language())
     bridge = Bridge(controller)
-    controller.discover()
-    if controller.selection != NEW and controller.selected_world() is None:
-        controller.select(NEW)
+    if discover:
+        controller.discover()
+        if controller.selection != NEW and controller.selected_world() is None:
+            controller.select(NEW)
     try:
         serve(bridge, incoming, outgoing)
     except BaseException as error:
@@ -675,6 +694,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     finally:
         logs.stop()
     return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Serve the window on standard input and output."""
+    parser = argparse.ArgumentParser(prog="rnw-bridge", description=DESCRIPTION)
+    _ = parser.add_argument("--data", type=Path, help="the generator's data folder")
+    _ = parser.add_argument(SELF_TEST, action="store_true", help="check the package and exit")
+    _ = parser.add_argument("--isolated", action="store_true", help=argparse.SUPPRESS)
+    options = parser.parse_args(argv)
+    if bool(cast("object", options.self_test)):
+        return self_test()
+    if bool(cast("object", options.isolated)):
+        with TemporaryDirectory(prefix="rnw-shell-test-") as temporary:
+            return _serve(Path(temporary), discover=False)
+    return _serve(cast("Path | None", options.data))
 
 
 if __name__ == "__main__":

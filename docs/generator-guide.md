@@ -70,6 +70,31 @@ generation and library features are available. See
 
 ## Continent, resources and peoples
 
+### Choose which continents to generate
+
+On the **World** tab, use **Continents** to select America, Africa, Oceania, or any
+combination. America starts enabled. Africa starts with **Supercontinent** and
+Oceania starts with **Archipelago** when you enable them. Pick a different preset
+for either continent and open its section in **Advanced** to adjust the land,
+mapping, societies, resources and start visibility. The Wall and Omerika are
+American presets. Omerika's option to keep the real Americas can run alongside
+generated Africa and Oceania.
+
+Africa includes the game's Egyptian and Sinai locations and the African Atlantic
+islands. The land around the Asian border determines whether a dry crossing exists.
+Oceania includes Australia, New Zealand, New Guinea and Hawaii. The islands the
+game places in Indonesia remain in Asia. All selected continents join one map and
+one 1337 start. A continent's coast can shift when another continent is enabled.
+
+When generating Africa, **Morocco's Iberian holdings** offers four outcomes for
+Ronda, Algeciras, Gibraltar and Marbella.
+
+- **Keep Morocco** keeps the Iberian holdings and gives Morocco the 86 closest
+  passable locations in the new Africa. Morocco's capital is the holding closest
+  to Fez's original position.
+- **Independent Algeciras** gives the four holdings to an Andalusi Sunni emirate.
+- **Join Castile** or **Join Granada** gives all four to the chosen country.
+
 ### Choose a world type
 
 A world type gives you a starting set of settings. Choose the shape you like, then
@@ -566,6 +591,25 @@ uv run rnw candidates candidates.png --code CODE --count 6
 uv run rnw generate-queue codes.txt
 uv run rnw verify-world WORLD_ID
 ```
+
+To choose continents from the command line, put settings such as these in a JSON
+file and pass it to `rnw world-code --settings FILE` or `rnw newworld --settings FILE`.
+
+```json
+{
+  "schema": 1,
+  "continents": {
+    "america": true,
+    "africa": {"preset": "supercontinent", "morocco": "restore"},
+    "oceania": {"preset": "archipelago"}
+  }
+}
+```
+
+Use `true` for a continent's defaults and `false` to keep its original map and
+societies. For Africa, the other Morocco values are `emirate`, `castile` and
+`granada`. Regional `new_world`, `natives` and `resources` blocks override the
+continent's preset independently. A generated world code includes those choices.
 
 For `generate-queue`, put one world code per line in `codes.txt`. The command keeps
 the mods in the library and stops on the first failure. Run `uv run rnw --help`

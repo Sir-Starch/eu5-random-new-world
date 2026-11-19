@@ -3280,3 +3280,43 @@ text = '''Эпоху {epoch} выбрать нельзя. С экспериме�
 ["error.epoch.stamp"]
 source = "0a0469d8c4467849"
 text = '''Этот код мира помечен выпуском {release}, который создавал эпоху {stamped}, а запрошена эпоха {asked}. Миру более ранней эпохи нужен код с её пометкой.'''
+
+["continent.title"]
+source = "6c048f26d3b8b473"
+text = '''Континенты'''
+
+["continent.america"]
+source = "98d7f113aa13e672"
+text = '''Америка'''
+
+["continent.africa"]
+source = "c4a371acd7c3df8b"
+text = '''Африка'''
+
+["continent.oceania"]
+source = "4773281fa64f3446"
+text = '''Океания'''
+
+["continent.choose"]
+source = "6c2ae46b1a7ee90a"
+text = '''Выберите хотя бы один континент.'''
+
+["continent.morocco"]
+source = "ead901867c258d8d"
+text = '''Иберийские владения Марокко'''
+
+["continent.morocco.restore"]
+source = "6af853c1bac1ff29"
+text = '''Сохранить Марокко'''
+
+["continent.morocco.emirate"]
+source = "fd5a738503ffb1fc"
+text = '''Независимый Альхесирас'''
+
+["continent.morocco.castile"]
+source = "2a7ea7589f95b0fb"
+text = '''Присоединить к Кастилии'''
+
+["continent.morocco.granada"]
+source = "6f3054c413324372"
+text = '''Присоединить к Гранаде'''

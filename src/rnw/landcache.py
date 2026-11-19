@@ -546,7 +546,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         return world
     stage = None
     regional = map_rows is not None or outside_land is not None
-    if cache is not None and drawn is None and not regional:
+    sketchable = outside_land is None and map_rows in (None, (0, len(domain)))
+    if cache is not None and drawn is None and sketchable:
         shape = (int(domain.shape[0]), int(domain.shape[1]))
         digest = domain_digest(domain, template if settings.template_permille else None)
         stage = read_stage(cache, stage_key(digest, seed, settings), shape)

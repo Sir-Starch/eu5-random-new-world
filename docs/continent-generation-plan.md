@@ -1,8 +1,8 @@
 # Optional continent generation
 
-The owner confirmed the player-facing scope on 2026-11-18. The architecture below
-is the proposed implementation. The end-to-end performance budget will be agreed
-after measuring a prototype on the development machine. The
+The owner confirmed the player-facing scope on 2026-11-18 and set a four-minute
+target for the combined configuration on the development machine after the
+prototype timing on 2026-11-19. The
 [geography prototype](../experiments/071-continent-geography/README.md)
 records the initial timing cases, coastal calibration, the shared biome and
 regional resource trial, and the installed 1337 data audit.
@@ -12,7 +12,7 @@ regional resource trial, and the installed 1337 data audit.
 - America, Africa and Oceania each have a switch. Only America is enabled by
   default. Any nonempty combination makes one world and installs as one mod.
   The window disables generation when every switch is off.
-- An enabled continent uses its own default preset immediately. The proposed
+- An enabled continent uses its own default preset immediately. The
   starting defaults are Continents for America, Supercontinent for Africa and
   Archipelago for Oceania. Each continent has its own preset and applicable
   land, society and resource controls. The Wall is exclusive to America.
@@ -152,7 +152,8 @@ empty application cache and reusable-input-cache runs on new geography separatel
 Keep the filesystem-cache conditions consistent where possible and record their
 limits. Repeat the control and combined case to distinguish added work from run
 variance. Compare the common stage counts to verify that shared work really runs
-once. The owner will set the acceptable elapsed-time increase from these results.
+once. The confirmed target applies to the combined export at the reference
+presets and worker budget.
 
 [V-LOCAL] The installed hierarchy and `default.map` give America 4,434 vanilla land
 locations, Africa 2,433 and Oceania 790, classifying lakes, sea zones, non-ownable

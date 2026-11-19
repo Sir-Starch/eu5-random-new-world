@@ -69,7 +69,14 @@ from rnw.messages import Said, say
 from rnw.png import COLOR_RGB, encode_png
 from rnw.progress import STAGES, Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
-from rnw.settings import PRESETS, WORLD_TYPES, SettingsError, build_settings
+from rnw.settings import (
+    PRESETS,
+    REGIONAL_PRESETS,
+    WORLD_TYPES,
+    MoroccoPolicy,
+    SettingsError,
+    build_settings,
+)
 from rnw.wording import render
 
 if TYPE_CHECKING:
@@ -77,9 +84,9 @@ if TYPE_CHECKING:
 
     from rnw.app.library import World
     from rnw.atlas import Atlas
-    from rnw.landarea import LandArea
+    from rnw.landarea import LandArea, RegionalBands
     from rnw.landmask import LandMask
-    from rnw.settings import Settings
+    from rnw.settings import RegionalSettings, Settings
 
 SEED_MAX: Final[int] = (1 << 64) - 1
 ERROR_LOG: Final[str] = "last-error.log"
@@ -213,6 +220,7 @@ class Controller:
         self._generation_seed: int | None = None
         self.changes: dict[str, int] = {}
         self.other_changes: dict[str, object] = {}
+        self._regional_drafts: dict[str, object] = {}
         self.install: bool = True
         self.output_folder: Path | None = None
         self.world_file: Path | None = None
@@ -241,7 +249,7 @@ class Controller:
         self.land_mask: LandMask | None = None
         # The area a New World can fill at the land editor's step, and what it was cut for.
         self.sheet: LandArea | None = None
-        self._sheet_inputs: tuple[Path, int, bool] | None = None
+        self._sheet_inputs: tuple[Path, int, bool, RegionalBands] | None = None
         self.last_import: exchange.Imported | None = None
         self._history_readers: dict[int, history_presenter.Reader] = {}
         self._words: dict[int, tuple[Atlas, tuple[str, Path | None], atlas.Words]] = {}
@@ -356,13 +364,98 @@ class Controller:
 
     # -- the new world's choices ---------------------------------------------------------------
 
+    def continent_selection(self) -> dict[str, bool]:
+        """The switches for the current composition, including an empty draft."""
+        raw = self._continent_document()
+        return {
+            "america": raw.get("america", True) is True,
+            **{key: raw.get(key, False) is not False for key in REGIONAL_PRESETS},
+        }
+
+    def _continent_document(self) -> dict[str, object]:
+        raw = self.other_changes.get("continents")
+        return dict(cast("dict[str, object]", raw)) if isinstance(raw, dict) else {}
+
+    def set_continent(self, key: str, *, enabled: bool) -> None:
+        """Change one continent's switch without resetting the others' settings."""
+        if key not in {"america", *REGIONAL_PRESETS}:
+            return
+        current = self.continent_selection()
+        if current[key] == enabled:
+            return
+        raw = self._continent_document()
+        if key == "america" and not enabled:
+            raw[key] = False
+        elif key == "america":
+            _ = raw.pop(key, None)
+        elif enabled:
+            raw[key] = self._regional_drafts.pop(key, True)
+        else:
+            self._regional_drafts[key] = raw.pop(key)
+        if raw:
+            self.other_changes["continents"] = raw
+        else:
+            _ = self.other_changes.pop("continents", None)
+        self._changed()
+
+    def region_settings(self, key: str, *, defaults: bool = False) -> RegionalSettings:
+        """Resolved controls of a regional preset, with defaults even when switched off."""
+        raw = self._continent_document().get(key, True)
+        if defaults and isinstance(raw, dict):
+            raw = {"preset": cast("dict[str, object]", raw).get("preset", REGIONAL_PRESETS[key][0])}
+        return build_settings(
+            self.preset, {"continents": {key: raw if raw is not False else True}}
+        ).continents.regions[0]
+
+    def _edit_region(self, key: str, changes: dict[str, object]) -> None:
+        raw = self._continent_document()
+        configured = raw.get(key, False)
+        if configured is False:
+            return
+        region = dict(cast("dict[str, object]", configured)) if isinstance(configured, dict) else {}
+        region.update(changes)
+        _ = build_settings(self.preset, {"continents": {key: region}})
+        raw[key] = region
+        self.other_changes["continents"] = raw
+        self._changed()
+
+    def set_region_preset(self, key: str, preset: str) -> None:
+        if key in REGIONAL_PRESETS and preset in controls.REGION_TYPES:
+            self._edit_region(
+                key, {"preset": preset, "new_world": {}, "natives": {}, "resources": {}}
+            )
+
+    def set_morocco(self, policy: str) -> None:
+        if policy in {mode.value for mode in MoroccoPolicy}:
+            self._edit_region("africa", {"morocco": policy})
+
+    def set_region_value(self, region: str, key: str, number: int | None) -> None:
+        control = controls.REGION_BY_KEY.get(key)
+        if (
+            region not in REGIONAL_PRESETS
+            or control is None
+            or control not in controls.regional_controls(region)
+        ):
+            return
+        raw = self._continent_document().get(region)
+        previous = (
+            cast("dict[str, object]", raw).get(control.section) if isinstance(raw, dict) else None
+        )
+        section = dict(cast("dict[str, object]", previous)) if isinstance(previous, dict) else {}
+        if number is None:
+            _ = section.pop(control.field, None)
+        else:
+            section[control.field] = min(control.high, max(control.low, number))
+        self._edit_region(region, {control.section: section})
+
     def set_preset(self, name: str) -> None:
         """Choose a world type; the changed values go back to the type's own."""
         if name in PRESETS and name in WORLD_TYPES and (name != self.preset or self.mode):
             self.mode = None
             self.origin = ""
             self.preset = name
-            self.changes, self.other_changes = {}, {}
+            continents = self._continent_document()
+            self.changes, self.other_changes = {}, {"continents": continents} if continents else {}
             self.land_mask = None
             self.notice = ""
             self._changed()
@@ -371,7 +464,7 @@ class Controller:
         """Choose Random or Total Chaos: a world type is drawn now and with each new seed."""
         if mode in random_types.MODES:
             self.mode = mode
-            self.other_changes, self.notice = {}, ""
+            self.other_changes, self.notice = self._keep_continents(), ""
             self.land_mask = None
             self._draw()
             self._changed()
@@ -386,7 +479,7 @@ class Controller:
         """Draw Total Chaos again, keeping the seed; a manual edit no longer names this draw."""
         if self.mode != random_types.CHAOS or (self.busy and not self.can_prepare):
             return
-        self.other_changes, self.notice = {}, ""
+        self.other_changes, self.notice = self._keep_continents(), ""
         self.land_mask = None
         self._draw()
         self._changed()
@@ -455,6 +548,7 @@ class Controller:
             if number != controls.BY_KEY[key].default(code.preset)
         }
         self.other_changes = other
+        self._regional_drafts.clear()
         notices: list[str] = []
         self.algorithm = epoch.CURRENT
         if reproduces(code):
@@ -466,7 +560,7 @@ class Controller:
             notices.append(text("epoch.followed", release=code.generator, epoch=self.algorithm))
         else:
             notices.append(text("other_version", made=code.generator, current=__version__))
-        if set(other) - {"rolls", "mask"}:
+        if set(other) - {"rolls", "mask", "continents"}:
             notices.append(text("other_changes"))
         wanted = code.settings().mask.id
         self.land_mask = self.land_mask if self.land_mask and self.land_mask.id == wanted else None
@@ -521,11 +615,15 @@ class Controller:
 
     def reset_values(self) -> None:
         """Give every setting back the world type's value."""
-        if self.changes or self.other_changes:
+        if self.changes or self.other_changes.keys() - {"continents"}:
             self.origin = "chaos_custom" if self.mode == random_types.CHAOS else ""
-            self.changes, self.other_changes = {}, {}
+            self.changes, self.other_changes = {}, self._keep_continents()
             self.land_mask = None
             self._changed()
+
+    def _keep_continents(self) -> dict[str, object]:
+        selected = self._continent_document()
+        return {"continents": selected} if selected else {}
 
     def _change_document(self) -> dict[str, object] | None:
         document = controls.nested(self.changes) or {}
@@ -533,6 +631,8 @@ class Controller:
             merged = cast("dict[str, object]", document.setdefault(section, {}))
             if isinstance(fields, dict):
                 merged.update(cast("dict[str, object]", fields))
+        if not self.continent_selection()["america"]:
+            _ = document.pop("mask", None)
         return document or None
 
     def world_code(self) -> WorldCode:
@@ -613,7 +713,7 @@ class Controller:
     @property
     def code(self) -> str:
         """The world code of the current choices."""
-        return encode(self.world_code())
+        return encode(self.world_code()) if any(self.continent_selection().values()) else ""
 
     def estimated_locations(self) -> int:
         """Locations the chosen world will have, roughly."""
@@ -754,13 +854,14 @@ class Controller:
         return None
 
     def resources_problem(self, world: World) -> str | None:
-        """Why the resources of ``world`` cannot be made again, or None: a world that keeps the
-        real Americas has the game's own, so there is nothing to roll."""
+        """The resources can be rolled when the world has any generated geography."""
         try:
-            kept = decode(world.code).settings().new_world.keep_geography
+            settings = decode(world.code).settings()
         except (WorldCodeError, SettingsError):
             return None
-        return text("part.resources.real") if kept else None
+        if settings.new_world.keep_geography and not settings.continents.regions:
+            return text("part.resources.real")
+        return None
 
     def edit_selected(self) -> str | None:
         """Load the selected world's type, seed and settings into the new-world page, to change
@@ -780,6 +881,7 @@ class Controller:
         self._use_origin(code)
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
+        self._regional_drafts.clear()
         self.land_mask = library.land_mask(self.data, world)
         self.notice = ""
         self.selection = NEW
@@ -939,6 +1041,8 @@ class Controller:
 
     def _choices_problem(self, code: WorldCode | None = None) -> str | None:
         """What is wrong with the choices: too many locations, or a land image that is missing."""
+        if code is None and not any(self.continent_selection().values()):
+            return text("continent.choose")
         code = code or self.world_code()
         try:
             estimate = controls.estimated_locations(code.settings())
@@ -980,7 +1084,7 @@ class Controller:
 
     def land_sheet(self) -> LandArea | None:
         """The area the editor draws on, when it was cut for the choices made now; else None."""
-        if self.game is None or self.sheet is None:
+        if self.game is None or self.sheet is None or not self.continent_selection()["america"]:
             return None
         wanted = service.area_inputs(self.game, self._area_settings())
         return self.sheet if self._sheet_inputs == wanted else None
@@ -1273,7 +1377,9 @@ class Controller:
             profile=self.profile,
             install=self.install,
             show_new_world=self.preferences.show_new_world,
-            land_mask=self.land_mask if code is None else None,
+            land_mask=self.land_mask
+            if code is None and self.continent_selection()["america"]
+            else None,
             output_folder=self.output_folder,
             world_file=self.world_file,
             algorithm=self.algorithm,

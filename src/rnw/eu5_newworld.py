@@ -1141,7 +1141,10 @@ def _water_areas(  # noqa: PLR0913 - shared waters read the final coast and its 
     boundary = {
         cell
         for label, cell in contacts
-        if game_map.classes[label] is CellClass.SEA
+        if (
+            game_map.classes[label] is CellClass.SEA
+            or (world.wrap_x and is_sea[cell] and game_map.classes[label] is CellClass.LAND)
+        )
         and (is_sea[cell] or not world.wrap_x)
         and game_map.continents[label] not in oceans_continents.union(selected)
     }

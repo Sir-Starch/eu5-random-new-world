@@ -3280,3 +3280,43 @@ text = '''A época {epoch} não pode ser escolhida. Com os recursos experimentai
 ["error.epoch.stamp"]
 source = "0a0469d8c4467849"
 text = '''Este código de mundo traz a versão {release}, que criou a época {stamped}, mas foi pedida a época {asked}. Um mundo de época mais antiga precisa de um código com a marca dela.'''
+
+["continent.title"]
+source = "6c048f26d3b8b473"
+text = '''Continentes'''
+
+["continent.america"]
+source = "98d7f113aa13e672"
+text = '''América'''
+
+["continent.africa"]
+source = "c4a371acd7c3df8b"
+text = '''África'''
+
+["continent.oceania"]
+source = "4773281fa64f3446"
+text = '''Oceania'''
+
+["continent.choose"]
+source = "6c2ae46b1a7ee90a"
+text = '''Selecione pelo menos um continente.'''
+
+["continent.morocco"]
+source = "ead901867c258d8d"
+text = '''Possessões ibéricas de Marrocos'''
+
+["continent.morocco.restore"]
+source = "6af853c1bac1ff29"
+text = '''Manter Marrocos'''
+
+["continent.morocco.emirate"]
+source = "fd5a738503ffb1fc"
+text = '''Algeciras independente'''
+
+["continent.morocco.castile"]
+source = "2a7ea7589f95b0fb"
+text = '''Anexar a Castela'''
+
+["continent.morocco.granada"]
+source = "6f3054c413324372"
+text = '''Anexar a Granada'''

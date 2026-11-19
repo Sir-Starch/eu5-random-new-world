@@ -11,12 +11,15 @@ from typing import cast
 import numpy as np
 import pytest
 
+from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_map import RIVER_LAND, RIVER_WATER, Eu5Map
+from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.geography import Location
 from rnw.model import CellClass
+from rnw.newworld import derive_world
 from rnw.settings import SettingsError, build_settings
-from rnw.vanilla_world import VanillaWorldError, build, cell_labels
+from rnw.vanilla_world import VanillaWorldError, build, cell_labels, with_real_americas
 
 KEYS = ("old", "new_a", "new_b", "bay", "ocean", "lake", "far_sea")
 
@@ -137,6 +140,38 @@ def test_the_same_installation_gives_the_same_cells() -> None:
     again = build(game, HIERARCHY, ATTRIBUTES, canvas)
     assert first.keep == again.keep
     assert np.array_equal(first.world.labels, again.world.labels)
+
+
+def test_real_american_locations_enter_the_shared_start_without_entering_the_map_plan() -> None:
+    game = _map()
+    generated = derive_world(
+        np.where(game.labels == 0, 0, -1).astype(np.int32),
+        (CellClass.LAND,),
+        np.zeros_like(game.labels),
+    )
+    plan = Plan(
+        cells=[PlannedCell("africa_new", "Test", 900, CellClass.LAND, "p", "a", "r", "s", "africa")]
+    )
+    biomes = CellBiomes(("arid",), ("desert",), ("flatland",), ("salt",))
+    final = np.where(game.labels == 0, len(game.keys), game.labels).astype(np.int32)
+    start = with_real_americas(
+        game,
+        HIERARCHY,
+        ATTRIBUTES,
+        final=final,
+        generated=generated,
+        plan=plan,
+        biomes=biomes,
+        height=np.zeros(game.labels.shape, dtype=np.uint16),
+        rivers=np.full(game.labels.shape, RIVER_LAND, dtype=np.uint8),
+    )
+    keys = [cell.key for cell in start.plan.cells]
+    assert keys == ["africa_new", "new_a", "new_b", "lake"]
+    assert [cell.key for cell in plan.cells] == ["africa_new"]
+    assert start.biomes.climate[:2] == ("arid", "tropical")
+    assert np.array_equal(start.world.labels == 1, game.labels == 1)
+    assert start.river_pixels[1] > 0
+    assert (1, 2) in start.world.edges
 
 
 def test_an_installation_without_americas_is_refused() -> None:

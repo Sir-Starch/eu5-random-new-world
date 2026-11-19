@@ -11,7 +11,8 @@
     control,
     value,
     disabled = false,
-  }: { control: ControlInfo; value: ValueState; disabled?: boolean } = $props();
+    region,
+  }: { control: ControlInfo; value: ValueState; disabled?: boolean; region?: string } = $props();
 
   let bar = $state<HTMLDivElement>();
   let dragging = $state<number | null>(null);
@@ -23,18 +24,23 @@
   const position = $derived(dragging ?? value.position);
   const share = $derived((position / control.steps) * 100);
   const defaultShare = $derived((value.default_position / control.steps) * 100);
-  const name = $derived(t(`control.${control.key}`));
-  const about = $derived(t(`control.${control.key}.about`));
+  const name = $derived(control.label ?? t(`control.${control.key}`));
+  const about = $derived(control.help ?? t(`control.${control.key}.about`));
   const unit = $derived(control.unit ? ` ${control.unit}` : "");
   const shown = $derived(`${value.shown.toFixed(control.decimals)}${unit}`);
   const fallback = $derived(`${value.default.toFixed(control.decimals)}${unit}`);
+  const regional = { set_value: "set_region_value", set_position: "set_region_position", reset_value: "reset_region_value" };
+
+  function update(method: keyof typeof regional, fields: Record<string, number> = {}) {
+    return app.call(region ? regional[method] : method, { key: control.key, region, ...fields });
+  }
 
   function send(next: number): void {
     const now = performance.now();
     if (pending) clearTimeout(pending);
     const go = (): void => {
       last = performance.now();
-      void app.call("set_position", { key: control.key, position: next });
+      void update("set_position", { position: next });
     };
     if (now - last > 90) go();
     else pending = setTimeout(go, 90);
@@ -74,13 +80,13 @@
     }
     if (dragging === null) return;
     if (pending) clearTimeout(pending);
-    await app.call("set_position", { key: control.key, position: dragging });
+    await update("set_position", { position: dragging });
     dragging = null;
   }
 
   function step(next: number): void {
     const clamped = Math.max(0, Math.min(control.steps, next));
-    if (clamped !== value.position) void app.call("set_position", { key: control.key, position: clamped });
+    if (clamped !== value.position) void update("set_position", { position: clamped });
   }
 
   function key(event: KeyboardEvent): void {
@@ -100,14 +106,14 @@
   }
 
   function reset(): void {
-    if (value.changed) void app.call("reset_value", { key: control.key });
+    if (value.changed) void update("reset_value");
   }
 
   async function commit(text: string): Promise<void> {
     if (!editing) return;
     editing = false;
     const number = Number(text.trim().replace(",", "."));
-    if (text.trim() && Number.isFinite(number)) await app.call("set_value", { key: control.key, value: number });
+    if (text.trim() && Number.isFinite(number)) await update("set_value", { value: number });
     await tick();
     bar?.focus();
   }

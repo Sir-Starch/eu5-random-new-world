@@ -121,6 +121,18 @@ def _membership(game_map: Eu5Map, continent: str) -> NDArray[np.bool_]:
     return np.fromiter((name == continent for name in game_map.continents), dtype=bool)
 
 
+def _coastal_claim(
+    claim: NDArray[np.bool_], footprint: NDArray[np.bool_], marine: NDArray[np.bool_]
+) -> NDArray[np.bool_]:
+    """Keep claimed waters connected to the selected land, the sea margin or a map edge."""
+    labels = label_components((claim | marine).astype(np.int32))
+    open_ = np.zeros(int(labels.max()) + 1, dtype=bool)
+    open_[labels[footprint]] = True
+    for border in (labels[0], labels[-1], labels[:, 0], labels[:, -1]):
+        open_[border] = True
+    return claim & open_[labels]
+
+
 def _legacy_domain(game_map: Eu5Map, settings: NewWorldSettings) -> Domain:
     canvas = select_canvas(
         game_map,
@@ -273,6 +285,38 @@ def _claim(  # noqa: PLR0913 - map, continent, settings and common ownership are
     return domain
 
 
+def _claim_america(
+    game_map: Eu5Map,
+    selected: Mapping[str, NewWorldSettings],
+    occupied: NDArray[np.bool_],
+    sea: NDArray[np.bool_],
+) -> Domain:
+    source = _legacy_domain(game_map, selected[NEW_WORLD])
+    mask = source.mask.copy()
+    if source.legacy_canvas is not None:
+        for island in source.legacy_canvas.footprints:
+            mask[island.rows, island.columns] = False
+    marine = np.empty_like(mask)
+    retained = sea & np.fromiter(
+        (name in CONTINENTS and name not in selected for name in game_map.continents),
+        dtype=bool,
+    )
+    for columns, original in source.spans():
+        for top in range(0, mask.shape[0], BAND_ROWS):
+            rows = slice(top, top + BAND_ROWS)
+            labels = game_map.labels[rows, original]
+            marine[rows, columns] = sea[labels]
+            allowed = source.footprint[rows, columns] | marine[rows, columns]
+            mask[rows, columns] &= allowed & ~occupied[rows, original] & ~retained[labels]
+    return Domain(
+        source.continent,
+        source.first_column,
+        source.map_width,
+        _coastal_claim(mask, source.footprint, marine),
+        source.footprint,
+    )
+
+
 def plan_domains(game_map: Eu5Map, selected: Mapping[str, NewWorldSettings]) -> tuple[Domain, ...]:
     """Plan selected regions once, giving new regional shores priority over wide American seas.
 
@@ -301,15 +345,5 @@ def plan_domains(game_map: Eu5Map, selected: Mapping[str, NewWorldSettings]) -> 
                 game_map, continent, selected[key], occupied, sea=sea, solid=solid
             )
     if NEW_WORLD in selected:
-        source = _legacy_domain(game_map, selected[NEW_WORLD])
-        mask = source.mask.copy()
-        for columns, original in source.spans():
-            for top in range(0, mask.shape[0], BAND_ROWS):
-                rows = slice(top, top + BAND_ROWS)
-                labels = game_map.labels[rows, original]
-                allowed = source.footprint[rows, columns] | sea[labels]
-                mask[rows, columns] &= allowed & ~occupied[rows, original]
-        planned[NEW_WORLD] = Domain(
-            source.continent, source.first_column, source.map_width, mask, source.footprint
-        )
+        planned[NEW_WORLD] = _claim_america(game_map, selected, occupied, sea)
     return tuple(planned[key] for key in CONTINENTS if key in planned)

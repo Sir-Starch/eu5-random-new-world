@@ -15,6 +15,7 @@ import pytest
 from rnw.continent_domains import (
     CONTINENTS,
     Domain,
+    _coastal_claim,  # pyright: ignore[reportPrivateUsage]
     _coastal_waters,  # pyright: ignore[reportPrivateUsage]
     plan_domains,
 )
@@ -28,6 +29,20 @@ if TYPE_CHECKING:
 
     from rnw.eu5_map import Eu5Map
     from rnw.settings import NewWorldSettings
+
+
+def test_a_water_pocket_inside_retained_land_is_outside_the_american_claim() -> None:
+    marine = np.ones((9, 11), dtype=bool)
+    marine[2:7, 2:7] = False
+    marine[4, 4] = True
+    footprint = np.zeros_like(marine)
+    footprint[5, 9] = True
+    claimed = marine | footprint
+    protected = _coastal_claim(claimed, footprint, marine)
+    assert not protected[4, 4]
+    assert protected[0, 0]
+    assert protected[5, 9]
+    assert np.count_nonzero(claimed ^ protected) == 1
 
 
 def _map() -> Eu5Map:

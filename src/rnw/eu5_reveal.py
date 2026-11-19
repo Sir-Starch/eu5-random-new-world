@@ -31,11 +31,12 @@ from rnw.geography import parse_locations
 from rnw.pdx import Block, parse
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Sequence
 
 REVEAL_FILE: Final[str] = "in_game/common/on_action/rnw_reveal.txt"
 HOOK: Final[str] = "on_game_started_after_lobby"
 ACTION: Final[str] = "rnw_reveal_new_world"
+AMERICA: Final[frozenset[str]] = frozenset({NEW_WORLD})
 # The global variable the vanilla event "Old World discovers New World" tests and sets.
 DISCOVERED: Final[str] = "new_world_discovered"
 HEADER: Final[str] = (
@@ -49,29 +50,29 @@ class RevealError(ValueError):
     """A reveal that cannot be written, or a written one that does not say what it should."""
 
 
-def new_world_areas(definitions: str) -> list[str]:
-    """The areas under the New World's continent in ``definitions.txt``, land and sea, sorted."""
+def new_world_areas(definitions: str, *, continents: Collection[str] = AMERICA) -> list[str]:
+    """The areas of the selected continents in ``definitions.txt``, land and sea, sorted."""
     areas = sorted(
         {
             location.area
             for location in parse_locations(definitions)
-            if location.continent == NEW_WORLD
+            if location.continent in continents
         }
     )
     if not areas:
-        message = f"definitions.txt has no area under the continent {NEW_WORLD}"
+        message = f"definitions.txt has no area under the continent {', '.join(sorted(continents))}"
         raise RevealError(message)
     return areas
 
 
-def script(areas: Sequence[str]) -> str:
+def script(areas: Sequence[str], *, america: bool = True) -> str:
     """The on_action file: the hook on the campaign's start after the lobby and its effect."""
     lines = [
         HEADER,
         f"{HOOK} = {{\n\ton_actions = {{ {ACTION} }}\n}}\n",
         f"\n{ACTION} = {{\n\teffect = {{\n",
         # The flag of the vanilla event that announces the discovery (see the module's note).
-        f"\t\tset_global_variable = {DISCOVERED}\n",
+        f"\t\tset_global_variable = {DISCOVERED}\n" if america else "",
         "\t\tevery_country = {\n\t\t\tlimit = { is_human = yes }\n",
         *(f"\t\t\tdiscover_area = area:{area}\n" for area in areas),
         "\t\t}\n\t}\n}\n",
@@ -79,16 +80,22 @@ def script(areas: Sequence[str]) -> str:
     return "".join(lines)
 
 
-def files(definitions: str) -> dict[str, bytes]:
+def files(definitions: str, *, continents: Collection[str] = AMERICA) -> dict[str, bytes]:
     """The reveal's file for a world whose ``definitions.txt`` is ``definitions``."""
-    return {REVEAL_FILE: script(new_world_areas(definitions)).encode("utf-8-sig")}
+    return {
+        REVEAL_FILE: script(
+            new_world_areas(definitions, continents=continents), america=NEW_WORLD in continents
+        ).encode("utf-8-sig")
+    }
 
 
 def _entries(block: Block | None) -> list[str | None]:
     return [] if block is None else [entry.key for entry in block.entries]
 
 
-def verify(written: dict[str, bytes], definitions: str) -> dict[str, object]:
+def verify(
+    written: dict[str, bytes], definitions: str, *, continents: Collection[str] = AMERICA
+) -> dict[str, object]:
     """Check the reveal file as written against the written ``definitions.txt``.
 
     The file hooks the campaign's start after the lobby through ``on_actions`` and never defines
@@ -110,16 +117,15 @@ def verify(written: dict[str, bytes], definitions: str) -> dict[str, object]:
         raise RevealError(message)
     action = root.block(ACTION)
     effect = action.block("effect") if action is not None else None
-    if _entries(action) != ["effect"] or _entries(effect) != [
-        "set_global_variable",
-        "every_country",
-    ]:
+    america = NEW_WORLD in continents
+    operations = ["set_global_variable", "every_country"] if america else ["every_country"]
+    if _entries(action) != ["effect"] or _entries(effect) != operations:
         message = f"{REVEAL_FILE}: {ACTION} must set {DISCOVERED} and visit every country"
         raise RevealError(message)
     assert effect is not None  # noqa: S101 - narrowed by the check above
     flag = effect.first("set_global_variable")
     countries = effect.block("every_country")
-    if flag is None or flag.value != DISCOVERED or countries is None:
+    if (america and (flag is None or flag.value != DISCOVERED)) or countries is None:
         message = f"{REVEAL_FILE}: the effect must set the global variable {DISCOVERED}"
         raise RevealError(message)
     limit = countries.block("limit")
@@ -138,7 +144,7 @@ def verify(written: dict[str, bytes], definitions: str) -> dict[str, object]:
     discovered = [
         entry.value.removeprefix("area:") if isinstance(entry.value, str) else "" for entry in areas
     ]
-    wanted = new_world_areas(definitions)
+    wanted = new_world_areas(definitions, continents=continents)
     if sorted(discovered) != wanted:
         missing = sorted(set(wanted) - set(discovered))
         extra = sorted(set(discovered) - set(wanted))

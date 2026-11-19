@@ -76,6 +76,7 @@ from rnw.gui.maps import CompareDialog, MapsPanel
 from rnw.gui.preview import PreviewView
 from rnw.gui.text import LANGUAGE_NAMES, TITLE, grouped, text
 from rnw.gui.theme import install as install_theme
+from rnw.gui.view import control_name
 from rnw.languages import SOURCE
 
 if TYPE_CHECKING:
@@ -441,17 +442,19 @@ class AboutDialog(QDialog):
 class _ControlRow:
     """One setting: its name, a slider, the value in its unit and a reset button."""
 
-    def __init__(self, control: controls.Control, window: MainWindow) -> None:
+    def __init__(self, control: controls.Control, window: MainWindow, *, region: str = "") -> None:
+        label = control_name(window.controller, control)
+        about = text(f"control.{control.key}.about") if control.key in controls.BY_KEY else ""
         self.check: QCheckBox | None = None
         if control.low == 0 and control.high == 1:
             self.check = QCheckBox()
-            self.check.setAccessibleName(text(f"control.{control.key}"))
-            self.check.setToolTip(text(f"control.{control.key}.about"))
+            self.check.setAccessibleName(label)
+            self.check.setToolTip(about)
             _ = self.check.toggled.connect(self._toggled)
         self.control: controls.Control = control
         self.window: MainWindow = window
-        about = text(f"control.{control.key}.about")
-        self.label: QLabel = QLabel(text(f"control.{control.key}"))
+        self.region: str = region
+        self.label: QLabel = QLabel(label)
         self.label.setToolTip(about)
         self.slider: QSlider = QSlider(Qt.Orientation.Horizontal)
         self.slider.setRange(0, controls.STEPS)
@@ -503,16 +506,25 @@ class _ControlRow:
             widget.setEnabled(enabled)
 
     def _slid(self, position: int) -> None:
-        self.window.controller.set_value(self.control.key, self.control.value_at(position))
+        self._set_value(self.control.value_at(position))
 
     def _toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox signal
         self._typed(float(checked))
 
     def _typed(self, shown: float) -> None:
-        self.window.controller.set_value(self.control.key, self.control.stored(shown))
+        self._set_value(self.control.stored(shown))
+
+    def _set_value(self, value: int) -> None:
+        if self.region:
+            self.window.controller.set_region_value(self.region, self.control.key, value)
+        else:
+            self.window.controller.set_value(self.control.key, value)
 
     def _reset(self) -> None:
-        self.window.controller.reset_value(self.control.key)
+        if self.region:
+            self.window.controller.set_region_value(self.region, self.control.key, None)
+        else:
+            self.window.controller.reset_value(self.control.key)
 
 
 class _QuickRow:
@@ -849,8 +861,11 @@ class MainWindow(QMainWindow):
 
     def _new_world_tab(self) -> QScrollArea:
         world, layout = self._scroll_page()
-        layout.addWidget(self._types())
-        layout.addWidget(self._quick())
+        layout.addWidget(self._continents())
+        self.american_types: QGroupBox = self._types()
+        self.american_quick: QGroupBox = self._quick()
+        layout.addWidget(self.american_types)
+        layout.addWidget(self.american_quick)
         self.keep_box: QWidget = QWidget()
         self.keep_box.setLayout(self._keep_row())
         layout.addWidget(self.keep_box)
@@ -885,12 +900,56 @@ class MainWindow(QMainWindow):
         hint = QLabel(text("lobby_cover_hint"))
         hint.setWordWrap(True)
         visibility_layout.addWidget(hint)
-        layout.addWidget(visibility)
+        layout.insertWidget(1, visibility)
         # Below the group, so that at the smallest window the page's other options stay in view
         # and this one is a scroll away.
-        layout.addLayout(self._reveal_row())
+        self.american_reveal: QWidget = QWidget()
+        self.american_reveal.setLayout(self._reveal_row())
+        layout.addWidget(self.american_reveal)
         layout.addStretch(1)
         return world
+
+    def _continents(self) -> QGroupBox:
+        group = QGroupBox(text("continent.title"))
+        layout = QFormLayout(group)
+        self.continent_switches: dict[str, QCheckBox] = {}
+        self.regional_presets: dict[str, QComboBox] = {}
+        for name, enabled in self.controller.continent_selection().items():
+            switch = QCheckBox(text(f"continent.{name}"))
+            self.continent_switches[name] = switch
+            switch.setChecked(enabled)
+
+            def toggled(checked: bool, key: str = name) -> None:  # noqa: FBT001
+                self.controller.set_continent(key, enabled=checked)
+
+            _ = switch.toggled.connect(toggled)
+            if name == "america":
+                layout.addRow(switch)
+                continue
+            preset = QComboBox()
+            for option in controls.REGION_TYPES:
+                preset.addItem(text(f"type.{option}"), option)
+
+            def picked(index: int, key: str = name) -> None:
+                if index >= 0:
+                    self.controller.set_region_preset(key, controls.REGION_TYPES[index])
+
+            _ = preset.currentIndexChanged.connect(picked)
+            layout.addRow(switch, preset)
+            self.regional_presets[name] = preset
+        self.morocco_label: QLabel = QLabel(text("continent.morocco"))
+        self.morocco_policy: QComboBox = QComboBox()
+        self.morocco_options: tuple[str, ...] = ("restore", "emirate", "castile", "granada")
+        for option in self.morocco_options:
+            self.morocco_policy.addItem(text(f"continent.morocco.{option}"))
+
+        def picked_morocco(index: int) -> None:
+            if index >= 0:
+                self.controller.set_morocco(self.morocco_options[index])
+
+        _ = self.morocco_policy.currentIndexChanged.connect(picked_morocco)
+        layout.addRow(self.morocco_label, self.morocco_policy)
+        return group
 
     def _advanced_tab(self) -> QScrollArea:
         advanced, advanced_layout = self._scroll_page()
@@ -898,14 +957,54 @@ class MainWindow(QMainWindow):
         identity_layout = QVBoxLayout(identity)
         identity_layout.addLayout(self._seed_and_code())
         advanced_layout.addWidget(identity)
-        land = QGroupBox(text("land_tools"))
+        self.american_land_tools: QGroupBox = QGroupBox(text("land_tools"))
+        land = self.american_land_tools
         land_layout = QVBoxLayout(land)
         land_layout.addLayout(self._land_image_row())
         land_layout.addLayout(self._candidate_row())
         advanced_layout.addWidget(land)
-        advanced_layout.addWidget(self._customize())
+        self.american_custom: QWidget = self._customize()
+        advanced_layout.addWidget(self.american_custom)
+        self.regional_pages: dict[str, QVBoxLayout] = {}
+        self.regional_controls: dict[str, tuple[QWidget, list[_ControlRow]]] = {}
+        for region in self.regional_presets:
+            page = QWidget()
+            regional = QVBoxLayout(page)
+            regional.setContentsMargins(0, 0, 0, 0)
+            self.regional_pages[region] = regional
+            page.setVisible(False)
+            advanced_layout.addWidget(page)
         advanced_layout.addStretch(1)
         return advanced
+
+    def _regional_advanced(self, region: str) -> tuple[QWidget, list[_ControlRow]]:
+        section = QWidget()
+        layout = QVBoxLayout(section)
+        toggle = QToolButton()
+        toggle.setText(text(f"continent.{region}"))
+        toggle.setCheckable(True)
+        layout.addWidget(toggle, alignment=Qt.AlignmentFlag.AlignLeft)
+        details = QWidget()
+        details.hide()
+        sections = QVBoxLayout(details)
+        rows: list[_ControlRow] = []
+        for group in controls.GROUPS:
+            members = [
+                control for control in controls.regional_controls(region) if control.group == group
+            ]
+            if not members:
+                continue
+            box = QGroupBox(text(f"group.{group}"))
+            grid = QGridLayout(box)
+            grid.setColumnStretch(1, 1)
+            for row, control in enumerate(members):
+                line = _ControlRow(control, self, region=region)
+                line.place(grid, row)
+                rows.append(line)
+            sections.addWidget(box)
+        _ = toggle.toggled.connect(details.setVisible)
+        layout.addWidget(details)
+        return section, rows
 
     def _delivery_tab(self) -> QScrollArea:
         delivery, delivery_layout = self._scroll_page()
@@ -1844,15 +1943,24 @@ class MainWindow(QMainWindow):
             self.estimate_help.setVisible(False)
 
     def _refresh_ocean_option(self, busy: bool) -> None:  # noqa: FBT001 - UI state
-        keeps = bool(self.controller.value("new_world.keep_geography"))
+        america = self.controller.continent_selection()["america"]
+        keeps = america and bool(self.controller.value("new_world.keep_geography"))
         _ = self.keep_geography.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         self.keep_geography.setChecked(keeps)
         _ = self.keep_geography.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.keep_geography.setEnabled(not busy)
-        self.keep_box.setVisible(self.controller.preset == "omerika" or keeps)
+        self.keep_box.setVisible(america and (self.controller.preset == "omerika" or keeps))
         # A world that keeps the real Americas has no ocean to expand and no New World to cover.
-        for widget in (self.expand_oceans, self.ocean_hint, self.ocean_help, self.visibility_box):
-            widget.setVisible(not keeps)
+        for widget in (self.expand_oceans, self.ocean_hint, self.ocean_help):
+            widget.setVisible(america and not keeps)
+        self.visibility_box.setVisible(
+            not keeps
+            or any(
+                enabled
+                for name, enabled in self.controller.continent_selection().items()
+                if name != "america"
+            )
+        )
         _ = self.expand_oceans.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
         _ = self.expand_oceans.blockSignals(False)  # noqa: FBT003 - Qt synchronization
@@ -1861,11 +1969,62 @@ class MainWindow(QMainWindow):
         self.reveal_at_start.setChecked(bool(self.controller.value("new_world.reveal_at_start")))
         _ = self.reveal_at_start.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.reveal_at_start.setEnabled(not busy)
+        self.american_reveal.setVisible(america)
+
+    def _refresh_regions(self, *, busy: bool) -> None:
+        selection = self.controller.continent_selection()
+        america = selection["america"]
+        for widget in (
+            self.american_types,
+            self.american_quick,
+            self.american_land_tools,
+            self.american_custom,
+        ):
+            widget.setVisible(america)
+        for name, switch in self.continent_switches.items():
+            enabled = selection[name]
+            _ = switch.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+            switch.setChecked(enabled)
+            _ = switch.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+            switch.setEnabled(not busy)
+            if name == "america":
+                continue
+            preset = self.regional_presets[name]
+            settings = self.controller.region_settings(name)
+            _ = preset.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+            preset.setCurrentIndex(controls.REGION_TYPES.index(settings.preset))
+            _ = preset.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+            preset.setEnabled(enabled and not busy)
+            page = self.regional_pages[name]
+            if enabled and name not in self.regional_controls:
+                section, rows = self._regional_advanced(name)
+                page.addWidget(section)
+                self.regional_controls[name] = section, rows
+            parent = page.parentWidget()
+            if parent is not None:
+                parent.setVisible(enabled)
+            if settings.morocco is not None:
+                _ = self.morocco_policy.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+                self.morocco_policy.setCurrentIndex(
+                    self.morocco_options.index(settings.morocco.value)
+                )
+                _ = self.morocco_policy.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+                self.morocco_policy.setVisible(enabled)
+                self.morocco_label.setVisible(enabled)
+                self.morocco_policy.setEnabled(not busy)
+            if enabled:
+                defaults = self.controller.region_settings(name, defaults=True)
+                _, rows = self.regional_controls[name]
+                for row in rows:
+                    value = controls.region_value(row.control, settings)
+                    default = controls.region_value(row.control, defaults)
+                    row.refresh(value, changed=value != default, enabled=not busy)
 
     def _refresh_new(self) -> None:
         controller = self.controller
         # While a world is made the next one can be prepared, so only other work locks the choices.
         busy = controller.busy and not controller.can_prepare
+        self._refresh_regions(busy=busy)
         drawn = controller.land_mask
         self.land_image_label.setText(
             text("land_image_chosen", id=format(drawn.id, "x")) if drawn is not None else ""

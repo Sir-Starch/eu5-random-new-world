@@ -163,6 +163,7 @@ def build_splines(  # noqa: PLR0913 - the network needs identities, geometry and
     contacts: Mapping[tuple[str, str], Point],
     anchors: Mapping[str, Point],
     map_width: int | None = None,
+    retained_contacts: Mapping[tuple[str, str], Point] | None = None,
 ) -> tuple[bytes, dict[str, object]]:
     """The mod's spline network from the game's.
 
@@ -177,6 +178,16 @@ def build_splines(  # noqa: PLR0913 - the network needs identities, geometry and
     mapping = {
         number + 1: new_index[key] for number, key in enumerate(vanilla_keys) if key in new_index
     }
+    if retained_contacts:
+        old_index = {key: number + 1 for number, key in enumerate(vanilla_keys)}
+        contacts = {
+            **contacts,
+            **{
+                (a, b): point
+                for (a, b), point in retained_contacts.items()
+                if strip_id(old_index[a], old_index[b]) not in network.strips
+            },
+        }
     old_anchors = {int(a) for a in network.anchors.tolist()}
     kept_anchors = {mapping[a] for a in old_anchors if a in mapping}
     wanted = {key for pair in contacts for key in pair}
@@ -293,13 +304,20 @@ def spline_problems(  # noqa: PLR0913 - the file, the game's, the keys and what 
 
 
 def world_contacts(
-    game_map: Eu5Map, plan: Plan, world: NewWorld, final: NDArray[np.int32]
+    game_map: Eu5Map,
+    plan: Plan,
+    world: NewWorld,
+    final: NDArray[np.int32],
+    *,
+    retained: Collection[str] = (),
 ) -> dict[tuple[str, str], Point]:
     """Land contacts of the generated locations of the finished map, by key, with border points."""
     classes = [*game_map.classes, *world.classes]
     keys = [*game_map.keys, *(cell.key for cell in plan.cells)]
     land = np.array([kind is CellClass.LAND for kind in classes], dtype=bool)
     generated = np.arange(len(classes)) >= len(game_map.keys)
+    if retained:
+        generated[: len(game_map.keys)] = [key in retained for key in game_map.keys]
     return {
         (keys[low], keys[high]): point
         for (low, high), point in land_contacts(final, land, generated).items()

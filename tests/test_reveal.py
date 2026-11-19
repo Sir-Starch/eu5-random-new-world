@@ -90,6 +90,16 @@ def test_the_file_is_written_with_a_byte_order_mark_and_checks_against_the_defin
     assert verify(written, DEFINITIONS) == {"reveal_areas": len(AREAS)}
 
 
+def test_revealing_africa_leaves_american_discovery_for_a_campaign() -> None:
+    definitions = DEFINITIONS + "\nafrica = { sahel = { r = { desert_area = { p = { dunes } } } } }"
+    written = files(definitions, continents={"africa"})
+    assert verify(written, definitions, continents={"africa"}) == {"reveal_areas": 1}
+    text = written[REVEAL_FILE].decode("utf-8-sig")
+    assert DISCOVERED not in text
+    assert "discover_area = area:desert_area" in text
+    assert all(area not in text for area in AREAS)
+
+
 DAMAGES: list[tuple[str, str, str]] = [
     # (what the file says, what it is changed to, what the check says)
     ("\t\t\tdiscover_area = area:rnw_c_area\n", "", "1 missing"),

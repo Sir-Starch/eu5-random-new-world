@@ -19,13 +19,13 @@ world's and ``n``. The land is changed by a new seed, which starts every roll ag
 from __future__ import annotations
 
 import hashlib
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from typing import TYPE_CHECKING, Final, cast
 
 from rnw.rng import derive_seed
 
 if TYPE_CHECKING:
-    from rnw.settings import Settings
+    from rnw.settings import NewWorldSettings, Settings
 
 RESOURCES: Final[str] = "resources"
 PEOPLES: Final[str] = "peoples"
@@ -49,6 +49,12 @@ def rolls_of(settings: Settings) -> dict[str, int]:
     return {RESOURCES: settings.rolls.resources, PEOPLES: settings.rolls.peoples}
 
 
+def _land_settings(settings: NewWorldSettings) -> list[tuple[str, object]]:
+    shape = cast("dict[str, object]", asdict(settings))
+    _ = shape.pop("precious_permille")
+    return sorted(shape.items())
+
+
 def land_key(settings: Settings, seed: int) -> str:
     """Names the land of a world: its seed and the settings that shape it.
 
@@ -56,7 +62,21 @@ def land_key(settings: Settings, seed: int) -> str:
     those, have the same key and are shown together as versions of one continent. Of the New
     World's settings only the share of precious metals belongs to the resources.
     """
-    shape = cast("dict[str, object]", asdict(settings.new_world))
-    _ = shape.pop("precious_permille")
-    text = repr((seed, settings.mask.id, sorted(shape.items())))
+    shape = _land_settings(settings.new_world)
+    document: tuple[object, ...] = (seed, settings.mask.id, shape)
+    if settings.continents.regions:
+        regional = [
+            (r.key, _land_settings(replace(r.new_world, reveal_at_start=0)))
+            for r in settings.continents.regions
+        ]
+        if settings.continents.america:
+            american = (
+                (("keep_geography", True),)
+                if settings.new_world.keep_geography
+                else _land_settings(replace(settings.new_world, reveal_at_start=0))
+            )
+            document = (seed, settings.mask.id, american, tuple(regional))
+        else:
+            document = (seed, 0, None, tuple(regional))
+    text = repr(document)
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:LAND_KEY_LENGTH]

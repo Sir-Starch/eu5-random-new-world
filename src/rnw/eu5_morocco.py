@@ -22,7 +22,7 @@ from rnw.settings import DEFAULT_MOROCCO_POLICY, MoroccoPolicy
 from rnw.societies import STATE
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Collection, Mapping
 
     from rnw.eu5_newworld import Plan
     from rnw.eu5_rewrite import SetupResult
@@ -178,6 +178,7 @@ def apply_morocco_start(  # noqa: PLR0913 - the selected policy and its regional
     replacement_capitals: Mapping[str, str],
     final_locations: set[str],
     emirate: Country | None = None,
+    surviving_places: Collection[str] = (),
 ) -> SetupResult:
     """Apply the reservation in the 1337 setup and retire Morocco where selected."""
     prepared = texts.copy()
@@ -239,6 +240,7 @@ def apply_morocco_start(  # noqa: PLR0913 - the selected policy and its regional
         location_replacements=places,
         replacement_capitals=capitals,
         final_locations=final_locations,
+        surviving_places=surviving_places,
     )
     _verify_ownership(result.texts[COUNTRIES_FILE], recipient, expected)
     return result

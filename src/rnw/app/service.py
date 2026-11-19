@@ -20,7 +20,7 @@ from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
 from rnw.eu5_world_export import export_world
 from rnw.inputs import compare
-from rnw.landarea import get_area
+from rnw.landarea import get_area, regional_bands
 from rnw.messages import say
 from rnw.parallel import cores
 from rnw.png import COLOR_GRAY, encode_png
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from rnw.app.discovery import GameInstall, Profile
     from rnw.app.library import World
     from rnw.app.worldcode import WorldCode
-    from rnw.landarea import LandArea
+    from rnw.landarea import LandArea, RegionalBands
     from rnw.landmask import LandMask
     from rnw.progress import Progress
     from rnw.settings import Settings
@@ -191,11 +191,14 @@ def generate(
     _require_profile(request)
     _require_epoch(request)
     started = time.monotonic()
-    # A world that keeps the real Americas makes no land; its stages are not those of its preset.
-    kept = request.code.settings().new_world.keep_geography
-    timing_key = estimates.key(
-        request.game.build_id, f"{request.code.preset}:real" if kept else request.code.preset
-    )
+    settings = request.code.settings()
+    kept = settings.new_world.keep_geography
+    timing_type = f"{request.code.preset}:real" if kept else request.code.preset
+    if not settings.continents.america:
+        timing_type = "vanilla-america"
+    for region in settings.continents.regions:
+        timing_type += f"+{region.key}:{region.preset}"
+    timing_key = estimates.key(request.game.build_id, timing_type)
     if progress is not None:
         progress.configure_eta(
             estimates.load(request.data, timing_key),
@@ -241,7 +244,7 @@ def generate(
         request.game.directory,
         output,
         seed=request.code.seed,
-        settings=replace(request.code.settings(), algorithm=request.algorithm),
+        settings=replace(settings, algorithm=request.algorithm),
         accept_build=request.accept_build,
         replace=True,
         check_memory=request.check_memory,
@@ -420,15 +423,25 @@ def land_area(
     """The area the New World can fill with ``settings``: read from the land cache when it was
     chosen before (a fraction of a second), else chosen from the installed game's map (seconds)
     and kept there."""
-    directory, band, expanded = area_inputs(game, settings)
-    return get_area(None if data is None else land_cache(data), directory, band, expanded=expanded)
+    directory, band, expanded, regional = area_inputs(game, settings)
+    return get_area(
+        None if data is None else land_cache(data),
+        directory,
+        band,
+        expanded=expanded,
+        regional=regional,
+    )
 
 
-def area_inputs(game: GameInstall, settings: Settings) -> tuple[Path, int, bool]:
-    """What the area depends on: the game, the ocean band and whether the oceans are expanded.
-    Two choices with the same inputs have the same area."""
+def area_inputs(game: GameInstall, settings: Settings) -> tuple[Path, int, bool, RegionalBands]:
+    """Identify the American area by its own settings and neighboring coastal claims."""
     shape = settings.new_world
-    return game.directory, shape.ocean_band_px, bool(shape.expand_oceans or shape.landform)
+    return (
+        game.directory,
+        shape.ocean_band_px,
+        bool(shape.expand_oceans or shape.landform),
+        regional_bands(settings),
+    )
 
 
 def land_template(

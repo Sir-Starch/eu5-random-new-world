@@ -25,6 +25,7 @@ from PIL import Image
 from rnw import __version__, history_presenter, parallel, worldname
 from rnw import atlas as atlas_module
 from rnw.app import controls, library, quick, random_types
+from rnw.app.gamenames import game_names
 from rnw.app.library import Placement
 from rnw.app.worldcode import WorldCode, encode
 from rnw.gui import mapstyle
@@ -62,6 +63,32 @@ class Choices:
     told: dict[str, str] = field(default_factory=dict)
 
 
+def control_name(controller: Controller, control: controls.Control) -> str:
+    if control.key in controls.BY_KEY:
+        return text(f"control.{control.key}")
+    if controller.game is not None:
+        names = game_names(controller.game.directory, language(), frozenset({control.field}))
+        if control.field in names:
+            return names[control.field]
+    return atlas_module.pretty(control.field)
+
+
+def _control_info(control: controls.Control, default: int) -> dict[str, object]:
+    return {
+        "key": control.key,
+        "group": control.group,
+        "low": control.shown(control.low),
+        "high": control.shown(control.high),
+        "decimals": control.decimals,
+        "unit": text(f"unit.{control.unit}").strip(),
+        "steps": controls.STEPS,
+        "logarithmic": control.logarithmic,
+        "advanced": control.field not in controls.PAGE_OPTIONS,
+        "toggle": control.low == 0 and control.high == 1,
+        "default": control.shown(default),
+    }
+
+
 def static(controller: Controller) -> dict[str, object]:
     """What the window needs once: its strings, the choices it offers and their ranges."""
     preset = controller.preset
@@ -77,20 +104,7 @@ def static(controller: Controller) -> dict[str, object]:
         "world_types": list(WORLD_TYPES),
         "groups": list(controls.GROUPS),
         "controls": [
-            {
-                "key": control.key,
-                "group": control.group,
-                "low": control.shown(control.low),
-                "high": control.shown(control.high),
-                "decimals": control.decimals,
-                "unit": text(f"unit.{control.unit}").strip(),
-                "steps": controls.STEPS,
-                "logarithmic": control.logarithmic,
-                "advanced": control in controls.ADVANCED,
-                "toggle": control.low == 0 and control.high == 1,
-                "default": control.shown(control.default(preset)),
-            }
-            for control in controls.CONTROLS
+            _control_info(control, control.default(preset)) for control in controls.CONTROLS
         ],
         "quick": [
             {
@@ -273,9 +287,11 @@ def _batch(c: Controller) -> str:
 def _new(c: Controller, choices: Choices) -> dict[str, object]:
     busy = c.busy
     values: dict[str, object] = {}
-    keeps = bool(c.value("new_world.keep_geography"))
+    continents = c.continent_selection()
+    america = continents["america"]
+    keeps = america and bool(c.value("new_world.keep_geography"))
     for control in controls.CONTROLS:
-        if not controls.visible(control, c.preset, keeps=keeps):
+        if not america or not controls.visible(control, c.preset, keeps=keeps):
             continue
         value = c.value(control.key)
         default = control.default(c.preset)
@@ -307,6 +323,9 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     )
     drawn = c.land_mask
     return {
+        "continents": continents,
+        "regional_types": controls.REGION_TYPES,
+        "regions": _regions(c, continents),
         "choice": c.mode or c.preset,
         "preset": c.preset,
         "mode": c.mode,
@@ -329,11 +348,12 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "land_mask": format(drawn.id, "x") if drawn is not None else "",
         "land_mask_text": text("land_image_chosen", id=format(drawn.id, "x")) if drawn else "",
         "keeps_geography": keeps,
-        "candidates_enabled": not busy
+        "candidates_enabled": america
+        and not busy
         and c.game is not None
         and not c.world_code().settings().mask.id
         and not keeps,
-        "template_enabled": not busy and c.game is not None and not keeps,
+        "template_enabled": america and not busy and c.game is not None and not keeps,
         "editor_ready": c.land_sheet() is not None,
         "preparable": c.can_prepare,
         "queue_problem": queue_problem,
@@ -343,6 +363,49 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "queue_follows": c.queue_follows,
         "retry": c.phase is Phase.FAILED and c.task is Task.GENERATE,
         "retry_enabled": c.problem() is None,
+    }
+
+
+def _regions(c: Controller, selection: dict[str, bool]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for name, enabled in selection.items():
+        if name == "america" or not enabled:
+            continue
+        settings = c.region_settings(name)
+        defaults = c.region_settings(name, defaults=True)
+        members = controls.regional_controls(name)
+        result[name] = {
+            "preset": settings.preset,
+            "morocco": settings.morocco.value if settings.morocco is not None else "",
+            "controls": [
+                {
+                    **_control_info(control, controls.region_value(control, defaults)),
+                    "label": control_name(c, control),
+                    "help": text(f"control.{control.key}.about")
+                    if control.key in controls.BY_KEY
+                    else "",
+                }
+                for control in members
+            ],
+            "values": {
+                control.key: _value_state(
+                    control,
+                    controls.region_value(control, settings),
+                    controls.region_value(control, defaults),
+                )
+                for control in members
+            },
+        }
+    return result
+
+
+def _value_state(control: controls.Control, value: int, default: int) -> dict[str, object]:
+    return {
+        "shown": control.shown(value),
+        "position": control.position(value),
+        "default": control.shown(default),
+        "default_position": control.position(default),
+        "changed": value != default,
     }
 
 

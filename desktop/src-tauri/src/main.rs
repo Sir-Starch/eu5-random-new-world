@@ -49,18 +49,19 @@ fn data_folder() -> Option<String> {
 }
 
 fn self_test() -> i32 {
-    let launch = match launch() {
+    let mut launch = match launch() {
         Ok(found) => found,
         Err(problem) => {
             eprintln!("{problem}");
             return 1;
         }
     };
+    launch.args.push("--isolated".into());
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_time()
         .build();
     let Ok(runtime) = runtime else { return 1 };
-    let bridge = match Bridge::start(&launch, data_folder(), |_| {}, |_| {}) {
+    let bridge = match Bridge::start(&launch, None, |_| {}, |_| {}) {
         Ok(started) => started,
         Err(problem) => {
             eprintln!("The generator did not start: {problem}");

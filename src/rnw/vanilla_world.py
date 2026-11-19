@@ -18,7 +18,7 @@ installation always gives the same cells.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -31,6 +31,8 @@ from rnw.model import CellClass
 from rnw.newworld import NewWorld, derive_world
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from numpy.typing import NDArray
 
     from rnw.eu5_canvas import Canvas
@@ -80,6 +82,34 @@ def _crop[T: np.generic](canvas: Canvas, raster: NDArray[T]) -> NDArray[T]:
     return np.roll(raster, canvas.roll, axis=1)[:, canvas.col0 : canvas.col0 + canvas.mask.shape[1]]
 
 
+def _installed_cell(game_map: Eu5Map, hierarchy: Mapping[str, Location], label: int) -> PlannedCell:
+    key = game_map.keys[label]
+    location = hierarchy.get(key)
+    return PlannedCell(
+        key=key,
+        name=key,
+        color=int(game_map.colors[label]),
+        kind=game_map.classes[label],
+        province=location.province if location else "",
+        area=location.area if location else "",
+        region=location.region if location else "",
+        subcontinent=location.subcontinent if location else "",
+        continent=location.continent if location else game_map.continents[label],
+    )
+
+
+def _installed_biomes(
+    cells: list[PlannedCell], attributes: Mapping[str, dict[str, str]]
+) -> CellBiomes:
+    rows = [attributes.get(cell.key, {}) for cell in cells]
+    return CellBiomes(
+        climate=tuple(row.get("climate", "") for row in rows),
+        vegetation=tuple(row.get("vegetation", "") for row in rows),
+        topography=tuple(row.get("topography", "") for row in rows),
+        raw_material=tuple(row.get("raw_material", "") for row in rows),
+    )
+
+
 def build(
     game_map: Eu5Map,
     hierarchy: dict[str, Location],
@@ -114,34 +144,73 @@ def build(
         else np.where(canvas.mask, _crop(canvas, height), 0).astype(np.int32)
     )
     world = derive_world(labels, kinds, elevation)
-    empty: dict[str, str] = {}
-    cells: list[PlannedCell] = []
-    for label in keep:
-        key = game_map.keys[label]
-        location = hierarchy.get(key)
-        cells.append(
-            PlannedCell(
-                key=key,
-                name=key,
-                color=int(game_map.colors[label]),
-                kind=game_map.classes[label],
-                province=location.province if location else "",
-                area=location.area if location else "",
-                region=location.region if location else "",
-                subcontinent=location.subcontinent if location else "",
-                continent=location.continent if location else game_map.continents[label],
-            )
-        )
-    biomes = CellBiomes(
-        climate=tuple(attributes.get(cell.key, empty).get("climate", "") for cell in cells),
-        vegetation=tuple(attributes.get(cell.key, empty).get("vegetation", "") for cell in cells),
-        topography=tuple(attributes.get(cell.key, empty).get("topography", "") for cell in cells),
-        raw_material=tuple(
-            attributes.get(cell.key, empty).get("raw_material", "") for cell in cells
-        ),
-    )
+    cells = [_installed_cell(game_map, hierarchy, label) for label in keep]
+    biomes = _installed_biomes(cells, attributes)
     flowing = canvas.mask & (_crop(canvas, game_map.rivers) < RIVER_WATER)
     river_pixels = np.bincount(labels[flowing & (labels >= 0)], minlength=len(keep)).astype(
         np.int64
     )
     return VanillaWorld(tuple(keep), world, Plan(cells=cells), biomes, river_pixels)
+
+
+def with_real_americas(  # noqa: PLR0913 - the overlay derives the shared map from final inputs.
+    game_map: Eu5Map,
+    hierarchy: Mapping[str, Location],
+    attributes: Mapping[str, dict[str, str]],
+    *,
+    final: NDArray[np.int32],
+    generated: NewWorld,
+    plan: Plan,
+    biomes: CellBiomes,
+    height: NDArray[np.uint16],
+    rivers: NDArray[np.uint8],
+) -> VanillaWorld:
+    """Add unchanged American locations to the society graph, leaving the map plan alone."""
+    vanilla_count = len(game_map.keys)
+    count = len(plan.cells)
+    present = np.bincount(final.ravel(), minlength=vanilla_count + count)
+    bound = {cell.key: i for i, cell in enumerate(plan.cells)}
+    keep = tuple(
+        i
+        for i, key in enumerate(game_map.keys)
+        if present[i]
+        and game_map.continents[i] == NEW_WORLD
+        and key in hierarchy
+        and key not in bound
+    )
+    if not any(game_map.classes[i] is CellClass.LAND for i in keep):
+        message = "The composed map has no retained American land for the new societies"
+        raise VanillaWorldError(message)
+    table = np.full(vanilla_count + count, -1, dtype=np.int32)
+    table[vanilla_count:] = np.arange(count, dtype=np.int32)
+    table[list(keep)] = np.arange(count, count + len(keep), dtype=np.int32)
+    for i, key in enumerate(game_map.keys):
+        if present[i] and key in bound and game_map.classes[i] is CellClass.SEA:
+            table[i] = bound[key]
+    labels = np.empty_like(final)
+    relief = np.empty_like(generated.elevation)
+    flowing = np.zeros(count + len(keep) + 1, dtype=np.int64)
+    for first in range(0, final.shape[0], 256):
+        rows = slice(first, first + 256)
+        current = labels[rows] = table[final[rows]]
+        new = generated.labels[rows] >= 0
+        relief[rows] = np.where(new, generated.elevation[rows], height[rows])
+        water = np.where(new, rivers[rows], game_map.rivers[rows])
+        active = current[(current >= 0) & (water < RIVER_WATER)]
+        flowing += np.bincount(active, minlength=flowing.size)
+    cells = [_installed_cell(game_map, hierarchy, i) for i in keep]
+    original = _installed_biomes(cells, attributes)
+    classes = generated.classes + tuple(cell.kind for cell in cells)
+    world = derive_world(labels, classes, relief, wrap_x=True)
+    return VanillaWorld(
+        keep,
+        world,
+        replace(plan, cells=[*plan.cells, *cells]),
+        CellBiomes(
+            climate=biomes.climate + original.climate,
+            vegetation=biomes.vegetation + original.vegetation,
+            topography=biomes.topography + original.topography,
+            raw_material=biomes.raw_material + original.raw_material,
+        ),
+        flowing[:-1],
+    )

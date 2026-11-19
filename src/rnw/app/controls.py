@@ -13,10 +13,10 @@ difference from the world type and travel in the world code.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final, cast
 
-from rnw.settings import PRESETS, RESOURCE_FIELDS, Settings
+from rnw.settings import PRESETS, RESOURCE_FIELDS, WORLD_TYPES, RegionalSettings, Settings
 
 STEPS: Final[int] = 1000
 # Locations of a world, estimated from its settings (C118): those outside the New World on
@@ -188,6 +188,111 @@ VANILLA_LOCATIONS: Final[int] = 27_312
 ADVANCED: Final[tuple[Control, ...]] = tuple(
     control for control in CONTROLS if control.field not in PAGE_OPTIONS
 )
+REGION_TYPES: Final[tuple[str, ...]] = tuple(
+    preset for preset in WORLD_TYPES if preset not in {"omerika", "wall"}
+)
+# Ordinary materials present in the supported installed reference (EU5 1.4.9).
+# Precious metals already have their own control.
+REGION_RESOURCES: Final[dict[str, frozenset[str]]] = {
+    "africa": frozenset(
+        [
+            "alum",
+            "amber",
+            "beeswax",
+            "camels",
+            "clay",
+            "coal",
+            "coffee",
+            "copper",
+            "cotton",
+            "dyes",
+            "fiber_crops",
+            "fish",
+            "fruit",
+            "horses",
+            "incense",
+            "iron",
+            "ivory",
+            "lead",
+            "legumes",
+            "livestock",
+            "lumber",
+            "marble",
+            "medicaments",
+            "mercury",
+            "millet",
+            "olives",
+            "rice",
+            "saffron",
+            "salt",
+            "saltpeter",
+            "sand",
+            "stone",
+            "sugar",
+            "tin",
+            "wheat",
+            "wild_game",
+            "wine",
+            "wool",
+        ]
+    ),
+    "oceania": frozenset(
+        [
+            "beeswax",
+            "clay",
+            "coal",
+            "copper",
+            "fiber_crops",
+            "fish",
+            "fruit",
+            "iron",
+            "legumes",
+            "livestock",
+            "lumber",
+            "medicaments",
+            "millet",
+            "salt",
+            "sand",
+            "stone",
+            "sugar",
+            "wild_game",
+        ]
+    ),
+}
+REGION_BY_KEY: Final[dict[str, Control]] = {
+    control.key: replace(control, low=1) if control.field == "state_share_permille" else control
+    for control in (
+        *CONTROLS,
+        *(
+            Control(
+                f"resources.{name}", "resources", 0, 3000, factor=1000, decimals=2, unit="times"
+            )
+            for name in sorted(
+                {k for pool in REGION_RESOURCES.values() for k in pool} - set(RESOURCE_FIELDS)
+            )
+        ),
+    )
+    if control.group not in {"wall", "omerika"}
+    and control.field not in {"expand_oceans", "keep_geography"}
+}
+
+
+def regional_controls(region: str) -> tuple[Control, ...]:
+    """The applicable controls, including materials of this region's installed calibration."""
+    resources = REGION_RESOURCES[region]
+    return tuple(
+        control
+        for control in REGION_BY_KEY.values()
+        if control.section != "resources" or control.field in resources
+    )
+
+
+def region_value(control: Control, settings: RegionalSettings) -> int:
+    """Read the same control in an independently resolved regional preset."""
+    if control.section == "resources":
+        return dict(settings.resources).get(control.field, 1000)
+    section = settings.natives if control.section == "natives" else settings.new_world
+    return cast("int", getattr(section, control.field))
 
 
 def visible(control: Control, preset: str, *, keeps: bool) -> bool:
@@ -208,8 +313,8 @@ def wall_share(width_permille: int, land_permille: int) -> int:
     return width_permille * per_width // 1000
 
 
-def estimated_locations(settings: Settings) -> int:
-    """Locations the world of ``settings`` will have, roughly (within about 600, C118)."""
+def _american_locations(settings: Settings) -> int:
+    """The established budget estimate for the American exporter (C118)."""
     world = settings.new_world
     if world.keep_geography:
         return VANILLA_LOCATIONS
@@ -226,6 +331,28 @@ def estimated_locations(settings: Settings) -> int:
     water = 1000 - share
     sea = sea_area * water // (world.sea_zone_px * world.sea_zone_px)
     return OUTSIDE_LOCATIONS + land + sea + LAKES
+
+
+def estimated_locations(settings: Settings) -> int:
+    """Rough location count before building the world at the requested densities."""
+    estimate = _american_locations(settings)
+    if not settings.continents.regions:
+        return estimate
+    if not settings.continents.america or settings.new_world.keep_geography:
+        estimate = 28_582
+    # Seed 17 over the stock 1.4.9 footprint. Counts scale with the share and
+    # sampling area. Shared seas are rounded here and checked after composition.
+    for region in settings.continents.regions:
+        land_area, sea_area, replaced = (
+            (15_700, 18_800, 3_500) if region.key == "africa" else (13_700, 16_300, 1_867)
+        )
+        knobs = region.new_world
+        estimate += (
+            land_area * knobs.land_permille // knobs.location_px**2
+            + sea_area * (1000 - knobs.land_permille) // knobs.sea_zone_px**2
+            - replaced
+        )
+    return estimate
 
 
 def nested(changes: dict[str, int]) -> dict[str, object] | None:

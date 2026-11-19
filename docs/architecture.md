@@ -1,9 +1,11 @@
 # Current architecture
 
 RNW is an external Python/Rust generator with a desktop application: a Tauri window (Svelte/TypeScript and a Rust shell) and the classic Qt window as its fallback.
-RNW 1.1.0 is the released baseline; RNW 1.2.0 is the current development target (pending epoch 61).
+RNW 1.2.2 is the released baseline. RNW 1.3.0 is the development target at epoch 64.
 It reads the player's EU5 installation and emits one self-contained local world
-mod. The Old World is preserved. Free-topology New World generation, native
+mod. America, Africa and Oceania can be replaced independently. The rest of the
+world uses the installed map and setup, with its connections to the new regions
+resolved during export. Free-topology continent generation, native
 societies and campaign content are implemented; the early T0–T5 research matrix
 is [historical](archive/feasibility-1.4.1.md), not the current capability verdict.
 Owner acceptance and released packages are recorded in C437–C439, C441.
@@ -32,6 +34,16 @@ The application/library/viewer are independent of the game adapters. Viewing a
 compact world file does not need EU5. Generating a built world does: map inputs,
 calibration, scripts, localization and optional covers are read locally. Derived
 worlds are not shipped in the repository, GitHub release or Workshop hub.
+
+An America-only world uses its existing map pipeline, including island placement.
+When other continents are selected, `continent_domains.py` allocates their land
+and seas before any region is generated. `continent_world.py` joins regional
+rasters in wrapped world coordinates. Biomes, water connections, locations,
+terrain assets and scripts run on that common map. Each selected continent uses
+its own societal calibration over the common route graph. The final histories,
+starting setup, stories, atlas and assets are written together. See the
+[continent generation plan](continent-generation-plan.md) for the map interfaces,
+historical choices and performance acceptance.
 
 ## Module map
 

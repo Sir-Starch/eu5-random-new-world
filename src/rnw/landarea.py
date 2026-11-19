@@ -19,7 +19,7 @@ the player's machine, as every picture of the game's map does (docs/legal.md).
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Final
@@ -27,6 +27,8 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import landcache
+from rnw.continent_domains import CONTINENTS, plan_domains
+from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_map import input_fingerprints, load_map
 from rnw.png import COLOR_GRAY, encode_png
 from rnw.progress import run_stage
@@ -34,7 +36,18 @@ from rnw.progress import run_stage
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+    from rnw.continent_domains import Domain
     from rnw.eu5_canvas import Canvas
+    from rnw.eu5_map import Eu5Map
+    from rnw.settings import Settings
+
+type RegionalBands = tuple[tuple[str, int], ...]
+
+
+def regional_bands(settings: Settings) -> RegionalBands:
+    """The regional coast settings that can change America's drawing area."""
+    return tuple((part.key, part.new_world.ocean_band_px) for part in settings.continents.regions)
+
 
 # The area is kept every fourth pixel of the canvas; the editor draws on every eighth.
 TEMPLATE_STEP: Final[int] = 4
@@ -110,7 +123,7 @@ def from_canvas(canvas: Canvas) -> LandArea:
     return LandArea((int(canvas.mask.shape[0]), int(canvas.mask.shape[1])), area, americas, islands)
 
 
-def area_key(game_dir: Path, band_px: int, *, expanded: bool) -> str:
+def area_key(game_dir: Path, band_px: int, *, expanded: bool, regional: RegionalBands = ()) -> str:
     """The identity of an area: the fingerprints of the map's files, the two settings and the
     code. Only the files are read, not decoded."""
     spec = (
@@ -120,30 +133,68 @@ def area_key(game_dir: Path, band_px: int, *, expanded: bool) -> str:
         band_px,
         expanded,
     )
-    return hashlib.sha256(repr(spec).encode("utf-8")).hexdigest()
+    return hashlib.sha256(repr((*spec, *regional)).encode("utf-8")).hexdigest()
 
 
-def get_area(cache: Path | None, game_dir: Path, band_px: int, *, expanded: bool) -> LandArea:
+def get_area(
+    cache: Path | None,
+    game_dir: Path,
+    band_px: int,
+    *,
+    expanded: bool,
+    regional: RegionalBands = (),
+) -> LandArea:
     """The area of the installed game's map for ``band_px`` of ocean, from the cache when it was
     chosen before (a fraction of a second), else chosen now (seconds) and kept."""
-    target = (
-        None
-        if cache is None
-        else cache
-        / landcache.AREAS
-        / f"{area_key(game_dir, band_px, expanded=expanded)}{landcache.AREA_SUFFIX}"
-    )
+    target = None
+    if cache is not None:
+        key = area_key(game_dir, band_px, expanded=expanded, regional=regional)
+        target = cache / landcache.AREAS / f"{key}{landcache.AREA_SUFFIX}"
     if target is not None and target.exists():
         area = _read(target)
         if area is not None:
             landcache.touch(target)
             return area
-    canvas = _canvas(cache, game_dir, band_px, expanded=expanded)
-    area = from_canvas(canvas)
+    if regional:
+        domain = _composed_area(game_dir, band_px, expanded=expanded, regional=regional)
+        area = from_domain(domain)
+    else:
+        area = from_canvas(_canvas(cache, game_dir, band_px, expanded=expanded))
     if target is not None and cache is not None:
         _write(target, area)
         landcache.prune(cache)
     return area
+
+
+def from_domain(domain: Domain) -> LandArea:
+    """The American drawing sheet within the shared continent footprints."""
+    area = np.ascontiguousarray(domain.mask[::TEMPLATE_STEP, ::TEMPLATE_STEP])
+    americas = np.ascontiguousarray(domain.footprint[::TEMPLATE_STEP, ::TEMPLATE_STEP])
+    rows, columns = domain.mask.shape
+    return LandArea((int(rows), int(columns)), area, americas, np.zeros_like(area))
+
+
+def _composed_area(
+    game_dir: Path, band_px: int, *, expanded: bool, regional: RegionalBands
+) -> Domain:
+    game_map = run_stage("load map", lambda: load_map(game_dir))
+    return run_stage(
+        "select canvas",
+        lambda: american_domain(game_map, band_px, expanded=expanded, regional=regional),
+    )
+
+
+def american_domain(
+    game_map: Eu5Map, band_px: int, *, expanded: bool, regional: RegionalBands
+) -> Domain:
+    """Plan the American canvas with the same coastal claims the final export uses."""
+    settings = {
+        name: replace(CONTINENTS[name].geography(), ocean_band_px=band) for name, band in regional
+    }
+    settings[NEW_WORLD] = replace(
+        CONTINENTS[NEW_WORLD].geography(), ocean_band_px=band_px, expand_oceans=int(expanded)
+    )
+    return plan_domains(game_map, settings)[0]
 
 
 def _canvas(cache: Path | None, game_dir: Path, band_px: int, *, expanded: bool) -> Canvas:

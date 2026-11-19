@@ -35,6 +35,7 @@ from rnw import (
     worldname,
 )
 from rnw import calibration as input_calibration
+from rnw.app.gamenames import game_names
 from rnw.app.worldcode import WorldCodeError, decode
 from rnw.artifacts import (
     Spool,
@@ -120,7 +121,7 @@ from rnw.eu5_canvas import (
     place_islands,
     remainder_boxes,
 )
-from rnw.eu5_content import ContentError, carry_out, cohort_places, culture_traits
+from rnw.eu5_content import TENOCHTITLAN, ContentError, carry_out, cohort_places, culture_traits
 from rnw.eu5_development import (
     VILLAGE,
     Development,
@@ -372,8 +373,9 @@ from rnw.topology import (
     label_components,
     unpack_pairs,
 )
+from rnw.vanilla_world import with_real_americas
 from rnw.watersheds import domain_climate, domain_rivers
-from rnw.wording import render
+from rnw.wording import reference, render
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
@@ -392,6 +394,7 @@ if TYPE_CHECKING:
     from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.settings import NewWorldSettings, Settings
+    from rnw.vanilla_world import VanillaWorld
     from rnw.wording import Name
     from rnw.worldname import Label
 
@@ -1520,7 +1523,14 @@ def _check_world(  # noqa: PLR0913, PLR0917 - checks the raster and the hierarch
         if world.wrap_x
         else set[tuple[int, int]]()
     )
-    missing = sorted(set(lost) - linked)
+    impassable_ocean_edges = {
+        pair
+        for pair in lost
+        if world.wrap_x
+        and all(sea[i] for i in pair)
+        and any(game_map.ambiguous[i] and continents[i] in oceans for i in pair)
+    }
+    missing = sorted(set(lost) - linked - impassable_ocean_edges)
     if missing:
         message = f"{len(missing)} Old World contacts were lost, e.g. {missing[:3]}"
         raise NewWorldExportError(message)
@@ -1557,6 +1567,7 @@ def _check_world(  # noqa: PLR0913, PLR0917 - checks the raster and the hierarch
     }
     if world.wrap_x:
         stats["selected_coastal_water_links_replaced"] = len(linked)
+        stats["impassable_ocean_borders_changed"] = len(impassable_ocean_edges)
     return stats, frozenset(low for low, high in after if low < vanilla_count <= high)
 
 
@@ -1911,6 +1922,7 @@ class ComposedStart:
     morocco: MoroccoStart | None = None
     emirate: Country | None = None
     calibrations: tuple[VanillaNatives, ...] = ()
+    real_america: VanillaWorld | None = None
 
 
 def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its bound identities.
@@ -1927,7 +1939,11 @@ def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its boun
     written = pop_lines(natives.pops)
     if start is None:
         return prune_setup(texts, gone, {c.key: written.get(c.key, []) for c in plan.cells})
-    pops = {c.key: written.get(c.key, []) for c in emitted_cells(plan)}
+    kept = start.real_america
+    restored = frozenset(() if kept is None else (game_map.keys[i] for i in kept.keep))
+    pops = {cell.key: written.get(cell.key, []) for cell in emitted_cells(plan)}
+    if kept is not None:
+        pops.update({game_map.keys[i]: written.get(game_map.keys[i], []) for i in kept.keep})
     original = {
         key: (int(row), int(column))
         for key, row, column in zip(game_map.keys, geometry.rows, geometry.columns, strict=True)
@@ -1956,6 +1972,7 @@ def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its boun
             replacement_capitals=replacements,
             final_locations=final,
             emirate=start.emirate,
+            surviving_places=restored,
         )
     return prune_regional_setup(
         texts,
@@ -1964,6 +1981,7 @@ def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its boun
         location_replacements=start.remap.locations,
         replacement_capitals=replacements,
         final_locations=final,
+        surviving_places=restored,
     )
 
 
@@ -1982,6 +2000,15 @@ def _history_outputs(
     history = eu5_history_text.build(natives, loc_keys, locations)
     verify_history_text(natives, history)
     return history
+
+
+def _gone_setup_places(
+    hierarchy: Mapping[str, Location], plan: Plan, removed: set[str], retained: Collection[str]
+) -> set[str]:
+    kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
+    removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
+    retired = {name for key in retained for name in (key, hierarchy[key].province)}
+    return removed | (removed_provinces - kept_provinces) | set(plan.dropped_areas) | retired
 
 
 def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the shared plan.
@@ -2030,9 +2057,6 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     instances = _locator_instances(plan, world, canvas, port_pixels, water.zones)
     trimmed = _trimmed_instances(game_map, canvas)
     relocated = removed | set(trimmed)
-    kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
-    removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
-    gone = removed | (removed_provinces - kept_provinces) | set(plan.dropped_areas)
     outputs = map_identity_files(game_dir, plan, water, removed)
     outputs[_mod_path(TEMPLATES)] = _encode(
         game_dir,
@@ -2079,7 +2103,16 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     override = _read(game_dir, LOCATOR_OVERRIDE)
     if (rewritten := rewrite_override_locators(override, removed)) != override:
         outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
-    history_text = _history_outputs(natives, loc_keys, plan, composed)
+    society = None if composed is None else composed.real_america
+    society_plan = plan if society is None else society.plan
+    society_world = world if society is None else society.world
+    gone = _gone_setup_places(
+        hierarchy,
+        plan,
+        removed,
+        () if society is None else [game_map.keys[i] for i in society.keep],
+    )
+    history_text = _history_outputs(natives, loc_keys, society_plan, composed)
     if history_text is not None:
         outputs.update(history_text.files)
     setup = _rewrite_setup(
@@ -2095,7 +2128,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         removed=removed,
         gone=gone,
     )
-    ai_decisions = _ai_assignment_records(game_dir, natives, world, plan)
+    ai_decisions = _ai_assignment_records(game_dir, natives, society_world, society_plan)
     ai_records = ai_assignments(ai_decisions)
     additions: dict[str, tuple[str, ...]] = {
         COUNTRIES_FILE: (country_records(natives.countries),),
@@ -2658,15 +2691,17 @@ def referenced_words(path: str, text: str) -> set[str]:
     return set(WORD.findall(text))
 
 
-def _add_reveal(texts: dict[str, bytes], *, enabled: bool) -> dict[str, object]:
-    """With the world setting on, write the reveal of the New World and check it against the
+def _add_reveal(
+    texts: dict[str, bytes], *, enabled: bool, continents: Collection[str] = AMERICAN_GENERATION
+) -> dict[str, object]:
+    """With the world setting on, write the reveal of the chosen continents and check against the
     written ``definitions.txt``; the statistics to keep, none when the setting is off."""
     if not enabled:
         return {}
     definitions = texts[_mod_path(DEFINITIONS)].decode("utf-8-sig")
     try:
-        texts.update(reveal_files(definitions))
-        return {"reveal": verify_reveal(texts, definitions)}
+        texts.update(reveal_files(definitions, continents=continents))
+        return {"reveal": verify_reveal(texts, definitions, continents=continents)}
     except RevealError as error:
         raise NewWorldExportError(str(error)) from error
 
@@ -3337,6 +3372,7 @@ def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan
     hierarchy: dict[str, Location],
     texts: dict[str, bytes],
     natives: FinalStartPlan,
+    real_america: VanillaWorld | None = None,
 ) -> tuple[bytes, dict[str, object]]:
     """The mod's spline network, made from the game's, and its statistics (R7d).
 
@@ -3350,15 +3386,32 @@ def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan
         location.key
         for location in parse_locations(texts[_mod_path(DEFINITIONS)].decode("utf-8-sig"))
     ]
-    contacts = world_contacts(game_map, plan, world, final)
+    extra: dict[tuple[str, str], tuple[float, float]] = {}
+    anchors = world_anchors(game_map, plan, world, canvas, final)
+    if real_america is None:
+        contacts = world_contacts(game_map, plan, world, final)
+    else:
+        kept = frozenset(game_map.keys[i] for i in real_america.keep)
+        all_contacts = world_contacts(game_map, plan, world, final, retained=kept)
+        contacts = {
+            pair: point for pair, point in all_contacts.items() if not kept.intersection(pair)
+        }
+        roads = {frozenset(pair) for pair in natives.roads if kept.issuperset(pair)}
+        extra = {pair: point for pair, point in all_contacts.items() if frozenset(pair) in roads}
+        needed = {key for pair in extra for key in pair}
+        for i, cell in enumerate(real_america.plan.cells):
+            if cell.key in needed:
+                row, column = real_america.world.interior[i]
+                anchors[cell.key] = (float(column) + 0.5, canvas.shape[0] - float(row) - 0.5)
     try:
         data, stats = build_splines(
             vanilla,
             vanilla_keys=vanilla_keys,
             mod_keys=mod_keys,
             contacts=contacts,
-            anchors=world_anchors(game_map, plan, world, canvas, final),
+            anchors=anchors,
             map_width=int(final.shape[1]),
+            retained_contacts=extra,
         )
     except SplineError as error:
         message = f"Spline network: {error}"
@@ -3369,13 +3422,13 @@ def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan
         vanilla,
         vanilla_keys=vanilla_keys,
         mod_keys=mod_keys,
-        contacts=list(contacts),
+        contacts=[*contacts, *extra],
         roads=[*roads, *natives.roads],
         map_width=int(final.shape[1]),
     )
     if problems:
-        extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
-        message = f"Spline network: {problems[0]}{extra}"
+        remaining = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        message = f"Spline network: {problems[0]}{remaining}"
         raise NewWorldExportError(message)
     return data, stats | {"land_contacts": len(contacts)}
 
@@ -3524,6 +3577,8 @@ def verify_development(  # noqa: PLR0913, PLR0917 - every generated development 
     development: Development,
     calibration: DevelopmentCalibration,
     new_world_keys: set[str],
+    *,
+    unchanged_geography: Collection[str] = (),
 ) -> dict[str, object]:
     """No positional development is left; terms, harbours and villages are as planned."""
 
@@ -3535,7 +3590,11 @@ def verify_development(  # noqa: PLR0913, PLR0917 - every generated development 
     if block is None:
         message = "No development block in the output"
         raise NewWorldExportError(message)
-    kept = sorted(entry.key for entry in block.entries if entry.key in new_world_keys)
+    kept = sorted(
+        entry.key
+        for entry in block.entries
+        if entry.key in new_world_keys and entry.key not in unchanged_geography
+    )
     if kept:
         message = f"Development entry {kept[0]} of the vanilla New World was kept"
         raise NewWorldExportError(message)
@@ -3545,8 +3604,10 @@ def verify_development(  # noqa: PLR0913, PLR0917 - every generated development 
         message = "Development rules outside the New World differ from vanilla"
         raise NewWorldExportError(message)
     found = _verify_terms(block, plan, development, calibration)
-    harbours = {k: v for k, v in template_harbours(text(TEMPLATES)).items() if k in generated}
-    if harbours != development.harbours or not set(harbours.values()) <= set(calibration.harbours):
+    redrawn = generated.difference(unchanged_geography)
+    harbours = {k: v for k, v in template_harbours(text(TEMPLATES)).items() if k in redrawn}
+    planned = {k: v for k, v in development.harbours.items() if k in redrawn}
+    if harbours != planned or not set(harbours.values()) <= set(calibration.harbours):
         message = "Generated harbour values differ from the ports or the vanilla values"
         raise NewWorldExportError(message)
     manager = parse(text(f"{SETUP_DIR}/{BUILDINGS_FILE}")).block("building_manager")
@@ -3628,6 +3689,11 @@ def _require_algorithm(settings: Settings) -> None:
         _ = epoch.require_selectable(settings.algorithm)
     except epoch.EpochError as error:
         raise NewWorldExportError(str(error)) from error
+    if settings.continents.regions and settings.algorithm < epoch.CONTINENT_SELECTION:
+        message = (
+            f"Additional continents require algorithm epoch {epoch.CONTINENT_SELECTION} or later"
+        )
+        raise NewWorldExportError(message)
 
 
 def _ocean_pixels(world: NewWorld) -> NDArray[np.bool_]:
@@ -4300,9 +4366,13 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
     *,
     settings: Settings,
     seed: int,
+    real_america: VanillaWorld | None = None,
 ) -> ComposedStart:
     map_ = prepared.game_map
     world, plan, biomes = prepared.shape.coast.world, prepared.plan, prepared.biomes
+    if real_america is not None:
+        world, plan, biomes = real_america.world, real_america.plan, real_america.biomes
+        river_pixels = real_america.river_pixels
     base = prepared.vanilla_start.result()
     if prepared.vanilla_locations is None:
         message = "Regional start needs installed population geography"
@@ -4350,6 +4420,16 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
             selection={i for i, cell in enumerate(plan.cells) if cell.continent == NEW_WORLD},
             routes=routes,
         )
+        if real_america is not None:
+            keys = _american_names(real_america, map_)
+            start = replace(
+                start,
+                names={
+                    key: reference(key)
+                    for key in sorted(keys)
+                    if key_hash(key) in prepared.vanilla_hashes
+                },
+            )
         add(start, base)
     for region in regions:
         name, knobs = region.key, region.natives
@@ -4401,7 +4481,29 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
         if policy is MoroccoPolicy.EMIRATE
         else None
     )
-    return ComposedStart(tuple(starts), remap, morocco, emirate, tuple(calibrations))
+    return ComposedStart(tuple(starts), remap, morocco, emirate, tuple(calibrations), real_america)
+
+
+def _american_names(america: VanillaWorld, game_map: Eu5Map) -> frozenset[str]:
+    keep = {game_map.keys[index] for index in america.keep}
+    return frozenset(
+        name
+        for cell in america.plan.cells
+        if cell.key in keep and cell.kind in {CellClass.LAND, CellClass.WASTELAND}
+        for name in (cell.key, cell.area, cell.region)
+    )
+
+
+def _kept_american_ports(
+    america: VanillaWorld, ports: Mapping[str, VanillaPort], height: int
+) -> dict[int, tuple[int, int]]:
+    """Retained docks keep their vanilla coordinates in the shared economy model."""
+    return {
+        index: (height - 1 - round(float(port.y)), round(float(port.x)))
+        for index, cell in enumerate(america.plan.cells)
+        if cell.continent == NEW_WORLD and cell.kind is CellClass.LAND
+        if (port := ports.get(cell.key)) is not None
+    }
 
 
 def _campaign_scripts(  # noqa: PLR0913 - scenario scope, startup data and the files being written.
@@ -4422,6 +4524,7 @@ def _campaign_scripts(  # noqa: PLR0913 - scenario scope, startup data and the f
     removed = prepared.removed
     composed = bool(settings.continents.regions)
     american_geography = settings.continents.america and not settings.new_world.keep_geography
+    real_america = settings.continents.america and settings.new_world.keep_geography
     rewrite = run_stage("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
     footprint = (
         world_footprint(
@@ -4448,7 +4551,12 @@ def _campaign_scripts(  # noqa: PLR0913 - scenario scope, startup data and the f
     except ValueError as error:
         raise NewWorldExportError(str(error)) from error
     scripts = rewrite.outputs
-    scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
+    sites = remap
+    if real_america:
+        sites = remap.with_locations(
+            {key: key for key in natives.holy_sites if key not in remap and key in hierarchy}
+        )
+    scripts.update(holy_site_outputs(game_dir, sites, natives.holy_sites))
     try:
         text_stats["content"] = carry_out(
             game_dir,
@@ -4456,7 +4564,7 @@ def _campaign_scripts(  # noqa: PLR0913 - scenario scope, startup data and the f
             checked,
             cohort_places(natives.pops),
             hierarchy,
-            remap,
+            remap.with_locations({TENOCHTITLAN: TENOCHTITLAN}) if real_america else remap,
             sea_areas=sorted(
                 {
                     cell.area
@@ -4465,6 +4573,7 @@ def _campaign_scripts(  # noqa: PLR0913 - scenario scope, startup data and the f
                 }
             ),
             american_geography=american_geography,
+            american_societies=settings.continents.america,
             continents={cell.key: cell.continent for cell in plan.cells} if composed else None,
         )
     except ContentError as error:
@@ -4712,7 +4821,33 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         geographic = stages.prepare("ports and geographic remap", prepare_geography)
         river_pixels = np.bincount(
             world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
-        )[: len(world.classes)]
+        )[: len(world.classes)].astype(np.int64)
+        real_america = (
+            run_stage(
+                "vanilla Americas",
+                lambda: with_real_americas(
+                    game_map,
+                    hierarchy,
+                    vanilla_attributes,
+                    final=final_labels,
+                    generated=world,
+                    plan=plan,
+                    biomes=biomes,
+                    height=store.world_heights(),
+                    rivers=river_codes,
+                ),
+            )
+            if composed and settings.continents.america and settings.new_world.keep_geography
+            else None
+        )
+        society_plan = plan if real_america is None else real_america.plan
+        society_world = world if real_america is None else real_america.world
+        society_biomes = biomes if real_america is None else real_america.biomes
+        society_rivers = river_pixels if real_america is None else real_america.river_pixels
+        if real_america is not None:
+            new_world_keys = new_world_keys | vanilla_new_world_keys(
+                hierarchy, removed | {game_map.keys[i] for i in real_america.keep}
+            )
 
         def prepare_natives() -> tuple[FinalStartPlan, ComposedStart | None]:
             if composed:
@@ -4720,17 +4855,18 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     game_dir,
                     prepared,  # noqa: F821 - released once the export stages finish
                     hierarchy,
-                    river_pixels.astype(np.int64),
+                    river_pixels,
                     geographic.result()[1],
                     settings=settings,
                     seed=peoples_seed,
+                    real_america=real_america,
                 )
                 return combine_starts(start.histories), start
             return build_start_plan(
                 world=world,
                 plan=plan,
                 biomes=biomes,
-                river_pixels=river_pixels.astype(np.int64),
+                river_pixels=river_pixels,
                 vanilla=vanilla_start.result(),
                 settings=settings.natives,
                 seed=peoples_seed,
@@ -4743,26 +4879,31 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         ports, remap = geographic.result()
         if composed_start is not None:
             remap = composed_start.remap
+        docks = (
+            ports[1]
+            if real_america is None
+            else ports[1] | _kept_american_ports(real_america, vanilla_ports, canvas.shape[0])
+        )
         development = _plan_development(
             calibration,
             game_map=game_map,
-            world=world,
-            plan=plan,
-            biomes=biomes,
+            world=society_world,
+            plan=society_plan,
+            biomes=society_biomes,
             natives=natives,
             labels=final_labels,
-            docks=ports[1],
-            river_codes=river_codes,
+            docks=docks,
+            river_codes=river_codes if real_america is None else locations.result()[1],
         )
         atlas_json, atlas_png = run_stage(
             "atlas",
             lambda: atlas_files(
                 build_atlas(
-                    world=world,
-                    plan=plan,
-                    biomes=biomes,
+                    world=society_world,
+                    plan=society_plan,
+                    biomes=society_biomes,
                     natives=natives,
-                    mask=canvas.mask,
+                    mask=canvas.mask if real_america is None else society_world.labels >= 0,
                     development=development.initial,
                 )
             ),
@@ -4793,15 +4934,24 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 composed=composed_start,
             ),
         )
+        spoken = (
+            natives
+            if real_america is None
+            else replace(
+                natives,
+                names=natives.names
+                | game_names(game_dir, "english", _american_names(real_america, game_map)),
+            )
+        )
         written = run_stage(
             "stories",
             lambda: _story_outputs(
                 game_dir,
-                plan=plan,
-                world=world,
-                natives=natives,
-                river_pixels=river_pixels.astype(np.int64),
-                topography=biomes.topography,
+                plan=society_plan,
+                world=society_world,
+                natives=spoken,
+                river_pixels=society_rivers,
+                topography=society_biomes.topography,
                 vanilla=vanilla_start.result(),
                 loc_keys=loc_keys,
                 seed=peoples_seed,
@@ -4810,15 +4960,32 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )
         texts.update(written.files)
         text_stats["stories"] = written.stats
-        text_stats.update(_add_reveal(texts, enabled=bool(settings.new_world.reveal_at_start)))
+        revealed_continents = {
+            region.key for region in settings.continents.regions if region.new_world.reveal_at_start
+        }
+        if settings.continents.america and settings.new_world.reveal_at_start:
+            revealed_continents.add(NEW_WORLD)
+        text_stats.update(
+            _add_reveal(texts, enabled=bool(revealed_continents), continents=revealed_continents)
+        )
         checkpoint()
         text_checks = verify_map_texts(texts, plan, canvas, shapes, removed)
-        text_checks.update(_verify_natives(natives, plan))
+        text_checks.update(_verify_natives(natives, society_plan))
         text_checks.update(
             verify_technology(texts, natives, vanilla_start.result(), composed=composed_start)
         )
         text_checks.update(
-            verify_development(texts, plan, natives, development, calibration, new_world_keys)
+            verify_development(
+                texts,
+                society_plan,
+                natives,
+                development,
+                calibration,
+                new_world_keys,
+                unchanged_geography=()
+                if real_america is None
+                else {game_map.keys[i] for i in real_america.keep},
+            )
         )
         checkpoint()
         spline_data, spline_stats = run_stage(
@@ -4833,6 +5000,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 hierarchy=hierarchy,
                 texts=texts,
                 natives=natives,
+                real_america=real_america,
             ),
         )
         texts[SPLINE_FILE] = spline_data
@@ -4842,14 +5010,14 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             verify_empires(
                 texts,
                 natives,
-                plan,
-                world,
+                society_plan,
+                society_world,
                 vanilla_start.result(),
                 {
                     name: _read(game_dir, f"{SETUP_DIR}/{name}")
                     for name in ("09_roads.txt", "18_opinions.txt")
                 },
-                removed | removed_tags,
+                removed | removed_tags | (new_world_keys if real_america is not None else set()),
                 composed=composed_start,
             )
         )
@@ -4857,10 +5025,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             verify_archetypes(
                 texts,
                 natives,
-                plan,
+                society_plan,
                 vanilla_start.result(),
                 {name: _read(game_dir, f"{SETUP_DIR}/{name}") for name in ARCHETYPE_FILES},
-                removed | removed_tags,
+                removed | removed_tags | (new_world_keys if real_america is not None else set()),
                 composed=composed_start,
             )
         )

@@ -3280,3 +3280,43 @@ text = '''L'époque {epoch} ne peut pas être choisie. Avec les fonctionnalités
 ["error.epoch.stamp"]
 source = "0a0469d8c4467849"
 text = '''Ce code de monde porte la version {release}, qui a créé l'époque {stamped}, mais l'époque {asked} a été demandée. Un monde d'une époque plus ancienne exige un code marqué de cette époque.'''
+
+["continent.title"]
+source = "6c048f26d3b8b473"
+text = '''Continents'''
+
+["continent.america"]
+source = "98d7f113aa13e672"
+text = '''Amérique'''
+
+["continent.africa"]
+source = "c4a371acd7c3df8b"
+text = '''Afrique'''
+
+["continent.oceania"]
+source = "4773281fa64f3446"
+text = '''Océanie'''
+
+["continent.choose"]
+source = "6c2ae46b1a7ee90a"
+text = '''Sélectionnez au moins un continent.'''
+
+["continent.morocco"]
+source = "ead901867c258d8d"
+text = '''Possessions ibériques du Maroc'''
+
+["continent.morocco.restore"]
+source = "6af853c1bac1ff29"
+text = '''Conserver le Maroc'''
+
+["continent.morocco.emirate"]
+source = "fd5a738503ffb1fc"
+text = '''Algésiras indépendante'''
+
+["continent.morocco.castile"]
+source = "2a7ea7589f95b0fb"
+text = '''Rattacher à la Castille'''
+
+["continent.morocco.granada"]
+source = "6f3054c413324372"
+text = '''Rattacher à Grenade'''

@@ -27,6 +27,7 @@ import numpy as np
 
 from rnw import landcache, tagfont
 from rnw.eu5_map import load_map
+from rnw.landarea import american_domain, regional_bands
 from rnw.messages import say
 from rnw.newworld import land_stage
 from rnw.parallel import worker_count
@@ -92,11 +93,13 @@ def sketch(
     if settings.new_world.keep_geography:
         message = say("candidates.real")
         raise CandidateError(message)
+    if not settings.continents.america:
+        message = "Land sketches require a generated America"
+        raise CandidateError(message)
     shape = settings.new_world
-    canvas = _canvas(game_dir, settings, cache)
-    domain = canvas.mask
+    domain, footprint = _sketch_area(game_dir, settings, cache)
     # Only Omerika reads the Americas' template; the other world types do not hash it.
-    template = canvas.template if shape.template_permille else None
+    template = footprint if shape.template_permille else None
     with running("candidates"):
         digest = None if cache is None else landcache.domain_digest(domain, template)
 
@@ -121,6 +124,26 @@ def sketch(
     if cache is not None:
         landcache.prune(cache)
     return found
+
+
+def _sketch_area(
+    game_dir: Path, settings: Settings, cache: Path | None
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_] | None]:
+    if not settings.continents.regions:
+        canvas = _canvas(game_dir, settings, cache)
+        return canvas.mask, canvas.template
+    shape = settings.new_world
+    game_map = run_stage("load map", lambda: load_map(game_dir))
+    domain = run_stage(
+        "select canvas",
+        lambda: american_domain(
+            game_map,
+            shape.ocean_band_px,
+            expanded=bool(shape.expand_oceans or shape.landform),
+            regional=regional_bands(settings),
+        ),
+    )
+    return domain.mask, domain.footprint
 
 
 def _canvas(game_dir: Path, settings: Settings, cache: Path | None) -> Canvas:

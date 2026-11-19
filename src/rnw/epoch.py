@@ -134,6 +134,7 @@ RIVERS_FIRST: Final[int] = (
 BASINS: Final[int] = 64  # 1.3.0: the rivers wear the land down to their graded beds.
 TABLELANDS: Final[int] = 64  # 1.3.0: plateaus are broad tablelands, not rare domes.
 POOLED_RESOURCES: Final[int] = 64  # 1.3.0: a small class of raw materials borrows broader ones.
+CONTINENT_SELECTION: Final[int] = 64  # 1.3.0: independent continents share one world map.
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
@@ -146,6 +147,7 @@ SWITCHES: Final[dict[str, int]] = {
     "BASINS": BASINS,
     "TABLELANDS": TABLELANDS,
     "POOLED_RESOURCES": POOLED_RESOURCES,
+    "CONTINENT_SELECTION": CONTINENT_SELECTION,
 }
 
 

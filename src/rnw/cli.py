@@ -757,7 +757,7 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
         bool, typer.Option(help="Print each stage and the share of the work done to stderr.")
     ] = False,
 ) -> None:
-    """Stage a NOT GAME VALIDATED mod that replaces the New World with generated land."""
+    """Stage one mod for the selected continents. Use --settings to combine continents."""
     try:
         chosen = load_settings(preset, settings)
         report = make_world(

@@ -85,6 +85,45 @@
   {/if}
 
   {#if app.newTab === "world"}
+    <Section id="new.continents" title={t("continent.title")}>
+      {#each Object.entries(n?.continents ?? {}) as [key, enabled] (key)}
+        <Check
+          checked={enabled}
+          disabled={locked}
+          label={t(`continent.${key}`)}
+          onchange={(value) => app.call("set_continent", { key, value })}
+        />
+      {/each}
+      {#each Object.entries(n?.regions ?? {}) as [key, region] (key)}
+        <div class="props">
+          <label for={`preset-${key}`} class="key">{t(`continent.${key}`)} · {t("type")}</label>
+          <select id={`preset-${key}`} class="input val" disabled={locked} value={region.preset}
+            onchange={(event) => app.call("set_region_preset", { key, preset: event.currentTarget.value })}>
+            {#each n?.regional_types ?? [] as type (type)}
+              <option value={type}>{t(`type.${type}`)}</option>
+            {/each}
+          </select>
+          {#if region.morocco}
+            <label for="morocco-policy" class="key">{t("continent.morocco")}</label>
+            <select id="morocco-policy" class="input val" disabled={locked} value={region.morocco}
+              onchange={(event) => app.call("set_morocco", { policy: event.currentTarget.value })}>
+              {#each ["restore", "emirate", "castile", "granada"] as policy (policy)}
+                <option value={policy}>{t(`continent.morocco.${policy}`)}</option>
+              {/each}
+            </select>
+          {/if}
+        </div>
+      {/each}
+      {#if n && (n.continents?.america === false || n.keeps_geography) && Object.keys(n.regions ?? {}).length}
+        <div class="oceans">
+          <Check checked={!s?.preferences.show_new_world} disabled={locked}
+            label={t("lobby_cover")} hint={t("lobby_cover_about")} info={t("lobby_cover_hint")}
+            onchange={(value) => app.call("set_show_new_world", { value: !value })} />
+        </div>
+      {/if}
+    </Section>
+
+    {#if n?.continents?.america !== false}
     <Section id="new.basics" title={t("quick")}>
       <div class="props">
         <label class="key" for="world-type">{t("type")}</label>
@@ -177,6 +216,7 @@
         </div>
       </div>
     </Section>
+    {/if}
 
     <Section id="new.identity" title={t("world_identity")}>
       <label class="field">
@@ -254,6 +294,28 @@
         </div>
       </Section>
       {/if}
+    {/each}
+    {#each Object.entries(n?.regions ?? {}) as [name, region] (name)}
+      <Section id={`new.advanced.${name}`} title={t(`continent.${name}`)} closed>
+        {#each groups as group (group)}
+          {@const controlsHere = region.controls.filter((control) => control.group === group)}
+          {#if controlsHere.length}
+            <Section id={`new.advanced.${name}.${group}`} title={t(`group.${group}`)}>
+              <div class="values">
+                {#each controlsHere as control (control.key)}
+                  {#if control.toggle}
+                    <Check checked={region.values[control.key].shown > 0} disabled={locked}
+                      label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
+                      onchange={(value) => app.call("set_region_value", { region: name, key: control.key, value: value ? 1 : 0 })} />
+                  {:else}
+                    <ValueField {control} value={region.values[control.key]} disabled={locked} region={name} />
+                  {/if}
+                {/each}
+              </div>
+            </Section>
+          {/if}
+        {/each}
+      </Section>
     {/each}
   {:else}
     <Section id="new.output" title={t("output")}>

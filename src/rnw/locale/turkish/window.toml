@@ -3280,3 +3280,43 @@ text = '''{epoch} çağı seçilemez. Deneysel özellikler açıkken bu oluştur
 ["error.epoch.stamp"]
 source = "0a0469d8c4467849"
 text = '''Bu dünya kodunda {release} sürümü damgalı; bu sürüm {stamped} çağını oluşturdu, ancak {asked} çağı istendi. Daha eski bir çağın dünyası, o çağın damgasını taşıyan bir kod gerektirir.'''
+
+["continent.title"]
+source = "6c048f26d3b8b473"
+text = '''Kıtalar'''
+
+["continent.america"]
+source = "98d7f113aa13e672"
+text = '''Amerika'''
+
+["continent.africa"]
+source = "c4a371acd7c3df8b"
+text = '''Afrika'''
+
+["continent.oceania"]
+source = "4773281fa64f3446"
+text = '''Okyanusya'''
+
+["continent.choose"]
+source = "6c2ae46b1a7ee90a"
+text = '''En az bir kıta seçin.'''
+
+["continent.morocco"]
+source = "ead901867c258d8d"
+text = '''Fas’ın İberya toprakları'''
+
+["continent.morocco.restore"]
+source = "6af853c1bac1ff29"
+text = '''Fas’ı koru'''
+
+["continent.morocco.emirate"]
+source = "fd5a738503ffb1fc"
+text = '''Bağımsız Algeciras'''
+
+["continent.morocco.castile"]
+source = "2a7ea7589f95b0fb"
+text = '''Kastilya’ya kat'''
+
+["continent.morocco.granada"]
+source = "6f3054c413324372"
+text = '''Gırnata’ya kat'''

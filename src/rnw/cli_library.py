@@ -93,8 +93,8 @@ def _fail(error: Exception) -> typer.Exit:
 def _row(data: Path, world: World, profile: Path | None) -> dict[str, object]:
     return {
         "id": world.id,
-        "name": worldname.display_name(world.preset, worldname.tag_of(world.id), world.name),
-        "title": worldname.label(world.preset, worldname.tag_of(world.id), world.name).title,
+        "name": library.display_name(world),
+        "title": library.label(world).title,
         "tag": worldname.tag_of(world.id),
         "code": world.code,
         "preset": world.preset,
@@ -160,9 +160,7 @@ def rename_world(
     typer.echo(
         json.dumps(
             {
-                "name": worldname.display_name(
-                    renamed.preset, worldname.tag_of(renamed.id), renamed.name
-                ),
+                "name": library.display_name(renamed),
                 "in_game_list_updated": not held,
             },
             indent=2,

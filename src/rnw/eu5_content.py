@@ -581,6 +581,7 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     *,
     sea_areas: Sequence[str] = (),
     american_geography: bool = True,
+    american_societies: bool | None = None,
     continents: Mapping[str, str] | None = None,
 ) -> dict[str, object]:
     """Write every decision of the table that edits scripts into ``scripts``; return the counts.
@@ -590,13 +591,16 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     """
     store = Scripts(script_files(game_dir), scripts)
     basis = Basis(candidates, culture_traits(game_dir), hierarchy, continents or {})
+    american_start = american_geography if american_societies is None else american_societies
     rebound: dict[str, list[str]] = {}
     seat_file = ""
     frontier = 0
     for key, consumer in checked.consumers.items():
         if checked.verdicts[key].decision is not Decision.REBIND:
             continue
-        if not american_geography and key in {GAME_START, DISCOVERY, FRONTIER}:
+        if (key == GAME_START and not american_start) or (
+            key in {DISCOVERY, FRONTIER} and not american_geography
+        ):
             continue
         if consumer.category == FORMABLES:
             rebound.setdefault(consumer.files[0], []).append(consumer.ident)
@@ -620,9 +624,7 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
             message = f"{rebinding.formable} is bound to places that are not generated: {stray[:5]}"
             raise ContentError(message)
     guarded = guard_scripts(store, [*guard_targets(checked.consumers, checked.verdicts), *thin])
-    start_bound = american_geography and _bind_nahuatl_start(
-        store, seat_file, basis.candidates, remap
-    )
+    start_bound = american_start and _bind_nahuatl_start(store, seat_file, basis.candidates, remap)
     changed = store.changed()
     for relative, data in changed.items():
         try:
