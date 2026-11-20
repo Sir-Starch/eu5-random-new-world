@@ -547,12 +547,13 @@ def _enclosed_claims(
     return _eurasian_waters(game_map, claims, sea, selected)[sample]
 
 
-def _ocean_claims(
+def _ocean_claims(  # noqa: PLR0913, PLR0917 - the map, selection, water, land and retained closed water.
     game_map: Eu5Map,
     selected: Mapping[str, NewWorldSettings],
     sea: NDArray[np.bool_],
     solid: NDArray[np.bool_],
     seed: int | None,
+    closed: Collection[str] = (),
 ) -> OceanClaims:
     """Divide competing ocean claims by distance to substantial land on a shared grid.
 
@@ -612,7 +613,9 @@ def _ocean_claims(
                 cutoff = int(np.partition(scores, quota)[quota])
                 owners[own & (best >= cutoff)] = -1
     islands = (
-        _pacific_islands(game_map, sample, owners, rows, columns, step=step, seed=seed)
+        _pacific_islands(
+            game_map, sample, owners, rows, columns, step=step, seed=seed, closed=closed
+        )
         if seed is not None and {"america", "oceania"}.issubset(selected)
         else ()
     )
@@ -800,13 +803,20 @@ def _pacific_islands(  # noqa: PLR0913 - reserve compact island groups on the sh
     *,
     step: int,
     seed: int,
+    closed: Collection[str] = (),
 ) -> tuple[tuple[int, int, int], ...]:
-    """Reserve a few widely spaced groups on the existing Pacific canvas."""
+    """Reserve a few widely spaced groups on the existing Pacific canvas.
+
+    A group's water must meet navigable retained water: ``closed`` names the impassable
+    ocean locations, and no group is placed beside them, where its sea would be cut off.
+    """
     pacific = np.array([c == "pacific_ocean_continent" for c in game_map.continents], dtype=bool)[
         labels
     ]
     radius = ISLAND_POOL
     room = distance_from(~pacific | (owners == 0), radius + 1, octagonal=True, wrap_x=True)
+    shut = np.array([key in closed for key in game_map.keys], dtype=bool)[labels]
+    clear = distance_from(shut, radius + 2, octagonal=True, wrap_x=True)
     height, width = labels.shape
     yy = np.arange(height, dtype=np.int64)[:, None]
     xx = np.arange(width, dtype=np.int64)[None, :]
@@ -818,7 +828,9 @@ def _pacific_islands(  # noqa: PLR0913 - reserve compact island groups on the sh
         gold_x = (longitude + rng.below(7) - 3) * width // 100
         across = np.abs(xx - gold_x) % width
         distance = 2 * np.abs(yy - gold_y) + np.minimum(across, width - across)
-        allowed = (room > radius) & (seam <= width // 7) & (distance < width // 12)
+        allowed = (
+            (room > radius) & (clear > radius + 1) & (seam <= width // 7) & (distance < width // 12)
+        )
         if not allowed.any():
             continue
         scores = distance.copy()
@@ -1202,13 +1214,14 @@ def _keep_coastal_waters(game_map: Eu5Map, domain: Domain, protected: NDArray[np
     )
 
 
-def plan_domains(
+def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained facts it plans around.
     game_map: Eu5Map,
     selected: Mapping[str, NewWorldSettings],
     *,
     seed: int | None = None,
     require_asia_connection: bool = False,
     retained_tolls: Collection[str] = (),
+    closed_waters: Collection[str] = (),
 ) -> tuple[Domain, ...]:
     """Plan selected regions once, dividing shared oceans before generating any land.
 
@@ -1234,7 +1247,7 @@ def plan_domains(
     claims = (
         _shared_ocean_claims(game_map, sea, solid, seed)
         if complete
-        else _ocean_claims(game_map, selected, sea, solid, seed)
+        else _ocean_claims(game_map, selected, sea, solid, seed, closed_waters)
     )
     shared = _shared_water(game_map, claims, sea, selected, retained_tolls) if complete else None
     connect = (

@@ -444,12 +444,23 @@ or Oceania had failed the Old World contact check since the southern sea route
 (`3064d4a`): the route turns the bottom 160 pixels into generated sea, and a
 retained wasteland islet such as South Georgia lost its touch with the sea
 around it. An impassable islet has no port, so the check no longer counts that
-touch. With the route on, Africa alone, Oceania alone, America with Africa and
-Africa with Oceania generate at seeds 17, 101 and 202, and all three continents
-at seeds 101 and 202 and the M55D seed. America with Oceania passes at seed 17
-and fails at seeds 101 and 202, as it does on the code at `d3c6f0a`: unreachable
-sea cells in a basin of the expanded American canvas, and a passable contact
-between American and Oceanian sea cells at their Pacific border.
+touch. Two more defects hid behind it, both in America with Oceania. A sea
+remainder that belongs to no region was filed under America and touched
+Oceanian sea (seed 202), and an Oceanian island group placed inside impassable
+retained ocean (`ocean_wasteland` in the location templates) had no navigable
+neighbour, so its sea cells were cut off (seed 101). The remainder now stays
+open ocean, and island groups keep nine cells of the claim grid away from
+retained impassable water; the list of such locations is read from the
+templates and passed to the plan.
+
+With the route on, every selection generates: Africa alone, Oceania alone,
+America with Africa and Africa with Oceania at seeds 17, 101 and 202; America
+with Oceania at seeds 17, 101, 202, 303, 404, 505 and 606; all three at 101, 202
+and the M55D seed. The M55D files are byte-identical to the installed build
+except `.metadata`. Final canvases of every selection keep the Celtic Sea,
+the Bay of Bengal, the North Sea, the Greenland and Norwegian seas and the seas
+north of Asia with the retained map; Africa keeps the Arabian Sea and the
+Azores ridge, America the open Labrador Sea.
 
 The first full plan exposed 125 tiny sea fragments that appeared when the
 regional grids met. They became isolated when nearby deep waters were

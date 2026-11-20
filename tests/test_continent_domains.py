@@ -411,6 +411,35 @@ def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -
     assert 0 < np.count_nonzero(owners == 2) < 500
 
 
+def test_pacific_islands_keep_away_from_impassable_retained_water() -> None:
+    labels = np.zeros((128, 512), dtype=np.int32)
+    labels[:, 440:] = 1
+    owners = np.full(labels.shape, -1, dtype=np.int8)
+    owners[:, 40:110] = 0
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("ocean", "shut"),
+                continents=("pacific_ocean_continent", "pacific_ocean_continent"),
+            ),
+        ),
+    )
+    rows, columns = np.arange(128, dtype=np.int64), np.arange(512, dtype=np.int64)
+
+    def place(closed: tuple[str, ...]) -> NDArray[np.bool_]:
+        claimed = owners.copy()
+        sites = _pacific_islands(
+            game, labels, claimed, rows, columns, step=1, seed=17, closed=closed
+        )
+        assert sites
+        return claimed == 2
+
+    assert place(())[:, 440:].any()
+    assert not place(("shut",))[:, 440 - 9 :].any()
+
+
 def test_a_partly_claimed_retained_gulf_keeps_its_whole_shore() -> None:
     labels = np.zeros((20, 24), dtype=np.int32)
     labels[5:15, 10:16] = 1

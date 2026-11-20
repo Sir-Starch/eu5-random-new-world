@@ -20,8 +20,11 @@ worlds and saves are not rewritten or migrated.
   their shores enclose, and the water Africa would have claimed north of its own
   generation limit stays Eurasian, so a generated continent cannot enter them or
   lie beside northern Europe. Worlds with fewer continents follow the same rules.
-  Africa alone, Oceania alone and their pairs generate again with the southern
-  route on: a retained wasteland islet in that strip no longer counts as a lost contact.
+  Every selection of Africa and Oceania, alone or with America, generates again with
+  the southern route on: a retained wasteland islet in that strip no longer counts as
+  a lost contact, an Oceanian island group is never placed beside impassable retained
+  water, where its sea would be cut off, and a leftover piece of an old ocean stays
+  open ocean instead of joining a neighbouring continent.
 
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size

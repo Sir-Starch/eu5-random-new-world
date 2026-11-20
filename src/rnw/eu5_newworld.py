@@ -1294,6 +1294,11 @@ def plan_composed_identities(  # noqa: PLR0913 - regional assignments and the co
         if len(origins[first] | origins[second]) > 1
         for cell in (first, second)
         if world.classes[cell] is CellClass.SEA
+    ) | frozenset(
+        # The cut remainder of an old ocean belongs to no region; it stays open ocean.
+        cell
+        for cell, source in enumerate(origins)
+        if not source and world.classes[cell] is CellClass.SEA
     )
     sea_areas, anchored = _water_areas(
         game_map,

@@ -4365,6 +4365,7 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     retained_tolls: Collection[str],
     store: DecalStore,
     southern_passage: int = 0,
+    closed_waters: Collection[str] = (),
 ) -> tuple[WorldRegion, ...]:
     domains = plan_domains(
         game_map,
@@ -4372,6 +4373,7 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
         seed=seed,
         require_asia_connection=require_asia_connection,
         retained_tolls=retained_tolls,
+        closed_waters=closed_waters,
     )
 
     def build(domain: Domain) -> WorldRegion:
@@ -4526,6 +4528,11 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             retained_tolls=sound_toll_locations(_read(game_dir, DEFAULT_MAP)),
             store=terrain_store,
             southern_passage=southern_passage,
+            closed_waters=sorted(
+                key
+                for key, water in read_waters(_read(game_dir, TEMPLATES)).items()
+                if water.topography == Topography.OCEAN_WASTELAND
+            ),
         ),
     )
     composed = run_stage(
