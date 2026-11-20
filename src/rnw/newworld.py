@@ -28,7 +28,7 @@ from rnw.gulfs import carve_inland_seas
 from rnw.islands import carve, place
 from rnw.isthmuses import raise_isthmuses
 from rnw.lakes import carve_lakes
-from rnw.land_bridge import NoRouteError, lattice, paint, route, smooth, swell, trace
+from rnw.land_bridge import NoRouteError, Winding, lattice, paint, route, smooth, swell, trace, wind
 from rnw.landmask import LandMaskError
 from rnw.messages import say
 from rnw.model import CellClass
@@ -92,6 +92,8 @@ BRIDGE_EDGE: Final[int] = 700  # roughness_permille of the edge noise
 BRIDGE_SWELL_PERIOD: Final[int] = 6000  # permille of a location: along the axis
 BRIDGE_MEANDER: Final[int] = 1800  # extra thousandths of a block a noisy block costs, at most
 BRIDGE_TRIES: Final[int] = 12
+BRIDGE_WIND_SPACING: Final[int] = 5000  # permille of a location: between the winding's waypoints
+BRIDGE_WIND_AMPLITUDE: Final[tuple[int, int]] = (1000, 2600)  # permille of a location: sideways
 BRIDGE_LANDING_SCALE: Final[int] = 700  # permille: the bridge to a strait's landing is slighter
 # The centre control lifts the land density by up to CENTRE_LIFT elevation units in the middle of
 # the canvas, rising over the distance from its edge (to the deepest interior, but at most
@@ -1036,15 +1038,21 @@ def _bridge_axis(
         + BRIDGE_MEANDER * (noise + NOISE_SCALE // 2) // NOISE_SCALE
         + 2 * PERMILLE * np.clip(comfort - clearance, 0, comfort) // comfort
     ).astype(np.int32)
+    start = (here[0] // block, here[1] // block)
+    goal = pooled(ground.continent[rows, columns], "any")
     try:
-        blocks = route(
-            cost,
-            passable,
-            (here[0] // block, here[1] // block),
-            pooled(ground.continent[rows, columns], "any"),
-        )
+        blocks = route(cost, passable, start, goal)
     except NoRouteError:
         return None
+    low, high = (max(1, value * location // PERMILLE // block) for value in BRIDGE_WIND_AMPLITUDE)
+    spacing = max(2, BRIDGE_WIND_SPACING * location // PERMILLE // block)
+    blocks = wind(
+        blocks,
+        cost,
+        passable,
+        goal,
+        Winding(spacing, low, high, derive_seed(seed, "land_bridge_wind")),
+    )
     centres = [(r * block + block // 2, c * block + block // 2) for r, c in blocks]
     centres[0] = here
     return trace(smooth(centres)), allowed

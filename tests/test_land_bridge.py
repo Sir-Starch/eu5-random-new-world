@@ -10,12 +10,14 @@ import pytest
 
 from rnw.land_bridge import (
     NoRouteError,
+    Winding,
     lattice,
     paint,
     route,
     smooth,
     swell,
     trace,
+    wind,
 )
 from rnw.noise import NOISE_SCALE
 
@@ -55,6 +57,32 @@ def test_a_route_follows_cheap_ground_and_is_repeatable() -> None:
     first = route(cost, free, (5, 0), goal)
     assert first == route(cost, free, (5, 0), goal)
     assert sum(1 for row, _ in first if 20 <= row < 23) > len(first) // 2
+
+
+def test_a_long_straight_route_is_made_to_wind_and_a_short_one_is_left() -> None:
+    cost, free = _plain(80, 400)
+    goal = np.zeros_like(free)
+    goal[40, 399] = True
+    straight = route(cost, free, (40, 0), goal)
+    assert {row for row, _ in straight} == {40}
+    winding = Winding(spacing=30, low=4, high=8, key=7)
+    bent = wind(straight, cost, free, goal, winding)
+    assert bent[0] == (40, 0)
+    assert bent[-1] == (40, 399)
+    assert all(free[block] for block in bent)
+    rows = [row for row, _ in bent]
+    assert min(rows) <= 40 - 3
+    assert max(rows) >= 40 + 3
+    assert bent == wind(straight, cost, free, goal, winding)
+    assert wind(straight[:25], cost, free, goal, winding) == straight[:25]
+
+
+def test_a_route_that_cannot_wind_is_left_as_it_was() -> None:
+    cost, free = _plain(3, 200)
+    goal = np.zeros_like(free)
+    goal[1, 199] = True
+    straight = route(cost, free, (1, 0), goal)
+    assert all(free[block] for block in wind(straight, cost, free, goal, Winding(20, 6, 9, 1)))
 
 
 def test_a_route_that_cannot_reach_says_so() -> None:

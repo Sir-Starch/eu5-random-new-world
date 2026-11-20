@@ -39,7 +39,6 @@ from rnw.eu5_slots import (
     synthesize,
 )
 from rnw.fields import PERMILLE
-from rnw.land_contact import DETAIL_REACH as CONTACT_DETAIL_REACH
 from rnw.land_contact import MATERIAL_REACH, soften_rim
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
@@ -639,6 +638,14 @@ def _contact_window(
     )
 
 
+def _fine_at(
+    fine: NDArray[np.generic], indices: tuple[NDArray[np.int64], NDArray[np.int64]]
+) -> NDArray[np.int64]:
+    """The decal-resolution samples of a contact array at the pixels of an index grid."""
+    rows, columns = (2 * grid.reshape(-1)[:, None] + np.arange(2) for grid in indices)
+    return fine[np.ix_(rows.reshape(-1), columns.reshape(-1))].astype(np.int64)
+
+
 def _contact_decals(
     contact: ContactBlend,
     heights: NDArray[np.int64],
@@ -652,10 +659,8 @@ def _contact_decals(
     if window is None:
         return None
     indices, decal_rows, decal_cols = window
-    weight = contact.weight(CONTACT_DETAIL_REACH)[indices]
-    target = contact.target[indices]
-    weight = np.repeat(np.repeat(weight, 2, axis=0), 2, axis=1)
-    target = np.repeat(np.repeat(target, 2, axis=0), 2, axis=1)
+    weight = _fine_at(contact.fine_weight, indices)
+    target = _fine_at(contact.fine_target, indices)
     samples = heights[decal_rows, decal_cols]
     heights[decal_rows, decal_cols] = (samples * (PERMILLE - weight) + target * weight) // PERMILLE
     retouch = (contact.distance[indices] <= MATERIAL_REACH) & contact.retained[indices]
@@ -677,9 +682,10 @@ def _contact_rim(
     if window is None:
         return
     indices, decal_rows, decal_cols = window
-    cap = np.repeat(np.repeat(contact.rim[indices], 2, axis=0), 2, axis=1)
     samples = image[decal_rows, decal_cols].astype(np.int64)
-    image[decal_rows, decal_cols] = soften_rim(samples, cap).astype(np.uint16)
+    image[decal_rows, decal_cols] = soften_rim(samples, _fine_at(contact.fine_rim, indices)).astype(
+        np.uint16
+    )
 
 
 @measured

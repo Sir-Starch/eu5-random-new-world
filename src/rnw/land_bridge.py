@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import heapq
 from itertools import pairwise
-from typing import TYPE_CHECKING, Final
+from math import isqrt
+from typing import TYPE_CHECKING, Final, NamedTuple
 
 import numpy as np
 
@@ -126,6 +127,69 @@ def route(
                 parent[there] = here
                 heapq.heappush(queue, (price + int(guide[there]), there))
     raise NoRouteError
+
+
+class Winding(NamedTuple):
+    """How a route is made to wind: a waypoint every ``spacing`` blocks, ``low`` to ``high``
+    blocks to its side (drawn from ``key``)."""
+
+    spacing: int
+    low: int
+    high: int
+    key: int
+
+
+def wind(
+    blocks: Sequence[tuple[int, int]],
+    cost: NDArray[np.int32],
+    passable: NDArray[np.bool_],
+    goal: NDArray[np.bool_],
+    winding: Winding,
+) -> list[tuple[int, int]]:
+    """A route made to wind: ``blocks`` again, through points to either side of it in turn.
+
+    Every ``winding.spacing`` blocks of the route a point is taken on its side, to the left and
+    to the right in turn, by ``winding.low`` to ``winding.high`` blocks, or by as much of it as
+    is passable; the new route goes through them. A route shorter than a spacing stays as it
+    is, and so does one that cannot go through its points.
+    """
+    spacing, low, high, key = winding
+    count = len(blocks) // spacing
+    if count < 1:
+        return list(blocks)
+    last = len(blocks) - 1
+    points = [blocks[0]]
+    for number in range(1, count + 1):
+        index = number * len(blocks) // (count + 1)
+        (before_row, before_column), (after_row, after_column) = (
+            blocks[max(0, index - 4)],
+            blocks[min(last, index + 4)],
+        )
+        along_row, along_column = after_row - before_row, after_column - before_column
+        length = max(1, isqrt(along_row * along_row + along_column * along_column))
+        size = low + mix64(key ^ (number * 0x9E3779B97F4A7C15)) % (high - low + 1)
+        size = size if number % 2 else -size
+        row, column = blocks[index]
+        while size:
+            moved = (row - along_column * size // length, column + along_row * size // length)
+            if (
+                0 <= moved[0] < passable.shape[0]
+                and 0 <= moved[1] < passable.shape[1]
+                and passable[moved]
+            ):
+                points.append(moved)
+                break
+            size = int(size / 2)
+    longer: list[tuple[int, int]] = [blocks[0]]
+    try:
+        for start, stop in pairwise(points):
+            here = np.zeros_like(goal)
+            here[stop] = True
+            longer.extend(route(cost, passable, start, here)[1:])
+        longer.extend(route(cost, passable, points[-1], goal)[1:])
+    except NoRouteError:
+        return list(blocks)
+    return longer
 
 
 def smooth(

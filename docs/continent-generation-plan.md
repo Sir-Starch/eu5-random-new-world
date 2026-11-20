@@ -40,7 +40,11 @@ The **Require a land connection to Asia** option always constructs a passable
 approach, a land bridge (`land_bridge.py`). Its axis is the cheapest route from
 a site on the interface to the continent over a noisy landscape that keeps clear
 of the domain's coast margin, on coarse blocks and with sixteen moves so that no
-direction is preferred, and then smoothed until no corner is left. Its body is
+direction is preferred. A route of more than a few locations is made to wind:
+it is routed again through waypoints, one every few locations, a location or two
+to its left and right in turn, so that no stretch of it stays straight for long.
+It is then
+smoothed until no corner is left. Its body is
 a union of discs along the axis whose radius swells and narrows, flares at both
 ends, narrows to the room beside the coast margin and has the same irregular
 edge as every other coast; a one-location spine is always kept. A site whose
@@ -60,9 +64,14 @@ retained ground over wider reaches the farther the pixel lies from the seam,
 not as the nearest shore pixel's height (which left streaks and straight steps
 where two such pixels' reaches met), and the conditioning gives way to the
 generated coast away from the seam. Retained ground that the generated sea has
-cut through high land rises over the new shoreline only as steeply as the
-steepest installed coasts do (the cap is `RIM_BASE + RIM_SLOPE` per pixel from
-the water; what is above it is compressed), so the cut is no wall.
+cut through high land (water whose installed height is above the coast's, never
+an installed coast or sea) rises over the new shoreline only as steeply as the
+steep installed coasts do (the cap is `RIM_BASE + RIM_SLOPE` per pixel from the
+water; what is above it is compressed), so the cut is no wall. The cap is
+applied to the retained heights before they are carried into the generated side,
+so both sides of the seam agree, and the target, its weight and the cap reach
+the decals by interpolation (two samples a location pixel), not as repeated
+whole pixels, so no pixel grid shows where the height slopes.
 Retained climate and vegetation supply a joint vote
 that weakens inland. Border materials follow the new shoreline.
 
