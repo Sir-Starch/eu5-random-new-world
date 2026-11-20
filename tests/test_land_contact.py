@@ -11,6 +11,7 @@ from rnw.eu5_terrain import _contact_decals  # pyright: ignore[reportPrivateUsag
 from rnw.land_contact import (
     NO_RIM,
     RIM_BASE,
+    RIM_MARGIN,
     RIM_REACH,
     RIM_SLOPE,
     ContactTerrain,
@@ -93,7 +94,11 @@ def test_the_retained_shore_cut_by_the_generated_sea_is_not_a_wall() -> None:
     heights = np.repeat(np.repeat(height[box].astype(np.int64), 2, axis=0), 2, axis=1)
     cut = soften_rim(heights, rim)
     assert np.all(cut <= heights)
-    assert cut[row, column] < COAST_HEIGHT + RIM_BASE + 2500
+    assert cut[row, column] <= COAST_HEIGHT + RIM_BASE + RIM_SLOPE + RIM_MARGIN
+    assert np.all(
+        cut[row : row + 2 * RIM_REACH, column]
+        <= rim[row : row + 2 * RIM_REACH, column] + RIM_MARGIN
+    )
     assert np.all(np.diff(cut[row : row + 2 * RIM_REACH, column]) >= 0)  # still climbs inland
     gentle = np.full(rim.shape, 6200, dtype=np.int64)
     assert np.array_equal(soften_rim(gentle, rim), gentle)
@@ -106,4 +111,9 @@ def test_the_retained_shore_cut_by_the_generated_sea_is_not_a_wall() -> None:
     plain = ContactTerrain(box, low[box]).blend(generated, retained)
     assert plain is not None
     assert np.all(plain.fine_rim == NO_RIM)
+    # So is the raster of a real coast: a strip of high water a pixel wide beside the land.
+    low[9, 80:] = 14000
+    strip = ContactTerrain(box, low[box]).blend(generated, retained)
+    assert strip is not None
+    assert np.all(strip.fine_rim == NO_RIM)
     assert np.array_equal(plain.height[retained[box]], low[box][retained[box]])

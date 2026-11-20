@@ -139,6 +139,39 @@ class Winding(NamedTuple):
     key: int
 
 
+def _waypoint(
+    blocks: Sequence[tuple[int, int]],
+    index: int,
+    size: int,
+    side: int,
+    passable: NDArray[np.bool_],
+) -> tuple[int, int] | None:
+    """The point ``size`` blocks to ``side`` (1 left, -1 right) of ``blocks[index]``, across the
+    route's direction there; the other side, then half and a quarter of the distance, when the
+    first is not passable; None when none is."""
+    (before_row, before_column), (after_row, after_column) = (
+        blocks[max(0, index - 4)],
+        blocks[min(len(blocks) - 1, index + 4)],
+    )
+    along_row, along_column = after_row - before_row, after_column - before_column
+    length = max(1, isqrt(along_row * along_row + along_column * along_column))
+    row, column = blocks[index]
+    for reach in (size, size // 2, size // 4):
+        for direction in (side, -side):
+            point = (
+                row - along_column * direction * reach // length,
+                column + along_row * direction * reach // length,
+            )
+            if (
+                reach > 0
+                and 0 <= point[0] < passable.shape[0]
+                and 0 <= point[1] < passable.shape[1]
+                and passable[point]
+            ):
+                return point
+    return None
+
+
 def wind(
     blocks: Sequence[tuple[int, int]],
     cost: NDArray[np.int32],
@@ -148,38 +181,28 @@ def wind(
 ) -> list[tuple[int, int]]:
     """A route made to wind: ``blocks`` again, through points to either side of it in turn.
 
-    Every ``winding.spacing`` blocks of the route a point is taken on its side, to the left and
-    to the right in turn, by ``winding.low`` to ``winding.high`` blocks, or by as much of it as
-    is passable; the new route goes through them. A route shorter than a spacing stays as it
-    is, and so does one that cannot go through its points.
+    A route of at least ``winding.spacing`` blocks gets a point every spacing blocks (at least
+    two), taken on its side, to the left and to the right in turn, by ``winding.low`` to
+    ``winding.high`` blocks, or by as much of it as is passable; the new route goes through them.
+    A route shorter than a spacing stays as it is, and so does one that cannot go through its
+    points.
     """
     spacing, low, high, key = winding
-    count = len(blocks) // spacing
-    if count < 1:
+    if len(blocks) < spacing:
         return list(blocks)
-    last = len(blocks) - 1
+    count = max(2, len(blocks) // spacing)
     points = [blocks[0]]
     for number in range(1, count + 1):
-        index = number * len(blocks) // (count + 1)
-        (before_row, before_column), (after_row, after_column) = (
-            blocks[max(0, index - 4)],
-            blocks[min(last, index + 4)],
-        )
-        along_row, along_column = after_row - before_row, after_column - before_column
-        length = max(1, isqrt(along_row * along_row + along_column * along_column))
         size = low + mix64(key ^ (number * 0x9E3779B97F4A7C15)) % (high - low + 1)
-        size = size if number % 2 else -size
-        row, column = blocks[index]
-        while size:
-            moved = (row - along_column * size // length, column + along_row * size // length)
-            if (
-                0 <= moved[0] < passable.shape[0]
-                and 0 <= moved[1] < passable.shape[1]
-                and passable[moved]
-            ):
-                points.append(moved)
-                break
-            size = int(size / 2)
+        point = _waypoint(
+            blocks,
+            number * len(blocks) // (count + 1),
+            size,
+            1 if number % 2 else -1,
+            passable,
+        )
+        if point is not None:
+            points.append(point)
     longer: list[tuple[int, int]] = [blocks[0]]
     try:
         for start, stop in pairwise(points):

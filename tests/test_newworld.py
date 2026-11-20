@@ -197,15 +197,22 @@ def test_required_asian_approach_stays_playable_through_the_generated_land() -> 
     assert np.all(world.labels[asia] == -1)
 
 
-def _longest_run(mask: NDArray[np.bool_]) -> int:
-    """The longest run of set pixels along any row of ``mask``."""
-    padded = np.pad(mask, ((0, 0), (1, 1)))
-    edges = np.diff(padded.astype(np.int8), axis=1)
+def _longest_straight(mask: NDArray[np.bool_], *, band: int, gap: int = 2, step: int = 3) -> int:
+    """The longest stretch of set pixels of ``mask`` that lies within a ``band``-pixel wide strip
+    along some line, at any angle (every ``step`` degrees), without a break over ``gap``."""
+    ys, xs = (axis.astype(np.float64) for axis in np.nonzero(mask))
     longest = 0
-    for row in range(mask.shape[0]):
-        starts, stops = np.flatnonzero(edges[row] == 1), np.flatnonzero(edges[row] == -1)
-        if starts.size:
-            longest = max(longest, int((stops - starts).max()))
+    for degrees in range(0, 180, step):
+        angle = np.deg2rad(degrees)
+        across = xs * np.cos(angle) + ys * np.sin(angle)
+        along = np.floor(-xs * np.sin(angle) + ys * np.cos(angle) + 0.5).astype(np.int64)
+        for shift in (0, band // 2 + 1):
+            strips = np.floor((across + shift) / band).astype(np.int64)
+            order = np.lexsort((along, strips))
+            strip, position = strips[order], along[order]
+            cuts = np.flatnonzero((np.diff(strip) != 0) | (np.diff(position) > gap)) + 1
+            starts, stops = np.concatenate([[0], cuts]), np.concatenate([cuts, [len(position)]])
+            longest = max(longest, int((position[stops - 1] - position[starts] + 1).max()))
     return longest
 
 
@@ -240,20 +247,20 @@ def test_the_asian_land_bridge_winds_and_has_no_straight_walls() -> None:
         parts = label_components(land.astype(np.int32))
         assert parts[330 - drop, 140] == parts[approach.point] > 0
         assert np.any(land & interface)
-        # Winding, not an L: no row or column holds most of the axis.
+        # Winding, not an L or a ruled line at any angle: no strip a location wide holds most of
+        # the axis.
         axis = int(np.count_nonzero(path))
-        assert max(_longest_run(path), _longest_run(path.T)) * 2 <= axis
+        assert _longest_straight(path, band=settings.location_px) * 10 <= 7 * axis
         # A body of land, at least a location wide along its whole axis.
         reach = distance_from(path, settings.location_px, octagonal=True)
         near = (reach < settings.location_px - 1) & domain & ~shore
         assert np.all(land[near])
-        # And a coast without long straight walls.
+        # And a coast without long straight walls, at any angle.
         inner = added & (distance_from(~domain, 30, octagonal=True) > 14)
-        horizontal = inner[1:-1, 1:-1] & ~land[:-2, 1:-1]
-        vertical = inner[1:-1, 1:-1] & ~land[1:-1, :-2]
-        wall = 5 * settings.location_px // 2
-        assert _longest_run(horizontal) <= wall
-        assert _longest_run(vertical.T) <= wall
+        edge = inner[1:-1, 1:-1] & ~(
+            land[:-2, 1:-1] & land[2:, 1:-1] & land[1:-1, :-2] & land[1:-1, 2:]
+        )
+        assert _longest_straight(edge, band=2) <= 4 * settings.location_px
 
 
 def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:

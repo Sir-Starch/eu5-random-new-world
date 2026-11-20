@@ -66,8 +66,9 @@ where two such pixels' reaches met), and the conditioning gives way to the
 generated coast away from the seam. Retained ground that the generated sea has
 cut through high land (water whose installed height is above the coast's, never
 an installed coast or sea) rises over the new shoreline only as steeply as the
-steep installed coasts do (the cap is `RIM_BASE + RIM_SLOPE` per pixel from the
-water; what is above it is compressed), so the cut is no wall. The cap is
+steep installed coasts do (the cap follows the installed coasts' 90th percentile,
+`RIM_BASE` at the first pixel and `RIM_SLOPE` for each after it; what is above it
+saturates to at most `RIM_MARGIN` over it), so the cut is no wall. The cap is
 applied to the retained heights before they are carried into the generated side,
 so both sides of the seam agree, and the target, its weight and the cap reach
 the decals by interpolation (two samples a location pixel), not as repeated

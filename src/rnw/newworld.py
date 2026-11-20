@@ -92,8 +92,8 @@ BRIDGE_EDGE: Final[int] = 700  # roughness_permille of the edge noise
 BRIDGE_SWELL_PERIOD: Final[int] = 6000  # permille of a location: along the axis
 BRIDGE_MEANDER: Final[int] = 1800  # extra thousandths of a block a noisy block costs, at most
 BRIDGE_TRIES: Final[int] = 12
-BRIDGE_WIND_SPACING: Final[int] = 5000  # permille of a location: between the winding's waypoints
-BRIDGE_WIND_AMPLITUDE: Final[tuple[int, int]] = (1000, 2600)  # permille of a location: sideways
+BRIDGE_WIND_SPACING: Final[int] = 4000  # permille of a location: between the winding's waypoints
+BRIDGE_WIND_AMPLITUDE: Final[tuple[int, int]] = (1200, 3000)  # permille of a location: sideways
 BRIDGE_LANDING_SCALE: Final[int] = 700  # permille: the bridge to a strait's landing is slighter
 # The centre control lifts the land density by up to CENTRE_LIFT elevation units in the middle of
 # the canvas, rising over the distance from its edge (to the deepest interior, but at most

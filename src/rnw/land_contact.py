@@ -49,16 +49,19 @@ COAST_TAPER: Final[int] = 32
 SEAM_HOLD: Final[tuple[int, int]] = (8, 48)
 # A retained shore that the generated sea has cut through high ground would stand over the water
 # as a wall whose edge is the staircase of the cut. Within RIM_REACH of water that the generator
-# made out of installed ground (water whose installed height is over the coast's by CUT_MARGIN;
-# the installed coasts and seas stay as they are) the retained height may rise over the
-# shoreline only about as steeply as the steep installed coasts do (RIM_BASE at the first pixel,
-# RIM_SLOPE a pixel after it, near the 90th percentile of the installed coasts); what is above
-# that is compressed to a ``RIM_SOFT``-th, so the ground still reads as it was.
+# made out of installed ground (water whose installed height is over the coast's by CUT_MARGIN,
+# in bodies wider than CUT_OPEN pixels; the installed coasts and seas stay as they are) the
+# retained height may rise over the shoreline only as steeply as the steep installed coasts do:
+# RIM_BASE at the first pixel and RIM_SLOPE for each pixel after it follow the 90th percentile of
+# the installed coasts there (904 at the first pixel, 2,391 at the second, 5,364 at the fourth).
+# What rises above that is not cut off but saturates, to at most RIM_MARGIN over the limit, so
+# the ground still climbs.
 RIM_REACH: Final[int] = 24
-RIM_BASE: Final[int] = 1200
-RIM_SLOPE: Final[int] = 900
-RIM_SOFT: Final[int] = 4
+RIM_BASE: Final[int] = 800
+RIM_SLOPE: Final[int] = 1100
+RIM_MARGIN: Final[int] = 1200
 CUT_MARGIN: Final[int] = 300
+CUT_OPEN: Final[int] = 2
 NO_RIM: Final[int] = 1 << 30
 # Heights, weights and the rim are carried to the decals' resolution (two samples a pixel) by
 # interpolation, in quarters of a pixel for the rim's distance from the water.
@@ -102,7 +105,10 @@ class ContactTerrain:
         # The retained heights are averaged over reaches that narrow toward the seam, which then
         # reproduces the real shore.
         water = ~generated & ~retained
-        cut = water & (self.height.astype(np.int64) > COAST_HEIGHT + CUT_MARGIN)
+        high = water & (self.height.astype(np.int64) > COAST_HEIGHT + CUT_MARGIN)
+        # A strip of high water a pixel or two wide is the raster of a real coast, not a cut.
+        solid = distance_from(~high, CUT_OPEN + 2, octagonal=True) > CUT_OPEN
+        cut = high & (distance_from(solid, CUT_OPEN + 2, octagonal=True) <= CUT_OPEN)
         from_cut = distance_from(cut, RIM_REACH, octagonal=True).astype(np.int64)
         rim = np.where(
             retained & (from_cut < RIM_REACH),
@@ -185,9 +191,10 @@ def _upsample(values: NDArray[np.int64], valid: NDArray[np.bool_]) -> NDArray[np
 
 
 def soften_rim(heights: NDArray[np.int64], rim: NDArray[np.int64]) -> NDArray[np.int64]:
-    """Retained ``heights`` with what rises over the ``rim`` limits compressed to a fraction."""
+    """Retained ``heights`` with what rises over the ``rim`` limits saturated, to at most
+    ``RIM_MARGIN`` over them (the excess ``e`` becomes ``e * RIM_MARGIN / (e + RIM_MARGIN)``)."""
     over = heights - rim
-    return np.where(over > 0, rim + over // RIM_SOFT, heights)
+    return np.where(over > 0, rim + over * RIM_MARGIN // (over + RIM_MARGIN), heights)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
