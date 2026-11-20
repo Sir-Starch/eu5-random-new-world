@@ -17,6 +17,7 @@ from rnw.eu5_map import Eu5Map
 from rnw.eu5_newworld import outside_contacts, regional_geometry
 from rnw.eu5_nw_export import (
     _replacement_water_links,  # pyright: ignore[reportPrivateUsage]
+    _wasteland_shore,  # pyright: ignore[reportPrivateUsage]
     settled_biomes,
 )
 from rnw.eu5_seas import Coast, mediterranean_crossing
@@ -199,6 +200,21 @@ def test_cut_coastal_route_needs_a_new_navigable_connection() -> None:
     assert _replacement_water_links(game, lost, links, frozenset({"africa"}), ()) == {(0, 1)}
     assert not _replacement_water_links(game, lost, links, frozenset({"africa"}), (1,))
     assert not _replacement_water_links(game, lost, links, frozenset({"oceania"}), ())
+
+
+def test_only_a_wasteland_and_its_sea_carry_no_contact() -> None:
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                classes=(CellClass.WASTELAND, CellClass.SEA, CellClass.LAND, CellClass.WASTELAND)
+            ),
+        ),
+    )
+    assert _wasteland_shore(game, (0, 1))
+    assert not _wasteland_shore(game, (1, 2))
+    assert not _wasteland_shore(game, (0, 3))
 
 
 def test_mediterranean_crossing_uses_the_retained_and_generated_shores() -> None:

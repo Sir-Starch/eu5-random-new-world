@@ -1467,6 +1467,12 @@ def _inland_sea_cells(
     return frozenset(cell for basin in basins for cell in basin)
 
 
+def _wasteland_shore(game_map: Eu5Map, pair: tuple[int, int]) -> bool:
+    """Whether the pair is an impassable wasteland and the sea around it."""
+    kinds = {game_map.classes[cell] for cell in pair}
+    return kinds == {CellClass.WASTELAND, CellClass.SEA}
+
+
 def _replacement_water_links(
     game_map: Eu5Map,
     lost: list[tuple[int, int]],
@@ -1576,6 +1582,8 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
         and not held[pair[0]]
         and not held[pair[1]]
         and (old_world[pair[0]] or old_world[pair[1]])
+        # An impassable islet has no port, so its touch with the sea carries no contact.
+        and not _wasteland_shore(game_map, pair)
     ]
     shores = (
         {cell for pair in lost for cell in pair if game_map.classes[cell] is CellClass.LAND}

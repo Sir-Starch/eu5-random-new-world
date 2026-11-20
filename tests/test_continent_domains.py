@@ -175,6 +175,46 @@ def test_africa_claims_no_water_beyond_its_northern_limit() -> None:
     assert not mask[:limit].any()
 
 
+def _northern_sea_map() -> tuple[Eu5Map, int, int]:
+    """Africa's own sea above its limit beside European land, and another sea to its west."""
+    base = _map()
+    labels = base.labels.copy()
+    labels[5:40, 640:700] = 6
+    labels[5:40, 700:760] = 7
+    labels[100:140, 560:620] = 8
+    game = _with_locations(
+        base,
+        labels,
+        ("northern_sea", CellClass.SEA, "africa"),
+        ("european_shore", CellClass.LAND, "europe"),
+        ("western_sea", CellClass.SEA, "africa"),
+    )
+    return game, 6, 8
+
+
+def test_water_africa_is_denied_above_its_limit_stays_with_the_retained_map() -> None:
+    game, north, west = _northern_sea_map()
+    owner = _owners(game, tuple(CONTINENTS))
+    assert np.all(owner[game.labels == north] == -1)
+    assert np.all(owner[game.labels == west] >= 0)
+
+
+@pytest.mark.parametrize("names", [("oceania",), ("africa", "oceania")])
+def test_a_partial_selection_leaves_enclosed_water_to_the_retained_map(
+    names: tuple[str, ...],
+) -> None:
+    game, passage = _passage_map(gap=0)
+    owner = _owners(game, names)
+    assert np.all(owner[game.labels == passage] == -1)
+
+
+def test_a_partial_african_world_claims_no_water_beyond_its_limit() -> None:
+    game, north, _ = _northern_sea_map()
+    owner = _owners(game, ("africa",))
+    assert np.all(owner[game.labels == north] == -1)
+    assert not (owner[:45] >= 0).any()
+
+
 def test_vanilla_water_speck_inside_asia_stays_in_the_preserved_canvas() -> None:
     game = _map()
     game.labels[55, 680] = 0

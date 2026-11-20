@@ -17,8 +17,11 @@ worlds and saves are not rewritten or migrated.
   coasts and Pacific island groups use the shared ocean. Regional worlds
   keep a navigable southern route by default, with an option to disable it.
   Eurasia and Greenland keep a canvas of their own with the bays and passages
-  their shores enclose, and Africa claims no ocean north of its own generation
-  limit, so a generated continent cannot enter them or lie beside northern Europe.
+  their shores enclose, and the water Africa would have claimed north of its own
+  generation limit stays Eurasian, so a generated continent cannot enter them or
+  lie beside northern Europe. Worlds with fewer continents follow the same rules.
+  Africa alone, Oceania alone and their pairs generate again with the southern
+  route on: a retained wasteland islet in that strip no longer counts as a lost contact.
 
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size

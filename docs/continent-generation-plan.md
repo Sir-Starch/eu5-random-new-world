@@ -60,8 +60,11 @@ canvases. Africa retains its share of the Mediterranean and may approach
 southern Iberia and western Asia. The
 African mainland's northern latitude sets a limit for both its generated
 land and its claim on open water, so no African canvas lies beside northern
-Europe. The water north of that limit goes to the nearest other generated
-canvas, or to Eurasia where its shores enclose it.
+Europe. Water that Africa would have claimed beyond that limit stays
+retained, whole locations at a time, so the Celtic Sea and the Bay of Biscay
+remain European. With fewer continents, the same two rules apply to the
+African and Oceanian claims: water that retained shores enclose and water
+beyond Africa's limit stays vanilla.
 The three generated regions share borders across the Pacific, Atlantic and
 Indian oceans. Their coasts and intervening deep water form during generation.
 The sea plan checks the common borders for deep water, keeps small residual

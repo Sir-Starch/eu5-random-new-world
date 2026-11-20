@@ -109,6 +109,10 @@ CONTINENTS: Final[Mapping[str, Continent]] = MappingProxyType(
 )
 
 
+AFRICA: Final[str] = "africa"
+AFRICA_NUMBER: Final[int] = tuple(CONTINENTS).index(AFRICA)
+
+
 def _validate_geography(continent: Continent, settings: NewWorldSettings) -> None:
     if continent.key != NEW_WORLD and (
         settings.landform or settings.template_permille or settings.keep_geography
@@ -238,6 +242,8 @@ class OceanClaims:
     eurasian: NDArray[np.bool_] | None = None
     # First pixel row Africa may claim; its land and its water both stop above it.
     north_africa: int = 0
+    # Blocks of the claim grid that Africa would have taken above that row.
+    reserved: NDArray[np.bool_] | None = None
 
     def rows(self, rows: NDArray[np.int64]) -> NDArray[np.int64]:
         return rows // (2 * self.step)
@@ -375,34 +381,43 @@ def _rejoin_fragments(
 
 
 def _eurasian_waters(
-    game_map: Eu5Map, claims: OceanClaims, sea: NDArray[np.bool_]
+    game_map: Eu5Map, claims: OceanClaims, sea: NDArray[np.bool_], generated: Collection[str]
 ) -> NDArray[np.bool_]:
     """Open-ocean locations at least half enclosed by Eurasian shores and joined to them.
 
     A location the enclosure marks but that reaches no retained Eurasian location
     through other marked ones would be an isolated vanilla zone in generated water.
     """
-    near = claims.eurasian
+    near, reserved = claims.eurasian, claims.reserved
     count = len(game_map.keys)
-    if near is None:
+    if near is None or reserved is None:
         return np.zeros(count, dtype=bool)
     labels = game_map.labels
-    columns = np.arange(labels.shape[1], dtype=np.int64) // claims.step
+    columns = np.arange(labels.shape[1], dtype=np.int64)
     taken = np.zeros(count, dtype=np.int64)
+    held = np.zeros(count, dtype=np.int64)
     total = np.zeros(count, dtype=np.int64)
     for first in range(0, len(labels), BAND_ROWS):
         stop = min(first + BAND_ROWS, len(labels))
         block = labels[first:stop]
-        reached = near[np.ix_(np.arange(first, stop, dtype=np.int64) // claims.step, columns)]
+        rows = np.arange(first, stop, dtype=np.int64)
+        kept = reserved[np.ix_(claims.rows(rows), claims.columns(columns))]
+        reached = near[np.ix_(rows // claims.step, columns // claims.step)] | kept
         total += np.bincount(block.ravel(), minlength=count)
         taken += np.bincount(block[reached], minlength=count)
+        held += np.bincount(block[kept], minlength=count)
     open_water = np.fromiter(
         (name.endswith("_ocean_continent") for name in game_map.continents), dtype=bool
     )
-    marked = sea & open_water & (total > 0) & (2 * taken >= total)
+    # Water filed under Africa is only withheld where its northern limit denied it, never
+    # where Eurasian shores merely enclose it: Africa keeps its share of the Mediterranean.
+    african = np.fromiter((name == "africa" for name in game_map.continents), dtype=bool)
+    marked = (
+        sea & (total > 0) & ((open_water & (2 * taken >= total)) | (african & (2 * held >= total)))
+    )
     retained = np.fromiter(
         (
-            bool(name) and name not in CONTINENTS and not name.endswith("_ocean_continent")
+            bool(name) and name not in generated and not name.endswith("_ocean_continent")
             for name in game_map.continents
         ),
         dtype=bool,
@@ -433,7 +448,7 @@ def _shared_water(
     retained_tolls: Collection[str],
 ) -> SharedWater:
     selected_land, cores = _continental_cores(game_map, sea)
-    eurasian = _eurasian_waters(game_map, claims, sea)
+    eurasian = _eurasian_waters(game_map, claims, sea, CONTINENTS)
     kept = sea & np.array(
         [
             continent not in selected
@@ -496,17 +511,56 @@ def _shared_water(
     return SharedWater(owners, claims.north_africa, tuple(resolved))
 
 
+def _pacific_shelf(mainland: NDArray[np.bool_], seed: int) -> NDArray[np.bool_]:
+    """Put the shelf's centreline out in the Pacific.
+
+    Its displacement varies with latitude and seed, and its ocean budget stays shared.
+    """
+    rows, columns = mainland.shape
+    rnd = SplitMix64(derive_seed(seed, "continental_shelf"))
+    bands = np.linspace(0, rows - 1, 6, dtype=np.int64)
+    offsets = [-(15 + rnd.below(40)) for _ in bands]
+    shift = np.zeros(rows, dtype=np.int64)
+    for i, (a, b) in enumerate(pairwise(bands.tolist())):
+        if a < b:
+            shift[a:b] = offsets[i] + (np.arange(b - a) * (offsets[i + 1] - offsets[i]) // (b - a))
+    shift[-1] = offsets[-1]
+    return mainland[np.arange(rows)[:, None], (np.arange(columns) - shift[:, None]) % columns]
+
+
+def _enclosed_claims(
+    game_map: Eu5Map,
+    sea: NDArray[np.bool_],
+    solid: NDArray[np.bool_],
+    selected: Collection[str],
+    sample: NDArray[np.int32],
+) -> NDArray[np.bool_]:
+    """The blocks of the claim grid inside the whole locations that retained shores enclose."""
+    step = game_map.labels.shape[1] // OCEAN_GRID_COLUMNS or 1
+    square = _eurasian_blocks(game_map, solid, step, selected)
+    claims = OceanClaims(
+        np.zeros(sample.shape, dtype=np.int8),
+        step,
+        eurasian=square,
+        reserved=np.zeros(sample.shape, dtype=bool),
+    )
+    return _eurasian_waters(game_map, claims, sea, selected)[sample]
+
+
 def _ocean_claims(
     game_map: Eu5Map,
     selected: Mapping[str, NewWorldSettings],
     sea: NDArray[np.bool_],
+    solid: NDArray[np.bool_],
     seed: int | None,
 ) -> OceanClaims:
     """Divide competing ocean claims by distance to substantial land on a shared grid.
 
     A distant island retains its footprint and a local coast. It cannot reserve an
     ocean sector for its continent. Taller blocks give all continents room towards the
-    poles without letting a fringe island dominate a whole latitude band.
+    poles without letting a fringe island dominate a whole latitude band. Africa and
+    Oceania leave to the retained map the water that its shores enclose, and Africa
+    claims nothing beyond its northern limit.
     """
     labels = game_map.labels
     height, width = labels.shape
@@ -517,6 +571,8 @@ def _ocean_claims(
     best = np.full(sample.shape, max(sample.shape) + 1, dtype=np.int32)
     owners = np.full(sample.shape, -1, dtype=np.int8)
     minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // (2 * step**2))
+    enclosed = _enclosed_claims(game_map, sea, solid, selected, sample)
+    north_africa = 0
     for number, key in enumerate(CONTINENTS):
         if key not in selected:
             continue
@@ -532,26 +588,16 @@ def _ocean_claims(
         if key == NEW_WORLD and (settings.expand_oceans or settings.landform):
             reach = max(reach, OPEN_OCEAN_BAND_PX)
         if key == NEW_WORLD and seed is not None and _expanded_america(settings):
-            # Put the shelf's centreline out in the Pacific. Its displacement
-            # varies with latitude and seed, and its ocean budget stays shared.
-            rnd = SplitMix64(derive_seed(seed, "continental_shelf"))
-            bands = np.linspace(0, len(rows) - 1, 6, dtype=np.int64)
-            offsets = [-(15 + rnd.below(40)) for _ in bands]
-            shift = np.zeros(len(rows), dtype=np.int64)
-            for i, (a, b) in enumerate(pairwise(bands.tolist())):
-                if a < b:
-                    shift[a:b] = offsets[i] + (
-                        np.arange(b - a) * (offsets[i + 1] - offsets[i]) // (b - a)
-                    )
-            shift[-1] = offsets[-1]
-            mainland = mainland[
-                np.arange(len(rows))[:, None],
-                (np.arange(len(columns)) - shift[:, None]) % len(columns),
-            ]
+            mainland = _pacific_shelf(mainland, seed)
             reach = max(reach, PACIFIC_SHELF_PX)
         radius = reach * width // (REFERENCE_WIDTH * step)
         distance = distance_from(mainland, radius + 1, octagonal=True, wrap_x=True)
         claim = (distance <= radius) & (distance < best)
+        if key == AFRICA:
+            north_africa = _african_limit(mainland, rows, step, width)
+            claim &= (rows - step >= north_africa)[:, None]
+        if key != NEW_WORLD:
+            claim &= ~enclosed
         owners[claim] = number
         best[claim] = distance[claim]
     if len(selected) > 1:
@@ -570,7 +616,7 @@ def _ocean_claims(
         if seed is not None and {"america", "oceania"}.issubset(selected)
         else ()
     )
-    return OceanClaims(owners, step, islands)
+    return OceanClaims(owners, step, islands, north_africa=north_africa)
 
 
 def _expanded_america(settings: NewWorldSettings) -> bool:
@@ -592,33 +638,56 @@ def _shared_ocean_claims(
     columns = np.minimum(np.arange(0, width, step, dtype=np.int64) + step // 2, width - 1)
     sample = game_map.labels[np.ix_(rows, columns)]
     limit = sample.shape[0] + sample.shape[1]
-    best = np.full(sample.shape, limit + 1, dtype=np.int32)
-    owners = np.zeros(sample.shape, dtype=np.int8)
     minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // (2 * step**2))
     north_africa = 0
+    distances: list[tuple[int, NDArray[np.int32]]] = []
     for number, name in enumerate(CONTINENTS):
         core = _substantial_land(_membership(game_map, name) & ~sea, sample, minimum)
         if not core.any():
             continue
+        if name == AFRICA:
+            north_africa = _african_limit(core, rows, step, width)
         if seed is not None:
             shift = _shelf_drift(seed, name, len(rows), len(columns))
             core = core[
                 np.arange(len(rows))[:, None],
                 (np.arange(len(columns)) - shift[:, None]) % len(columns),
             ]
-        distance = distance_from(core, limit, octagonal=True, wrap_x=True)
+        distances.append((number, distance_from(core, limit, octagonal=True, wrap_x=True)))
+    owners = _nearest_core(distances, sample.shape, limit, np.ones(len(rows), dtype=bool))
+    held = _nearest_core(distances, sample.shape, limit, rows - step >= north_africa)
+    reserved = (owners == AFRICA_NUMBER) & (held != AFRICA_NUMBER)
+    return OceanClaims(
+        held,
+        step,
+        eurasian=_eurasian_blocks(game_map, solid, step, CONTINENTS),
+        north_africa=north_africa,
+        reserved=reserved,
+    )
+
+
+def _african_limit(core: NDArray[np.bool_], rows: NDArray[np.int64], step: int, width: int) -> int:
+    """The first pixel row Africa may claim: its northernmost land less its northern reach."""
+    first = int(np.flatnonzero(core.any(axis=1))[0])
+    return max(0, int(rows[first]) - step - AFRICAN_NORTH_REACH_PX * width // REFERENCE_WIDTH)
+
+
+def _nearest_core(
+    distances: list[tuple[int, NDArray[np.int32]]],
+    shape: tuple[int, ...],
+    limit: int,
+    african: NDArray[np.bool_],
+) -> NDArray[np.int8]:
+    """The continent whose land is nearest each block; Africa claims only its ``african`` rows."""
+    best = np.full(shape, limit + 1, dtype=np.int32)
+    owners = np.zeros(shape, dtype=np.int8)
+    for number, distance in distances:
         take = distance < best
-        if name == "africa":
-            first = int(np.flatnonzero(core.any(axis=1))[0])
-            north_africa = max(
-                0, int(rows[first]) - step - AFRICAN_NORTH_REACH_PX * width // REFERENCE_WIDTH
-            )
-            take &= (rows - step >= north_africa)[:, None]
+        if number == AFRICA_NUMBER:
+            take &= african[:, None]
         best[take] = distance[take]
         owners[take] = number
-    return OceanClaims(
-        owners, step, eurasian=_eurasian_blocks(game_map, solid, step), north_africa=north_africa
-    )
+    return owners
 
 
 def _substantial_land(
@@ -631,8 +700,13 @@ def _substantial_land(
     return main & (sizes >= min(int(sizes.max()), minimum))[parts]
 
 
-def _eurasian_blocks(game_map: Eu5Map, solid: NDArray[np.bool_], step: int) -> NDArray[np.bool_]:
-    """Square blocks of water that retained Eurasian shores enclose.
+def _eurasian_blocks(
+    game_map: Eu5Map, solid: NDArray[np.bool_], step: int, generated: Collection[str]
+) -> NDArray[np.bool_]:
+    """Square blocks of water that retained shores enclose, whatever the generated continents.
+
+    Every continent outside ``generated`` is retained land, so Eurasia and an unselected
+    Africa enclose water alike.
 
     The claim grid is twice as coarse in latitude, so its distances would double the
     reach north and south. A square grid keeps the reach the same in every direction.
@@ -648,7 +722,7 @@ def _eurasian_blocks(game_map: Eu5Map, solid: NDArray[np.bool_], step: int) -> N
     limit = sample.shape[0] + sample.shape[1]
     nearest_generated = np.full(sample.shape, limit + 1, dtype=np.int32)
     minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // step**2)
-    for name in CONTINENTS:
+    for name in generated:
         core = _substantial_land(_membership(game_map, name) & solid, sample, minimum)
         if core.any():
             nearest_generated = np.minimum(
@@ -656,13 +730,13 @@ def _eurasian_blocks(game_map: Eu5Map, solid: NDArray[np.bool_], step: int) -> N
             )
     eurasia = np.fromiter(
         (
-            bool(name) and name not in CONTINENTS and not name.endswith("_ocean_continent")
+            bool(name) and name not in generated and not name.endswith("_ocean_continent")
             for name in game_map.continents
         ),
         dtype=bool,
     )
     land = (eurasia & solid)[sample]
-    foreign = (_membership_any(game_map) & solid)[sample]
+    foreign = (_membership_any(game_map, generated) & solid)[sample]
     reach = max(1, EURASIAN_SPAN_PX * width // (REFERENCE_WIDTH * step))
     enclosed = np.zeros(sample.shape, dtype=bool)
     for dy, dx in EURASIAN_LINES:
@@ -673,9 +747,9 @@ def _eurasian_blocks(game_map: Eu5Map, solid: NDArray[np.bool_], step: int) -> N
     return enclosed & (nearest <= nearest_generated)
 
 
-def _membership_any(game_map: Eu5Map) -> NDArray[np.bool_]:
+def _membership_any(game_map: Eu5Map, generated: Collection[str]) -> NDArray[np.bool_]:
     """Locations of any generated continent."""
-    return np.fromiter((name in CONTINENTS for name in game_map.continents), dtype=bool)
+    return np.fromiter((name in generated for name in game_map.continents), dtype=bool)
 
 
 def _sighted(
@@ -1160,7 +1234,7 @@ def plan_domains(
     claims = (
         _shared_ocean_claims(game_map, sea, solid, seed)
         if complete
-        else _ocean_claims(game_map, selected, sea, seed)
+        else _ocean_claims(game_map, selected, sea, solid, seed)
     )
     shared = _shared_water(game_map, claims, sea, selected, retained_tolls) if complete else None
     connect = (

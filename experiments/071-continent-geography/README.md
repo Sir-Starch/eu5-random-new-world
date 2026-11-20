@@ -394,17 +394,18 @@ this candidate. [Installation details](../INSTALLED.md).
 ## Four canvases on M55D
 
 [V-EXEC 2026-11-20] The four-canvas raster assigns all 90,805,365 installed
-sea pixels. Eurasia retains 12,592,521 sea pixels and Greenland. The
-American and African canvases share 8,133 seawater pixel edges. America
+sea pixels. Eurasia retains 12,856,445 sea pixels and Greenland. The
+American and African canvases share 7,404 seawater pixel edges. America
 and Oceania share 8,540. Africa and Oceania share 3,384. The count includes
 the horizontal map wrap. The original Norwegian and Java seas and the
 Malacca Strait stay in the Eurasian canvas. The Strait of Gibraltar is
 in the African canvas, with the Iberian shore preserved. The African
 mainland's northern limit for generation and for its ocean claim is row 2,240 on this
-16,384 × 8,192 raster, south of the preserved Norwegian coast. Above it
-the open Atlantic, including the Celtic Sea, belongs to America; the Bay of
-Biscay keeps a Eurasian strip along the coast, and the passage between
-Greenland and Britain stays Eurasian.
+16,384 × 8,192 raster, south of the preserved Norwegian coast. The water
+Africa would have claimed above it stays retained, whole locations at a time:
+the Celtic Sea, the Bay of Biscay and the passage between Greenland and
+Britain are Eurasian down to the latitude of north-western Iberia, and the
+open Atlantic west of them belongs to America.
 The remote vanilla Pacific islets assigned to Oceania no longer leave
 separate patches inside the American canvas. The surrounding canvas
 regenerates their old sites.
@@ -430,6 +431,25 @@ small water speck wholly inside replaced land joins that land's canvas. A
 larger location stranded among retained waters raises an error. The Baffin
 Island and Red Sea islets exposed these cases. The full cold export of the
 M55D code took 218.3 seconds at 16 threads. [V-EXEC]
+
+### Selections of fewer continents
+
+[V-EXEC 2026-11-20] The two limits also bind worlds that generate fewer than
+three continents. Water that retained shores enclose, whole locations at a time,
+and water beyond Africa's northern limit stay with the retained map. America
+alone keeps its legacy planner.
+
+A bisect of the seed-17 Oceania-only world found that every selection of Africa
+or Oceania had failed the Old World contact check since the southern sea route
+(`3064d4a`): the route turns the bottom 160 pixels into generated sea, and a
+retained wasteland islet such as South Georgia lost its touch with the sea
+around it. An impassable islet has no port, so the check no longer counts that
+touch. With the route on, Africa alone, Oceania alone, America with Africa and
+Africa with Oceania generate at seeds 17, 101 and 202, and all three continents
+at seeds 101 and 202 and the M55D seed. America with Oceania passes at seed 17
+and fails at seeds 101 and 202, as it does on the code at `d3c6f0a`: unreachable
+sea cells in a basin of the expanded American canvas, and a passable contact
+between American and Oceanian sea cells at their Pacific border.
 
 The first full plan exposed 125 tiny sea fragments that appeared when the
 regional grids met. They became isolated when nearby deep waters were
