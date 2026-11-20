@@ -30,14 +30,14 @@ worlds and saves are not rewritten or migrated.
   path with a thin straight apron, which left walls with straight edges on the generated coast.
   The connection is now a body of land along a winding, smoothed route (a long route is routed
   again through waypoints to either side of it, so it has no long straight stretch) that keeps
-  clear of the domain's coast margin; it swells and narrows, flares where it meets the
-  continent and the retained shore, has the irregular edge of every other coast and keeps a
-  spine one location wide. The strait landing in Europe is built the same way. Where the generated land meets the
-  retained ground, its height is now carried in as smooth averages of the retained heights
-  instead of copies of the nearest shore pixel (which drew parallel streaks and rectangular
-  steps), and retained ground that the generated sea has cut through high land (only that, never an
-  installed coast) rises over the new shore only as steeply as the game's steep coasts, so it
-  is no wall with a comb edge. The height and its weight reach the painted detail by
+  clear of the domain's coast margin; it swells and narrows, flares where it meets the continent
+  and the retained shore, has the irregular edge of every other coast and keeps a spine one
+  location wide. The strait landing in Europe is built the same way. Where the generated land
+  meets the retained ground, its height is now carried in as smooth averages of the retained
+  heights instead of copies of the nearest shore pixel (which drew parallel streaks and
+  rectangular steps), and retained ground that the generated sea has cut through high land (only
+  that, never an installed coast) rises over the new shore only as steeply as the game's steep
+  coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
