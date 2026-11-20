@@ -46,14 +46,16 @@ RNW_REPRODUCE=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_ins
 RNW_LAYERS=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py -k layers
 ```
 
-`-k reference` also makes every older selectable epoch (`-k older_epochs` for those alone) with
+`-k reference` also makes every older selectable epoch whose golden matches the installed map
+fingerprint (`-k older_epochs` for those alone), with
 `Settings.algorithm` set to it and compares the result with that epoch's frozen golden: the
 proof that its gate still makes the old bytes ([ADR 0013](adr/0013-experimental-features-and-epoch-choice.md)).
 `tests/test_epoch_selection.py` and `tests/test_epoch_controller.py` need no game: the window of
 epochs, the switches, the stamps and what the controller makes of the choice.
 
-The reference export compares the current epoch's output with
-`tests/golden_world.json` (pending epoch 64 of 1.3.0). The frozen
+The reference export compares epoch 64 of pending RNW 1.3.0 with `tests/golden_world.json` on
+EU5 1.4.9. `tests/golden_world_1.4.7.json` records its pre-climate-calibration result on EU5
+1.4.7. The frozen
 epoch-63, epoch-62, epoch-61, epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch63.json`,
 `tests/golden_world_epoch62.json`, `tests/golden_world_epoch61.json`, `tests/golden_world_epoch60.json` and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples
 rerolls. They take substantially longer than synthetic tests and need the local

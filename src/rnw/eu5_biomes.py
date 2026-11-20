@@ -95,6 +95,9 @@ TERRAIN_MATERIALS: Final[str] = "game/in_game/gfx/terrain2/materials.txt"
 CLIMATE_STEP: Final[int] = 4
 # Rows per strip of the whole-raster climate passes; a multiple of CLIMATE_STEP.
 CLIMATE_STRIP: Final[int] = 1024
+# Read the same amount of training evidence from similar map areas, including the interiors
+# of the large desert wastelands. A 48-pixel grid gives about as many rows as the old vote.
+CLIMATE_SAMPLE_STEP: Final[int] = 48
 # Row of the equator and (pixels from it, absolute latitude in tenths of a degree), from
 # city locators of build 25905365 [V-LOCAL C49]: Quito, Mogadishu and Singapore near
 # the equator, Cairo 30.0, London 51.5, Oslo 59.9, Arkhangelsk 64.5, Hammerfest 70.7.
@@ -408,6 +411,26 @@ def land_features(
         columns[1] = rain_root(rain - winter)
         columns.append(rain_root(winter))
     return np.stack(columns, axis=1)
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class ClimateSamples:
+    """Local climate readings on a regular grid and the vanilla labels at those points."""
+
+    labels: NDArray[np.int32]
+    features: NDArray[np.int64]
+
+
+def climate_samples(
+    grid: ClimateGrid, labels: NDArray[np.int32], height: NDArray[np.uint16]
+) -> ClimateSamples:
+    """Sample the raster uniformly so that a large desert has more than one climate reading."""
+    step = CLIMATE_SAMPLE_STEP
+    rows, columns = np.mgrid[step // 2 : labels.shape[0] : step, step // 2 : labels.shape[1] : step]
+    points = np.stack([rows.ravel(), columns.ravel()], axis=1)
+    pixels = (points[:, 0], points[:, 1])
+    features = land_features(grid, points, height[pixels].astype(np.int64))
+    return ClimateSamples(labels[pixels], features)
 
 
 def water_features(grid: ClimateGrid, points: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -1214,12 +1237,19 @@ def size_model(
     ground = _ground_training(labels, voters, truth, height, grid, land=land)
     del land
     # The climate vote of the cells, as ``assign_biomes`` makes it with open climates.
-    vote_names, vote_pairs = _vocabulary(joint)
+    vote_names, learned_pairs = _vocabulary(joint)
     _, vote_climate_of = _vocabulary([name.split("|")[0] for name in vote_names])
     learned_index = np.array(learned, dtype=np.int64)
+    vote_features, vote_pairs = _climate_training(
+        climate_samples(grid, labels, height),
+        land_features(grid, points[learned_index], mean_height[learned_index]),
+        learned_index,
+        learned_pairs,
+        centred[learned_index],
+    )
     known = {name: number for number, name in enumerate(names)}
     vote = (
-        land_features(grid, points[learned_index], mean_height[learned_index]),
+        vote_features,
         vote_pairs,
         vote_climate_of,
         np.array([name.split("|")[1] in NO_WETLANDS for name in vote_names], dtype=bool),
@@ -1775,16 +1805,20 @@ class VanillaLocations:
     mean_height: NDArray[np.int64]
     pairs: NDArray[np.int64]
     pixels: NDArray[np.int64] | None = None
+    climate: ClimateSamples | None = None
 
 
-def vanilla_locations(labels: NDArray[np.int32], height: NDArray[np.uint16]) -> VanillaLocations:
-    """Pixel-weighted centre and mean height of every vanilla label."""
+def vanilla_locations(
+    labels: NDArray[np.int32], height: NDArray[np.uint16], *, grid: ClimateGrid | None = None
+) -> VanillaLocations:
+    """Vanilla label centres and mean heights, with optional gridded climate readings."""
     pixels, points, mean_height = _label_centres(labels, height, int(labels.max()) + 1)
     return VanillaLocations(
         points=points,
         mean_height=mean_height,
         pairs=adjacency_pairs(labels, wrap_x=True),
         pixels=pixels,
+        climate=None if grid is None else climate_samples(grid, labels, height),
     )
 
 
@@ -1930,6 +1964,32 @@ def _land_training(
         for i in train
     ]
     return train, joint
+
+
+def _climate_training(
+    samples: ClimateSamples,
+    centres: NDArray[np.int64],
+    labels: NDArray[np.int64],
+    pairs: NDArray[np.int64],
+    pixels: NDArray[np.int64],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Read each sampled land patch, keeping a donor for pairs too small for the grid."""
+    if not labels.size:
+        return centres, pairs
+    by_label = np.full(int(labels.max()) + 1, -1, dtype=np.int64)
+    by_label[labels] = pairs
+    sampled = (samples.labels >= 0) & (samples.labels < by_label.size)
+    mapped = np.full(samples.labels.shape, -1, dtype=np.int64)
+    mapped[sampled] = by_label[samples.labels[sampled]]
+    keep = mapped >= 0
+    known = np.bincount(mapped[keep], minlength=int(pairs.max()) + 1) > 0
+    missing: list[int] = []
+    for pair in np.flatnonzero(~known):
+        candidates = np.flatnonzero(pairs == pair)
+        missing.append(int(candidates[pixels[candidates].argmax()]))
+    return np.concatenate([samples.features[keep], centres[missing]]), np.concatenate(
+        [mapped[keep], pairs[missing]]
+    )
 
 
 def regularize_votes(  # noqa: PLR0913, PLR0917 - the votes, the pairs, the graph and the rounds.
@@ -2130,6 +2190,10 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         vanilla.points[train_index],
         vanilla.mean_height[train_index],
     )
+    if open_climate and vanilla.climate is not None and vanilla.pixels is not None:
+        train_x, joint_ids = _climate_training(
+            vanilla.climate, train_x, train_index, joint_ids, vanilla.pixels[train_index]
+        )
     land = np.array([kind in LAND_KINDS for kind in cells.kinds], dtype=bool)
     land_cells = np.flatnonzero(land)
     query_x = land_features(

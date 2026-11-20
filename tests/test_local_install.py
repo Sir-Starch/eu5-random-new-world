@@ -20,7 +20,7 @@ from rnw import colonial_names, content_report, epoch, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
 from rnw.content import CONFEDERATION_COUNCIL, FAMILIES, GREAT_LAW, NATION_FOUNDING
-from rnw.contract import CONTRACT_FILES, fingerprint
+from rnw.contract import CONTRACT_FILES, aggregate_digest, fingerprint
 from rnw.eu5_archetypes import american_includes
 from rnw.eu5_biomes import PRECIOUS, template_attributes
 from rnw.eu5_canvas import select_canvas
@@ -67,6 +67,13 @@ from rnw.storymodel import render_events, render_hook
 from rnw.translations import GAME, problems
 
 GOLDEN_WORLD = Path(__file__).with_name("golden_world.json")
+
+
+def _current_golden(game_dir: Path) -> dict[str, object]:
+    golden = cast("dict[str, object]", json.loads(GOLDEN_WORLD.read_text(encoding="utf-8")))
+    if aggregate_digest(fingerprint(game_dir)) != golden["game_fingerprint_sha256"]:
+        pytest.skip(f"the current reference world is for {golden['game_label']}")
+    return golden
 
 
 def test_local_history_positions_use_observed_ungated_american_ranges() -> None:
@@ -537,10 +544,10 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     root_value = os.environ.get("EU5_GAME_DIR")
     if root_value is None or os.environ.get("RNW_REPRODUCE") != "1":
         pytest.skip("EU5_GAME_DIR and RNW_REPRODUCE=1 are needed")
-    golden = cast("dict[str, object]", json.loads(GOLDEN_WORLD.read_text(encoding="utf-8")))
+    game_dir = Path(root_value)
+    golden = _current_golden(game_dir)
     assert golden["epoch"] == epoch.CURRENT, "a new epoch needs a new reference world"
     code = decode(str(golden["code"]))
-    game_dir = Path(root_value)
     report = export_new_world(
         game_dir,
         tmp_path / "generated" / "rnw_exp_reference",
@@ -569,7 +576,7 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
         assert weight == (8 if cast("str", row["key"]).endswith("_region") else 0)
     stats = cast("dict[str, dict[str, dict[str, int]]]", report["text_stats"])
     guarded = stats["content"]["guarded"]
-    # On 1.4.5: 83 events (including the DLC diaspora), the canal chain's advance and decisions,
+    # 83 events (including the DLC diaspora), the canal chain's advance and decisions,
     # the pilgrimage and eight scripted names; formables vary with the world's cultures.
     assert {name: guarded[name] for name in guarded if name != "common/formable_countries"} == {
         "common/advances": 1,
@@ -600,8 +607,7 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     )
     absences = cast("dict[str, str]", stories["absences"])
     assert all(family in absences for family in confederate if not offered[family])
-    if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
-        pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
+    assert record.game.fingerprint_sha256 == golden["game_fingerprint_sha256"]
     output = cast("dict[str, object]", golden["output"])
     assert record.output_sha256 == output["sha256"]
     assert record.output_count == output["count"]
@@ -629,8 +635,11 @@ def test_local_older_epochs_come_out_as_their_frozen_reference_worlds(
     assert golden["epoch"] == number
     code = decode(str(golden["code"]))
     assert epoch.epoch_of(code.generator) == number
+    game_dir = Path(root_value)
+    if aggregate_digest(fingerprint(game_dir)) != golden["game_fingerprint_sha256"]:
+        pytest.skip(f"the frozen reference world is for {golden['game_label']}")
     report = export_new_world(
-        Path(root_value),
+        game_dir,
         tmp_path / "generated" / "rnw_exp_reference",
         seed=code.seed,
         settings=replace(code.settings(), algorithm=number),
@@ -638,8 +647,7 @@ def test_local_older_epochs_come_out_as_their_frozen_reference_worlds(
     )
     record = Record.from_json(report["record"])
     assert record.algorithm == number
-    if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
-        pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
+    assert record.game.fingerprint_sha256 == golden["game_fingerprint_sha256"]
     output = cast("dict[str, object]", golden["output"])
     assert record.output_sha256 == output["sha256"]
     assert record.output_count == output["count"]

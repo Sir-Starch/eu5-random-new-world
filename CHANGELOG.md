@@ -40,6 +40,10 @@ worlds and saves are not rewritten or migrated.
   coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
+- Calibrate climate and vegetation from evenly spaced readings of vanilla land. The
+  interiors of large desert locations now contribute in proportion to their map area,
+  so suitable subtropical terrain develops broader dry belts.
+
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size
   calibration across new worlds. The same seed and inputs produce the same world files.

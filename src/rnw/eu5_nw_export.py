@@ -5734,10 +5734,11 @@ def _vanilla_climate(game_map: Eu5Map, store: DecalStore, *, seasonal: bool) -> 
     ``seasonal`` (epoch 64, ``epoch.OPEN_CLIMATE``) the rain of each season."""
     height = store.world_heights()
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
+    grid = climate_grid(sea[game_map.labels], height, seasonal=seasonal)
     return VanillaClimate(
         height=height,
-        locations=vanilla_locations(game_map.labels, height),
-        grid=climate_grid(sea[game_map.labels], height, seasonal=seasonal),
+        locations=vanilla_locations(game_map.labels, height, grid=grid if seasonal else None),
+        grid=grid,
     )
 
 

@@ -63,6 +63,9 @@ KNOWN_BUILDS: Final[dict[str, str]] = {
     "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a": (
         "EU5 1.4.5 public release, Steam build 26211608 (map contract shared with 1.4.3 and 1.4.4)"
     ),
+    "8c02119a78a80506c900f582b3673cee025afa52e22ee40f2456d7f0578058ce": (
+        "EU5 1.4.9 public release, Steam build 26655995"
+    ),
 }
 MOD_LOCATIONS: Final[str] = "in_game/map_data/locations.png"
 MOD_RIVERS: Final[str] = "in_game/map_data/rivers.png"
