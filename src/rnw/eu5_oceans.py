@@ -57,38 +57,54 @@ def _neighbours(part: OceanRemainder, canvas: Canvas, world: NewWorld) -> set[in
     return found
 
 
-def _adjacent_navigable_color(  # noqa: PLR0913, PLR0917 - original and generated neighbours.
+def _adjacent_navigable_color(  # noqa: C901, PLR0913, PLR0917 - original and generated neighbours.
     part: OceanRemainder,
     game_map: Eu5Map,
     canvas: Canvas,
     world: NewWorld,
     plan: Plan,
     closed: frozenset[int],
+    *,
+    enclosed_land: bool = False,
 ) -> int | None:
     """Choose the longest shared edge with actual navigable water, if one exists.
 
     The remainder is small, so walk only its row runs. Generated and retained
     neighbours are read in their respective coordinate systems. A corner contact
-    is not enough to make the resulting location connected.
+    is not enough to make the resulting location connected. A tiny old ocean
+    speck wholly surrounded by a single retained land location belongs to it.
     """
     contacts: Counter[int] = Counter()
+    enclosing: set[int] = set()
     height, width = canvas.shape
     crop_width = world.labels.shape[1]
 
     def contact(row: int, column: int) -> None:
         if not 0 <= row < height:
+            enclosing.add(-1)
             return
         column %= width
         crop = column - canvas.col0
         if 0 <= crop < crop_width:
             cell = int(world.labels[row, crop])
             if cell >= 0:
+                enclosing.add(-1)
                 if world.classes[cell] is CellClass.SEA and cell not in closed:
                     contacts[plan.cells[cell].color] += 1
                 return
         old = int(game_map.labels[row, (column - canvas.roll) % width])
-        if game_map.classes[old] is CellClass.SEA and not game_map.ambiguous[old]:
+        if world.wrap_x and old == part.source:
+            return
+        # Shared-world remainders are being assigned new colours in this same
+        # plan. Only an untouched retained neighbour still has its original
+        # colour at every border pixel.
+        stable = not world.wrap_x or not canvas.trimmed[old]
+        if stable and game_map.classes[old] is CellClass.SEA and not game_map.ambiguous[old]:
             contacts[int(game_map.colors[old])] += 1
+        if stable and game_map.classes[old] in {CellClass.LAND, CellClass.WASTELAND}:
+            enclosing.add(old)
+        else:
+            enclosing.add(-1)
 
     for row, left, right in part.runs.tolist():
         contact(row, left - 1)
@@ -96,7 +112,11 @@ def _adjacent_navigable_color(  # noqa: PLR0913, PLR0917 - original and generate
         for column in range(left, right):
             contact(row - 1, column)
             contact(row + 1, column)
-    return min(contacts, key=lambda color: (-contacts[color], color)) if contacts else None
+    if contacts:
+        return min(contacts, key=lambda color: (-contacts[color], color))
+    if enclosed_land and len(enclosing) == 1 and -1 not in enclosing:
+        return int(game_map.colors[enclosing.pop()])
+    return None
 
 
 def _overlap(game_map: Eu5Map, canvas: Canvas, world: NewWorld, cells: set[int]) -> dict[int, int]:
@@ -268,10 +288,20 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
             # Preserve the principal vanilla identity and every substantive or
             # generated component. Tiny isolated remainders may instead join an
             # actually adjacent, navigable sea location without inventing an ocean.
-            if number and len(nodes) == 1 and nodes[0] >= count and not world.wrap_x:
+            if number and len(nodes) == 1 and nodes[0] >= count:
                 part = canvas.ocean_parts[nodes[0] - count]
-                if part.pixels < typical_area:
-                    color = _adjacent_navigable_color(part, game_map, canvas, world, plan, closed)
+                if part.pixels < (typical_area * 2 if world.wrap_x else typical_area):
+                    color = _adjacent_navigable_color(
+                        part,
+                        game_map,
+                        canvas,
+                        world,
+                        plan,
+                        closed,
+                        enclosed_land=world.wrap_x
+                        and bool(game_map.ambiguous[source])
+                        and part.pixels < typical_area // 32,
+                    )
                     if color is not None:
                         result.patches.append((part, color))
                         absorbed += 1

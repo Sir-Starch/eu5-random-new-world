@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
+import pytest
 
 from rnw.eu5_canvas import Canvas, OceanRemainder, remainder_runs
 from rnw.eu5_newworld import Plan, PlannedCell
@@ -200,10 +201,14 @@ def test_tiny_remainder_cannot_join_water_across_land() -> None:
     assert oceans.stats["ocean_fragments_absorbed"] == 0
 
 
-def test_tiny_remainder_can_join_retained_vanilla_sea() -> None:
-    labels = np.zeros((10, 10), dtype=np.int32)
-    labels[5, 0] = 1
-    world = derive_world(labels, (CellClass.SEA, CellClass.LAND), labels.copy())
+@pytest.mark.parametrize("trimmed", [False, True])
+def test_tiny_remainder_can_join_only_a_stable_retained_sea(*, trimmed: bool) -> None:
+    labels = np.full((10, 20), -1, dtype=np.int32)
+    labels[:, 5:15] = 0
+    labels[5, 5] = 1
+    world = derive_world(
+        labels, (CellClass.SEA, CellClass.LAND), np.zeros_like(labels), wrap_x=True
+    )
     game = _map()
     old_labels = game.labels.copy()
     old_labels[5, 3] = 1
@@ -225,12 +230,52 @@ def test_tiny_remainder_can_join_retained_vanilla_sea() -> None:
     tiny = OceanRemainder(0, np.array([[5, 4, 5]], dtype=np.int64), 1)
     canvas = Canvas(
         original.roll,
-        original.col0,
-        original.mask,
+        0,
+        labels >= 0,
         original.shape,
         original.removed,
-        original.trimmed,
+        np.array([True, trimmed]),
         (original.ocean_parts[1], tiny),
+    )
+    plan = _plan(world.classes)
+    oceans = plan_oceans(game, canvas, world, plan, _hierarchy(), frozenset({0}), KeySpace(set()))
+    assert [(part.pixels, color) for part, color in oceans.patches if color == 0x654321] == (
+        [] if trimmed else [(1, 0x654321)]
+    )
+
+
+def test_tiny_ocean_enclave_joins_the_one_retained_land_location_around_it() -> None:
+    rows, width = 40, 85
+    original = np.ones((rows, width), dtype=np.int32)
+    original[:, 10:] = 0
+    original[17, 3] = 0
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("old_ocean", "land"),
+                colors=np.array([0x123456, 0x654321]),
+                classes=(CellClass.SEA, CellClass.WASTELAND),
+                continents=("pacific_ocean_continent", "asia"),
+                ambiguous=np.array([True, False]),
+                labels=original,
+            ),
+        ),
+    )
+    labels = np.full_like(original, -1)
+    labels[:, 10:60] = 0
+    world = derive_world(labels, (CellClass.SEA,), np.zeros_like(labels), wrap_x=True)
+    main = OceanRemainder(0, remainder_runs(np.ones((rows, 25), dtype=bool), 0, 60), rows * 25)
+    tiny = OceanRemainder(0, np.array([[17, 3, 4]], dtype=np.int64), 1)
+    canvas = Canvas(
+        0,
+        0,
+        labels >= 0,
+        original.shape,
+        np.array([False, False]),
+        np.array([True, False]),
+        (main, tiny),
     )
     plan = _plan(world.classes)
     oceans = plan_oceans(game, canvas, world, plan, _hierarchy(), frozenset({0}), KeySpace(set()))

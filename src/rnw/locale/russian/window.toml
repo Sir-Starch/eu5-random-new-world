@@ -3305,6 +3305,10 @@ text = '''Выберите хотя бы один континент.'''
 source = "a936e75dbefa2ad8"
 text = "Обязательное сухопутное соединение с Азией"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "Сохранить морской путь для кругосветного плавания"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Иберийские владения Марокко'''

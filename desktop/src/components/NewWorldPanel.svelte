@@ -94,6 +94,11 @@
           onchange={(value) => app.call("set_continent", { key, value })}
         />
       {/each}
+      {#if n?.sea_circumnavigation != null}
+        <Check checked={n.sea_circumnavigation} disabled={locked}
+          label={t("continent.sea_circumnavigation")}
+          onchange={(enabled) => app.call("set_sea_circumnavigation", { enabled })} />
+      {/if}
       {#each Object.entries(n?.regions ?? {}) as [key, region] (key)}
         <div class="props">
           <label for={`preset-${key}`} class="key">{t(`continent.${key}`)} · {t("type")}</label>

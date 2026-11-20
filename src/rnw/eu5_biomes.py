@@ -58,7 +58,7 @@ from rnw.timing import measured
 from rnw.topology import adjacency_pairs, distance_from
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable, Mapping, Sequence
 
     from numpy.typing import NDArray
 
@@ -2050,6 +2050,34 @@ def _voted_grounds(
     return {cell: TOPOGRAPHIES[kind] for cell, kind in zip(chosen, kinds, strict=True)}
 
 
+def _anchor_biome_votes(
+    scores: NDArray[np.int64],
+    joint_names: Sequence[str],
+    position: NDArray[np.int64],
+    attributes: Sequence[Mapping[str, str]],
+    boundary_votes: Mapping[int, tuple[int, int]],
+) -> None:
+    """Extend a retained biome's evidence into a new, connected landscape."""
+    vocabulary = {name: i for i, name in enumerate(joint_names)}
+    for cell, (source, weight) in boundary_votes.items():
+        slot = position[cell]
+        if slot < 0:
+            continue
+        observed = attributes[source]
+        climate_name = observed.get("climate", "")
+        cover = observed.get("vegetation", "")
+        exact = vocabulary.get(f"{climate_name}|{EMPTY_LAND.get(cover, cover)}")
+        candidates = [
+            i for i, name in enumerate(joint_names) if name.startswith(f"{climate_name}|")
+        ]
+        if exact is None and not candidates:
+            continue
+        donor = exact if exact is not None else max(candidates, key=lambda i: scores[slot, i])
+        own = scores[slot].copy()
+        scores[slot] = own * (PERMILLE - weight) // PERMILLE
+        scores[slot, donor] += int(own.sum()) * weight // PERMILLE
+
+
 def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     *,
     game_map: Eu5Map,
@@ -2068,6 +2096,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     pooled_resources: bool = False,
     regional_resources: Mapping[str, MaterialRegion] | None = None,
     regional_wastelands: Mapping[str, WastelandRegion] | None = None,
+    boundary_votes: Mapping[int, tuple[int, int]] | None = None,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics.
 
@@ -2127,6 +2156,8 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
             ),
         )
         scores = scores * weights[np.newaxis, :]
+    if boundary_votes:
+        _anchor_biome_votes(scores, joint_names, position, attributes, boundary_votes)
     climate_choice, vegetation_choice = regularize_votes(
         scores,
         joint_climate,

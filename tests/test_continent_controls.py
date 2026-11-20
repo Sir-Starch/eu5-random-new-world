@@ -71,3 +71,18 @@ def test_land_versions_distinguish_regional_geography(tmp_path: Path) -> None:
         )
         < controls.LOCATION_BUDGET
     )
+
+
+def test_circumnavigation_option_is_optional_and_roundtrips(tmp_path: Path) -> None:
+    controller = Controller(data=tmp_path)
+    assert controller.sea_circumnavigation() is None
+    controller.set_continent("africa", enabled=True)
+    assert controller.sea_circumnavigation() is True
+    default = land_key(controller.world_code().settings(), 17)
+    controller.set_sea_circumnavigation(enabled=False)
+    restored = Controller(data=tmp_path)
+    assert restored.use_code(controller.code) is None
+    assert restored.sea_circumnavigation() is False
+    assert land_key(restored.world_code().settings(), 17) != default
+    restored.set_sea_circumnavigation(enabled=True)
+    assert land_key(restored.world_code().settings(), 17) == default

@@ -3305,6 +3305,10 @@ text = '''大陸を1つ以上選択してください。'''
 source = "a936e75dbefa2ad8"
 text = "アジアとの陸続きの接続を必須にする"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "世界を一周できる航路を確保"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''モロッコのイベリア領'''

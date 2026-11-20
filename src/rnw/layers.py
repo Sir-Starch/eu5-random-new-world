@@ -82,5 +82,7 @@ def land_key(settings: Settings, seed: int) -> str:
             document = (seed, settings.mask.id, american, tuple(regional))
         else:
             document = (seed, 0, None, tuple(regional))
+        if not settings.continents.sea_circumnavigation:
+            document += (("sea_circumnavigation", False),)
     text = repr(document)
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:LAND_KEY_LENGTH]

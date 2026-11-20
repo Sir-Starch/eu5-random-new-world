@@ -13,6 +13,9 @@ worlds and saves are not rewritten or migrated.
   New coastal shallows follow the generated shore. Africa can form a
   seed-dependent land connection to Asia or a navigable strait crossing to
   Europe. A checkbox makes the Asian connection required.
+  Land contacts continue the retained relief and biome. Expanded American
+  coasts and Pacific island groups use the shared ocean. Regional worlds
+  keep a navigable southern route by default, with an option to disable it.
 
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size

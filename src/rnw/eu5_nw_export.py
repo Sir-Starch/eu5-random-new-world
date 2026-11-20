@@ -331,6 +331,7 @@ from rnw.history_model import Factor, Military
 from rnw.history_output_checks import verify_combined_text, verify_diplomacy
 from rnw.history_output_checks import verify_text as verify_history_text
 from rnw.history_plan_checks import validate_projection
+from rnw.land_contact import ContactTerrain, contact_box
 from rnw.landmask import Fitted, LandMask, fit_drawing
 from rnw.languages import official_languages
 from rnw.layers import PEOPLES, RESOURCES, layer_seed
@@ -415,6 +416,7 @@ if TYPE_CHECKING:
     from rnw.eu5_start import Country, FinalStartPlan, PopCohort
     from rnw.game_texts import Entry
     from rnw.geography import Location
+    from rnw.land_contact import ContactBlend
     from rnw.settings import NewWorldSettings, Settings
     from rnw.vanilla_world import VanillaWorld
     from rnw.wording import Name
@@ -758,6 +760,7 @@ def composed_land_character(  # noqa: PLR0913 - common map, calibration and inde
     materials = material_counts(_read(game_dir, TERRAIN_MATERIALS))
     resource_regions: dict[str, MaterialRegion] = {}
     wasteland_regions: dict[str, WastelandRegion] = {}
+    boundary_votes: dict[int, tuple[int, int]] = {}
     polar = np.zeros(count, dtype=bool)
     touches = np.unique(world.labels[[0, -1], :])
     polar[touches[(touches >= 0) & (touches < count)]] = True
@@ -768,6 +771,17 @@ def composed_land_character(  # noqa: PLR0913 - common map, calibration and inde
         first = int(shared.cell_ids[name][0])
         cells = range(first, first + land)
         parameters = geography[name]
+        if region.contact is not None:
+            rows, columns = region.contact.box
+            span = np.arange(int(columns.start), int(columns.stop), dtype=np.int64)
+            span %= canvas.shape[1]
+            boundary_votes.update(
+                region.contact.biome_votes(
+                    np.take(world.labels[rows], span, axis=1),
+                    np.take(game_map.labels[rows], span, axis=1),
+                    len(game_map.keys),
+                )
+            )
         barrier = np.zeros(land, dtype=bool)
         barrier[local.barrier] = True
         resource_regions[name] = MaterialRegion(
@@ -809,6 +823,7 @@ def composed_land_character(  # noqa: PLR0913 - common map, calibration and inde
         pooled_resources=True,
         regional_resources=resource_regions,
         regional_wastelands=wasteland_regions,
+        boundary_votes=boundary_votes,
     )
     if biomes.kinds is None:
         message = "The composed wasteland plans did not classify the land cells"
@@ -3915,6 +3930,7 @@ class _ExportGeography:
     water_textures: Future[dict[str, int]]
     vanilla_ports: dict[str, VanillaPort]
     vanilla_locations: VanillaLocations | None = None
+    contact: ContactBlend | None = None
 
 
 def _water_textures(  # noqa: PLR0913 - read the fixed map plus the new mask and coastline.
@@ -4293,6 +4309,8 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     cache_dir: Path | None,
     require_asia_connection: bool,
     retained_tolls: Collection[str],
+    store: DecalStore,
+    southern_passage: int = 0,
 ) -> tuple[WorldRegion, ...]:
     domains = plan_domains(
         game_map,
@@ -4310,6 +4328,18 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             if name == NEW_WORLD and land_mask is not None
             else None
         )
+        terrain = None
+        world_box: tuple[slice, slice] | None = None
+        box = contact_box(domain.land_interface) if domain.land_interface is not None else None
+        if domain.join_asia and box is not None:
+            rows, columns = box
+            global_rows = slice(domain.first_row + rows.start, domain.first_row + rows.stop)
+            first = (domain.first_column + columns.start) % domain.map_width
+            global_columns = slice(first, first + columns.stop - columns.start)
+            samples = np.arange(first, first + columns.stop - columns.start, dtype=np.int64)
+            samples %= domain.map_width
+            terrain = ContactTerrain(box, store.height_window(global_rows, samples))
+            world_box = global_rows, global_columns
         world = landcache.get_world(
             cache_dir,
             domain.mask,
@@ -4326,8 +4356,21 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             outside_land=domain.contact_land,
             land_interface=domain.land_interface if domain.join_asia else None,
             strait=domain.strait,
+            contact_terrain=terrain,
+            island_sites=domain.island_sites,
+            reserve_south=max(0, domain.rows.stop - (game_map.labels.shape[0] - southern_passage)),
         )
-        return WorldRegion(domain, world)
+        if terrain is None or world_box is None or domain.contact_land is None:
+            return WorldRegion(domain, world)
+        dry = np.array(
+            [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
+        )[world.labels]
+        joint = terrain.blend(dry, domain.contact_land)
+        return WorldRegion(
+            domain,
+            world,
+            None if joint is None else replace(joint, box=world_box),
+        )
 
     if len(domains) == 1:
         return (build(domains[0]),)
@@ -4370,7 +4413,7 @@ def _replaced_development(hierarchy: Mapping[str, Location], removed: set[str]) 
     return gone - retained
 
 
-def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and calibration.
+def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geography and calibration.
     stages: Stages,
     spool: Spool,
     game_dir: Path,
@@ -4395,6 +4438,13 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
     localization = stages.submit(
         "vanilla localization keys", lambda: key_hashes(vanilla_localization_keys(game_dir))
     )
+    terrain_store = DecalStore(game_dir, game_map.labels.shape)
+    southern_passage = (
+        max(4, 160 * game_map.labels.shape[1] // 16_384)
+        if settings.continents.sea_circumnavigation
+        and not (settings.continents.america and settings.new_world.landform)
+        else 0
+    )
     regions = run_stage(
         "generate world",
         lambda: _regional_worlds(
@@ -4410,12 +4460,22 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
                 region.require_asia_connection for region in settings.continents.regions
             ),
             retained_tolls=sound_toll_locations(_read(game_dir, DEFAULT_MAP)),
+            store=terrain_store,
+            southern_passage=southern_passage,
         ),
     )
-    composed = run_stage("select canvas", lambda: compose_regions(game_map, regions))
+    composed = run_stage(
+        "select canvas",
+        lambda: compose_regions(game_map, regions, southern_passage=southern_passage, seed=seed),
+    )
     canvas = composed.canvas
     vanilla = _prepare_vanilla(
         stages, game_dir, game_map, canvas, hierarchy, settings.algorithm, (), composed=True
+    )
+    # The river rasters depend on regional drainage, not on the later sea
+    # identities. Let them share the existing worker budget with the biome pass.
+    rivers = stages.submit(
+        "biomes and rivers", lambda: composed_rivers(canvas.shape, regions, seed)
     )
     store, attributes, _, calibration = vanilla.reads.result()
     training = vanilla.climates.result()
@@ -4448,16 +4508,16 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
             removed=vanilla.removed,
         ),
     )
-    shapes = run_stage("water shapes", lambda: shape_water(coast))
+    shapes = run_stage(
+        "water shapes",
+        lambda: shape_water(coast, regular_grid=True, southern_passage=southern_passage),
+    )
     world = shapes.coast.world
     water_textures = stages.submit(
         "water textures",
         lambda: _water_textures(
             spool, game_dir, game_map, canvas, world, seed=seed, moved=None, regional_water=shapes
         ),
-    )
-    rivers = stages.submit(
-        "biomes and rivers", lambda: composed_rivers(canvas.shape, regions, seed)
     )
     biomes = settled_biomes(base_biomes, shared.world, shapes.coast)
     mark_ready("biome readings")
@@ -4497,6 +4557,21 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
     plan.dropped_areas = missing_area_keys(hierarchy, removed, plan)
     _check_identity_budget(game_map, removed, plan)
     final = _final_labels(game_map, canvas, world)
+    if southern_passage:
+        passable = np.array(
+            [
+                kind is CellClass.SEA and not closed
+                for kind, closed in zip(game_map.classes, game_map.ambiguous, strict=True)
+            ]
+            + [
+                kind is CellClass.SEA and i not in shapes.zones
+                for i, kind in enumerate(world.classes)
+            ],
+            dtype=bool,
+        )
+        if not passable[final[-1]].all():
+            message = "The southern sea route has a break before it returns around the map"
+            raise NewWorldExportError(message)
     checks, neighbours = run_stage(
         "world checks",
         lambda: _check_world(
@@ -4517,6 +4592,8 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
     ):
         message = "The African land approach does not join a passable Asian location"
         raise NewWorldExportError(message)
+    if southern_passage:
+        checks["circumnavigation_sea_locations"] = int(np.unique(final[-1]).size)
     return _ExportGeography(
         game_map,
         canvas,
@@ -4543,6 +4620,7 @@ def _prepare_composed_geography(  # noqa: PLR0913 - stages share geography and c
         water_textures,
         vanilla_ports,
         training.locations,
+        next((region.contact for region in regions if region.contact is not None), None),
     )
 
 
@@ -4880,6 +4958,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             prepared.water_textures,
         )
         vanilla_ports = prepared.vanilla_ports
+        terrain_contact = prepared.contact
         seam = (canvas.roll - canvas.col0) % canvas.shape[1]
         slot_tables, slot_stats = run_stage(
             "slot tables",
@@ -4937,6 +5016,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     noise_roll=seam,
                     mountains=mountain_relief(store, carved, seed=seed, column0=0),  # noqa: F821 - deleted after the stages
                     moved=moved_groups,
+                    contact=terrain_contact,
                 )
                 return terrain_outputs(store, inputs, slot_tables, seed, spool)
 

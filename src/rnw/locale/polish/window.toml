@@ -3305,6 +3305,10 @@ text = '''Wybierz co najmniej jeden kontynent.'''
 source = "a936e75dbefa2ad8"
 text = "Wymagaj połączenia lądowego z Azją"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "Zachowaj szlak morski wokół świata"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Iberyjskie posiadłości Maroka'''

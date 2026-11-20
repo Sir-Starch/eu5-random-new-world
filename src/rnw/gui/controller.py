@@ -376,6 +376,26 @@ class Controller:
         raw = self.other_changes.get("continents")
         return dict(cast("dict[str, object]", raw)) if isinstance(raw, dict) else {}
 
+    def sea_circumnavigation(self) -> bool | None:
+        """The regional option is available when the world has no Wall."""
+        selection = self.continent_selection()
+        if not any(selection[key] for key in REGIONAL_PRESETS) or (
+            selection["america"] and self.preset == "wall"
+        ):
+            return None
+        return self._continent_document().get("sea_circumnavigation", True) is True
+
+    def set_sea_circumnavigation(self, *, enabled: bool) -> None:
+        if self.sea_circumnavigation() in (None, enabled):
+            return
+        raw = self._continent_document()
+        if enabled:
+            _ = raw.pop("sea_circumnavigation", None)
+        else:
+            raw["sea_circumnavigation"] = False
+        self.other_changes["continents"] = raw
+        self._changed()
+
     def set_continent(self, key: str, *, enabled: bool) -> None:
         """Change one continent's switch without resetting the others' settings."""
         if key not in {"america", *REGIONAL_PRESETS}:

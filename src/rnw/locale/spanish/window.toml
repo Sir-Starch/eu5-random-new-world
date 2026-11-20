@@ -3305,6 +3305,10 @@ text = '''Selecciona al menos un continente.'''
 source = "a936e75dbefa2ad8"
 text = "Exigir una conexión terrestre con Asia"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "Conservar una ruta marítima alrededor del mundo"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Posesiones ibéricas de Marruecos'''

@@ -278,10 +278,12 @@ class ContinentSettings:
 
     america: bool = True
     regions: tuple[RegionalSettings, ...] = ()
+    sea_circumnavigation: bool = True
 
     def document(self) -> dict[str, object]:
         return {
             "america": self.america,
+            **({} if self.sea_circumnavigation else {"sea_circumnavigation": False}),
             **{region.key: region.document() for region in self.regions},
         }
 
@@ -748,7 +750,11 @@ def _continents(raw: object) -> ContinentSettings:
     if not isinstance(america, bool):
         message = "The America switch must be true or false"
         raise SettingsError(message)
-    if unknown := values.keys() - {"america", *REGIONAL_PRESETS}:
+    circumnavigation = values.get("sea_circumnavigation", True)
+    if not isinstance(circumnavigation, bool):
+        message = "The sea circumnavigation switch must be true or false"
+        raise SettingsError(message)
+    if unknown := values.keys() - {"america", "sea_circumnavigation", *REGIONAL_PRESETS}:
         message = f"Unknown continents: {', '.join(sorted(unknown))}"
         raise SettingsError(message)
     configured: list[RegionalSettings] = []
@@ -765,7 +771,7 @@ def _continents(raw: object) -> ContinentSettings:
     if not (america or configured):
         message = "Choose at least one continent"
         raise SettingsError(message)
-    return ContinentSettings(america, tuple(configured))
+    return ContinentSettings(america, tuple(configured), circumnavigation)
 
 
 def build_settings(preset: str, overrides: dict[str, object] | None = None) -> Settings:

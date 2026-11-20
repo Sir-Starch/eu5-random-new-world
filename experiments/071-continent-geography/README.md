@@ -357,3 +357,34 @@ all 1,461 canonical files were verified in the installed copy. The
 America-only reference on the same installed build reproduced all 884
 canonical files byte for byte.
 [Installation details](../INSTALLED.md).
+
+## M55D terrain and navigation
+
+[V-GAME 2026-11-19] The owner's M55D screenshots show an escarpment at
+the African–Asian land join, impassable Atlantic fragments and sparse
+central-Pacific land. The original world was generated on EU5 1.4.9.
+
+[V-LOCAL 1.4.9 / 26655995] The installed
+`in_game/common/expedition_types/circumnavigation_expedition.txt` defines a
+sea expedition with ordered waypoints through the Atlantic, Pacific, Indian
+Ocean and around southern Africa. Its completion awards
+`first_circumnavigation`. The installed achievement definition for
+`there_and_back_again` checks that modifier. RNW already binds the
+expedition's positional references to the generated map. The regional
+generator now reserves a navigable route in the south and checks the
+wrapped route in the assembled geography when the option is enabled.
+
+[V-EXEC 2026-11-20] On the reported seed and presets the written primary
+heights across African–Asian edges have a median difference of 0 and a
+95th percentile of 348 height units, down from 3,595 and 11,210. The
+50 touching location pairs agree on climate and 46 agree on vegetation.
+The route retains 12 direct passable African–Asian location pairs.
+Generated American land overlaps vanilla at 0.293 by Jaccard index, down
+from 0.496. The Pacific reservation in this seed adds two islands.
+
+The final colour raster and default map contain no impassable sea location
+smaller than 1,024 pixels. The southern row crosses 130 navigable locations
+across the map wrap with no blocked pixel. The full cold export took 213.2
+seconds at 24 threads. All 1,455 canonical files verify in the installed
+copy. In-game rendering and expedition completion remain unobserved for
+this candidate. [Installation details](../INSTALLED.md).

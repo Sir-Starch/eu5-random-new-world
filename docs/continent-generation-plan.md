@@ -40,8 +40,17 @@ The final adjacency check requires a direct border between passable locations.
 Nearby European shores can admit a separate approach with a short navigable
 strait. Only a crossing validated against the pixels on both shores and the
 single sea zone between them enters the game map. Local river routing treats
-retained terrain as a closed boundary. The composed climate uses the
-installation's heights on the retained side.
+retained terrain as a closed boundary. The generated land approaches the
+installed relief before drainage and the painted detail fades to the same
+heights at the junction. Retained climate and vegetation supply a joint vote
+that weakens inland. Border materials follow the new shoreline.
+
+Expanded America in a regional world has a seed-shaped Pacific shelf under
+the shared ocean allowance. When both America and Oceania are generated, the
+shared Pacific has room for separate island groups. The sea plan keeps small
+residual pieces with adjacent navigable water and gives regular sea cells to
+the southern passage when **Keep a sea route around the world** is enabled.
+This option defaults on for regional worlds and is omitted for The Wall.
 
 Oceania covers the game's `oceania` continent, including Australia, New Zealand,
 New Guinea and Hawaii. Indonesia stays vanilla. Preserve the distinction between

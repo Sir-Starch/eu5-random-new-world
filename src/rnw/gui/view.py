@@ -324,6 +324,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     drawn = c.land_mask
     return {
         "continents": continents,
+        "sea_circumnavigation": c.sea_circumnavigation(),
         "regional_types": controls.REGION_TYPES,
         "regions": _regions(c, continents),
         "choice": c.mode or c.preset,

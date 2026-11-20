@@ -6,6 +6,18 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-20, **1.3.0 development / epoch 64 — M55D terrain and navigation** (C548).
+[V-EXEC] Installed `RNW: M55D Seamless Coasts` in `rnw_exp_world_d6mcidopta`
+for EU5 1.4.9 / build 26655995. The country-selection map is visible. The
+installed copy verifies all 1,455 canonical files (`9bd98a61…40da2a`).
+The [M55D comparison](071-continent-geography/README.md#m55d-terrain-and-navigation)
+records the height, climate, Pacific and navigation checks.
+
+The updated `rnw_exp_hub` passed both offscreen Wine self-tests and the
+installed-file check. Candidate `local_data/m55d-seams/hub-final/rnw_exp_hub`.
+Backup `.rnw-hub-backups/1.3.0-1795155904725332670`. Windows wheel SHA-256
+`81a7aea5f6137e582d688d9e7ff50f971fe829f9bd2ddf8f5ae58347d2ba8ebd`.
+
 2026-11-19, **1.3.0 development / epoch 64 — regional ocean balance and crossings** (C547).
 [V-EXEC] Installed `RNW: 6HGZ Regional Coasts` in `rnw_exp_world_lilsm56plj`
 for EU5 1.4.9 / build 26655995. The reported 6HGZ seed and regional presets

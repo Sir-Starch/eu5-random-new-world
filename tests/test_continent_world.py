@@ -76,6 +76,19 @@ def test_a_wrapped_location_keeps_one_identity_and_a_local_centre() -> None:
     assert local.columns[2] == 0
 
 
+def test_southern_passage_grows_water_cells_only_in_closed_ocean() -> None:
+    game = _game()
+    game.labels[-2:, :] = 1
+    game.labels[-1, 0] = 0
+    game.ambiguous[1] = True
+    region = _region("africa", 2, [0])
+    combined = compose_regions(game, (region,), southern_passage=1, seed=17)
+    assert combined.world.labels[-1, 0] == -1
+    assert np.all(combined.world.labels[-1, 1:] >= 1)
+    assert np.all(combined.world.labels[-2, 3:] == -1)
+    assert all(kind is CellClass.SEA for kind in combined.world.classes[1:])
+
+
 def test_distinct_labels_across_the_wrap_share_a_real_border() -> None:
     data = np.array([[0, -1, 1], [0, 2, 1]], dtype=np.int32)
     world = derive_world(data, (CellClass.LAND,) * 3, np.zeros_like(data), wrap_x=True)

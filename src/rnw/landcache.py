@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 
     from rnw.eu5_biomes import SizeModel
     from rnw.eu5_map import Eu5Map
+    from rnw.land_contact import ContactTerrain
     from rnw.relief import ReliefHints
     from rnw.settings import NewWorldSettings
 
@@ -114,7 +115,7 @@ def _hash_file(path: Path) -> str:
         return hashlib.file_digest(handle, "sha256").hexdigest()
 
 
-def cache_key(  # noqa: C901, PLR0913, PLR0917 - hash each independent geography input.
+def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent geography input.
     domain: NDArray[np.bool_],
     seed: int,
     settings: NewWorldSettings,
@@ -132,6 +133,9 @@ def cache_key(  # noqa: C901, PLR0913, PLR0917 - hash each independent geography
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
+    contact_terrain: ContactTerrain | None = None,
+    island_sites: tuple[tuple[int, int, int], ...] = (),
+    reserve_south: int = 0,
 ) -> str:
     # The first number is the layout of the construction (11: the drainage plan the rivers are
     # drawn along; 10: the game's location sizes the cells are spaced by; 9: the epoch the world
@@ -186,6 +190,13 @@ def cache_key(  # noqa: C901, PLR0913, PLR0917 - hash each independent geography
         for row in range(0, len(neighbor), STRIP):
             checkpoint()
             digest.update(neighbor[row : row + STRIP].tobytes())
+    if contact_terrain is not None:
+        digest.update(repr(contact_terrain.box).encode("ascii"))
+        digest.update(contact_terrain.height.tobytes())
+    if island_sites:
+        digest.update(repr(island_sites).encode("ascii"))
+    if reserve_south:
+        digest.update(f"south={reserve_south}".encode("ascii"))
     return digest.hexdigest()
 
 
@@ -520,6 +531,9 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
+    contact_terrain: ContactTerrain | None = None,
+    island_sites: tuple[tuple[int, int, int], ...] = (),
+    reserve_south: int = 0,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
@@ -549,6 +563,9 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             outside_land=outside_land,
             land_interface=land_interface,
             strait=strait,
+            contact_terrain=contact_terrain,
+            island_sites=island_sites,
+            reserve_south=reserve_south,
         )
     )
     target = None if cache is None or key is None else cache / key
@@ -560,7 +577,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         return world
     stage = None
     regional = map_rows is not None or outside_land is not None
-    sketchable = outside_land is None and map_rows in (None, (0, len(domain)))
+    sketchable = outside_land is None and not reserve_south and map_rows in (None, (0, len(domain)))
     if cache is not None and drawn is None and sketchable:
         shape = (int(domain.shape[0]), int(domain.shape[1]))
         digest = domain_digest(domain, template if settings.template_permille else None)
@@ -584,6 +601,9 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         outside_land=outside_land,
         land_interface=land_interface,
         strait=strait,
+        contact_terrain=contact_terrain,
+        island_sites=island_sites,
+        reserve_south=reserve_south,
     )
     if not regional:
         world = seal_pockets(world)

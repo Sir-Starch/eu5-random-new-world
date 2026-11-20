@@ -3305,6 +3305,10 @@ text = '''请至少选择一个大洲。'''
 source = "a936e75dbefa2ad8"
 text = "必须与亚洲陆路相连"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "保留环球航行路线"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''摩洛哥在伊比利亚的领地'''

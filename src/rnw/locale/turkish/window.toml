@@ -3305,6 +3305,10 @@ text = '''En az bir kıta seçin.'''
 source = "a936e75dbefa2ad8"
 text = "Asya ile kara bağlantısı zorunlu olsun"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "Dünya çevresinde bir deniz rotası bırak"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''Fas’ın İberya toprakları'''

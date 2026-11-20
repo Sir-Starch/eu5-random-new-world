@@ -3305,6 +3305,10 @@ text = '''대륙을 하나 이상 선택하세요.'''
 source = "a936e75dbefa2ad8"
 text = "아시아와의 육상 연결 필수"
 
+["continent.sea_circumnavigation"]
+source = "53af14619d0e417c"
+text = "세계 일주 항로 유지"
+
 ["continent.morocco"]
 source = "ead901867c258d8d"
 text = '''모로코의 이베리아 영토'''

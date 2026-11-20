@@ -72,6 +72,7 @@ if TYPE_CHECKING:
 
     from rnw.eu5_biomes import SizeModel
     from rnw.islands import Footprint
+    from rnw.land_contact import ContactBlend, ContactTerrain
     from rnw.settings import NewWorldSettings
 
 PERMILLE: Final[int] = 1000
@@ -967,6 +968,46 @@ def _link_cells(labels: NDArray[np.int32], approaches: tuple[Approach, ...]) -> 
     ).astype(np.int64)
 
 
+def _ocean_islands(
+    land: NDArray[np.bool_],
+    domain: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    sites: Sequence[tuple[int, int, int]],
+    seed: int,
+) -> None:
+    """Raise irregular grouped islands within the reserved Pacific water windows."""
+    for number, (row, col, step) in enumerate(sites):
+        if not domain[row, col] or shore[row, col]:
+            continue
+        radius = 6 * step
+        box = (
+            slice(max(0, row - radius), min(len(land), row + radius + 1)),
+            slice(max(0, col - radius), min(land.shape[1], col + radius + 1)),
+        )
+        y, x = np.ogrid[
+            box[0].start - row : box[0].stop - row, box[1].start - col : box[1].stop - col
+        ]
+        key = derive_seed(seed, "pacific_island_group", str(number))
+        tilt = 1 if key & 1 else -1
+        outline = _field(
+            key,
+            "island_coasts",
+            shape=land[box].shape,
+            period=step * 3,
+            octaves=4,
+            persistence_permille=550,
+        )
+        raised = np.zeros(outline.shape, dtype=bool)
+        for dy, dx, size in (
+            (0, 0, 2 * step),
+            (tilt * 2 * step, 3 * step, step),
+            (-tilt * step, -3 * step, step),
+        ):
+            distance = (y - dy) ** 2 + (x - dx) ** 2
+            raised |= distance * NOISE_SCALE < size**2 * (NOISE_SCALE + outline)
+        land[box] |= raised & domain[box] & ~shore[box]
+
+
 def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
     land: NDArray[np.bool_],
     ocean: NDArray[np.bool_],
@@ -1238,6 +1279,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     spread: NDArray[np.int16] | None = None,
     algorithm: int = epoch.CURRENT,
     outside_land: NDArray[np.bool_] | None = None,
+    contact: ContactBlend | None = None,
 ) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan, NDArray[np.int64]]:
     """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``), the river pixels
     that are their borders, the drainage plan the rivers run down and the seed spacing of every
@@ -1261,6 +1303,8 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         )
         if algorithm >= epoch.BASINS:
             shape_relief(relief, land, plan, seed=seed, hints=hints, spread=spread)
+        if contact is not None:
+            contact.keep_shore(relief)
         climate = domain_climate(land, lakes, relief, row0=row0, outside_land=outside_land)
         rivers = domain_rivers(
             land, plan, lakes=lakes, rain=climate.rain, seed=seed, outside_land=outside_land
@@ -1444,7 +1488,7 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
 
 
 @measured
-def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
+def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world construction.
     domain: NDArray[np.bool_],
     *,
     seed: int,
@@ -1463,6 +1507,9 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
+    contact_terrain: ContactTerrain | None = None,
+    island_sites: tuple[tuple[int, int, int], ...] = (),
+    reserve_south: int = 0,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
@@ -1508,9 +1555,14 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     if not 0 <= row0 < row0 + domain.shape[0] <= map_height:
         message = "The generation domain rows are outside the map"
         raise ValueError(message)
+    land_domain = domain
+    if reserve_south:
+        land_domain = domain.copy()
+        land_domain[-reserve_south:] = False
     land, ocean, lakes = _first_land(
-        domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
+        land_domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
     )
+    del land_domain
     whole = domain
     # Retained ocean islands stay in the open ocean, never in a new inland sea.
     placement_ocean = (
@@ -1525,6 +1577,11 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     ocean &= domain
     lakes &= domain
     shore = _off_limits(domain, settings, outside_land)
+    if reserve_south:
+        shore[-reserve_south:] = True
+    _ocean_islands(land, domain, shore, island_sites, seed)
+    if island_sites:
+        ocean &= ~land
     approaches, landing = _regional_approaches(
         land,
         ocean,
@@ -1540,6 +1597,11 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     # including existing lakes, before any cell, port or relief field gives it an identity.
     land, ocean, lakes = _classify(domain, land, shore, settings, lakes_drawn)
     del shore
+    contact = (
+        contact_terrain.blend(land, outside_land)
+        if contact_terrain is not None and outside_land is not None
+        else None
+    )
     if settings.template_permille:
         omerika.check_joined(land, _template(domain, seed, settings, template))
     rivers_first = algorithm >= epoch.RIVERS_FIRST
@@ -1595,6 +1657,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
         )
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
         relief = relief_job.result()
+        if contact is not None:
+            contact.condition(relief)
         if land_job is None:
             if settings.landform:
                 wall.add_relief(relief, land, whole, seed, settings)
@@ -1614,6 +1678,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
                     spread=spread,
                     algorithm=algorithm,
                     outside_land=outside_land,
+                    contact=contact,
                 ),
             ).result()
             del spread

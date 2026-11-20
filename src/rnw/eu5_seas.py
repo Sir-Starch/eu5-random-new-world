@@ -357,7 +357,7 @@ class Water:
     external_crossings: tuple[ExternalCrossing, ...] = ()
 
 
-def shape_water(coast: Coast) -> Water:
+def shape_water(coast: Coast, *, regular_grid: bool = False, southern_passage: int = 0) -> Water:
     """Choose the lanes, fold the shut deep water into zones, and give the lanes their currents.
 
     The lanes are the navigable deep water. A lane cell carries a current only where the cells
@@ -367,9 +367,30 @@ def shape_water(coast: Coast) -> Water:
     waters = analyse(coast.world, coast.shore)
     original_topography = waters.topography
     original_scale = waters.scale
-    chosen = plan_lanes(
-        coast.world, waters, coast.courses, coast.samples, coast.docks, preferred=coast.designed
+    passage = (
+        set(np.unique(coast.world.labels[-southern_passage:]).tolist()) if southern_passage else ()
     )
+    chosen = plan_lanes(
+        coast.world,
+        waters,
+        coast.courses,
+        coast.samples,
+        coast.docks,
+        preferred=coast.designed,
+        passage=passage,
+    )
+    if regular_grid:
+        # Keep substantive deep basins. A line or group of at most two cells
+        # belongs to the navigable sea grid and must not turn into a closed zone.
+        minimum_basin_cells = 3
+        opened = frozenset(
+            cell for zone in chosen.zones if len(zone) < minimum_basin_cells for cell in zone
+        )
+        chosen = replace(
+            chosen,
+            zones=tuple(zone for zone in chosen.zones if len(zone) >= minimum_basin_cells),
+            ordinary=chosen.ordinary | opened,
+        )
     fold = {cell: zone[0] for zone in chosen.zones for cell in zone[1:]}
     if fold:
         world, cell_of = relabel(coast.world, fold)

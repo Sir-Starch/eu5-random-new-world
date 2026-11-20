@@ -48,6 +48,7 @@ export interface ValueState {
 
 export interface NewState {
   continents: Record<string, boolean>;
+  sea_circumnavigation?: boolean | null;
   regional_types: string[];
   regions: Record<string, { preset: string; morocco: string; require_asia_connection: boolean; controls: ControlInfo[]; values: Record<string, ValueState> }>;
   choice: string;

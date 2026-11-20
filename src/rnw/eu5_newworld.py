@@ -1251,10 +1251,10 @@ def plan_composed_identities(  # noqa: PLR0913 - regional assignments and the co
     areas: list[_Area] = []
     owner = list(range(len(world.classes)))
     physical: list[dict[str, object]] = []
-    origins: dict[int, set[str]] = {}
+    origins: list[set[str]] = [set() for _ in world.classes]
     for name, (regional, cells) in regions.items():
         for cell in cells:
-            origins.setdefault(cell, set()).add(name)
+            origins[cell].add(name)
         areas.extend(
             replace(area, provinces=[[cells[cell] for cell in p] for p in area.provinces])
             for area in regional.areas

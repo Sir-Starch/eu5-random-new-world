@@ -17,6 +17,7 @@ from rnw.continent_domains import (
     Domain,
     _coastal_claim,  # pyright: ignore[reportPrivateUsage]
     _coastal_waters,  # pyright: ignore[reportPrivateUsage]
+    _pacific_islands,  # pyright: ignore[reportPrivateUsage]
     _protected_sea,  # pyright: ignore[reportPrivateUsage]
     plan_domains,
 )
@@ -143,6 +144,26 @@ def test_shared_southern_ocean_and_seeded_african_boundary() -> None:
     plans = plan_domains(game, selected, seed=42)
     assert not plans[1].join_asia
     assert plans[1].land_interface is None
+
+
+def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -> None:
+    labels = np.zeros((128, 512), dtype=np.int32)
+    owners = np.full(labels.shape, -1, dtype=np.int8)
+    owners[:, 40:110] = 0
+    keep = owners == 0
+    first = _pacific_islands(
+        _map(),
+        labels,
+        owners,
+        np.arange(128, dtype=np.int64),
+        np.arange(512, dtype=np.int64),
+        step=1,
+        seed=17,
+    )
+    assert len(first) == 3
+    assert all(owners[row, col] == 2 for row, col, _ in first)
+    assert np.array_equal(owners == 0, keep)
+    assert 0 < np.count_nonzero(owners == 2) < 500
 
 
 def test_a_partly_claimed_retained_gulf_keeps_its_whole_shore() -> None:

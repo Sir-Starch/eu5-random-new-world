@@ -956,6 +956,13 @@ class MainWindow(QMainWindow):
 
         _ = self.asia_connection.toggled.connect(connection_toggled)
         layout.addRow(self.asia_connection)
+        self.circumnavigation: QCheckBox = QCheckBox(text("continent.sea_circumnavigation"))
+
+        def circumnavigation_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a bool.
+            self.controller.set_sea_circumnavigation(enabled=checked)
+
+        _ = self.circumnavigation.toggled.connect(circumnavigation_toggled)
+        layout.addRow(self.circumnavigation)
         return group
 
     def _advanced_tab(self) -> QScrollArea:
@@ -1981,6 +1988,12 @@ class MainWindow(QMainWindow):
     def _refresh_regions(self, *, busy: bool) -> None:
         selection = self.controller.continent_selection()
         america = selection["america"]
+        circumnavigation = self.controller.sea_circumnavigation()
+        _ = self.circumnavigation.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.circumnavigation.setChecked(circumnavigation is True)
+        _ = self.circumnavigation.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.circumnavigation.setVisible(circumnavigation is not None)
+        self.circumnavigation.setEnabled(not busy)
         for widget in (
             self.american_types,
             self.american_quick,

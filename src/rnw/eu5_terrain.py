@@ -38,6 +38,9 @@ from rnw.eu5_slots import (
     slot_remap,
     synthesize,
 )
+from rnw.fields import PERMILLE, smoothstep
+from rnw.land_contact import DETAIL_REACH as CONTACT_DETAIL_REACH
+from rnw.land_contact import MATERIAL_REACH
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
@@ -55,6 +58,7 @@ if TYPE_CHECKING:
 
     from rnw.eu5_islands import Moved
     from rnw.eu5_mountains import MountainRelief
+    from rnw.land_contact import ContactBlend
 
 TERRAIN: Final[str] = "game/in_game/gfx/terrain2"
 DECAL_CACHE: Final[str] = f"{TERRAIN}/terrain_cache/ingame_decals.json"
@@ -209,6 +213,21 @@ class DecalStore:
             out[
                 decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
             ] = image[1::2, 1::2]
+        return out
+
+    def height_window(self, rows: slice, columns: NDArray[np.int64]) -> NDArray[np.uint16]:
+        """Read only the primary decals intersecting a retained land boundary."""
+        out = np.zeros((rows.stop - rows.start, columns.size), dtype=np.uint16)
+        for decal in self.decals:
+            top = max(rows.start, decal.row0)
+            bottom = min(rows.stop, decal.row0 + decal.rows)
+            within = (columns >= decal.column0) & (columns < decal.column0 + decal.columns)
+            if top < bottom and within.any():
+                checkpoint()
+                _, image = self.layer(decal.name, "height")
+                vertical = slice(2 * (top - decal.row0) + 1, 2 * (bottom - decal.row0), 2)
+                horizontal = (columns[within] - decal.column0) * 2 + 1
+                out[top - rows.start : bottom - rows.start, within] = image[vertical, horizontal]
         return out
 
     def world_materials(self) -> NDArray[np.uint8]:
@@ -514,6 +533,7 @@ class TerrainInputs:
     noise_roll: int = 0
     mountains: MountainRelief | None = None
     moved: Moved | None = None
+    contact: ContactBlend | None = None
 
 
 class TerrainRangeError(ValueError):
@@ -588,6 +608,45 @@ def _lay_stamp_slots(
         np.ascontiguousarray(tables.materials),
         np.ascontiguousarray(slot_remap()).ravel(),
     )
+
+
+def _contact_decals(
+    contact: ContactBlend,
+    heights: NDArray[np.int64],
+    *,
+    first: int,
+    column: int,
+    width: int,
+) -> NDArray[np.bool_] | None:
+    """Taper detail against the same installed height used by the physical terrain."""
+    rows, columns = contact.box
+    top = max(first, rows.start)
+    bottom = min(first + heights.shape[0] // 2, rows.stop)
+    if top >= bottom:
+        return None
+    across = np.arange(column, column + heights.shape[1] // 2, dtype=np.int64)
+    across = (across - int(columns.start)) % width
+    local = np.flatnonzero(across < columns.stop - columns.start)
+    if not local.size:
+        return None
+    indices = np.ix_(
+        np.arange(top - int(rows.start), bottom - int(rows.start), dtype=np.int64), across[local]
+    )
+    distance = contact.distance[indices]
+    weight = (PERMILLE - smoothstep(distance.astype(np.int64), 2, CONTACT_DETAIL_REACH)) * (
+        contact.generated[indices]
+    )
+    target = contact.target[indices]
+    decal_rows = slice(2 * (top - first), 2 * (bottom - first))
+    decal_cols = (2 * local[:, None] + np.arange(2)).ravel()
+    weight = np.repeat(np.repeat(weight, 2, axis=0), 2, axis=1)
+    target = np.repeat(np.repeat(target, 2, axis=0), 2, axis=1)
+    samples = heights[decal_rows, decal_cols]
+    heights[decal_rows, decal_cols] = (samples * (PERMILLE - weight) + target * weight) // PERMILLE
+    retouch = (distance <= MATERIAL_REACH) & contact.retained[indices]
+    mask = np.zeros(heights.shape, dtype=bool)
+    mask[decal_rows, decal_cols] = np.repeat(np.repeat(retouch, 2, axis=0), 2, axis=1)
+    return mask
 
 
 @measured
@@ -691,12 +750,23 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
                 raise TerrainRangeError(str(error)) from error
         target = (slice(first * 2, last * 2), slice(left * 2, right * 2))
         height_image, material_image = images
+        retouch = (
+            None
+            if inputs.contact is None
+            else _contact_decals(
+                inputs.contact,
+                heights,
+                first=decal.row0 + first,
+                column=decal.column0 + left,
+                width=width,
+            )
+        )
         _write_where(height_image[target], heights, inside)
         del heights
         slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
         if stamped is not None:
             slots = _lay_stamp_slots(slots, stamped, labels[core], tables)
-        _write_where(material_image[target], slots, inside)
+        _write_where(material_image[target], slots, inside if retouch is None else inside | retouch)
 
 
 @measured

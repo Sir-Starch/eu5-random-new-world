@@ -135,6 +135,9 @@ class Bridge:
             ),
             "set_morocco": lambda p: c.set_morocco(_str(p, "policy")),
             "set_asia_connection": lambda p: c.set_asia_connection(required=_bool(p, "required")),
+            "set_sea_circumnavigation": lambda p: c.set_sea_circumnavigation(
+                enabled=_bool(p, "enabled")
+            ),
             "set_seed": lambda p: c.set_seed(_str(p, "value")),
             "randomize": lambda _p: c.randomize(),
             "randomize_settings": lambda _p: c.randomize_settings(),
