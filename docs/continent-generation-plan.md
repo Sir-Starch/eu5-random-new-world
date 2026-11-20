@@ -37,14 +37,33 @@ Africa covers the game's `africa` continent, including Egypt, Sinai and the
 Atlantic islands it assigns to Africa. A seed can select a dry approach to
 western Asia, along its nearby coastline or at the existing land interface.
 The **Require a land connection to Asia** option always constructs a passable
-approach. The generated shore and land cells follow the resulting terrain.
+approach, a land bridge (`land_bridge.py`). Its axis is the cheapest route from
+a site on the interface to the continent over a noisy landscape that keeps clear
+of the domain's coast margin, on coarse blocks and with sixteen moves so that no
+direction is preferred, and then smoothed until no corner is left. Its body is
+a union of discs along the axis whose radius swells and narrows, flares at both
+ends, narrows to the room beside the coast margin and has the same irregular
+edge as every other coast; a one-location spine is always kept. A site whose
+bridge does not touch the interface, join the continent and cover the site is
+dropped for the next candidate, and none at all fails explicitly. All of it is
+integer arithmetic, so a seed gives the same bridge on every platform. The
+generated shore and land cells follow the resulting terrain.
 The final adjacency check requires a direct border between passable locations.
 Nearby European shores can admit a separate approach with a short navigable
-strait. Only a crossing validated against the pixels on both shores and the
+strait, built the same way at a smaller scale. Only a crossing validated
+against the pixels on both shores and the
 single sea zone between them enters the game map. Local river routing treats
 retained terrain as a closed boundary. The generated land approaches the
 installed relief before drainage and the painted detail fades to the same
-heights at the junction. Retained climate and vegetation supply a joint vote
+heights at the junction. The retained height is carried in as averages of the
+retained ground over wider reaches the farther the pixel lies from the seam,
+not as the nearest shore pixel's height (which left streaks and straight steps
+where two such pixels' reaches met), and the conditioning gives way to the
+generated coast away from the seam. Retained ground that the generated sea has
+cut through high land rises over the new shoreline only as steeply as the
+steepest installed coasts do (the cap is `RIM_BASE + RIM_SLOPE` per pixel from
+the water; what is above it is compressed), so the cut is no wall.
+Retained climate and vegetation supply a joint vote
 that weakens inland. Border materials follow the new shoreline.
 
 With all three continents enabled, Eurasia and Greenland form a fourth

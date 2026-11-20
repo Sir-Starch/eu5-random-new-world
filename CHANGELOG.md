@@ -26,6 +26,17 @@ worlds and saves are not rewritten or migrated.
   water, where its sea would be cut off, and a leftover piece of an old ocean stays
   open ocean instead of joining a neighbouring continent.
 
+- Make Africa's **land connection to Asia** a natural land bridge. It used to be a right-angled
+  path with a thin straight apron, which left walls with straight edges on the generated coast.
+  The connection is now a body of land along a winding, smoothed route that keeps clear of the
+  domain's coast margin; it swells and narrows, flares where it meets the continent and the
+  retained shore, has the irregular edge of every other coast and keeps a spine one location
+  wide. The strait landing in Europe is built the same way. Where the generated land meets the
+  retained ground, its height is now carried in as smooth averages of the retained heights
+  instead of copies of the nearest shore pixel (which drew parallel streaks and rectangular
+  steps), and retained ground that the generated sea has cut through high land rises over the
+  new shore only as steeply as the game's steepest coasts, so it is no wall with a comb edge.
+
 - Speed up cell construction, terrain statistics and water painting with exact native kernels,
   omit discarded coastal statistics, and reuse the installed map's content-validated size
   calibration across new worlds. The same seed and inputs produce the same world files.

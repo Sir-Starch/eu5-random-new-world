@@ -197,6 +197,65 @@ def test_required_asian_approach_stays_playable_through_the_generated_land() -> 
     assert np.all(world.labels[asia] == -1)
 
 
+def _longest_run(mask: NDArray[np.bool_]) -> int:
+    """The longest run of set pixels along any row of ``mask``."""
+    padded = np.pad(mask, ((0, 0), (1, 1)))
+    edges = np.diff(padded.astype(np.int8), axis=1)
+    longest = 0
+    for row in range(mask.shape[0]):
+        starts, stops = np.flatnonzero(edges[row] == 1), np.flatnonzero(edges[row] == -1)
+        if starts.size:
+            longest = max(longest, int((stops - starts).max()))
+    return longest
+
+
+def test_the_asian_land_bridge_winds_and_has_no_straight_walls() -> None:
+    """The bridge to the retained land is a body of land with a coast, not a path with an apron."""
+    height, width = 420, 720
+    settings = replace(SMALL, location_px=14)
+    domain = np.zeros((height, width), dtype=bool)
+    domain[10:410, 10:560] = True
+    rows, columns = np.mgrid[:height, :width]
+    shore = distance_from(~domain, 8, octagonal=True) < 8
+    outside = np.zeros_like(domain)
+    outside[120:260, 561:700] = True
+    interface = np.zeros_like(domain)
+    interface[140:220, 559] = True
+    for seed, drop in ((11, 0), (31, 20), (51, 40)):
+        land = (((rows - 330 - drop) ** 2 + (columns - 140) ** 2) < 110**2) & domain & ~shore
+        before = land.copy()
+        approach = newworld._land_approach(  # pyright: ignore[reportPrivateUsage]
+            land,
+            domain,
+            shore,
+            interface,
+            outside_land=outside,
+            settings=settings,
+            seed=seed,
+        )
+        assert approach is not None
+        added = land & ~before
+        path = np.zeros_like(land)
+        path[approach.box] = approach.path
+        parts = label_components(land.astype(np.int32))
+        assert parts[330 - drop, 140] == parts[approach.point] > 0
+        assert np.any(land & interface)
+        # Winding, not an L: no row or column holds most of the axis.
+        axis = int(np.count_nonzero(path))
+        assert max(_longest_run(path), _longest_run(path.T)) * 2 <= axis
+        # A body of land, at least a location wide along its whole axis.
+        reach = distance_from(path, settings.location_px, octagonal=True)
+        near = (reach < settings.location_px - 1) & domain & ~shore
+        assert np.all(land[near])
+        # And a coast without long straight walls.
+        inner = added & (distance_from(~domain, 30, octagonal=True) > 14)
+        horizontal = inner[1:-1, 1:-1] & ~land[:-2, 1:-1]
+        vertical = inner[1:-1, 1:-1] & ~land[1:-1, :-2]
+        wall = 5 * settings.location_px // 2
+        assert _longest_run(horizontal) <= wall
+        assert _longest_run(vertical.T) <= wall
+
+
 def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:
     """A drawn continent is continuous even when its display crosses both map edges."""
     domain = np.ones((160, 400), dtype=bool)

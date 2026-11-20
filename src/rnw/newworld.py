@@ -28,6 +28,7 @@ from rnw.gulfs import carve_inland_seas
 from rnw.islands import carve, place
 from rnw.isthmuses import raise_isthmuses
 from rnw.lakes import carve_lakes
+from rnw.land_bridge import NoRouteError, lattice, paint, route, smooth, swell, trace
 from rnw.landmask import LandMaskError
 from rnw.messages import say
 from rnw.model import CellClass
@@ -77,6 +78,21 @@ if TYPE_CHECKING:
 
 PERMILLE: Final[int] = 1000
 STRAIT_LANDING: Final[int] = 2
+# A land bridge (``_land_approach``) is a ridge of land along a bent axis, measured in locations
+# (``location_px``): it never narrows below two locations, its body swells from 1.2 to 2.4 of them
+# in half-width along the way, flares to 1.7 times that where it meets land, and its edge swings
+# by a third of its width with the noise of every coast. The axis is the cheapest route over a
+# noisy landscape that stays clear of the edges of its room, on blocks of ``BRIDGE_BLOCK`` pixels.
+BRIDGE_BLOCK: Final[int] = 16
+BRIDGE_CORE: Final[int] = 1000  # permille of a location: radius of the land that is never cut
+BRIDGE_BODY: Final[tuple[int, int]] = (1200, 2400)  # permille of a location: the body's radius
+BRIDGE_FLARE: Final[int] = 700  # extra permille of the radius at either end
+BRIDGE_FLARE_LENGTH: Final[int] = 4000  # permille of a location: how far the flare reaches
+BRIDGE_EDGE: Final[int] = 700  # roughness_permille of the edge noise
+BRIDGE_SWELL_PERIOD: Final[int] = 6000  # permille of a location: along the axis
+BRIDGE_MEANDER: Final[int] = 1800  # extra thousandths of a block a noisy block costs, at most
+BRIDGE_TRIES: Final[int] = 12
+BRIDGE_LANDING_SCALE: Final[int] = 700  # permille: the bridge to a strait's landing is slighter
 # The centre control lifts the land density by up to CENTRE_LIFT elevation units in the middle of
 # the canvas, rising over the distance from its edge (to the deepest interior, but at most
 # CENTRE_REACH_PX); the land share does not change, only where the land lies.
@@ -905,13 +921,27 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
     shore: NDArray[np.bool_],
     interface: NDArray[np.bool_],
     *,
+    outside_land: NDArray[np.bool_] | None,
     settings: NewWorldSettings,
     seed: int,
+    scale: int = PERMILLE,
 ) -> Approach | None:
-    """Grow a broad irregular approach from a seeded shore to existing generated land."""
+    """Raise a land bridge from a seeded shore to the continent: a bent, swelling ridge of land.
+
+    ``scale`` is the permille of the usual width of its body.
+
+    The sites of ``interface`` are tried in the order of their distance from the continent
+    (the largest land) and a seeded jitter; the first whose bridge joins both is made. None when
+    none does.
+    """
     step = max(8, settings.location_px // 2)
     sites = np.argwhere(interface & domain)
-    core = np.argwhere(land[::step, ::step]) * step
+    parts = label_components(land.astype(np.int32))
+    sizes = np.bincount(parts.ravel())
+    sizes[~np.isin(np.arange(len(sizes)), parts[land])] = 0
+    continent = land & (sizes[parts] * 2 >= sizes.max())
+    del parts
+    core = np.argwhere(continent[::step, ::step]) * step
     if sites.size == 0 or core.size == 0:
         return None
     _, unique = np.unique(sites // (step * 4), axis=0, return_index=True)
@@ -929,37 +959,193 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
             i,
         ),
     )
-    height, width = land.shape
-    for index in candidates:
-        row, col = map(int, sites[index])
-        radius = int(distance[index]) + 8 * step
-        box = (
-            slice(max(0, row - radius), min(height, row + radius + 1)),
-            slice(max(0, col - radius), min(width, col + radius + 1)),
+    ground = _BridgeGround(land, domain, shore, interface, continent, outside_land, settings, scale)
+    for index in candidates[:BRIDGE_TRIES]:
+        checkpoint()
+        approach = _bridge(
+            ground,
+            (int(sites[index, 0]), int(sites[index, 1])),
+            int(distance[index]),
+            derive_seed(seed, "land_bridge", str(index)),
         )
-        target = land[box]
-        allowed = domain[box]
-        start = np.zeros(target.shape, dtype=bool)
-        point = row - box[0].start, col - box[1].start
-        start[point] = True
-        path = start if target[point] else _path(start, target, allowed)
-        if not path.any():
-            continue
-        reach = max(settings.coast_margin_px, 2 * step)
-        distance_to_path = distance_from(path, 2 * reach, octagonal=True)
-        wobble = _field(
-            seed,
-            "africa_land_approach_coast",
-            shape=path.shape,
-            period=4 * reach,
-            octaves=3,
-            persistence_permille=500,
-        )
-        apron = allowed & (distance_to_path <= reach + wobble * reach // NOISE_SCALE)
-        land[box] |= apron | path
-        shore[box] &= ~(apron | path)
-        return Approach(box, path, (row, col))
+        if approach is not None:
+            return approach
     return None
+
+
+@dataclass(frozen=True)
+class _BridgeGround:
+    """The ground a land bridge is made on: the land, its limits and what sizes the bridge."""
+
+    land: NDArray[np.bool_]
+    domain: NDArray[np.bool_]
+    shore: NDArray[np.bool_]
+    interface: NDArray[np.bool_]
+    continent: NDArray[np.bool_]
+    outside_land: NDArray[np.bool_] | None
+    settings: NewWorldSettings
+    scale: int
+
+    def width(self, value: int) -> int:
+        """``value`` thousandths of a location, at the bridge's scale, in pixels."""
+        return value * self.settings.location_px * self.scale // (PERMILLE * PERMILLE)
+
+
+def _bridge_axis(
+    ground: _BridgeGround, window: tuple[slice, slice], here: tuple[int, int], seed: int
+) -> tuple[NDArray[np.int64], NDArray[np.bool_]] | None:
+    """The axis of a bridge from ``here`` to the continent within ``window``, and where land may
+    lie there: the domain beyond its coast margin and the neighbourhood of ``here`` (its limits
+    come from what is outside the domain). The axis is the cheapest route over coarse blocks of
+    a noisy landscape that keeps clear of the limits, smoothed; None when no route reaches."""
+    location = ground.settings.location_px
+    body = ground.width(BRIDGE_BODY[1])
+    rows, columns = window
+    near = np.zeros(ground.land[window].shape, dtype=bool)
+    near[here] = True
+    reach_near = ground.settings.coast_margin_px + location
+    near = distance_from(near, reach_near, octagonal=True) <= reach_near
+    allowed = ground.domain[window] & (~ground.shore[window] | near)
+    del near
+    start_mask = np.zeros(allowed.shape, dtype=bool)
+    start_mask[here] = True
+    block = BRIDGE_BLOCK
+    coarse_rows, coarse_columns = (-(-size // block) for size in allowed.shape)
+
+    def pooled(mask: NDArray[np.bool_], reduce: str) -> NDArray[np.bool_]:
+        padded = np.zeros((coarse_rows * block, coarse_columns * block), dtype=bool)
+        padded[: mask.shape[0], : mask.shape[1]] = mask
+        grid = padded.reshape(coarse_rows, block, coarse_columns, block)
+        return grid.all(axis=(1, 3)) if reduce == "all" else grid.any(axis=(1, 3))
+
+    clearance = euclidean_distance(~pooled(allowed, "all"), 64 * block) // 8
+    comfort = max(1, (body + ground.settings.coast_margin_px) // block)
+    needed = max(2, BRIDGE_CORE * location // PERMILLE // block + 1)
+    in_start_zone = pooled(distance_from(start_mask, 2 * body, octagonal=True) <= 2 * body, "any")
+    passable = (clearance >= needed) | (in_start_zone & pooled(allowed, "any"))
+    noise = _field(
+        seed,
+        "land_bridge_route",
+        shape=(coarse_rows, coarse_columns),
+        period=max(4, BRIDGE_SWELL_PERIOD * location // PERMILLE // block),
+        octaves=2,
+        persistence_permille=500,
+    ).astype(np.int64)
+    cost = (
+        PERMILLE
+        + BRIDGE_MEANDER * (noise + NOISE_SCALE // 2) // NOISE_SCALE
+        + 2 * PERMILLE * np.clip(comfort - clearance, 0, comfort) // comfort
+    ).astype(np.int32)
+    try:
+        blocks = route(
+            cost,
+            passable,
+            (here[0] // block, here[1] // block),
+            pooled(ground.continent[rows, columns], "any"),
+        )
+    except NoRouteError:
+        return None
+    centres = [(r * block + block // 2, c * block + block // 2) for r, c in blocks]
+    centres[0] = here
+    return trace(smooth(centres)), allowed
+
+
+def _bridge_ridge(
+    ground: _BridgeGround,
+    window: tuple[slice, slice],
+    allowed: NDArray[np.bool_],
+    axis: NDArray[np.int64],
+    seed: int,
+) -> tuple[tuple[slice, slice], NDArray[np.bool_]]:
+    """The body of a bridge along ``axis`` (rows of row, column, distance within ``window``) and
+    the box it lies in: a ridge that swells and narrows, flares at both ends, has the irregular
+    edge of every other coast and narrows to the room beside the domain's coast margin."""
+    location = ground.settings.location_px
+    rows, columns = window
+    length = int(axis[-1, 2])
+    pad = 3 * ground.width(BRIDGE_BODY[1]) + ground.settings.coast_margin_px
+    low = np.min(axis[:, :2], axis=0) - pad
+    high = np.max(axis[:, :2], axis=0) + pad + 1
+    top, left = max(0, int(low[0])), max(0, int(low[1]))
+    bottom, right = (
+        min(rows.stop - rows.start, int(high[0])),
+        min(columns.stop - columns.start, int(high[1])),
+    )
+    box = (
+        slice(rows.start + top, rows.start + bottom),
+        slice(columns.start + left, columns.start + right),
+    )
+    local_axis = axis - np.array([top, left, 0], dtype=np.int64)
+    local = (bottom - top, right - left)
+    swelling = lattice(
+        derive_seed(seed, "land_bridge_swell"), length, BRIDGE_SWELL_PERIOD * location // PERMILLE
+    )
+    flare = swell(length, BRIDGE_FLARE_LENGTH * location // PERMILLE)
+    low_body, high_body = (ground.width(value) for value in BRIDGE_BODY)
+    wide = low_body + (high_body - low_body) * swelling // NOISE_SCALE
+    reach = wide * (PERMILLE + BRIDGE_FLARE * flare // NOISE_SCALE) // PERMILLE
+    spine = np.full(length + 1, BRIDGE_CORE * location // PERMILLE, dtype=np.int64)
+    # Beside the edges of its room (the coast margin of the domain, not retained land, whose
+    # shore is a real one) the body narrows to the room instead of being cut straight by it.
+    margin_edge = ground.shore[window]
+    if ground.outside_land is not None:
+        margin_edge = margin_edge & ~ground.outside_land[window]
+    room = euclidean_distance(margin_edge, 8 * (ground.width(BRIDGE_BODY[1]) + location))
+    room_at = np.zeros(length + 1, dtype=np.int64)
+    room_at[axis[:, 2]] = room[axis[:, 0], axis[:, 1]] // 8
+    reach = np.maximum(spine, np.minimum(reach, room_at * 3 // 4))
+    edge = _field(
+        seed,
+        "land_bridge_coast",
+        shape=local,
+        period=3 * location,
+        octaves=4,
+        persistence_permille=550,
+    )
+    every = max(1, location // 8)
+    ridge = paint(local_axis, reach, edge, roughness_permille=BRIDGE_EDGE, every=every)
+    ridge |= paint(local_axis, spine, edge, roughness_permille=0, every=every)
+    ridge &= allowed[top:bottom, left:right]
+    return box, ridge
+
+
+def _bridge(
+    ground: _BridgeGround, site: tuple[int, int], distance: int, seed: int
+) -> Approach | None:
+    """The land bridge from ``site`` to the continent, added to the land; None if none fits.
+
+    It is valid when it touches the retained land along enough of its edge, joins the continent
+    and covers the site itself; the caller tries the next site otherwise.
+    """
+    location = ground.settings.location_px
+    height, width = ground.land.shape
+    radius = 2 * distance + 12 * location
+    window = (
+        slice(max(0, site[0] - radius), min(height, site[0] + radius + 1)),
+        slice(max(0, site[1] - radius), min(width, site[1] + radius + 1)),
+    )
+    here = (site[0] - window[0].start, site[1] - window[1].start)
+    found = _bridge_axis(ground, window, here, seed)
+    if found is None:
+        return None
+    axis, allowed = found
+    # The axis lies in the window; the body is painted in a box round it.
+    box, ridge = _bridge_ridge(ground, window, allowed, axis, seed)
+    contact = int(np.count_nonzero(ridge & ground.interface[box]))
+    joined = label_components((ground.land[box] | ridge).astype(np.int32))
+    reaches = np.unique(joined[ridge & ground.continent[box]])
+    origin = (box[0].start - window[0].start, box[1].start - window[1].start)
+    if (
+        contact < max(8, location // 2)
+        or reaches.size == 0
+        or not ridge[here[0] - origin[0], here[1] - origin[1]]
+    ):
+        return None
+    ground.land[box] |= ridge
+    ground.shore[box] &= ~ridge
+    path = np.zeros(ridge.shape, dtype=bool)
+    path[axis[:, 0] - origin[0], axis[:, 1] - origin[1]] = True
+    return Approach(box, path, site)
 
 
 def _link_cells(labels: NDArray[np.int32], approaches: tuple[Approach, ...]) -> NDArray[np.int64]:
@@ -1016,12 +1202,15 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
     *,
     interface: NDArray[np.bool_] | None,
     strait: NDArray[np.uint8] | None,
+    outside_land: NDArray[np.bool_] | None,
     settings: NewWorldSettings,
     seed: int,
 ) -> tuple[tuple[Approach, ...], tuple[int, int] | None]:
     links: list[Approach] = []
     if interface is not None:
-        approach = _land_approach(land, domain, shore, interface, settings=settings, seed=seed)
+        approach = _land_approach(
+            land, domain, shore, interface, outside_land=outside_land, settings=settings, seed=seed
+        )
         if approach is None:
             message = "The African canvas has no continuous approach to a passable Asian location"
             raise ValueError(message)
@@ -1035,8 +1224,10 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
             domain & ~reserved_sea,
             shore,
             strait == STRAIT_LANDING,
+            outside_land=outside_land,
             settings=settings,
             seed=derive_seed(seed, "mediterranean_approach"),
+            scale=BRIDGE_LANDING_SCALE,
         )
         if approach is not None:
             links.append(approach)
@@ -1593,6 +1784,7 @@ def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world 
         shore,
         interface=land_interface,
         strait=strait,
+        outside_land=outside_land,
         settings=settings,
         seed=seed,
     )

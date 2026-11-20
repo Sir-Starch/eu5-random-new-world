@@ -38,9 +38,9 @@ from rnw.eu5_slots import (
     slot_remap,
     synthesize,
 )
-from rnw.fields import PERMILLE, smoothstep
+from rnw.fields import PERMILLE
 from rnw.land_contact import DETAIL_REACH as CONTACT_DETAIL_REACH
-from rnw.land_contact import MATERIAL_REACH
+from rnw.land_contact import MATERIAL_REACH, soften_rim
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
@@ -610,6 +610,35 @@ def _lay_stamp_slots(
     )
 
 
+def _contact_window(
+    contact: ContactBlend, shape: tuple[int, ...], *, first: int, column: int, width: int
+) -> tuple[tuple[NDArray[np.int64], NDArray[np.int64]], slice, NDArray[np.int64]] | None:
+    """The contact box's location pixels within a ``shape`` (decal pixels) window of the map.
+
+    The window's top row is location row ``first`` and its left column ``column``, wrapping at
+    ``width``. Returns the box's index grid over those pixels, the decal rows they cover and
+    the decal columns (two for each location pixel); None when the window misses the box.
+    """
+    rows, columns = contact.box
+    top = max(first, rows.start)
+    bottom = min(first + shape[0] // 2, rows.stop)
+    if top >= bottom:
+        return None
+    across = np.arange(column, column + shape[1] // 2, dtype=np.int64)
+    across = (across - int(columns.start)) % width
+    local = np.flatnonzero(across < columns.stop - columns.start)
+    if not local.size:
+        return None
+    indices = np.ix_(
+        np.arange(top - int(rows.start), bottom - int(rows.start), dtype=np.int64), across[local]
+    )
+    return (
+        indices,
+        slice(2 * (top - first), 2 * (bottom - first)),
+        (2 * local[:, None] + np.arange(2)).ravel(),
+    )
+
+
 def _contact_decals(
     contact: ContactBlend,
     heights: NDArray[np.int64],
@@ -619,34 +648,38 @@ def _contact_decals(
     width: int,
 ) -> NDArray[np.bool_] | None:
     """Taper detail against the same installed height used by the physical terrain."""
-    rows, columns = contact.box
-    top = max(first, rows.start)
-    bottom = min(first + heights.shape[0] // 2, rows.stop)
-    if top >= bottom:
+    window = _contact_window(contact, heights.shape, first=first, column=column, width=width)
+    if window is None:
         return None
-    across = np.arange(column, column + heights.shape[1] // 2, dtype=np.int64)
-    across = (across - int(columns.start)) % width
-    local = np.flatnonzero(across < columns.stop - columns.start)
-    if not local.size:
-        return None
-    indices = np.ix_(
-        np.arange(top - int(rows.start), bottom - int(rows.start), dtype=np.int64), across[local]
-    )
-    distance = contact.distance[indices]
-    weight = (PERMILLE - smoothstep(distance.astype(np.int64), 2, CONTACT_DETAIL_REACH)) * (
-        contact.generated[indices]
-    )
+    indices, decal_rows, decal_cols = window
+    weight = contact.weight(CONTACT_DETAIL_REACH)[indices]
     target = contact.target[indices]
-    decal_rows = slice(2 * (top - first), 2 * (bottom - first))
-    decal_cols = (2 * local[:, None] + np.arange(2)).ravel()
     weight = np.repeat(np.repeat(weight, 2, axis=0), 2, axis=1)
     target = np.repeat(np.repeat(target, 2, axis=0), 2, axis=1)
     samples = heights[decal_rows, decal_cols]
     heights[decal_rows, decal_cols] = (samples * (PERMILLE - weight) + target * weight) // PERMILLE
-    retouch = (distance <= MATERIAL_REACH) & contact.retained[indices]
+    retouch = (contact.distance[indices] <= MATERIAL_REACH) & contact.retained[indices]
     mask = np.zeros(heights.shape, dtype=bool)
     mask[decal_rows, decal_cols] = np.repeat(np.repeat(retouch, 2, axis=0), 2, axis=1)
     return mask
+
+
+def _contact_rim(
+    contact: ContactBlend,
+    image: NDArray[np.uint16],
+    *,
+    first: int,
+    column: int,
+    width: int,
+) -> None:
+    """Take the cliffs the generated sea cut out of the retained shore in the written heights."""
+    window = _contact_window(contact, image.shape, first=first, column=column, width=width)
+    if window is None:
+        return
+    indices, decal_rows, decal_cols = window
+    cap = np.repeat(np.repeat(contact.rim[indices], 2, axis=0), 2, axis=1)
+    samples = image[decal_rows, decal_cols].astype(np.int64)
+    image[decal_rows, decal_cols] = soften_rim(samples, cap).astype(np.uint16)
 
 
 @measured
@@ -763,6 +796,14 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         )
         _write_where(height_image[target], heights, inside)
         del heights
+        if inputs.contact is not None:
+            _contact_rim(
+                inputs.contact,
+                height_image[target],
+                first=decal.row0 + first,
+                column=decal.column0 + left,
+                width=width,
+            )
         slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
         if stamped is not None:
             slots = _lay_stamp_slots(slots, stamped, labels[core], tables)
