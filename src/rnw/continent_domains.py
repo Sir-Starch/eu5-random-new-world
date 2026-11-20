@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import heapq
 from dataclasses import dataclass, replace
 from itertools import pairwise
 from types import MappingProxyType
@@ -13,11 +14,19 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw.eu5_canvas import NEW_WORLD, CanvasError, roll_for, select_canvas
+from rnw.eu5_pacific import IslandGroup, ocean_island_groups
+from rnw.islands import Footprint
 from rnw.model import CellClass
 from rnw.progress import checkpoint
 from rnw.rng import SplitMix64, derive_seed
 from rnw.settings import PRESETS, REGIONAL_PRESETS, NewWorldSettings
-from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
+from rnw.topology import (
+    adjacency_lengths,
+    adjacency_pairs,
+    distance_from,
+    label_components,
+    unpack_pairs,
+)
 from rnw.watersheds import DENSITY_STEP
 
 if TYPE_CHECKING:
@@ -42,6 +51,24 @@ SHARED_OCEAN_DIVISOR: Final[int] = 6
 AFRICA_LAND_CHANCE: Final[int] = 40
 EUROPE_STRAIT_CHANCE: Final[int] = 35
 EUROPE_STRAIT_GAP: Final[int] = 7
+OCEAN_SPECK_PX: Final[int] = 1024
+AFRICAN_NORTH_REACH_PX: Final[int] = 512
+# Open water nearer to retained Eurasian land than to any generated continent stays
+# Eurasian when Eurasian land lies within this reach on both sides of it along some
+# line, as in a bay or a passage between shores. Open ocean stays generated.
+EURASIAN_SPAN_PX: Final[int] = 1100
+# Sight lines as (rows, columns) per step; slanted ones catch a passage between two
+# shores that no row, column or diagonal joins, such as south of Greenland.
+EURASIAN_LINES: Final[tuple[tuple[int, int], ...]] = (
+    (0, 1),
+    (1, 0),
+    (1, 1),
+    (1, -1),
+    (1, 2),
+    (1, -2),
+    (2, 1),
+    (2, -1),
+)
 # Fixed sea positions of the War of the Straits, the Battle of Lepanto and
 # the installed exploration test. Their retained coasts keep these anchors.
 NAVAL_ANCHORS: Final[frozenset[str]] = frozenset(
@@ -109,6 +136,10 @@ class Domain:
     # 1 keeps water at the European shore, 2 admits an African landing.
     strait: NDArray[np.uint8] | None = None
     island_sites: tuple[tuple[int, int, int], ...] = ()
+    shared_ocean: bool = False
+    north_water_rows: int = 0
+    groups: tuple[IslandGroup, ...] = ()
+    footprints: tuple[Footprint, ...] = ()
 
     def spans(self) -> tuple[tuple[slice, slice], ...]:
         """Regional and world column spans in west-to-east order."""
@@ -188,7 +219,7 @@ def _extent(used: NDArray[np.bool_], reach: int) -> tuple[int, int]:
     return (first - roll) % used.size, stop - first
 
 
-def _read(labels: NDArray[np.int32], first: int, width: int) -> NDArray[np.int32]:
+def _read[Pixel: np.generic](labels: NDArray[Pixel], first: int, width: int) -> NDArray[Pixel]:
     """Borrow an unwrapped window or copy only the two required pieces across the seam."""
     stop = first + width
     if stop <= labels.shape[1]:
@@ -203,12 +234,270 @@ class OceanClaims:
     owners: NDArray[np.int8]
     step: int
     islands: tuple[tuple[int, int, int], ...] = ()
+    # Square blocks of `step` pixels that retained Eurasian land reaches first.
+    eurasian: NDArray[np.bool_] | None = None
 
     def rows(self, rows: NDArray[np.int64]) -> NDArray[np.int64]:
         return rows // (2 * self.step)
 
     def columns(self, columns: NDArray[np.int64]) -> NDArray[np.int64]:
         return columns // self.step
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class SharedWater:
+    """The preserved Eurasian waters and the continental claims around them."""
+
+    owners: NDArray[np.int8]
+    north_africa: int
+    groups: tuple[tuple[int, IslandGroup], ...]
+
+
+def ocean_speck_limit(width: int) -> int:
+    return max(1, OCEAN_SPECK_PX * width**2 // REFERENCE_WIDTH**2)
+
+
+def _continental_cores(
+    game_map: Eu5Map, sea: NDArray[np.bool_]
+) -> tuple[NDArray[np.bool_], NDArray[np.int8]]:
+    """Keep substantial land with its own region; the shelf owns outlying islets."""
+    numbers = {name: index for index, name in enumerate(CONTINENTS)}
+    kinds = np.array([numbers.get(name, -1) for name in game_map.continents], dtype=np.int8)
+    kinds[sea] = -1
+    original = kinds[game_map.labels]
+    land = original >= 0
+    parts = label_components(original.astype(np.int32), wrap_x=True)
+    area = np.bincount(parts[land], minlength=int(parts.max()) + 1)
+    minimum = max(
+        1, CONTINENTAL_SHORE_AREA_PX * game_map.labels.shape[1] ** 2 // REFERENCE_WIDTH**2
+    )
+    original[(area < minimum)[parts]] = -1
+    return kinds >= 0, original
+
+
+def _connect_owners(owners: NDArray[np.int8]) -> NDArray[np.int8]:
+    """Grow each main canvas over adjacent unconnected fragments."""
+    parts = label_components(owners.astype(np.int32), wrap_x=True)
+    count = int(parts.max()) + 1
+    values = np.full(count, -1, dtype=np.int8)
+    sizes = np.zeros(count, dtype=np.int64)
+    for first in range(0, len(parts), BAND_ROWS):
+        rows = slice(first, first + BAND_ROWS)
+        block = parts[rows]
+        values[block] = owners[rows]
+        sizes += np.bincount(block.ravel(), minlength=count)
+    connected = np.full(count, -1, dtype=np.int8)
+    for number in range(len(CONTINENTS)):
+        candidates = np.flatnonzero(values == number)
+        if candidates.size:
+            connected[candidates[np.argmax(sizes[candidates])]] = number
+    pairs, lengths = adjacency_lengths(parts, wrap_x=True)
+    links: dict[int, list[tuple[int, int]]] = {}
+    for (first, second), length in zip(unpack_pairs(pairs), lengths.tolist(), strict=True):
+        if values[first] >= 0 and values[second] >= 0:
+            links.setdefault(first, []).append((second, length))
+            links.setdefault(second, []).append((first, length))
+    heap = [
+        (-length, int(connected[cell]), other)
+        for cell in np.flatnonzero(connected >= 0).tolist()
+        for other, length in links.get(cell, ())
+    ]
+    heapq.heapify(heap)
+    while heap:
+        _, number, cell = heapq.heappop(heap)
+        if connected[cell] >= 0:
+            continue
+        connected[cell] = number
+        for other, length in links.get(cell, ()):
+            if connected[other] < 0:
+                heapq.heappush(heap, (-length, number, other))
+    return connected[parts]
+
+
+def _own_enclosed_specks(
+    owners: NDArray[np.int8], specks: NDArray[np.bool_], parts: NDArray[np.int32]
+) -> NDArray[np.int8]:
+    """Give a water speck to the one canvas that wholly surrounds it.
+
+    A speck inside replaced land is part of that land's canvas, so its location is
+    not cut. A speck that touches retained land or water stays with the retained map.
+    """
+    combined = np.empty(owners.shape, dtype=np.int32)
+    for first in range(0, len(owners), BAND_ROWS):
+        rows = slice(first, first + BAND_ROWS)
+        combined[rows] = np.where(specks[rows], parts[rows] + len(CONTINENTS) + 1, owners[rows] + 1)
+    around: dict[int, set[int]] = {}
+    for first, second in unpack_pairs(adjacency_pairs(combined, wrap_x=True)):
+        for speck, other in ((first, second), (second, first)):
+            if speck > len(CONTINENTS) >= other:
+                around.setdefault(speck, set()).add(other)
+    del combined
+    lookup = np.full(int(parts.max()) + 1, -1, dtype=np.int8)
+    for speck, neighbours in around.items():
+        if len(neighbours) == 1 and 0 not in neighbours:
+            lookup[speck - len(CONTINENTS) - 1] = min(neighbours) - 1
+    for first in range(0, len(owners), BAND_ROWS):
+        rows = slice(first, first + BAND_ROWS)
+        owners[rows] = np.where(specks[rows], lookup[parts[rows]], owners[rows])
+    return owners
+
+
+def _rejoin_fragments(
+    labels: NDArray[np.int32], claimed: NDArray[np.int8], connected: NDArray[np.int8]
+) -> NDArray[np.int8]:
+    """Settle the fragments that touch no canvas through retained water.
+
+    Replaced land is removed whole, so a fragment stays with the canvas that claimed
+    it, as a small enclave among retained waters. A larger location stranded wholly
+    there is a planning error rather than a hole to leave quietly.
+    """
+    count = int(labels.max()) + 1
+    owned = np.zeros(count, dtype=np.int64)
+    stranded = np.zeros(count, dtype=np.int64)
+    for first in range(0, len(labels), BAND_ROWS):
+        rows = slice(first, first + BAND_ROWS)
+        block = labels[rows]
+        owned += np.bincount(block[connected[rows] >= 0], minlength=count)
+        stranded += np.bincount(
+            block[(claimed[rows] >= 0) & (connected[rows] < 0)], minlength=count
+        )
+    whole = (stranded > 0) & (owned == 0)
+    if np.any(stranded[whole] >= ocean_speck_limit(labels.shape[1])):
+        message = "A generated location is stranded among retained waters"
+        raise CanvasError(message)
+    for first in range(0, len(labels), BAND_ROWS):
+        rows = slice(first, first + BAND_ROWS)
+        back = (claimed[rows] >= 0) & (connected[rows] < 0)
+        connected[rows] = np.where(back, claimed[rows], connected[rows])
+    return connected
+
+
+def _eurasian_waters(
+    game_map: Eu5Map, claims: OceanClaims, sea: NDArray[np.bool_]
+) -> NDArray[np.bool_]:
+    """Open-ocean locations at least half enclosed by Eurasian shores and joined to them.
+
+    A location the enclosure marks but that reaches no retained Eurasian location
+    through other marked ones would be an isolated vanilla zone in generated water.
+    """
+    near = claims.eurasian
+    count = len(game_map.keys)
+    if near is None:
+        return np.zeros(count, dtype=bool)
+    labels = game_map.labels
+    columns = np.arange(labels.shape[1], dtype=np.int64) // claims.step
+    taken = np.zeros(count, dtype=np.int64)
+    total = np.zeros(count, dtype=np.int64)
+    for first in range(0, len(labels), BAND_ROWS):
+        stop = min(first + BAND_ROWS, len(labels))
+        block = labels[first:stop]
+        reached = near[np.ix_(np.arange(first, stop, dtype=np.int64) // claims.step, columns)]
+        total += np.bincount(block.ravel(), minlength=count)
+        taken += np.bincount(block[reached], minlength=count)
+    open_water = np.fromiter(
+        (name.endswith("_ocean_continent") for name in game_map.continents), dtype=bool
+    )
+    marked = sea & open_water & (total > 0) & (2 * taken >= total)
+    retained = np.fromiter(
+        (
+            bool(name) and name not in CONTINENTS and not name.endswith("_ocean_continent")
+            for name in game_map.continents
+        ),
+        dtype=bool,
+    )
+    links: dict[int, list[int]] = {}
+    joined: list[int] = []
+    for first, second in unpack_pairs(adjacency_pairs(labels, wrap_x=True)):
+        for cell, other in ((first, second), (second, first)):
+            if marked[cell]:
+                if retained[other]:
+                    joined.append(cell)
+                elif marked[other]:
+                    links.setdefault(cell, []).append(other)
+    reached = np.zeros(count, dtype=bool)
+    while joined:
+        cell = joined.pop()
+        if not reached[cell]:
+            reached[cell] = True
+            joined.extend(links.get(cell, ()))
+    return reached
+
+
+def _shared_water(
+    game_map: Eu5Map,
+    claims: OceanClaims,
+    sea: NDArray[np.bool_],
+    selected: Collection[str],
+    retained_tolls: Collection[str],
+) -> SharedWater:
+    selected_land, cores = _continental_cores(game_map, sea)
+    eurasian = _eurasian_waters(game_map, claims, sea)
+    kept = sea & np.array(
+        [
+            continent not in selected
+            and (
+                not continent.endswith("_ocean_continent")
+                or key in retained_tolls
+                or key in NAVAL_ANCHORS
+            )
+            for key, continent in zip(game_map.keys, game_map.continents, strict=True)
+        ],
+        dtype=bool,
+    ) | (sea & eurasian)
+    result = np.full(len(sea), -1, dtype=np.int8)
+    groups = ocean_island_groups(game_map)
+    members = np.zeros(len(sea), dtype=bool)
+    for group in groups:
+        members[list(group.locations)] = True
+    island_rows, island_columns = np.nonzero(members[game_map.labels])
+    values = game_map.labels[island_rows, island_columns]
+    owner = claims.owners[claims.rows(island_rows), claims.columns(island_columns)]
+    found: list[tuple[int, IslandGroup]] = []
+    for group in groups:
+        votes = owner[np.isin(values, group.locations)]
+        chosen = int(np.bincount(votes).argmax())
+        whole = [*group.locations, *group.zones]
+        result[whole] = chosen
+        kept[whole] = False
+        found.append((chosen, group))
+    # The installed open-ocean colours include a few disconnected specks
+    # inside retained land. Keep their ownership, and let the identity pass
+    # handle each original remainder rather than generating isolated ports.
+    water = sea[game_map.labels]
+    parts = label_components(water.astype(np.int32), wrap_x=True)
+    counts = np.bincount(parts[water], minlength=int(parts.max()) + 1)
+    specks = water & (counts < ocean_speck_limit(game_map.labels.shape[1]))[parts]
+    labels = game_map.labels
+    heights = np.flatnonzero((cores == 1).any(axis=1))
+    north_africa = (
+        max(0, int(heights[0]) - AFRICAN_NORTH_REACH_PX * labels.shape[1] // REFERENCE_WIDTH)
+        if heights.size
+        else 0
+    )
+    owners = np.full(labels.shape, -1, dtype=np.int8)
+    columns = claims.columns(np.arange(labels.shape[1], dtype=np.int64))
+    for first in range(0, len(labels), BAND_ROWS):
+        stop = min(first + BAND_ROWS, len(labels))
+        rows = slice(first, stop)
+        coarse = claims.owners[np.ix_(claims.rows(np.arange(first, stop, dtype=np.int64)), columns)]
+        block = labels[rows]
+        water_or_land = (sea | selected_land)[block] & ~(kept[block] | specks[rows])
+        belongs = np.where(cores[rows] >= 0, cores[rows], coarse)
+        owners[rows] = np.where(
+            result[block] >= 0, result[block], np.where(water_or_land, belongs, -1)
+        )
+    owners = _own_enclosed_specks(owners, specks, parts)
+    owners = _rejoin_fragments(labels, owners, _connect_owners(owners))
+    resolved: list[tuple[int, IslandGroup]] = []
+    for _, group in found:
+        picked = np.isin(values, group.locations)
+        here = np.unique(owners[island_rows[picked], island_columns[picked]])
+        if here.size != 1:
+            message = "An installed ocean island group crosses disconnected canvases"
+            raise CanvasError(message)
+        if here[0] >= 0:
+            resolved.append((int(here[0]), group))
+    return SharedWater(owners, north_africa, tuple(resolved))
 
 
 def _ocean_claims(
@@ -290,6 +579,137 @@ def _ocean_claims(
 
 def _expanded_america(settings: NewWorldSettings) -> bool:
     return bool(settings.expand_oceans and not (settings.landform or settings.template_permille))
+
+
+def _shared_ocean_claims(
+    game_map: Eu5Map, sea: NDArray[np.bool_], solid: NDArray[np.bool_], seed: int | None
+) -> OceanClaims:
+    """Partition every ocean block about the three substantial continental footprints.
+
+    The retained Eurasian land competes for the nearest blocks with a bounded reach,
+    so Africa and Oceania cannot dig into its bays and passages. It owns no block
+    here; ``_eurasian_waters`` turns this reservation into whole retained locations.
+    """
+    height, width = game_map.labels.shape
+    step = max(1, width // OCEAN_GRID_COLUMNS)
+    rows = np.minimum(np.arange(0, height, 2 * step, dtype=np.int64) + step, height - 1)
+    columns = np.minimum(np.arange(0, width, step, dtype=np.int64) + step // 2, width - 1)
+    sample = game_map.labels[np.ix_(rows, columns)]
+    limit = sample.shape[0] + sample.shape[1]
+    best = np.full(sample.shape, limit + 1, dtype=np.int32)
+    owners = np.zeros(sample.shape, dtype=np.int8)
+    minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // (2 * step**2))
+    for number, name in enumerate(CONTINENTS):
+        core = _substantial_land(_membership(game_map, name) & ~sea, sample, minimum)
+        if not core.any():
+            continue
+        if seed is not None:
+            shift = _shelf_drift(seed, name, len(rows), len(columns))
+            core = core[
+                np.arange(len(rows))[:, None],
+                (np.arange(len(columns)) - shift[:, None]) % len(columns),
+            ]
+        distance = distance_from(core, limit, octagonal=True, wrap_x=True)
+        take = distance < best
+        best[take] = distance[take]
+        owners[take] = number
+    return OceanClaims(owners, step, eurasian=_eurasian_blocks(game_map, solid, step))
+
+
+def _substantial_land(
+    land: NDArray[np.bool_], sample: NDArray[np.int32], minimum: int
+) -> NDArray[np.bool_]:
+    """The sampled land of a continent's largest landmasses, without its outlying islets."""
+    main = land[sample]
+    parts = label_components(main.astype(np.int32), wrap_x=True)
+    sizes = np.bincount(parts[main], minlength=int(parts.max()) + 1)
+    return main & (sizes >= min(int(sizes.max()), minimum))[parts]
+
+
+def _eurasian_blocks(game_map: Eu5Map, solid: NDArray[np.bool_], step: int) -> NDArray[np.bool_]:
+    """Square blocks of water that retained Eurasian shores enclose.
+
+    The claim grid is twice as coarse in latitude, so its distances would double the
+    reach north and south. A square grid keeps the reach the same in every direction.
+    A block is enclosed when its nearest land is Eurasian, and Eurasian land lies within
+    reach on both sides of it along a row, a column or a diagonal with no generated
+    continent's land in the way.
+    """
+    labels = game_map.labels
+    height, width = labels.shape
+    rows = np.minimum(np.arange(0, height, step, dtype=np.int64) + step // 2, height - 1)
+    columns = np.minimum(np.arange(0, width, step, dtype=np.int64) + step // 2, width - 1)
+    sample = labels[np.ix_(rows, columns)]
+    limit = sample.shape[0] + sample.shape[1]
+    nearest_generated = np.full(sample.shape, limit + 1, dtype=np.int32)
+    minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // step**2)
+    for name in CONTINENTS:
+        core = _substantial_land(_membership(game_map, name) & solid, sample, minimum)
+        if core.any():
+            nearest_generated = np.minimum(
+                nearest_generated, distance_from(core, limit, octagonal=True, wrap_x=True)
+            )
+    eurasia = np.fromiter(
+        (
+            bool(name) and name not in CONTINENTS and not name.endswith("_ocean_continent")
+            for name in game_map.continents
+        ),
+        dtype=bool,
+    )
+    land = (eurasia & solid)[sample]
+    foreign = (_membership_any(game_map) & solid)[sample]
+    reach = max(1, EURASIAN_SPAN_PX * width // (REFERENCE_WIDTH * step))
+    enclosed = np.zeros(sample.shape, dtype=bool)
+    for dy, dx in EURASIAN_LINES:
+        enclosed |= _sighted(land, foreign, dy, dx, reach) & _sighted(
+            land, foreign, -dy, -dx, reach
+        )
+    nearest = distance_from(land, limit, octagonal=True, wrap_x=True)
+    return enclosed & (nearest <= nearest_generated)
+
+
+def _membership_any(game_map: Eu5Map) -> NDArray[np.bool_]:
+    """Locations of any generated continent."""
+    return np.fromiter((name in CONTINENTS for name in game_map.continents), dtype=bool)
+
+
+def _sighted(
+    target: NDArray[np.bool_], blocking: NDArray[np.bool_], dy: int, dx: int, reach: int
+) -> NDArray[np.bool_]:
+    """Blocks with target land within ``reach`` steps in a direction before blocking land."""
+    height = target.shape[0]
+    found = np.zeros_like(target)
+    clear = np.ones_like(target)
+    for step in range(1, reach // max(abs(dy), abs(dx)) + 1):
+        gone = step * dy
+        if abs(gone) >= height:
+            break
+        hit = np.zeros_like(target)
+        wall = np.zeros_like(target)
+        top, bottom = max(0, -gone), height - max(0, gone)
+        for source, sink in ((target, hit), (blocking, wall)):
+            moved = np.roll(source, -step * dx, axis=1)
+            sink[top:bottom] = moved[top + gone : bottom + gone]
+        found |= clear & hit
+        clear &= ~(hit | wall)
+    return found
+
+
+def _shelf_drift(seed: int, name: str, rows: int, columns: int) -> NDArray[np.int64]:
+    """Give the shared frontier a seed-dependent drift on either side of the old shore."""
+    rng = SplitMix64(derive_seed(seed, "shared_ocean_drift", name))
+    reach = max(1, columns // 30)
+    bands = np.linspace(0, rows - 1, 6, dtype=np.int64)
+    offsets = [rng.below(2 * reach + 1) - reach for _ in bands]
+    shift = np.full(rows, offsets[-1], dtype=np.int64)
+    for i, (first, last) in enumerate(pairwise(bands.tolist())):
+        if first < last:
+            shift[first:last] = offsets[i] + (
+                np.arange(last - first, dtype=np.int64)
+                * (offsets[i + 1] - offsets[i])
+                // (last - first)
+            )
+    return shift
 
 
 def _pacific_islands(  # noqa: PLR0913 - reserve compact island groups on the shared ocean grid.
@@ -375,6 +795,7 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     solid: NDArray[np.bool_],
     join_asia: bool | None,
     europe_strait: bool,
+    shared: SharedWater | None = None,
 ) -> Domain:
     labels = game_map.labels
     map_height, map_width = labels.shape
@@ -383,9 +804,11 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     member = identity & ~sea
     # The American hierarchy includes coastal seas that must be replaced in
     # full to keep American and retained continental identities separated.
-    original_seas = identity & sea if continent.key == NEW_WORLD else np.zeros_like(sea)
-    source = (member | original_seas)[labels]
-    owner = claims.owners == number
+    original_seas = (
+        identity & sea if shared is None and continent.key == NEW_WORLD else np.zeros_like(sea)
+    )
+    source = (member | original_seas)[labels] if shared is None else shared.owners == number
+    owner = (claims.owners == number) & (shared is None)
     owner_cols = owner.any(axis=0)[claims.columns(np.arange(map_width, dtype=np.int64))]
     owner_rows = owner.any(axis=1)[claims.rows(np.arange(map_height, dtype=np.int64))]
     first, width = _extent(source.any(axis=0) | owner_cols, reach + 1)
@@ -404,6 +827,36 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     local = _read(labels[top:end], first, width)
     footprint = member[local]
     marine = sea[local]
+    local_owners = (
+        _read(shared.owners[top:end], first, width)
+        if shared is not None
+        else claims.owners[
+            np.ix_(
+                claims.rows(np.arange(top, end, dtype=np.int64)),
+                claims.columns(np.arange(first, first + width, dtype=np.int64) % map_width),
+            )
+        ]
+    )
+    if (
+        shared is not None
+        and not europe_strait
+        and (continent.land_neighbor is None or join_asia is False)
+    ):
+        return _whole_domain(
+            continent,
+            first,
+            map_width,
+            top,
+            number,
+            local,
+            footprint,
+            local_owners,
+            interface=None,
+            neighbor=None,
+            join_asia=False,
+            strait=None,
+            shared=shared,
+        )
     open_sea = np.fromiter(
         (
             name == continent.key or name.endswith("_ocean_continent")
@@ -411,12 +864,6 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
         ),
         dtype=bool,
     )[local]
-    local_owners = claims.owners[
-        np.ix_(
-            claims.rows(np.arange(top, end, dtype=np.int64)),
-            claims.columns(np.arange(first, first + width, dtype=np.int64) % map_width),
-        )
-    ]
     coast = _coastal_waters(footprint, marine, reach, reach, 0)
     candidate = marine & ((local_owners == number) | ((local_owners < 0) & coast))
     claim = candidate & open_sea
@@ -473,6 +920,22 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
         if landing.any():
             strait = np.where(landing, 2, near_europe < gap).astype(np.uint8)
     claim &= close
+    if shared is not None:
+        return _whole_domain(
+            continent,
+            first,
+            map_width,
+            top,
+            number,
+            local,
+            footprint,
+            local_owners,
+            interface=interface,
+            neighbor=neighbor,
+            join_asia=bool(join_asia),
+            strait=strait,
+            shared=shared,
+        )
     sites = (
         tuple((row - top, (col - first) % map_width, step) for row, col, step in claims.islands)
         if continent.key == "oceania"
@@ -498,6 +961,52 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
         join_asia=bool(join_asia),
         strait=strait,
         island_sites=sites,
+    )
+
+
+def _whole_domain(  # noqa: PLR0913, PLR0917 - complete ownership plus retained coastal identities.
+    continent: Continent,
+    first: int,
+    width: int,
+    top: int,
+    number: int,
+    local: NDArray[np.int32],
+    footprint: NDArray[np.bool_],
+    local_owners: NDArray[np.int8],
+    *,
+    interface: NDArray[np.bool_] | None,
+    neighbor: NDArray[np.bool_] | None,
+    join_asia: bool,
+    strait: NDArray[np.uint8] | None,
+    shared: SharedWater,
+) -> Domain:
+    mask = local_owners == number
+    if interface is not None:
+        interface = np.logical_and(interface, mask)
+    if strait is not None:
+        strait[~mask] = 0
+    north_water_rows = max(0, shared.north_africa - top) if continent.key == "africa" else 0
+    groups = tuple(group for owner, group in shared.groups if owner == number)
+    footprints: list[Footprint] = []
+    for group in groups:
+        member = np.isin(local, (*group.locations, *group.zones)) & mask
+        rows, cols = np.nonzero(member)
+        footprints.append(Footprint(rows.astype(np.int32), cols.astype(np.int32)))
+    return Domain(
+        continent,
+        first,
+        width,
+        mask,
+        footprint & mask,
+        first_row=top,
+        land_interface=interface,
+        contact_land=neighbor,
+        join_asia=join_asia,
+        strait=strait,
+        shared_ocean=True,
+        north_water_rows=north_water_rows,
+        groups=groups,
+        footprints=tuple(footprints),
     )
 
 
@@ -624,9 +1133,9 @@ def plan_domains(
 ) -> tuple[Domain, ...]:
     """Plan selected regions once, dividing shared oceans before generating any land.
 
-    Preserve the legacy canvas for America on its own. In a combined world, each region
-    exclusively owns its vanilla land footprint and the unclaimed coastal water placed in its
-    domain. The sea planner can later join the resulting waters using their real contacts.
+    Preserve the legacy canvas for America on its own. With all three regions enabled,
+    preserve Eurasia's original coastline and internal seas as a fourth canvas,
+    and assign every other ocean pixel to one generated region.
     """
     if not selected or set(selected) - CONTINENTS.keys():
         message = "Choose at least one supported continent"
@@ -642,7 +1151,13 @@ def plan_domains(
     )
     occupied = np.zeros(game_map.labels.shape, dtype=bool)
     planned: dict[str, Domain] = {}
-    claims = _ocean_claims(game_map, selected, sea, seed)
+    complete = len(selected) == len(CONTINENTS)
+    claims = (
+        _shared_ocean_claims(game_map, sea, solid, seed)
+        if complete
+        else _ocean_claims(game_map, selected, sea, seed)
+    )
+    shared = _shared_water(game_map, claims, sea, selected, retained_tolls) if complete else None
     connect = (
         None
         if seed is None
@@ -665,6 +1180,7 @@ def plan_domains(
                 solid=solid,
                 join_asia=connect if key == "africa" else None,
                 europe_strait=strait and key == "africa",
+                shared=shared,
             )
             for columns, original in domain.spans():
                 domain.mask[:, columns] &= ~occupied[domain.rows, original]
@@ -681,14 +1197,22 @@ def plan_domains(
                 solid=solid,
                 join_asia=None,
                 europe_strait=False,
+                shared=shared,
             )
-            if seed is not None and _expanded_america(selected[NEW_WORLD])
+            if complete or (seed is not None and _expanded_america(selected[NEW_WORLD]))
             else _claim_america(game_map, selected, occupied, sea, claims)
         )
         planned[NEW_WORLD] = america
         for crop, original in america.spans():
             america.mask[:, crop] &= ~occupied[america.rows, original]
             occupied[america.rows, original] |= america.mask[:, crop]
+    if shared is not None:
+        for first in range(0, len(game_map.labels), BAND_ROWS):
+            rows = slice(first, first + BAND_ROWS)
+            if not np.array_equal(occupied[rows], shared.owners[rows] >= 0):
+                message = "The generated canvases do not partition the map around retained Eurasia"
+                raise CanvasError(message)
+        return tuple(planned[key] for key in CONTINENTS)
     protected = _protected_sea(game_map, occupied, selected)
     protected |= np.fromiter(
         (

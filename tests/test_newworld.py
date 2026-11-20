@@ -60,6 +60,15 @@ def _land_mask(world: NewWorld) -> NDArray[np.bool_]:
     return land[world.labels]
 
 
+def test_regional_northern_limit_can_remain_in_the_generated_sea_grid() -> None:
+    domain = np.ones((260, 460), dtype=bool)
+    result = generate_new_world(domain, seed=3, settings=SMALL, sizes=SIZES, reserve_north=70)
+    with_land = _land_mask(result)
+    sea = np.array([kind is CellClass.SEA for kind in result.classes] + [False])
+    assert np.all(sea[result.labels[:70]])
+    assert with_land[70:].any()
+
+
 def test_finished_water_distinguishes_puddles_lakes_inland_seas_and_the_ocean() -> None:
     """A detached ocean pocket gets its physical kind before partitioning, including kept stages."""
     domain = np.ones((260, 460), dtype=bool)

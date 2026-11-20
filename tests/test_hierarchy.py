@@ -621,6 +621,46 @@ def test_boundary_only_region_has_no_independent_coast() -> None:
     assert coasts == {"independent": [2]}
 
 
+def test_surviving_ocean_anchor_does_not_sprout_a_disconnected_coastal_piece() -> None:
+    graph = _grid(10, 1)
+    coasts = {"coastal_region": [0, 4]}
+    areas, _ = _sea_areas(
+        graph,
+        list(range(10)),
+        [
+            _SeaArea(
+                "coast",
+                "coastal_region",
+                coastal=True,
+                replaced=30,
+                centre=(0, 0),
+                remaining=frozenset(),
+            ),
+            _SeaArea(
+                "ocean",
+                "atlantic_region",
+                coastal=False,
+                replaced=30,
+                centre=(0, 40),
+                remaining=frozenset({99}),
+            ),
+        ],
+        {(99, 4)},
+        coasts={name: cells.copy() for name, cells in coasts.items()},
+        parents={
+            "coastal_region": ("coastal_region", "north_america", "america"),
+            "ocean": ("atlantic_region", "atlantic_ocean", "atlantic_ocean_continent"),
+        },
+        keys=KeySpace(set()),
+        boundary={3},
+        compose=True,
+    )
+    _check_shores(graph, areas, coasts)
+    assert all(
+        4 not in province for area in areas if area.name != "ocean" for province in area.provinces
+    )
+
+
 def test_boundary_only_shore_stays_in_the_protected_ocean_hierarchy() -> None:
     graph = _grid(8, 2)
     seas = [

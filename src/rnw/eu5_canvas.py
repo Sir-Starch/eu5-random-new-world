@@ -90,6 +90,8 @@ class Canvas:
     # Where the installed game's own Americas lie on the canvas (land and lakes of the New World's
     # continent): the template of Omerika (``rnw.omerika``). Read from the map, never shipped.
     template: NDArray[np.bool_] | None = None
+    # Original isolated sea pixels assigned to the enclosing retained land colour.
+    enclosed_ocean: tuple[tuple[OceanRemainder, int], ...] = ()
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""

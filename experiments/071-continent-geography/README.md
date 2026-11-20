@@ -390,3 +390,47 @@ across the map wrap with no blocked pixel. The full cold export took 213.2
 seconds at 24 threads. All 1,455 canonical files verify in the installed
 copy. In-game rendering and expedition completion remain unobserved for
 this candidate. [Installation details](../INSTALLED.md).
+
+## Four canvases on M55D
+
+[V-EXEC 2026-11-20] The four-canvas raster assigns all 90,805,365 installed
+sea pixels. Eurasia retains 12,592,521 sea pixels and Greenland. The
+American and African canvases share 7,745 seawater pixel edges. America
+and Oceania share 8,540. Africa and Oceania share 3,384. The count includes
+the horizontal map wrap. The original Norwegian and Java seas and the
+Malacca Strait stay in the Eurasian canvas. The Strait of Gibraltar is
+in the African canvas, with the Iberian shore preserved. The African
+mainland's northern limit for physical generation is row 2,205 on this
+16,384 × 8,192 raster, south of the preserved Norwegian coast.
+The remote vanilla Pacific islets assigned to Oceania no longer leave
+separate patches inside the American canvas. The surrounding canvas
+regenerates their old sites.
+Existing open-ocean islands take part in normal island placement; the
+builder can move a group and its ports together when new land occupies its
+original position.
+
+Water that Eurasian shores enclose stays in the fourth canvas: the Bay of
+Bengal, the Arabian Sea and the passage between Greenland and Europe. A
+distance reach alone gave Eurasia long tongues of the Pacific and most of the
+northern Indian Ocean, because the claim grid is twice as coarse in latitude.
+The final rule works on a square grid. A block is enclosed when Eurasian land
+lies within about 1,100 pixels on both sides of it along one of eight lines
+and no generated continent's land blocks either sight. Whole installed
+locations at least half enclosed that touch the retained map keep their
+water. An enclosed location detached from the retained map would be an
+isolated vanilla zone in generated water, so it is regenerated.
+
+Three checks now fail the plan rather than leave a hole. A fragment of a
+generated canvas that only retained water touches stays with the canvas that
+claimed it, so no location is cut between a canvas and the retained map. A
+small water speck wholly inside replaced land joins that land's canvas. A
+larger location stranded among retained waters raises an error. The Baffin
+Island and Red Sea islets exposed these cases. The full cold export of the
+M55D code took 198.2 seconds at 16 threads. [V-EXEC]
+
+The first full plan exposed 125 tiny sea fragments that appeared when the
+regional grids met. They became isolated when nearby deep waters were
+grouped. The shared cell builder now folds fragments into their broadest
+sea neighbour before ports and routes are assigned. Stray vanilla ocean
+pixels enclosed by one retained land location join that location before
+the shared geography is built.

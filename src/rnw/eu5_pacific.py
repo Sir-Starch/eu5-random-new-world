@@ -158,6 +158,20 @@ def _groups(
     )
 
 
+def ocean_island_groups(game_map: Eu5Map) -> tuple[IslandGroup, ...]:
+    """Retained island groups that belong to the shared open ocean."""
+    pinned = np.fromiter(
+        (
+            kind not in NOT_LAND and continent.endswith("_ocean_continent")
+            for kind, continent in zip(game_map.classes, game_map.continents, strict=True)
+        ),
+        dtype=bool,
+    )
+    return (
+        _groups(game_map, game_map.labels, pinned, game_map.labels.shape[1]) if pinned.any() else ()
+    )
+
+
 def expansion(
     game_map: Eu5Map,
     rolled: NDArray[np.int32],

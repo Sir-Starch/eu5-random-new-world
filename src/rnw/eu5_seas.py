@@ -206,11 +206,15 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
     vanilla: Mapping[str, VanillaWater],
     removed: Collection[str],
     designed: np.ndarray[tuple[int, ...], np.dtype[np.bool_]] | None = None,
+    minimum_sea: int = 0,
 ) -> Coast:
     """Settle the sea cells of ``world`` against ports; collect the game's lanes beside it."""
     contacts = outside_contacts(game_map, canvas, world, len(game_map.keys))
     settled = settle_seas(
-        world, foreign_coast(game_map, world, contacts, ports, removed), shared_coast=world.wrap_x
+        world,
+        foreign_coast(game_map, world, contacts, ports, removed),
+        shared_coast=world.wrap_x,
+        minimum_sea=minimum_sea,
     )
     samples: dict[int, list[Vector]] = {}
     docks: set[int] = set()

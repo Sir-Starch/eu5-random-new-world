@@ -73,6 +73,17 @@ def test_a_settled_world_is_the_world_itself() -> None:
     assert settled.cell_of == (0, 1, 2)
 
 
+def test_small_open_water_fragment_folds_into_its_broadest_sea_neighbour() -> None:
+    labels = np.zeros((6, 9), dtype=np.int32)
+    labels[:, 6:] = 1
+    labels[3, 5] = 2
+    world = derive_world(labels, (CellClass.SEA,) * 3, np.zeros_like(labels))
+    settled = settle_seas(world, minimum_sea=5)
+    assert settled.merged == 1
+    assert settled.cell_of == (0, 1, 0)
+    assert settled.world.pixels.tolist() == [36, 18]
+
+
 def test_water_beside_only_wasteland_or_a_lake_needs_no_port() -> None:
     """The engine names a sea zone without a port only beside land (C232)."""
     world = block_world(["w.k", "###"], block=2)

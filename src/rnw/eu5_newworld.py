@@ -806,6 +806,18 @@ def _sea_areas(  # noqa: PLR0913, PLR0915 - sea areas read the vanilla seas, coa
     protected_oceans = _protect_ocean_boundary(graph, ocean_sources, shore, boundary or set())
     protected_oceans.update(common_oceans[i] for i in protected_crossings)
     reserved_ocean = {cell for sources in ocean_sources for cell in sources} - original_sources
+    pinned_oceans = [
+        not sea.remaining or number in protected_oceans for number, sea in enumerate(oceans)
+    ]
+    if compose:
+        # An original contact can be a shore and a surviving ocean anchor.
+        # Both partitions must agree on its owner before their waves start.
+        reserved_ocean.update(
+            cell
+            for sources, pinned in zip(ocean_sources, pinned_oceans, strict=True)
+            if pinned
+            for cell in sources
+        )
     for region in regions:
         coasts[region] = [cell for cell in coasts[region] if cell not in reserved_ocean]
         if not coasts[region]:
@@ -835,8 +847,7 @@ def _sea_areas(  # noqa: PLR0913, PLR0915 - sea areas read the vanilla seas, coa
             not sea.remaining and number not in protected_oceans
             for number, sea in enumerate(oceans)
         ],
-        pinned=[True] * len(regions)
-        + [not sea.remaining or number in protected_oceans for number, sea in enumerate(oceans)],
+        pinned=[True] * len(regions) + pinned_oceans,
     )
     parts = absorb_small_pieces(graph, parts, first=len(regions), minimum=MIN_SHORE_PIECE)
     areas: list[_Area] = []
@@ -1047,17 +1058,30 @@ def plan_regional_land(  # noqa: PLR0913 - installed inputs and one generated re
     biomes: CellBiomes,
     settings: NewWorldSettings,
     keys: KeySpace,
+    replaced: NDArray[np.bool_],
+    original: VanillaGeometry,
     algorithm: int = CURRENT,
 ) -> RegionalLand:
     """Assign the region's own hierarchy before the common water identity pass."""
     continent = domain.continent.key
     geometry = regional_geometry(game_map, domain, hierarchy)
+    # Outlying islands can lie in another canvas. Their original region
+    # still uses their installed names and profiles as generation inputs.
+    displaced = replaced & (geometry.pixels == 0)
+    padding = (domain.map_width - domain.mask.shape[1]) // 2
+    columns = (original.columns - domain.first_column + padding) % domain.map_width - padding
+    geometry = replace(
+        geometry,
+        rows=np.where(displaced, original.rows - domain.first_row, geometry.rows),
+        columns=np.where(displaced, columns, geometry.columns),
+        pixels=np.where(displaced, original.pixels, geometry.pixels),
+    )
     tally = _land_tally(
         game_map,
         hierarchy,
         geometry,
         geometry.pixels,
-        geometry.pixels > 0,
+        replaced,
         col0=0,
         continent=continent,
     )

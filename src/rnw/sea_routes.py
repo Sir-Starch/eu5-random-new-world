@@ -180,6 +180,8 @@ def _links(world: NewWorld, sea: Collection[int]) -> Graph:
     for first, second in world.edges:
         if first in links and second in links:
             row, column = (int(v) for v in world.centroids[first] - world.centroids[second])
+            if world.wrap_x:
+                column = min(abs(column), world.labels.shape[1] - abs(column))
             length = max(1, math.isqrt(row * row + column * column))
             links[first].append((second, length))
             links[second].append((first, length))
@@ -200,7 +202,7 @@ def navigation_links(world: NewWorld, waters: Waters) -> Graph:
     lengths: Counter[tuple[int, int]] = Counter()
     for start in range(0, len(world.labels), STRIP_ROWS):
         rows = world.labels[start : start + STRIP_ROWS]
-        pairs, sizes = adjacency_lengths(rows)
+        pairs, sizes = adjacency_lengths(rows, wrap_x=world.wrap_x)
         lengths.update(dict(zip(unpack_pairs(pairs), sizes.tolist(), strict=True)))
         if start:
             seam = world.labels[start - 1 : start + 1]

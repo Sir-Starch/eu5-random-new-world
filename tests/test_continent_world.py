@@ -10,8 +10,10 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from rnw.continent_domains import CONTINENTS, Domain
-from rnw.continent_world import WorldRegion, compose_regions
+from rnw.continent_world import WorldRegion, absorb_ocean_specks, compose_regions
 from rnw.eu5_biomes import CellBiomes
+from rnw.eu5_canvas import Canvas, OceanRemainder
+from rnw.eu5_map import Eu5Map
 from rnw.eu5_newworld import outside_contacts, regional_geometry
 from rnw.eu5_nw_export import (
     _replacement_water_links,  # pyright: ignore[reportPrivateUsage]
@@ -23,7 +25,6 @@ from rnw.newworld import derive_world
 from rnw.ports import ForeignCoast, pair_lengths, relabel
 
 if TYPE_CHECKING:
-    from rnw.eu5_map import Eu5Map
     from rnw.eu5_newworld import Plan
     from rnw.eu5_seas import Water
 
@@ -142,6 +143,42 @@ def test_cut_retained_sea_records_each_connected_remainder() -> None:
     assert shared.canvas.trimmed.tolist() == [True]
     assert [part.pixels for part in shared.canvas.ocean_parts] == [9, 6]
     assert all(part.source == 0 for part in shared.canvas.ocean_parts)
+
+
+def test_an_enclosed_closed_ocean_speck_follows_its_actual_land_location() -> None:
+    labels = np.zeros((5, 1024), dtype=np.int32)
+    labels[2, 100] = 1
+    labels[2, 200:220] = 1
+    rgb = np.zeros((*labels.shape, 3), dtype=np.uint8)
+    game = Eu5Map(
+        ("land", "ocean"),
+        np.array([0x123456, 0], dtype=np.int64),
+        (CellClass.LAND, CellClass.SEA),
+        np.array([False, True]),
+        ("asia", "pacific_ocean_continent"),
+        rgb,
+        labels,
+        rgb,
+        (),
+        (),
+        (),
+        (),
+    )
+    canvas = Canvas(
+        0,
+        0,
+        labels == 0,
+        labels.shape,
+        np.zeros(2, dtype=bool),
+        np.array([False, True]),
+        (OceanRemainder(1, np.array([[2, 100, 101]], dtype=np.int64), 1),),
+    )
+    result, fixed = absorb_ocean_specks(game, canvas)
+    assert result.labels[2, 100] == 0
+    assert result.rgb[2, 100].tolist() == [0x12, 0x34, 0x56]
+    assert np.all(result.labels[2, 200:220] == 1)
+    assert game.labels[2, 100] == 1
+    assert fixed.enclosed_ocean == ((canvas.ocean_parts[0], 0x123456),)
 
 
 def test_cut_coastal_route_needs_a_new_navigable_connection() -> None:

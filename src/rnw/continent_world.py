@@ -4,12 +4,14 @@
 # pyright: reportAny=false
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.continent_domains import ocean_speck_limit
 from rnw.eu5_canvas import Canvas, CanvasError, OceanRemainder, remainder_boxes, remainder_runs
+from rnw.islands import Footprint, carve
 from rnw.model import CellClass
 from rnw.newworld import (
     NewWorld,
@@ -69,6 +71,9 @@ def _place(
         message = f"Generated cells do not fit {domain.continent.key}"
         raise CanvasError(message)
     table = np.append(cells, np.int32(-1)).astype(np.int32, copy=False)
+    expected = domain.mask
+    if domain.footprints:
+        expected = carve(expected, domain.footprints, tuple(map(tuple, world.moves.tolist())))
     for local, original in domain.spans():
         for first in range(0, domain.mask.shape[0], BAND_ROWS):
             checkpoint()
@@ -77,7 +82,7 @@ def _place(
             own = world.labels[first:stop, local]
             mask = own >= 0
             target = labels[rows, original]
-            if np.any(mask & (target >= 0)) or np.any(mask != domain.mask[first:stop, local]):
+            if np.any(mask & (target >= 0)) or np.any(mask != expected[first:stop, local]):
                 message = f"The composed footprint conflicts at {domain.continent.key}"
                 raise CanvasError(message)
             np.copyto(target, table[own], where=mask)
@@ -106,6 +111,72 @@ def _canvas(game_map: Eu5Map, mask: NDArray[np.bool_]) -> Canvas:
         removed=(inside > 0) & (outside == 0),
         trimmed=trimmed,
         ocean_parts=_remainders(game_map, mask, trimmed),
+    )
+
+
+def relocated_canvas(game_map: Eu5Map, canvas: Canvas) -> Canvas:
+    """Count retained and replaced locations at their final installed coordinates."""
+    return replace(
+        _canvas(game_map, canvas.mask),
+        groups=canvas.groups,
+        footprints=canvas.footprints,
+        moves=canvas.moves,
+        enclosed_ocean=canvas.enclosed_ocean,
+    )
+
+
+def absorb_ocean_specks(game_map: Eu5Map, canvas: Canvas) -> tuple[Eu5Map, Canvas]:
+    """Assign an isolated old ocean speck to the retained land enclosing it."""
+    height, width = canvas.shape
+    paints: list[tuple[OceanRemainder, int]] = []
+    labels = game_map.labels
+    for part in canvas.ocean_parts:
+        if part.pixels >= ocean_speck_limit(width) or not game_map.ambiguous[part.source]:
+            continue
+        banks: set[int] = set()
+        for row, left, right in part.runs.tolist():
+            banks.add(int(labels[row, (left - 1) % width]))
+            banks.add(int(labels[row, right % width]))
+            if row > 0:
+                banks.update(labels[row - 1, left:right].tolist())
+            if row + 1 < height:
+                banks.update(labels[row + 1, left:right].tolist())
+        banks.discard(part.source)
+        if len(banks) == 1:
+            (bank,) = banks
+            if game_map.classes[bank] in {CellClass.LAND, CellClass.WASTELAND}:
+                paints.append((part, bank))
+    if not paints:
+        return game_map, canvas
+    labels = labels.copy()
+    rgb = game_map.rgb.copy()
+    for part, bank in paints:
+        color = int(game_map.colors[bank])
+        for row, left, right in part.runs.tolist():
+            labels[row, left:right] = bank
+            rgb[row, left:right] = (color >> 16, (color >> 8) & 255, color & 255)
+    edits = tuple((part, int(game_map.colors[bank])) for part, bank in paints)
+    return replace(game_map, labels=labels, rgb=rgb), replace(canvas, enclosed_ocean=edits)
+
+
+def _island_placements(canvas: Canvas, regions: Sequence[WorldRegion]) -> Canvas:
+    footprints: list[Footprint] = []
+    moves: list[tuple[int, int]] = []
+    for region in regions:
+        domain = region.domain
+        for footprint, (down, across) in zip(domain.footprints, region.world.moves, strict=True):
+            footprints.append(
+                Footprint(
+                    footprint.rows + domain.first_row,
+                    (footprint.columns + domain.first_column) % domain.map_width,
+                )
+            )
+            moves.append((int(down), int(across)))
+    return replace(
+        canvas,
+        groups=tuple(group for region in regions for group in region.domain.groups),
+        footprints=tuple(footprints),
+        moves=tuple(moves),
     )
 
 
@@ -188,7 +259,7 @@ def compose_regions(
         mean = np.concatenate((mean, south.mean_elevation))
         spread = np.concatenate((spread, south.spread))
     return ComposedWorld(
-        _canvas(game_map, labels >= 0),
+        _island_placements(_canvas(game_map, labels >= 0), regions),
         NewWorld(
             labels=labels,
             classes=ordered,

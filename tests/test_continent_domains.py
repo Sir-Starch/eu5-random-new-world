@@ -19,12 +19,15 @@ from rnw.continent_domains import (
     _coastal_waters,  # pyright: ignore[reportPrivateUsage]
     _pacific_islands,  # pyright: ignore[reportPrivateUsage]
     _protected_sea,  # pyright: ignore[reportPrivateUsage]
+    _rejoin_fragments,  # pyright: ignore[reportPrivateUsage]
+    _sighted,  # pyright: ignore[reportPrivateUsage]
     plan_domains,
 )
 from rnw.eu5_biomes import EQUATOR_ROW, block_features, climate_grid, land_features, latitude_tenths
 from rnw.eu5_canvas import CanvasError, select_canvas
 from rnw.model import CellClass
 from rnw.settings import PRESETS
+from rnw.topology import adjacency_pairs, unpack_pairs
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -140,10 +143,202 @@ def test_shared_southern_ocean_and_seeded_african_boundary() -> None:
     assert africa.land_interface.any()
     assert oceania.rows.stop == game.labels.shape[0]
     assert oceania.mask[-1].any()
-    assert america.mask.sum() < select_canvas(game, 1600, expanded=True).mask.sum()
+    assert america.shared_ocean
+    assert africa.north_water_rows > 0
     plans = plan_domains(game, selected, seed=42)
     assert not plans[1].join_asia
     assert plans[1].land_interface is None
+
+
+def test_three_canvases_partition_the_whole_ocean_and_share_borders() -> None:
+    game = _map()
+    names = tuple(CONTINENTS)
+    owner = np.full(game.labels.shape, -1, dtype=np.int32)
+    for number, domain in enumerate(plan_domains(game, _settings(names), seed=739)):
+        mask = _in_world(domain, domain.mask, game.labels.shape)
+        assert np.all(owner[mask] == -1)
+        owner[mask] = number
+    water = game.labels == 0
+    assert np.all(owner[water] >= 0)
+    ocean_owner = np.where(water, owner, -1).astype(np.int32)
+    pairs = set(unpack_pairs(adjacency_pairs(ocean_owner, wrap_x=True)))
+    assert {(0, 1), (0, 2), (1, 2)} <= pairs
+
+
+def test_vanilla_water_speck_inside_asia_stays_in_the_preserved_canvas() -> None:
+    game = _map()
+    game.labels[55, 680] = 0
+    domains = plan_domains(game, _settings(tuple(CONTINENTS)), seed=739)
+    given = [_in_world(domain, domain.mask, game.labels.shape) for domain in domains]
+    assert not any(mask[55, 680] for mask in given)
+
+
+def test_eurasian_canvas_keeps_native_inner_waters_and_leaves_africa_its_shore() -> None:
+    game = _map()
+    labels = game.labels.copy()
+    labels[45:70, 655:660] = 6
+    labels[120:170, 610:620] = 7
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                labels=labels,
+                keys=(*game.keys, "eurasian_strait", "african_sea"),
+                classes=(*game.classes, CellClass.SEA, CellClass.SEA),
+                continents=(*game.continents, "asia", "africa"),
+                ambiguous=np.append(game.ambiguous, (False, False)),
+            ),
+        ),
+    )
+    domains = plan_domains(game, _settings(tuple(CONTINENTS)), seed=739)
+    owner = np.zeros(labels.shape, dtype=np.int8)
+    for number, domain in enumerate(domains, 1):
+        area = _in_world(domain, domain.mask, labels.shape)
+        assert not np.any(owner[area])
+        owner[area] = number
+    assert np.all(owner[(labels == 3) | (labels == 6)] == 0)
+    assert np.all(owner[labels == 7] == 2)
+    assert np.all(owner[labels == 0] > 0)
+
+
+def test_an_islet_of_a_replaced_continent_does_not_punch_a_hole_in_another_canvas() -> None:
+    game = _map()
+    game.labels[240, 270] = 4
+    names = tuple(CONTINENTS)
+    domains = plan_domains(game, _settings(names), seed=739)
+    given = {
+        domain.continent.key: _in_world(domain, domain.mask, game.labels.shape)
+        for domain in domains
+    }
+    assert given["america"][240, 270]
+    assert not given["oceania"][240, 270]
+    assert not any(domain.groups for domain in domains)
+
+
+def test_open_ocean_island_enters_placement_inside_its_canvas() -> None:
+    game = _map()
+    labels = game.labels.copy()
+    labels[260:265, 430:435] = 6
+    with_island = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                labels=labels,
+                keys=(*game.keys, "island"),
+                classes=(*game.classes, CellClass.LAND),
+                continents=(*game.continents, "atlantic_ocean_continent"),
+                ambiguous=np.append(game.ambiguous, False),
+            ),
+        ),
+    )
+    domains = plan_domains(with_island, _settings(tuple(CONTINENTS)), seed=739)
+    holder = next(domain for domain in domains if domain.groups)
+    assert holder.groups[0].locations == (6,)
+    points = holder.footprints[0]
+    assert points.size == 25
+    assert np.all(holder.mask[points.rows, points.columns])
+
+
+def _with_locations(
+    game: Eu5Map, labels: NDArray[np.int32], *added: tuple[str, CellClass, str]
+) -> Eu5Map:
+    """The test map with extra locations numbered after the existing ones."""
+    return cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                labels=labels,
+                keys=(*game.keys, *(key for key, _, _ in added)),
+                classes=(*game.classes, *(kind for _, kind, _ in added)),
+                continents=(*game.continents, *(name for _, _, name in added)),
+                ambiguous=np.append(game.ambiguous, np.zeros(len(added), dtype=bool)),
+            ),
+        ),
+    )
+
+
+def _owners(game: Eu5Map, selected: tuple[str, ...]) -> NDArray[np.int8]:
+    """The canvas of each pixel in order of selection, -1 where the map is retained."""
+    owner = np.full(game.labels.shape, -1, dtype=np.int8)
+    for number, domain in enumerate(plan_domains(game, _settings(selected), seed=739)):
+        owner[_in_world(domain, domain.mask, game.labels.shape)] = number
+    return owner
+
+
+def _passage_map(gap: int) -> tuple[Eu5Map, int]:
+    """Two European shores with an open-ocean location in the passage between them."""
+    base = _map()
+    labels = base.labels.copy()
+    labels[330:370, 300 : 330 - gap] = 6
+    labels[330:370, 380 + gap : 410] = 7
+    labels[330:370, 330:380] = 8
+    return (
+        _with_locations(
+            base,
+            labels,
+            ("west_shore", CellClass.LAND, "europe"),
+            ("east_shore", CellClass.LAND, "europe"),
+            ("passage", CellClass.SEA, "atlantic_ocean_continent"),
+        ),
+        8,
+    )
+
+
+def test_open_water_between_eurasian_shores_stays_retained() -> None:
+    game, passage = _passage_map(gap=0)
+    owner = _owners(game, tuple(CONTINENTS))
+    assert np.all(owner[game.labels == passage] == -1)
+    assert owner[310, 355] >= 0
+    assert owner[390, 355] >= 0
+
+
+def test_enclosed_water_detached_from_the_eurasian_map_is_regenerated() -> None:
+    game, passage = _passage_map(gap=3)
+    owner = _owners(game, tuple(CONTINENTS))
+    assert np.all(owner[game.labels == passage] >= 0)
+
+
+def test_a_sight_line_stops_at_the_land_of_a_generated_continent() -> None:
+    target = np.zeros((3, 12), dtype=bool)
+    blocking = np.zeros_like(target)
+    target[1, 10] = True
+    blocking[1, 5] = True
+    seen = _sighted(target, blocking, 0, 1, 12)
+    assert seen[1, 5:10].all()
+    assert not seen[1, :5].any()
+    assert not seen[0].any()
+    assert _sighted(target, blocking, 0, -1, 12)[1, 11]
+
+
+def test_a_water_speck_inside_replaced_land_belongs_to_its_canvas() -> None:
+    game = _map()
+    game.labels[100, 210] = 0
+    america = plan_domains(game, _settings(tuple(CONTINENTS)), seed=739)[0]
+    assert _in_world(america, america.mask, game.labels.shape)[100, 210]
+
+
+def test_a_fragment_cut_off_by_retained_water_stays_with_its_location() -> None:
+    labels = np.zeros((2, 16384), dtype=np.int32)
+    labels[:, :100] = 1
+    labels[1, 200:205] = 2
+    claimed = np.where(labels > 0, 0, -1).astype(np.int8)
+    connected = claimed.copy()
+    connected[0, 50] = -1
+    connected[1, 200:205] = -1
+    joined = _rejoin_fragments(labels, claimed, connected)
+    assert joined[0, 50] == 0
+    assert np.array_equal(joined >= 0, claimed >= 0)
+
+
+def test_a_large_location_stranded_among_retained_waters_is_an_error() -> None:
+    labels = np.zeros((2, 16384), dtype=np.int32)
+    labels[:, 100:2000] = 2
+    claimed = np.where(labels > 0, 1, -1).astype(np.int8)
+    with pytest.raises(CanvasError, match="stranded"):
+        _ = _rejoin_fragments(labels, claimed, np.full_like(claimed, -1))
 
 
 def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -> None:

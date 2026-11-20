@@ -1510,6 +1510,7 @@ def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world 
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
     reserve_south: int = 0,
+    reserve_north: int = 0,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
@@ -1556,9 +1557,10 @@ def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world 
         message = "The generation domain rows are outside the map"
         raise ValueError(message)
     land_domain = domain
-    if reserve_south:
+    if reserve_south or reserve_north:
         land_domain = domain.copy()
-        land_domain[-reserve_south:] = False
+        land_domain[:reserve_north] = False
+        land_domain[len(domain) - reserve_south :] = False
     land, ocean, lakes = _first_land(
         land_domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
     )
@@ -1568,6 +1570,8 @@ def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world 
     placement_ocean = (
         _ocean(domain, land | lakes, _off_limits(domain, settings))[1] if groups else ocean
     )
+    if groups and reserve_south:
+        placement_ocean[-reserve_south:] = False
     moves = place(whole, land, placement_ocean, groups, margin=settings.coast_margin_px)
     del placement_ocean
     if on_placed is not None:
@@ -1577,8 +1581,8 @@ def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world 
     ocean &= domain
     lakes &= domain
     shore = _off_limits(domain, settings, outside_land)
-    if reserve_south:
-        shore[-reserve_south:] = True
+    shore[:reserve_north] = True
+    shore[len(domain) - reserve_south :] = True
     _ocean_islands(land, domain, shore, island_sites, seed)
     if island_sites:
         ocean &= ~land

@@ -136,6 +136,7 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
     reserve_south: int = 0,
+    reserve_north: int = 0,
 ) -> str:
     # The first number is the layout of the construction (11: the drainage plan the rivers are
     # drawn along; 10: the game's location sizes the cells are spaced by; 9: the epoch the world
@@ -197,6 +198,8 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
         digest.update(repr(island_sites).encode("ascii"))
     if reserve_south:
         digest.update(f"south={reserve_south}".encode("ascii"))
+    if reserve_north:
+        digest.update(f"north={reserve_north}".encode("ascii"))
     return digest.hexdigest()
 
 
@@ -534,6 +537,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
     reserve_south: int = 0,
+    reserve_north: int = 0,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
@@ -566,6 +570,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             contact_terrain=contact_terrain,
             island_sites=island_sites,
             reserve_south=reserve_south,
+            reserve_north=reserve_north,
         )
     )
     target = None if cache is None or key is None else cache / key
@@ -577,7 +582,11 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         return world
     stage = None
     regional = map_rows is not None or outside_land is not None
-    sketchable = outside_land is None and not reserve_south and map_rows in (None, (0, len(domain)))
+    sketchable = (
+        outside_land is None
+        and not (reserve_south or reserve_north)
+        and map_rows in (None, (0, len(domain)))
+    )
     if cache is not None and drawn is None and sketchable:
         shape = (int(domain.shape[0]), int(domain.shape[1]))
         digest = domain_digest(domain, template if settings.template_permille else None)
@@ -604,6 +613,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         contact_terrain=contact_terrain,
         island_sites=island_sites,
         reserve_south=reserve_south,
+        reserve_north=reserve_north,
     )
     if not regional:
         world = seal_pockets(world)

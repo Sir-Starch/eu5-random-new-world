@@ -189,7 +189,11 @@ class Settled:
 
 
 def settle_seas(
-    world: NewWorld, foreign: ForeignCoast | None = None, *, shared_coast: bool = False
+    world: NewWorld,
+    foreign: ForeignCoast | None = None,
+    *,
+    shared_coast: bool = False,
+    minimum_sea: int = 0,
 ) -> Settled:
     """``world`` with every coastal sea zone able to have a port of its own.
 
@@ -198,6 +202,8 @@ def settle_seas(
     shortage), then any; the longest shared border first. The world itself when nothing is
     unserved. On a shared coast, a zone that only touches retained land may reach a port by
     folding along adjoining water. An unserved zone with no such route raises ``PortError``.
+    When joining regional grids, small pieces at their common edges are first folded
+    over their broadest marine contact, so each starts with a full-size sea neighbour.
     """
     foreign = foreign or ForeignCoast()
     lengths = pair_lengths(world)
@@ -208,6 +214,19 @@ def settle_seas(
             sea_links.setdefault(first, {})[second] = length
             sea_links.setdefault(second, {})[first] = length
     merged: dict[int, int] = {}
+    if minimum_sea:
+        sizes = world.pixels.tolist()
+        small = sorted(
+            (sea for sea in sea_links if sizes[sea] < minimum_sea), key=sizes.__getitem__
+        )
+        for sea in small:
+            neighbours = sea_links[sea]
+            if sizes[sea] >= minimum_sea or not neighbours:
+                continue
+            target = min(neighbours, key=lambda other: (-neighbours[other], -sizes[other], other))
+            _merge(sea, target, sea_links, links, needed)
+            merged[sea] = target
+            sizes[target] += sizes[sea]
     while True:
         checkpoint()
         unserved = plan_ports(links, needed).unserved

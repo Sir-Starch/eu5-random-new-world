@@ -60,6 +60,20 @@ def test_route_opening_measurements_are_independent_of_strip_height(
     assert navigation_links(world, waters) == expected
 
 
+def test_deep_water_can_cross_the_map_wrap_at_a_full_width_opening() -> None:
+    labels = np.repeat(np.arange(3, dtype=np.int32), 20)[None, :].repeat(40, axis=0)
+    world = derive_world(
+        labels,
+        (CellClass.SEA, CellClass.LAND, CellClass.SEA),
+        np.zeros_like(labels),
+        wrap_x=True,
+    )
+    waters = replace(
+        analyse(world), scale=20, topography=(Topography.DEEP_OCEAN, None, Topography.DEEP_OCEAN)
+    )
+    assert navigation_links(world, waters) == {0: [(2, 20)], 2: [(0, 20)]}
+
+
 def test_a_forward_destination_cannot_be_reached_by_walking_through_another_terminal() -> None:
     # Forward water 3 is reachable only through the side coast 2. The new route
     # must end at 2, not pretend its continuation still runs through closed water.

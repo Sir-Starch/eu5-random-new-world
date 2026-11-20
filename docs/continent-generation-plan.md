@@ -24,10 +24,12 @@ regional resource trial, and the installed 1337 data audit.
   against its own preset. A world code and a portable world file carry the
   enabled continents and their settings. Old codes and epochs remain readable.
 - An America-only request uses the current generation behavior, including
-  possible relocation of some vanilla Pacific islands. When Oceania is
-  generated, the shared map planner reserves its vanilla footprint for Oceania
-  before American land can displace those islands. Coastlines can change in a
-  shared border area when the continents selected for generation change.
+  possible relocation of some vanilla Pacific islands. With all three
+  enabled, outlying islets of regenerated continents belong to their
+  surrounding canvas. The replacement geography covers their old sites.
+  Retained islands filed under the open ocean use the existing island
+  placement rules. Coastlines can change in a shared border area when
+  the continents selected for generation change.
 
 ## Geography and the starting map
 
@@ -45,11 +47,23 @@ installed relief before drainage and the painted detail fades to the same
 heights at the junction. Retained climate and vegetation supply a joint vote
 that weakens inland. Border materials follow the new shoreline.
 
-Expanded America in a regional world has a seed-shaped Pacific shelf under
-the shared ocean allowance. When both America and Oceania are generated, the
-shared Pacific has room for separate island groups. The sea plan keeps small
-residual pieces with adjacent navigable water and gives regular sea cells to
-the southern passage when **Keep a sea route around the world** is enabled.
+With all three continents enabled, Eurasia and Greenland form a fourth
+canvas with their installed coastal and inland seas. It also keeps the open
+water that its shores enclose: a block of sea belongs to it when Eurasian
+land lies on both sides along some line within about 1,100 pixels, no
+generated continent's land is in the way, and Eurasian land is nearer than any
+generated continent's. Whole installed locations that are mostly enclosed and
+that join the retained map keep their water, so the Bay of Bengal, the
+Arabian Sea and the passage between Greenland and Europe stay vanilla. The
+rest of the open ocean remains available to the three generated canvases. Africa retains its share of the
+Mediterranean and may approach southern Iberia and western Asia. The
+African mainland's northern latitude sets a separate limit for its
+generated land, so its open water remains sea next to northern Europe.
+The three generated regions share borders across the Pacific, Atlantic and
+Indian oceans. Their coasts and intervening deep water form during generation.
+The sea plan checks the common borders for deep water, keeps small residual
+pieces with adjacent navigable water and gives regular sea cells to the
+southern passage when **Keep a sea route around the world** is enabled.
 This option defaults on for regional worlds and is omitted for The Wall.
 
 Oceania covers the game's `oceania` continent, including Australia, New Zealand,
@@ -105,13 +119,12 @@ The offline setup trial exercised all four choices on the same map.
 1. **Plan the domains together.** Read and calibrate the installation once.
    Use a registry of continent definitions that supplies the vanilla footprint,
    coast and contact policy, supported presets and societal calibration. Resolve
-   overlapping ocean claims by distance from substantial land, with a common
-   allowance for room in the open oceans. Africa and Oceania can use southern
-   waters to the edge of the map. Keep the sea zones of named tolls and
-   protect old shore contacts that a partial claim would sever. Build compact, wrap-aware windows
-   or row bands for the actual domains, with a halo only where a kernel needs
-   surrounding geography. A bounding rectangle across all active continents
-   would spend work and memory on the oceans between them.
+   ocean claims by wrapped distance from substantial land, with a seed-based
+   displacement of the ocean fronts. Assign the entire open ocean when all
+   three continents are enabled. Keep the original geography of the
+   fourth canvas, including named tolls and the Eurasian shore. Build
+   compact, wrap-aware windows or row bands with a halo where a kernel
+   needs surrounding geography.
 2. **Build geography with shared algorithms.** Use the existing coast, relief,
    drainage and cell builders with each continent's settings and deterministic
    random streams. Calibrate preset scale and land budgets against each region's

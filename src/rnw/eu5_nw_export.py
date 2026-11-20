@@ -54,8 +54,8 @@ from rnw.content import OCEANS as OPEN_OCEANS
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
-from rnw.continent_domains import plan_domains
-from rnw.continent_world import WorldRegion, compose_regions
+from rnw.continent_domains import SHARED_OCEAN_DIVISOR, plan_domains
+from rnw.continent_world import WorldRegion, absorb_ocean_specks, compose_regions, relocated_canvas
 from rnw.eu5_ai import (
     PERSONALITIES,
     AiDecision,
@@ -3862,9 +3862,17 @@ def _prepare_vanilla(  # noqa: PLR0913, PLR0917 - original inputs and their fixe
     moves: tuple[tuple[int, int], ...],
     *,
     composed: bool = False,
+    complete_ocean: bool = False,
 ) -> _PreparedVanilla:
-    canvas = place_islands(original, clean, list(moves))
-    game_map = relocate_map(open_map(original, canvas), canvas)
+    if composed and (clean.groups or complete_ocean):
+        source, fixed = (
+            absorb_ocean_specks(original, clean) if complete_ocean else (original, clean)
+        )
+        game_map = relocate_map(source, fixed)
+        canvas = relocated_canvas(game_map, fixed)
+    else:
+        canvas = place_islands(original, clean, list(moves))
+        game_map = relocate_map(open_map(original, canvas), canvas)
     width = int(game_map.labels.shape[1])
     moved = moved_pixels_of(canvas)
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
@@ -4278,6 +4286,8 @@ def _composed_identities(  # noqa: PLR0913 - country-independent location geogra
             biomes=local_biomes,
             settings=geography[name],
             keys=keys,
+            replaced=shared.canvas.removed,
+            original=geometry,
         )
         numbered[name] = regional, [source_cells[cell] for cell in source]
     world, canvas = water.coast.world, shared.canvas
@@ -4294,7 +4304,43 @@ def _composed_identities(  # noqa: PLR0913 - country-independent location geogra
         waters=water.waters,
     )
     plan.oceans = plan_oceans(game_map, canvas, world, plan, hierarchy, water.zones, keys)
+    plan.oceans.patches.extend(canvas.enclosed_ocean)
+    plan.oceans.stats["ocean_identity_recolours"] += sum(
+        part.pixels for part, _ in canvas.enclosed_ocean
+    )
     return plan
+
+
+def _shared_ocean_boundaries(shared: ComposedWorld, water: Water) -> dict[str, int]:
+    """Verify that each common boundary has deep water and no merged land."""
+    owner = [-1] * len(shared.world.classes)
+    names = list(shared.cell_ids)
+    for number, cells in enumerate(shared.cell_ids.values()):
+        for cell in cells.tolist():
+            owner[cell] = number
+    deep: Counter[tuple[int, int]] = Counter()
+    kinds = shared.world.classes
+    translated = water.coast.source_cells
+    depth = water.waters.topography
+    deep_types = {Topography.DEEP_OCEAN, Topography.OCEAN_WASTELAND}
+    for first, second in shared.world.edges:
+        a, b = owner[first], owner[second]
+        if a == b or min(a, b) < 0:
+            continue
+        if kinds[first] is not CellClass.SEA or kinds[second] is not CellClass.SEA:
+            message = f"The {names[a]} and {names[b]} canvases meet outside the ocean"
+            raise NewWorldExportError(message)
+        if depth[translated[first]] in deep_types and depth[translated[second]] in deep_types:
+            deep[min(a, b), max(a, b)] += 1
+    results = {
+        f"deep_sea_contacts_{names[a]}_{names[b]}": deep[a, b]
+        for a in range(len(names))
+        for b in range(a + 1, len(names))
+    }
+    if not all(results.values()):
+        message = "A pair of generated continents has no shared deep-ocean boundary"
+        raise NewWorldExportError(message)
+    return results
 
 
 def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each physical window.
@@ -4323,6 +4369,14 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     def build(domain: Domain) -> WorldRegion:
         checkpoint()
         name = domain.continent.key
+        mask = domain.mask
+        knobs = geography[name]
+        south = max(0, domain.rows.stop - (game_map.labels.shape[0] - southern_passage))
+        if domain.shared_ocean and not knobs.landform:
+            area = int(np.count_nonzero(mask[domain.north_water_rows : len(mask) - south]))
+            land = int(np.count_nonzero(domain.footprint))
+            nominal = min(area, land + game_map.labels.size // SHARED_OCEAN_DIVISOR)
+            knobs = replace(knobs, land_permille=knobs.land_permille * nominal // area)
         drawing = (
             fit_drawing(land_mask, domain.mask.shape, algorithm)
             if name == NEW_WORLD and land_mask is not None
@@ -4342,9 +4396,10 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             world_box = global_rows, global_columns
         world = landcache.get_world(
             cache_dir,
-            domain.mask,
+            mask,
             seed=seed if name == NEW_WORLD else derive_seed(seed, "continent", name),
-            settings=geography[name],
+            settings=knobs,
+            groups=domain.footprints,
             template=domain.footprint,
             drawn=None if drawing is None else drawing.land,
             lakes_drawn=None if drawing is None else drawing.lakes,
@@ -4358,7 +4413,8 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             strait=domain.strait,
             contact_terrain=terrain,
             island_sites=domain.island_sites,
-            reserve_south=max(0, domain.rows.stop - (game_map.labels.shape[0] - southern_passage)),
+            reserve_south=south,
+            reserve_north=domain.north_water_rows,
         )
         if terrain is None or world_box is None or domain.contact_land is None:
             return WorldRegion(domain, world)
@@ -4468,10 +4524,20 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
         "select canvas",
         lambda: compose_regions(game_map, regions, southern_passage=southern_passage, seed=seed),
     )
-    canvas = composed.canvas
+    complete_ocean = all(region.domain.shared_ocean for region in regions)
     vanilla = _prepare_vanilla(
-        stages, game_dir, game_map, canvas, hierarchy, settings.algorithm, (), composed=True
+        stages,
+        game_dir,
+        game_map,
+        composed.canvas,
+        hierarchy,
+        settings.algorithm,
+        composed.canvas.moves,
+        composed=True,
+        complete_ocean=complete_ocean,
     )
+    game_map, canvas = vanilla.game_map, vanilla.canvas
+    composed = replace(composed, canvas=canvas)
     # The river rasters depend on regional drainage, not on the later sea
     # identities. Let them share the existing worker budget with the biome pass.
     rivers = stages.submit(
@@ -4506,6 +4572,9 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             ports=vanilla_ports,
             vanilla=vanilla_waters,
             removed=vanilla.removed,
+            minimum_sea=min(knobs.min_sea_cell_px for knobs in geography.values())
+            if complete_ocean
+            else 0,
         ),
     )
     shapes = run_stage(
@@ -4516,7 +4585,14 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     water_textures = stages.submit(
         "water textures",
         lambda: _water_textures(
-            spool, game_dir, game_map, canvas, world, seed=seed, moved=None, regional_water=shapes
+            spool,
+            game_dir,
+            game_map,
+            canvas,
+            world,
+            seed=seed,
+            moved=vanilla.moved,
+            regional_water=shapes,
         ),
     )
     biomes = settled_biomes(base_biomes, shared.world, shapes.coast)
@@ -4594,11 +4670,13 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
         raise NewWorldExportError(message)
     if southern_passage:
         checks["circumnavigation_sea_locations"] = int(np.unique(final[-1]).size)
+    if complete_ocean:
+        checks.update(_shared_ocean_boundaries(shared, shapes))
     return _ExportGeography(
         game_map,
         canvas,
         canvas,
-        None,
+        vanilla.moved,
         shapes,
         final,
         removed,
