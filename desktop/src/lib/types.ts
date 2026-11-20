@@ -50,7 +50,7 @@ export interface NewState {
   continents: Record<string, boolean>;
   sea_circumnavigation?: boolean | null;
   regional_types: string[];
-  regions: Record<string, { preset: string; morocco: string; require_asia_connection: boolean; controls: ControlInfo[]; values: Record<string, ValueState> }>;
+  regions: Record<string, { preset: string; morocco: string; mamluks: string; require_asia_connection: boolean; controls: ControlInfo[]; values: Record<string, ValueState> }>;
   choice: string;
   preset: string;
   mode: string | null;

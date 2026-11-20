@@ -17,6 +17,7 @@ from morocco_start import map_morocco_trials, morocco_trials
 
 from rnw.continent_domains import CONTINENTS, plan_domains
 from rnw.continent_world import WorldRegion, compose_regions
+from rnw.eu5_africa_start import algeciras
 from rnw.eu5_biomes import (
     CellBiomes,
     Generated,
@@ -32,7 +33,6 @@ from rnw.eu5_history import installed_rules
 from rnw.eu5_history_build import build_history_start
 from rnw.eu5_islands import moved_pixels_of
 from rnw.eu5_map import DEFAULT_MAP, DEFINITIONS, PORTS, load_map
-from rnw.eu5_morocco import algeciras, reserve_morocco
 from rnw.eu5_natives import (
     regional_populations,
     regional_projection_inputs,
@@ -56,6 +56,7 @@ from rnw.eu5_nw_export import (
     composed_land_character,
     composed_rivers,
     missing_area_keys,
+    reserve_african_countries,
     settled_biomes,
     vanilla_localization_keys,
     verify_country_tags,
@@ -200,12 +201,17 @@ def _society_trials(  # noqa: PLR0913 - calibration, map and selected regional s
     original = {
         key: (int(geometry.rows[i]), int(geometry.columns[i])) for i, key in enumerate(game.keys)
     }
-    moroccan_start = (
-        reserve_morocco(plan, world, original, (morocco or (DEFAULT_MOROCCO_POLICY,))[0])
-        if "africa" in native_options
-        else None
+    africa_settings = None
+    if "africa" in native_options:
+        policy = (morocco or (DEFAULT_MOROCCO_POLICY,))[0]
+        settings = build_settings("continents", {"continents": {"africa": {"morocco": policy}}})
+        africa_settings = settings.continents.regions[0]
+    moroccan_start, mamluks, remap = reserve_african_countries(
+        game_dir, plan, world, original, hierarchy, africa_settings, remap
     )
-    reserved = moroccan_start.africa if moroccan_start is not None else ()
+    moroccan_land = () if moroccan_start is None else moroccan_start.africa
+    mamluk_land = () if mamluks is None else mamluks.africa
+    reserved = moroccan_land + mamluk_land
     base = vanilla_natives(game_dir, game, geometry, attributes, hierarchy) if run_history else None
     rules = installed_rules(base) if base is not None else None
     routes = (
@@ -267,7 +273,8 @@ def _society_trials(  # noqa: PLR0913 - calibration, map and selected regional s
             "religions": len(set(boot.religions)),
             "state_territories": groups[STATE],
             "tribal_territories": groups[TRIBE],
-            "inhabited_moroccan_locations": len(boot.pops.keys() & set(reserved)),
+            "inhabited_moroccan_locations": len(boot.pops.keys() & set(moroccan_land)),
+            "inhabited_mamluk_locations": len(boot.pops.keys() & set(mamluk_land)),
         }
         if rules is not None and base is not None:
             sacred = {
@@ -325,7 +332,9 @@ def _society_trials(  # noqa: PLR0913 - calibration, map and selected regional s
         if moroccan_start is not None and moroccan_start.policy is MoroccoPolicy.EMIRATE
         else None
     )
-    return populations, ComposedStart(tuple(starts), remap, moroccan_start, emirate)
+    return populations, ComposedStart(
+        tuple(starts), remap, moroccan_start, emirate, mamluks=mamluks
+    )
 
 
 def _write_start_trial(  # noqa: PLR0913 - exercise the final writer with the finished shared map.

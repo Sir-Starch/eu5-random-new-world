@@ -6,12 +6,12 @@ from dataclasses import replace
 
 import pytest
 
-from rnw.eu5_morocco import (
+from rnw.eu5_africa_start import (
     AFRICAN_HOLDINGS,
     COUNTRIES_BLOCK,
     COUNTRIES_FILE,
     IBERIAN_HOLDINGS,
-    MoroccoError,
+    AfricanStartError,
     algeciras,
     apply_morocco_start,
     plan_morocco,
@@ -48,7 +48,7 @@ def test_reservation_uses_passable_candidates_and_wraps_distance() -> None:
 
 
 def test_reservation_requires_enough_land_for_the_exact_holdings() -> None:
-    with pytest.raises(MoroccoError, match="requires 86 passable locations"):
+    with pytest.raises(AfricanStartError, match="requires 86 passable locations"):
         _ = plan_morocco({"tiny": (8, 4)}, ORIGINAL, 1000)
 
 
@@ -117,7 +117,7 @@ def test_policy_has_one_iberian_owner_and_never_changes_its_population(
 def test_a_forged_reservation_cannot_take_a_vanilla_holding() -> None:
     start = plan_morocco(AFRICA, ORIGINAL, 1000)
     bad = replace(start, africa=("ronda", *start.africa[1:]))
-    with pytest.raises(MoroccoError, match="86 distinct new African holdings"):
+    with pytest.raises(AfricanStartError, match="86 distinct new African holdings"):
         _ = apply_morocco_start(
             bad,
             {COUNTRIES_FILE: SETUP},

@@ -3328,3 +3328,15 @@ text = '''카스티야에 편입'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''그라나다에 편입'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''맘루크의 아시아 영토'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''맘루크 유지'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''독립 다마스쿠스 술탄국'''

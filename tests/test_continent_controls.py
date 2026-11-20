@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from rnw.app import controls
 from rnw.gui.controller import Controller
 from rnw.layers import land_key
-from rnw.settings import MoroccoPolicy, build_settings
+from rnw.settings import MamlukPolicy, MoroccoPolicy, build_settings
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -24,6 +24,8 @@ def test_continent_presets_and_overrides_travel_independently(tmp_path: Path) ->
     controller.set_region_preset("africa", "continents")
     controller.set_region_value("africa", "resources.coffee", 1500)
     controller.set_morocco("castile")
+    assert controller.region_settings("africa").mamluks is MamlukPolicy.RESTORE
+    controller.set_mamluks("damascus")
     controller.set_asia_connection(required=True)
     controller.set_region_value("oceania", "natives.state_share_permille", 24)
     controller.set_region_value("oceania", "resources.coffee", 1500)
@@ -34,6 +36,8 @@ def test_continent_presets_and_overrides_travel_independently(tmp_path: Path) ->
     assert africa.preset == "continents"
     assert africa.resources == (("coffee", 1500),)
     assert africa.morocco is MoroccoPolicy.CASTILE
+    assert africa.mamluks is MamlukPolicy.DAMASCUS
+    assert oceania.mamluks is None
     assert africa.require_asia_connection
     assert not oceania.require_asia_connection
     assert oceania.natives.state_share_permille == 24
@@ -59,6 +63,7 @@ def test_land_versions_distinguish_regional_geography(tmp_path: Path) -> None:
     assert legacy != original
     controller.set_region_value("africa", "resources.coffee", 200)
     controller.set_morocco("granada")
+    controller.set_mamluks("damascus")
     assert land_key(controller.world_code().settings(), 17) == original
     controller.set_asia_connection(required=True)
     assert land_key(controller.world_code().settings(), 17) != original

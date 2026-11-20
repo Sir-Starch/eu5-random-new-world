@@ -3328,3 +3328,15 @@ text = '''Присоединить к Кастилии'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''Присоединить к Гранаде'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''Владения Мамлюков в Азии'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''Сохранить Мамлюков'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''Независимый Дамасский султанат'''

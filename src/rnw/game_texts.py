@@ -72,7 +72,11 @@ def formation_description(family: str) -> str:
 @cache
 def sources() -> dict[str, str]:
     """Every static text of the mod, by its key, in English."""
-    found: dict[str, str] = {"rnw_treaty_meridian": "Treaty meridian"}
+    found: dict[str, str] = {
+        "rnw_treaty_meridian": "Treaty meridian",
+        "rnw_damascus_sultanate": "Sultanate of Damascus",
+        "rnw_damascus_sultanate_adj": "Damascene",
+    }
     for story in STORIES:
         found.update(event_keys(story))
     for spec in SPECS:

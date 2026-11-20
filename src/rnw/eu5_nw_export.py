@@ -56,6 +56,17 @@ from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
 from rnw.continent_domains import SHARED_OCEAN_DIVISOR, plan_domains
 from rnw.continent_world import WorldRegion, absorb_ocean_specks, compose_regions, relocated_canvas
+from rnw.eu5_africa_start import (
+    CAIRO,
+    MAMLUKS,
+    algeciras,
+    apply_morocco_start,
+    damascus_sultanate,
+    prepare_mamluk_start,
+    reserve_mamluks,
+    reserve_morocco,
+    verify_mamluk_start,
+)
 from rnw.eu5_ai import (
     PERSONALITIES,
     AiDecision,
@@ -197,7 +208,6 @@ from rnw.eu5_map import (
     open_png,
     read_class_lists,
 )
-from rnw.eu5_morocco import algeciras, apply_morocco_start, reserve_morocco
 from rnw.eu5_mountains import mountain_relief
 from rnw.eu5_natives import (
     COUNTRY_DIR,
@@ -384,7 +394,14 @@ from rnw.rng import derive_seed
 from rnw.sea_corridors import corridor_paths, draw_corridors
 from rnw.seas import Shape, Topography, inland_seas
 from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
-from rnw.settings import MoroccoPolicy, ResourceSettings, canonical_json, run_spec, spec_digest
+from rnw.settings import (
+    MamlukPolicy,
+    MoroccoPolicy,
+    ResourceSettings,
+    canonical_json,
+    run_spec,
+    spec_digest,
+)
 from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.timing import measured
@@ -409,15 +426,15 @@ if TYPE_CHECKING:
     from rnw.barrens import WastelandSettings
     from rnw.continent_domains import Domain
     from rnw.continent_world import ComposedWorld
+    from rnw.eu5_africa_start import MamlukStart, MoroccoStart
     from rnw.eu5_islands import Moved
-    from rnw.eu5_morocco import MoroccoStart
     from rnw.eu5_remap import GeographicRemap
     from rnw.eu5_rewrite import SetupResult
     from rnw.eu5_start import Country, FinalStartPlan, PopCohort
     from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.land_contact import ContactBlend
-    from rnw.settings import NewWorldSettings, Settings
+    from rnw.settings import NewWorldSettings, RegionalSettings, Settings
     from rnw.vanilla_world import VanillaWorld
     from rnw.wording import Name
     from rnw.worldname import Label
@@ -2034,6 +2051,14 @@ class ComposedStart:
     emirate: Country | None = None
     calibrations: tuple[VanillaNatives, ...] = ()
     real_america: VanillaWorld | None = None
+    mamluks: MamlukStart | None = None
+    damascus: Country | None = None
+
+    @property
+    def african_holdings(self) -> tuple[str, ...]:
+        morocco = () if self.morocco is None else self.morocco.africa
+        mamluks = () if self.mamluks is None else self.mamluks.africa
+        return morocco + mamluks
 
 
 def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its bound identities.
@@ -2061,21 +2086,36 @@ def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its boun
         for key, row, column in zip(game_map.keys, geometry.rows, geometry.columns, strict=True)
     }
     final = set(game_map.keys).difference(removed) | {cell.key for cell in emitted_cells(plan)}
+    holdings = set(start.african_holdings)
+    if holdings - written.keys() or any(
+        holdings.intersection(country.members) for country in natives.countries
+    ):
+        message = "Reserved African holdings must have populations and no generated owner"
+        raise NewWorldExportError(message)
+    mamluks = start.mamluks
+    damascus = start.damascus
+    if mamluks is not None:
+        texts[COUNTRIES_FILE] = prepare_mamluk_start(
+            mamluks, texts[COUNTRIES_FILE], gone, final, damascus
+        )
+        if damascus is not None:
+            gone = gone | {MAMLUKS}
+    preferred = {MAMLUKS: mamluks.capital} if mamluks is not None and damascus is None else None
     replacements = retained_capitals(
-        texts[COUNTRIES_FILE],
-        gone,
-        original,
-        game_map.labels.shape[1],
-        preferred={"MAM": "damascus"},
+        texts[COUNTRIES_FILE], gone, original, game_map.labels.shape[1], preferred=preferred
     )
-    if start.morocco is not None:
-        holdings = set(start.morocco.africa)
-        if holdings - written.keys() or any(
-            holdings.intersection(country.members) for country in natives.countries
-        ):
-            message = "Morocco's reserved holdings must have populations and no generated owner"
-            raise NewWorldExportError(message)
-        return apply_morocco_start(
+    if start.morocco is None:
+        result = prune_regional_setup(
+            texts,
+            gone,
+            pops,
+            location_replacements=start.remap.locations,
+            replacement_capitals=replacements,
+            final_locations=final,
+            surviving_places=restored,
+        )
+    else:
+        result = apply_morocco_start(
             start.morocco,
             texts,
             gone,
@@ -2086,15 +2126,11 @@ def _rewrite_setup(  # noqa: PLR0913 - the start uses the final map and its boun
             emirate=start.emirate,
             surviving_places=restored,
         )
-    return prune_regional_setup(
-        texts,
-        gone,
-        pops,
-        location_replacements=start.remap.locations,
-        replacement_capitals=replacements,
-        final_locations=final,
-        surviving_places=restored,
-    )
+    if mamluks is not None:
+        verify_mamluk_start(
+            mamluks, result.texts[COUNTRIES_FILE], damascus.tag if damascus else MAMLUKS
+        )
+    return result
 
 
 def _history_outputs(
@@ -2112,6 +2148,19 @@ def _history_outputs(
     history = eu5_history_text.build(natives, loc_keys, locations)
     verify_history_text(natives, history)
     return history
+
+
+def _country_additions(
+    natives: FinalStartPlan, composed: ComposedStart | None
+) -> tuple[tuple[Country, ...], dict[str, Entry]]:
+    countries = natives.countries
+    if composed is not None:
+        countries += tuple(c for c in (composed.emirate, composed.damascus) if c is not None)
+    names: dict[str, Entry] = {**country_names(countries)}
+    if composed is not None and (damascus := composed.damascus) is not None:
+        names[damascus.tag] = Text("rnw_damascus_sultanate")
+        names[f"{damascus.tag}_ADJ"] = Text("rnw_damascus_sultanate_adj")
+    return countries, names
 
 
 def _gone_setup_places(
@@ -2288,9 +2337,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         outputs[_mod_path(BASE_VALUES)] = _encode(
             game_dir, BASE_VALUES, drop_block_entries(_read(game_dir, BASE_VALUES), (), retired)
         )
-    countries = natives.countries
-    if composed is not None and composed.emirate is not None:
-        countries += (composed.emirate,)
+    countries, names = _country_additions(natives, composed)
     outputs[DEFINITION_FILE] = country_definitions(countries)
     languages = official_languages(game_dir)
     if used:
@@ -2300,7 +2347,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
             game_dir,
             plan,
             {
-                **country_names(countries),
+                **names,
                 **{key: Text(key) for key in place_texts(used)},
                 **(history_text.texts if history_text is not None else {}),
             },
@@ -4717,6 +4764,35 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     )
 
 
+def reserve_african_countries(  # noqa: PLR0913, PLR0917 - installed and generated geography.
+    game_dir: Path,
+    plan: Plan,
+    world: NewWorld,
+    original: Mapping[str, tuple[int, int]],
+    hierarchy: Mapping[str, Location],
+    settings: RegionalSettings | None,
+    remap: GeographicRemap,
+) -> tuple[MoroccoStart | None, MamlukStart | None, GeographicRemap]:
+    """Reserve the starting territory of both countries before regional history."""
+    if settings is None or settings.morocco is None or settings.mamluks is None:
+        return None, None, remap
+    morocco = reserve_morocco(plan, world, original, settings.morocco)
+    country_setup = _setup_paths(game_dir, regional=True)[COUNTRIES_FILE]
+    mamluks = reserve_mamluks(
+        plan,
+        world,
+        original,
+        country_setup.read_text(encoding="utf-8-sig"),
+        {key for key, place in hierarchy.items() if place.continent == "africa"},
+        reserved=morocco.africa,
+        policy=settings.mamluks,
+    )
+    capitals = {"fez": morocco.capital} if morocco.capital else {}
+    if mamluks.policy is MamlukPolicy.RESTORE:
+        capitals[CAIRO] = mamluks.capital
+    return morocco, mamluks, remap.with_locations(capitals)
+
+
 def _build_composed_start(  # noqa: PLR0913 - regional settings and the completed physical world.
     game_dir: Path,
     prepared: _ExportGeography,
@@ -4747,10 +4823,11 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
             map_.keys, prepared.geometry.rows, prepared.geometry.columns, strict=True
         )
     }
-    policy = next((region.morocco for region in regions if region.key == "africa"), None)
-    morocco = None if policy is None else reserve_morocco(plan, world, original, policy)
-    if morocco is not None and morocco.capital:
-        remap = remap.with_locations({"fez": morocco.capital})
+    africa = next((region for region in regions if region.key == "africa"), None)
+    morocco, mamluks, remap = reserve_african_countries(
+        game_dir, plan, world, original, hierarchy, africa, remap
+    )
+    held = (() if morocco is None else morocco.africa) + (() if mamluks is None else mamluks.africa)
     rules = installed_rules(base)
     routes = shared_routes(world, plan, biomes, max_sea_steps=rules.max_sea_steps)
     starts: list[FinalStartPlan] = []
@@ -4793,7 +4870,7 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
         add(start, base)
     for region in regions:
         name, knobs = region.key, region.natives
-        held = morocco.africa if name == "africa" and morocco is not None else ()
+        reserved = held if name == "africa" else ()
         sacred = {
             site.name: remap.locations[site.location]
             for site in base.holy_sites
@@ -4809,7 +4886,7 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
             vanilla=profiles[name],
             settings=knobs,
             seed=derive_seed(seed, "peoples", name),
-            reserved=held,
+            reserved=reserved,
             routes=routes,
         )
         historical = simulate_region(
@@ -4820,7 +4897,7 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
             settings=knobs,
             rules=rules,
             seed=derive_seed(seed, "history", name),
-            reserved=held,
+            reserved=reserved,
             sacred=sacred.values(),
         )
         add(
@@ -4838,10 +4915,17 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
         )
     emirate = (
         algeciras(seed, base.reserved_tags, prepared.loc_keys, base.colors)
-        if policy is MoroccoPolicy.EMIRATE
+        if morocco is not None and morocco.policy is MoroccoPolicy.EMIRATE
         else None
     )
-    return ComposedStart(tuple(starts), remap, morocco, emirate, tuple(calibrations), real_america)
+    damascus = None
+    if mamluks is not None and mamluks.policy is MamlukPolicy.DAMASCUS:
+        tags = base.reserved_tags if emirate is None else base.reserved_tags | {emirate.tag}
+        colors = base.colors if emirate is None else base.colors | {emirate.color}
+        damascus = damascus_sultanate(mamluks, hierarchy, seed, tags, prepared.loc_keys, colors)
+    return ComposedStart(
+        tuple(starts), remap, morocco, emirate, tuple(calibrations), real_america, mamluks, damascus
+    )
 
 
 def _american_names(america: VanillaWorld, game_map: Eu5Map) -> frozenset[str]:

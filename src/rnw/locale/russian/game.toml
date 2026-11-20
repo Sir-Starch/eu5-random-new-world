@@ -2033,3 +2033,11 @@ text = '''{first} и {second}'''
 ["rnw_story_list_series"]
 source = "ce79e43811c0b2cc"
 text = '''{first}, {second}'''
+
+["rnw_damascus_sultanate"]
+source = "30a980a8226fa79a"
+text = '''Дамасский султанат'''
+
+["rnw_damascus_sultanate_adj"]
+source = "c0b5c78abbe01214"
+text = '''дамасск'''

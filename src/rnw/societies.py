@@ -411,16 +411,21 @@ def _complexity(
 
 
 def _population(
-    capacity: NDArray[np.int64], complexity: NDArray[np.int64], target: int, rng: SplitMix64
+    capacity: NDArray[np.int64],
+    complexity: NDArray[np.int64],
+    target: int,
+    rng: SplitMix64,
+    *,
+    reserved: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.int64]:
     noise = np.array([_uniform(rng, NOISE_RANGE) for _ in range(len(capacity))], dtype=np.int64)
     gain = PERMILLE + COMPLEX_GAIN * complexity // PERMILLE
     raw = capacity * gain // PERMILLE * noise // PERMILLE
     total = int(raw.sum())
-    if total <= 0:
-        return np.zeros(len(capacity), dtype=np.int64)
-    out = raw * target // total
-    return np.where(out >= MIN_POPULATION, out, 0)
+    out = raw * target // total if total > 0 else np.zeros(len(capacity), dtype=np.int64)
+    # Existing countries need settled land even where the regional model has little food.
+    minimum = 0 if reserved is None else reserved * MIN_POPULATION
+    return np.where(out >= MIN_POPULATION, out, minimum)
 
 
 def _state_land(  # noqa: PLR0913 - the core, the share and how the outliers are placed
@@ -823,7 +828,11 @@ def _generate_societies(  # noqa: PLR0913 - shared calibration, with independent
         floor=state_floor,
     )
     population = _population(
-        graph.capacity, complexity, target * settings.population_permille // PERMILLE, rng
+        graph.capacity,
+        complexity,
+        target * settings.population_permille // PERMILLE,
+        rng,
+        reserved=reserved,
     )
     share = settings.peasant_peak_permille * complexity // PERMILLE
     peasants = population * share // PERMILLE

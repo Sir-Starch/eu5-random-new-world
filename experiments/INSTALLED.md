@@ -2109,3 +2109,22 @@ The Windows wheel SHA-256 is `033476bc5b29cfb29b0cf5890fde0c691cec4bf5d565f83ca9
 This hub includes the checkout's existing 1.4.9 compatibility work. The locked checks passed
 with 3,706 Python and 39 native Rust tests. The 884-file epoch-64 reference reproduces
 byte for byte at 12 and 8 threads. The epoch-63 reference reproduces its recorded 1.4.9 output.
+
+2026-11-20, **Mamluk and Damascus starts** (pending epoch 64 of 1.3.0, C551).
+[V-EXEC] Installed two worlds in the Steam Proton profile for EU5 1.4.9 / build 26655995.
+Both use Subtropical Drylands' geography and one new peoples roll. Each verifies all
+1,454 canonical files, including the 18 selection-cover files in the recovery receipt.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| RNW: Mamluk Sultanate | `rnw_exp_world_hr5p3d47ly` | `141e680b84ce6f9a101e83269927aa01dfa1521f50840934a63dcb32ae757531` |
+| RNW: Sultanate of Damascus | `rnw_exp_world_oab37zwklf` | `634647751dc1ee5519058ec35c431efb77760638497c3e3e90168b13914a7ae4` |
+
+The [continent plan](../docs/continent-generation-plan.md#the-mamluks-asian-holdings)
+records the installed ownership audit. The updated local `rnw_exp_hub` passed both
+Wine offscreen self-tests and installed-file verification. Its previous copy is
+in `.rnw-hub-backups/1.3.0-1795194361624820175`. The Windows wheel SHA-256 is
+`b81230244382f636d910f447ea5ee37d62b7109cd532085540587d60c51ad386`.
+The locked checks passed with 3,712 Python tests and 39 native Rust tests.
+The Tauri checks passed with 50 tests and a production build. The installed-game
+reference check reproduced the 884-file epoch-64 America-only golden.

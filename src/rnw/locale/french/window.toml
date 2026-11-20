@@ -3328,3 +3328,15 @@ text = '''Rattacher à la Castille'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''Rattacher à Grenade'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''Possessions mameloukes en Asie'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''Conserver les Mamelouks'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''Sultanat de Damas indépendant'''

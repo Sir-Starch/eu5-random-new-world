@@ -9,6 +9,9 @@ worlds and saves are not rewritten or migrated.
   world. Both added continents have their own presets, detailed settings and
   local cultures, faiths and societies. Africa offers four outcomes for
   Morocco's holdings in Iberia, with keeping Morocco as the default.
+  The Mamluks keep their Asian holdings and receive 68 new African locations
+  by default. Their Asian holdings can instead form an independent Sultanate
+  of Damascus.
   Selected continents share open oceans, including the southern waters.
   New coastal shallows follow the generated shore. Africa can form a
   seed-dependent land connection to Asia or a navigable strait crossing to

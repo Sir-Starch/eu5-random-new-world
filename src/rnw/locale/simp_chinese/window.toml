@@ -3328,3 +3328,15 @@ text = '''并入卡斯蒂利亚'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''并入格拉纳达'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''马穆鲁克在亚洲的领地'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''保留马穆鲁克'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''独立的大马士革苏丹国'''

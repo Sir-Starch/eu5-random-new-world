@@ -37,6 +37,13 @@ class MoroccoPolicy(StrEnum):
     GRANADA = "granada"
 
 
+class MamlukPolicy(StrEnum):
+    """Selectable results for the Mamluks when Africa is generated."""
+
+    RESTORE = "restore"
+    DAMASCUS = "damascus"
+
+
 DEFAULT_MOROCCO_POLICY: Final[MoroccoPolicy] = MoroccoPolicy.RESTORE
 REGIONAL_PRESETS: Final[dict[str, tuple[str, int]]] = {
     "africa": ("supercontinent", 820),
@@ -256,6 +263,7 @@ class RegionalSettings:
     resources: tuple[tuple[str, int], ...] = ()
     morocco: MoroccoPolicy | None = None
     require_asia_connection: bool = False
+    mamluks: MamlukPolicy | None = None
 
     def document(self) -> dict[str, object]:
         data: dict[str, object] = {
@@ -267,6 +275,8 @@ class RegionalSettings:
             data["resources"] = dict(self.resources)
         if self.morocco is not None:
             data["morocco"] = self.morocco.value
+        if self.mamluks is MamlukPolicy.DAMASCUS:
+            data["mamluks"] = self.mamluks.value
         if self.require_asia_connection:
             data["require_asia_connection"] = True
         return data
@@ -670,7 +680,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     fallback, band = REGIONAL_PRESETS[key]
     allowed = {"preset", "new_world", "natives", "resources"}
     if key == "africa":
-        allowed.update(("morocco", "require_asia_connection"))
+        allowed.update(("morocco", "mamluks", "require_asia_connection"))
     if unknown := fields_.keys() - allowed:
         message = f"Unknown {key} settings: {', '.join(sorted(unknown))}"
         raise SettingsError(message)
@@ -695,6 +705,9 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     morocco = (
         _morocco_policy(fields_.get("morocco", DEFAULT_MOROCCO_POLICY)) if key == "africa" else None
     )
+    mamluks = (
+        _mamluk_policy(fields_.get("mamluks", MamlukPolicy.RESTORE)) if key == "africa" else None
+    )
     connection = fields_.get("require_asia_connection", False)
     if type(connection) is not bool:
         message = "Africa's land connection requirement must be on or off"
@@ -711,6 +724,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
         resources,
         morocco,
         connection,
+        mamluks,
     )
 
 
@@ -738,6 +752,17 @@ def _morocco_policy(value: object) -> MoroccoPolicy:
             message = f"Unknown Morocco option: {value}"
             raise SettingsError(message) from error
     message = "Morocco's option must be a name"
+    raise SettingsError(message)
+
+
+def _mamluk_policy(value: object) -> MamlukPolicy:
+    if isinstance(value, str):
+        try:
+            return MamlukPolicy(value)
+        except ValueError as error:
+            message = f"Unknown Mamluk option: {value}"
+            raise SettingsError(message) from error
+    message = "The Mamluk option must be a name"
     raise SettingsError(message)
 
 

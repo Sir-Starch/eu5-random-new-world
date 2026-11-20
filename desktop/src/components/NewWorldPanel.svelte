@@ -116,6 +116,17 @@
                 <option value={policy}>{t(`continent.morocco.${policy}`)}</option>
               {/each}
             </select>
+          {/if}
+          {#if region.mamluks}
+            <label for="mamluk-policy" class="key">{t("continent.mamluks")}</label>
+            <select id="mamluk-policy" class="input val" disabled={locked} value={region.mamluks}
+              onchange={(event) => app.call("set_mamluks", { policy: event.currentTarget.value })}>
+              {#each ["restore", "damascus"] as policy (policy)}
+                <option value={policy}>{t(`continent.mamluks.${policy}`)}</option>
+              {/each}
+            </select>
+          {/if}
+          {#if key === "africa"}
             <div class="wide">
               <Check checked={region.require_asia_connection} disabled={locked}
                 label={t("continent.africa.asia_connection")}

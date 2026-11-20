@@ -3328,3 +3328,15 @@ text = '''Kastilya’ya kat'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''Gırnata’ya kat'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''Memlüklerin Asya toprakları'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''Memlükleri koru'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''Bağımsız Şam Sultanlığı'''

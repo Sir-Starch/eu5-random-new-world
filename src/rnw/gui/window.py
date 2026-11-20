@@ -78,11 +78,15 @@ from rnw.gui.text import LANGUAGE_NAMES, TITLE, grouped, text
 from rnw.gui.theme import install as install_theme
 from rnw.gui.view import control_name
 from rnw.languages import SOURCE
+from rnw.settings import MamlukPolicy, MoroccoPolicy
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from PySide6.QtGui import QDragEnterEvent, QDropEvent
 
     from rnw.app.library import World
+    from rnw.settings import RegionalSettings
 
 GIB: Final[float] = float(1 << 30)
 PROGRESS_STEPS: Final[int] = 100
@@ -937,18 +941,7 @@ class MainWindow(QMainWindow):
             _ = preset.currentIndexChanged.connect(picked)
             layout.addRow(switch, preset)
             self.regional_presets[name] = preset
-        self.morocco_label: QLabel = QLabel(text("continent.morocco"))
-        self.morocco_policy: QComboBox = QComboBox()
-        self.morocco_options: tuple[str, ...] = ("restore", "emirate", "castile", "granada")
-        for option in self.morocco_options:
-            self.morocco_policy.addItem(text(f"continent.morocco.{option}"))
-
-        def picked_morocco(index: int) -> None:
-            if index >= 0:
-                self.controller.set_morocco(self.morocco_options[index])
-
-        _ = self.morocco_policy.currentIndexChanged.connect(picked_morocco)
-        layout.addRow(self.morocco_label, self.morocco_policy)
+        self._add_african_policies(layout)
         self.asia_connection: QCheckBox = QCheckBox(text("continent.africa.asia_connection"))
 
         def connection_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a positional bool.
@@ -964,6 +957,29 @@ class MainWindow(QMainWindow):
         _ = self.circumnavigation.toggled.connect(circumnavigation_toggled)
         layout.addRow(self.circumnavigation)
         return group
+
+    def _add_african_policies(self, layout: QFormLayout) -> None:
+        self.african_policies: dict[str, tuple[QLabel, QComboBox]] = {}
+        for name, options, apply in (
+            ("morocco", tuple(MoroccoPolicy), self.controller.set_morocco),
+            ("mamluks", tuple(MamlukPolicy), self.controller.set_mamluks),
+        ):
+            label = QLabel(text(f"continent.{name}"))
+            combo = QComboBox()
+            for option in options:
+                combo.addItem(text(f"continent.{name}.{option.value}"), option.value)
+
+            def picked(
+                index: int,
+                values: tuple[str, ...] = options,
+                set_policy: Callable[[str], None] = apply,
+            ) -> None:
+                if index >= 0:
+                    set_policy(values[index])
+
+            _ = combo.currentIndexChanged.connect(picked)
+            layout.addRow(label, combo)
+            self.african_policies[name] = label, combo
 
     def _advanced_tab(self) -> QScrollArea:
         advanced, advanced_layout = self._scroll_page()
@@ -1985,6 +2001,25 @@ class MainWindow(QMainWindow):
         self.reveal_at_start.setEnabled(not busy)
         self.american_reveal.setVisible(america)
 
+    def _refresh_african_options(
+        self, settings: RegionalSettings, *, enabled: bool, busy: bool
+    ) -> None:
+        for name, policy in (("morocco", settings.morocco), ("mamluks", settings.mamluks)):
+            if policy is None:
+                continue
+            label, combo = self.african_policies[name]
+            _ = combo.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+            combo.setCurrentIndex(combo.findData(policy.value))
+            _ = combo.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+            combo.setVisible(enabled)
+            label.setVisible(enabled)
+            combo.setEnabled(not busy)
+        _ = self.asia_connection.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.asia_connection.setChecked(settings.require_asia_connection)
+        _ = self.asia_connection.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.asia_connection.setVisible(enabled)
+        self.asia_connection.setEnabled(not busy)
+
     def _refresh_regions(self, *, busy: bool) -> None:
         selection = self.controller.continent_selection()
         america = selection["america"]
@@ -2023,20 +2058,8 @@ class MainWindow(QMainWindow):
             parent = page.parentWidget()
             if parent is not None:
                 parent.setVisible(enabled)
-            if settings.morocco is not None:
-                _ = self.morocco_policy.blockSignals(True)  # noqa: FBT003 - Qt synchronization
-                self.morocco_policy.setCurrentIndex(
-                    self.morocco_options.index(settings.morocco.value)
-                )
-                _ = self.morocco_policy.blockSignals(False)  # noqa: FBT003 - Qt synchronization
-                self.morocco_policy.setVisible(enabled)
-                self.morocco_label.setVisible(enabled)
-                self.morocco_policy.setEnabled(not busy)
-                _ = self.asia_connection.blockSignals(True)  # noqa: FBT003 - Qt synchronization
-                self.asia_connection.setChecked(settings.require_asia_connection)
-                _ = self.asia_connection.blockSignals(False)  # noqa: FBT003 - Qt synchronization
-                self.asia_connection.setVisible(enabled)
-                self.asia_connection.setEnabled(not busy)
+            if name == "africa":
+                self._refresh_african_options(settings, enabled=enabled, busy=busy)
             if enabled:
                 defaults = self.controller.region_settings(name, defaults=True)
                 _, rows = self.regional_controls[name]

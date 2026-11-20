@@ -73,6 +73,7 @@ from rnw.settings import (
     PRESETS,
     REGIONAL_PRESETS,
     WORLD_TYPES,
+    MamlukPolicy,
     MoroccoPolicy,
     SettingsError,
     build_settings,
@@ -448,6 +449,10 @@ class Controller:
     def set_morocco(self, policy: str) -> None:
         if policy in {mode.value for mode in MoroccoPolicy}:
             self._edit_region("africa", {"morocco": policy})
+
+    def set_mamluks(self, policy: str) -> None:
+        if policy in {mode.value for mode in MamlukPolicy}:
+            self._edit_region("africa", {"mamluks": policy})
 
     def set_asia_connection(self, *, required: bool) -> None:
         self._edit_region("africa", {"require_asia_connection": required})

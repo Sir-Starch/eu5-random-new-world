@@ -18,6 +18,7 @@ from rnw.settings import NATIVES
 from rnw.societies import (
     CITY,
     EMPIRE_FLOOR,
+    MIN_POPULATION,
     STATE,
     STEP_COST,
     TOWN,
@@ -743,6 +744,18 @@ def test_history_bootstrap_assigns_no_empire_and_preserves_the_ordinary_baseline
         )
         assert _digest(actual) == _digest(expected)
         assert not any(polity.great or polity.landed for polity in actual.polities)
+
+
+def test_regional_bootstrap_settles_reserved_land_even_without_food() -> None:
+    graph = _grid()
+    graph = replace(graph, capacity=np.zeros_like(graph.capacity))
+    reserved = np.zeros(len(graph.capacity), dtype=bool)
+    reserved[[0, 2]] = True
+    result = bootstrap_societies(
+        graph, SETTINGS, seed=42, target=0, state_floor=StateFloor(), reserved=reserved
+    )
+    np.testing.assert_array_equal(result.population, reserved * MIN_POPULATION)
+    assert not result.polities
 
 
 def test_bootstrap_size_changes_partition_without_changing_food_identity_or_state_envelope() -> (

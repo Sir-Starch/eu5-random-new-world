@@ -3328,3 +3328,15 @@ text = '''Przyłącz do Kastylii'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''Przyłącz do Grenady'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''Posiadłości mameluków w Azji'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''Zachowaj mameluków'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''Niepodległy Sułtanat Damaszku'''

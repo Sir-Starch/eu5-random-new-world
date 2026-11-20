@@ -260,7 +260,7 @@ def project_regional_start(  # noqa: PLR0913 - historical roots, map, naming and
         )
     if not region.retained:
         return start
-    pops = {key: tuple(boot.pops[key]) for key in region.retained}
+    pops = {key: tuple(boot.pops.get(key, ())) for key in region.retained}
     population = {key: sum(pop.amount for pop in rows) for key, rows in pops.items()}
     if min(population.values()) <= 0:
         message = "A retained holding has no regional population"

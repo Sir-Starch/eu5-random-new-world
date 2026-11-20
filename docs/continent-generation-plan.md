@@ -115,13 +115,10 @@ Tordesillas rules to America, with a distinct contact policy for Africa's natura
 boundary. Derive initial discovery from each region's role in 1337 and its actual
 contacts, retaining the American discovery behavior for America-only worlds.
 
-Vanilla setup outside an enabled footprint remains in place. A country holding
-land on both sides keeps its surviving locations. The proposed handling keeps
-its tag and institutions on that land and moves its capital to a valid surviving
-location when required. This needs an explicit setup rule because the current
-pruner can remove the entire record. On the installed EU5 1.4.9 build 26655995,
-the 1337 records give Morocco four locations in Europe and the Mamluks 75 in
-Asia, including one conquered location. Both records also hold African land. [V-LOCAL]
+Vanilla setup outside an enabled footprint remains in place. The 1337 setup of
+EU5 1.4.9 build 26655995 has 1,566 countries with land. Only Morocco and the
+Mamluks own locations both in Africa and abroad. This counts all starting
+ownership entries, including conquered land. [V-LOCAL]
 The regional setup pass binds character birthplaces and dynasty homes to
 present locations, then trims optional kinship links when a character is
 retired. Only named identities can propagate a retirement to other files.
@@ -148,6 +145,32 @@ Algeciras, Gibraltar and Marbella.
 All four options use the existing population cohorts in Iberia. The choice
 belongs to Africa's settings and is available in both windows and the CLI.
 The offline setup trial exercised all four choices on the same map.
+
+### The Mamluks' Asian holdings
+
+**Keep Mamluks** is the default when Africa is generated. The Mamluks keep
+their tag, government and all 75 Asian holdings, including conquered Iskenderun.
+Their 68 original African holdings are replaced by the 68 passable generated
+locations closest to their Asian territory, using the same wrapped distance
+as for Morocco.
+Morocco's reservation takes priority if both claims reach the same location.
+The 54 holdings nearest the original Cairo become cores, including the new
+capital, and the other 14 start integrated. Both reservations are made before
+African societies claim land. The 1337 setup binds references to Cairo to the
+new capital where a location replacement is called for.
+
+**Independent Sultanate of Damascus** gives those 75 Asian locations to a
+new Sunni Levantine monarchy with a fresh tag and capital in Damascus. The
+Asian populations remain in place. The Mamluks retire from the start and
+African societies can settle the land that would have been reserved for them.
+
+[V-EXEC] Both options exported on the same geography with EU5 1.4.9 build
+26655995. The location and river rasters and location hierarchy match between
+the two worlds. The exported 1337 setup gives the chosen country every Asian
+holding under a single owner and preserves the Asian population records.
+The restoration gives the Mamluks 68 populated passable African locations
+outside Morocco's reservation. The independent sultanate has a fresh tag and
+its name and adjective in all 11 official languages.
 
 ## One generation pipeline
 

@@ -104,6 +104,14 @@ Ronda, Algeciras, Gibraltar and Marbella.
 - **Independent Algeciras** gives the four holdings to an Andalusi Sunni emirate.
 - **Join Castile** or **Join Granada** gives all four to the chosen country.
 
+**Mamluk holdings in Asia** offers two outcomes.
+
+- **Keep Mamluks** keeps all 75 Asian holdings and gives the Mamluks the 68
+  closest passable locations in the new Africa. Their capital is the new
+  holding closest to the original Cairo.
+- **Independent Sultanate of Damascus** gives all 75 Asian holdings to a new
+  Sunni Levantine monarchy with Damascus as its capital.
+
 ### Choose a world type
 
 A world type gives you a starting set of settings. Choose the shape you like, then
@@ -609,7 +617,7 @@ file and pass it to `rnw world-code --settings FILE` or `rnw newworld --settings
   "schema": 1,
   "continents": {
     "america": true,
-    "africa": {"preset": "supercontinent", "morocco": "restore"},
+    "africa": {"preset": "supercontinent", "morocco": "restore", "mamluks": "damascus"},
     "oceania": {"preset": "archipelago"}
   }
 }
@@ -617,8 +625,9 @@ file and pass it to `rnw world-code --settings FILE` or `rnw newworld --settings
 
 Use `true` for a continent's defaults and `false` to keep its original map and
 societies. For Africa, the other Morocco values are `emirate`, `castile` and
-`granada`. Regional `new_world`, `natives` and `resources` blocks override the
-continent's preset independently. A generated world code includes those choices.
+`granada`. The `mamluks` choice defaults to `restore`. Regional `new_world`,
+`natives` and `resources` blocks override the continent's preset independently.
+A generated world code includes those choices.
 
 For `generate-queue`, put one world code per line in `codes.txt`. The command keeps
 the mods in the library and stops on the first failure. Run `uv run rnw --help`

@@ -69,6 +69,7 @@ REASONS: Final[Mapping[str, str]] = {
         "The mechanic requires an original country tag in its eligibility conditions. "
         "No generated country starts with any of those tags."
     ),
+    "country_exists": "The event chain can start only while the named country exists.",
     "retired": (
         "Retired by the exporter with its country: the events of retired tags, the "
         "modifiers only they applied, the historical base values of removed locations."
@@ -835,6 +836,7 @@ def _regional_table() -> dict[str, Verdict]:
     _regional_society(table)
     _regional_events(table)
     _retired_morocco(table)
+    _retired_mamluks(table)
     return table.rows
 
 
@@ -1057,6 +1059,19 @@ def _regional_diplomacy_events(table: _Table) -> None:
         flavor_eth.201 flavor_eth.202 flavor_eth.203 flavor_eth.204 flavor_eth.210
         ibn_battuta_events.6
         """,
+    )
+
+
+def _retired_mamluks(table: _Table) -> None:
+    """Script consumers that become inert or record the absence of the Mamluks."""
+    table.add("common/laws", KEEP, "lost", "mamluk_army_law")
+    table.add("common/rebel_demands", KEEP, "lost", "rebel_demand_flavor_mam_54")
+    table.add("common/tests", KEEP, "generic", "generic_country_is_alive_check")
+    table.add(
+        "events",
+        KEEP,
+        "country_exists",
+        "battle_for_the_strait_events.55 flavor_geo.4 flavor_geo.6",
     )
 
 

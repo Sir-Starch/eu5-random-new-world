@@ -60,6 +60,8 @@ def test_independent_preset_and_resource_settings_keep_their_own_defaults() -> N
         ({"africa": {"preset": "wall"}}, "Invalid africa preset"),
         ({"africa": {"morocco": "spain"}}, "Unknown Morocco option"),
         ({"oceania": {"morocco": "granada"}}, "Unknown oceania settings"),
+        ({"africa": {"mamluks": "syria"}}, "Unknown Mamluk option"),
+        ({"oceania": {"mamluks": "damascus"}}, "Unknown oceania settings"),
         ({"africa": {"resources": {"coffee": True}}}, "Resource weight for coffee"),
     ],
 )

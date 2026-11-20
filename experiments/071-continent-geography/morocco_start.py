@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from rnw.content_inventory import DEFINITIONS, SETUP_DIR
-from rnw.eu5_morocco import (
+from rnw.eu5_africa_start import (
     COUNTRIES_BLOCK,
     COUNTRIES_FILE,
     IBERIAN_HOLDINGS,

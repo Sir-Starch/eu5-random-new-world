@@ -3328,3 +3328,15 @@ text = '''Anexionar a Castilla'''
 ["continent.morocco.granada"]
 source = "6f3054c413324372"
 text = '''Anexionar a Granada'''
+
+["continent.mamluks"]
+source = "0c2904920c905cc4"
+text = '''Posesiones mamelucas en Asia'''
+
+["continent.mamluks.restore"]
+source = "a9fb6aa8de82c155"
+text = '''Conservar a los mamelucos'''
+
+["continent.mamluks.damascus"]
+source = "063f2a9ba88d6b2d"
+text = '''Sultanato de Damasco independiente'''
