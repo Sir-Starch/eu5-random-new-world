@@ -380,7 +380,9 @@ heights across African–Asian edges have a median difference of 0 and a
 50 touching location pairs agree on climate and 46 agree on vegetation.
 The route retains 12 direct passable African–Asian location pairs.
 Generated American land overlaps vanilla at 0.293 by Jaccard index, down
-from 0.496. The Pacific reservation in this seed adds two islands.
+from 0.496. On a 640×320 raster, after allowing translation and uniform
+rescaling, the best overlap with vanilla falls from 0.518 to 0.437. The
+Pacific reservation in this seed adds two islands.
 
 The final colour raster and default map contain no impassable sea location
 smaller than 1,024 pixels. The southern row crosses 130 navigable locations
