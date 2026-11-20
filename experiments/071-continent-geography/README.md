@@ -395,13 +395,16 @@ this candidate. [Installation details](../INSTALLED.md).
 
 [V-EXEC 2026-11-20] The four-canvas raster assigns all 90,805,365 installed
 sea pixels. Eurasia retains 12,592,521 sea pixels and Greenland. The
-American and African canvases share 7,745 seawater pixel edges. America
+American and African canvases share 8,133 seawater pixel edges. America
 and Oceania share 8,540. Africa and Oceania share 3,384. The count includes
 the horizontal map wrap. The original Norwegian and Java seas and the
 Malacca Strait stay in the Eurasian canvas. The Strait of Gibraltar is
 in the African canvas, with the Iberian shore preserved. The African
-mainland's northern limit for physical generation is row 2,205 on this
-16,384 × 8,192 raster, south of the preserved Norwegian coast.
+mainland's northern limit for generation and for its ocean claim is row 2,240 on this
+16,384 × 8,192 raster, south of the preserved Norwegian coast. Above it
+the open Atlantic, including the Celtic Sea, belongs to America; the Bay of
+Biscay keeps a Eurasian strip along the coast, and the passage between
+Greenland and Britain stays Eurasian.
 The remote vanilla Pacific islets assigned to Oceania no longer leave
 separate patches inside the American canvas. The surrounding canvas
 regenerates their old sites.
@@ -410,7 +413,7 @@ builder can move a group and its ports together when new land occupies its
 original position.
 
 Water that Eurasian shores enclose stays in the fourth canvas: the Bay of
-Bengal, the Arabian Sea and the passage between Greenland and Europe. A
+Bengal, the South China Sea and the passage between Greenland and Britain. A
 distance reach alone gave Eurasia long tongues of the Pacific and most of the
 northern Indian Ocean, because the claim grid is twice as coarse in latitude.
 The final rule works on a square grid. A block is enclosed when Eurasian land
@@ -426,7 +429,7 @@ claimed it, so no location is cut between a canvas and the retained map. A
 small water speck wholly inside replaced land joins that land's canvas. A
 larger location stranded among retained waters raises an error. The Baffin
 Island and Red Sea islets exposed these cases. The full cold export of the
-M55D code took 198.2 seconds at 16 threads. [V-EXEC]
+M55D code took 218.3 seconds at 16 threads. [V-EXEC]
 
 The first full plan exposed 125 tiny sea fragments that appeared when the
 regional grids met. They became isolated when nearby deep waters were

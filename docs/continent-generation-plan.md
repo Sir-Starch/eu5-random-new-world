@@ -53,12 +53,15 @@ water that its shores enclose: a block of sea belongs to it when Eurasian
 land lies on both sides along some line within about 1,100 pixels, no
 generated continent's land is in the way, and Eurasian land is nearer than any
 generated continent's. Whole installed locations that are mostly enclosed and
-that join the retained map keep their water, so the Bay of Bengal, the
-Arabian Sea and the passage between Greenland and Europe stay vanilla. The
-rest of the open ocean remains available to the three generated canvases. Africa retains its share of the
-Mediterranean and may approach southern Iberia and western Asia. The
-African mainland's northern latitude sets a separate limit for its
-generated land, so its open water remains sea next to northern Europe.
+that join the retained map keep their water, so the Bay of Bengal, the South
+China Sea and the passage between Greenland and Britain stay vanilla. The
+open Indian and Atlantic oceans remain available to the three generated
+canvases. Africa retains its share of the Mediterranean and may approach
+southern Iberia and western Asia. The
+African mainland's northern latitude sets a limit for both its generated
+land and its claim on open water, so no African canvas lies beside northern
+Europe. The water north of that limit goes to the nearest other generated
+canvas, or to Eurasia where its shores enclose it.
 The three generated regions share borders across the Pacific, Atlantic and
 Indian oceans. Their coasts and intervening deep water form during generation.
 The sea plan checks the common borders for deep water, keeps small residual

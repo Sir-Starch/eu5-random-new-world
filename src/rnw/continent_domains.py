@@ -236,6 +236,8 @@ class OceanClaims:
     islands: tuple[tuple[int, int, int], ...] = ()
     # Square blocks of `step` pixels that retained Eurasian land reaches first.
     eurasian: NDArray[np.bool_] | None = None
+    # First pixel row Africa may claim; its land and its water both stop above it.
+    north_africa: int = 0
 
     def rows(self, rows: NDArray[np.int64]) -> NDArray[np.int64]:
         return rows // (2 * self.step)
@@ -468,12 +470,6 @@ def _shared_water(
     counts = np.bincount(parts[water], minlength=int(parts.max()) + 1)
     specks = water & (counts < ocean_speck_limit(game_map.labels.shape[1]))[parts]
     labels = game_map.labels
-    heights = np.flatnonzero((cores == 1).any(axis=1))
-    north_africa = (
-        max(0, int(heights[0]) - AFRICAN_NORTH_REACH_PX * labels.shape[1] // REFERENCE_WIDTH)
-        if heights.size
-        else 0
-    )
     owners = np.full(labels.shape, -1, dtype=np.int8)
     columns = claims.columns(np.arange(labels.shape[1], dtype=np.int64))
     for first in range(0, len(labels), BAND_ROWS):
@@ -497,7 +493,7 @@ def _shared_water(
             raise CanvasError(message)
         if here[0] >= 0:
             resolved.append((int(here[0]), group))
-    return SharedWater(owners, north_africa, tuple(resolved))
+    return SharedWater(owners, claims.north_africa, tuple(resolved))
 
 
 def _ocean_claims(
@@ -599,6 +595,7 @@ def _shared_ocean_claims(
     best = np.full(sample.shape, limit + 1, dtype=np.int32)
     owners = np.zeros(sample.shape, dtype=np.int8)
     minimum = max(1, CONTINENTAL_SHORE_AREA_PX * width**2 // REFERENCE_WIDTH**2 // (2 * step**2))
+    north_africa = 0
     for number, name in enumerate(CONTINENTS):
         core = _substantial_land(_membership(game_map, name) & ~sea, sample, minimum)
         if not core.any():
@@ -611,9 +608,17 @@ def _shared_ocean_claims(
             ]
         distance = distance_from(core, limit, octagonal=True, wrap_x=True)
         take = distance < best
+        if name == "africa":
+            first = int(np.flatnonzero(core.any(axis=1))[0])
+            north_africa = max(
+                0, int(rows[first]) - step - AFRICAN_NORTH_REACH_PX * width // REFERENCE_WIDTH
+            )
+            take &= (rows - step >= north_africa)[:, None]
         best[take] = distance[take]
         owners[take] = number
-    return OceanClaims(owners, step, eurasian=_eurasian_blocks(game_map, solid, step))
+    return OceanClaims(
+        owners, step, eurasian=_eurasian_blocks(game_map, solid, step), north_africa=north_africa
+    )
 
 
 def _substantial_land(

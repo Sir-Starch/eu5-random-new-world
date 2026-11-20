@@ -165,6 +165,16 @@ def test_three_canvases_partition_the_whole_ocean_and_share_borders() -> None:
     assert {(0, 1), (0, 2), (1, 2)} <= pairs
 
 
+def test_africa_claims_no_water_beyond_its_northern_limit() -> None:
+    game = _map()
+    africa = plan_domains(game, _settings(tuple(CONTINENTS)), seed=739)[1]
+    limit = africa.first_row + africa.north_water_rows
+    assert limit > 0
+    mask = _in_world(africa, africa.mask, game.labels.shape)
+    assert mask[limit:].any()
+    assert not mask[:limit].any()
+
+
 def test_vanilla_water_speck_inside_asia_stays_in_the_preserved_canvas() -> None:
     game = _map()
     game.labels[55, 680] = 0
