@@ -2145,3 +2145,22 @@ in `.rnw-hub-backups/1.3.0-1795194361624820175`. The Windows wheel SHA-256 is
 The locked checks passed with 3,712 Python tests and 39 native Rust tests.
 The Tauri checks passed with 50 tests and a production build. The installed-game
 reference check reproduced the 884-file epoch-64 America-only golden.
+
+2026-11-21, **Generator window for several continents** (source `887110d`, pending epoch 64 of
+1.3.0; window and atlas metadata only). [V-EXEC] The standard updater built and installed
+`rnw_exp_hub` in the existing Windows/Proton profile (EU5 not running). Both Wine offscreen
+self-tests passed (window, native kernels, world codes, shell and bridge), and the installed
+files verified. The hub that preceded this task is retained at
+`.rnw-hub-backups/1.3.0-1795256772264117394`, the intermediate one (source `a5e5de9`) at
+`.rnw-hub-backups/1.3.0-1795257402424501618`.
+Wheel SHA-256 `5ebb5e0ac0487ac1844e79fd86ad951a79a054981c684a6bd54fbb36304a8bdb`; Tauri window
+`9bc651c591939ec74fc68c86019610773b7985aa4e234a2b8e280e9f7f700d39`; launcher
+`49674400462cacc88be19be07bd7d27e09c35c4a0d8d5cbaa8ab85d540966932` (unchanged). The change
+covers the progress phases, a block for each continent in the new world's settings,
+sketches of every continent that is switched on, kept lands and continent names on the map,
+and the land editor's view of the whole world. A new world's atlas also records where its
+box lies on the map (`origin`, under `.metadata`). The 884-file epoch-64 reference
+reproduced byte for byte, so no new world was installed. The locked checks passed with
+3,736 Python and 39 native Rust tests; the Tauri checks passed with 50 tests and a
+production build. No world folder, save, playset or setting changed. This did not publish
+or update the Workshop item.
