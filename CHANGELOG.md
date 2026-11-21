@@ -170,6 +170,16 @@ worlds and saves are not rewritten or migrated.
   vegetation alone) by how many locations stand behind it, while a large group keeps its own mix,
   and on the game's own Americas the totals of every resource stay the game's. Epoch 63 and
   older make the same worlds as before.
+- Open the classic window under **Valve's Proton Experimental**, the Steam Deck's choice.
+  Valve's Proton builds ship `icu.dll` but not the `icuuc.dll` that Qt needs, so the Workshop
+  generator, which falls back to the classic window when the system has no WebView2, stopped
+  with "DLL load failed while importing QtWidgets". The hub now carries a small forwarder to
+  `icu.dll` (`generator/compat/icuuc.dll`, built from `packaging/icuuc`) and puts it on the
+  search path only when the system has no `icuuc.dll` of its own; Windows and the community
+  Proton builds (GE-Proton, CachyOS) keep theirs. The hub build fails if a newer Qt imports
+  more than the forwarder forwards. Valve's Proton 10.0 still cannot run the generator: its
+  Wine lacks the `crealf` function NumPy calls, so `import numpy` stops. Use Proton
+  Experimental or GE-Proton; with 1.2.2 and earlier, use GE-Proton.
 
 ## 1.2.2 — 2026-11-11
 

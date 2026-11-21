@@ -14,7 +14,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 from rnw.app import paths
-from rnw.gui import start
+from rnw.gui import start, windows_icu
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -22,8 +22,17 @@ if TYPE_CHECKING:
 SELF_TEST = "--self-test"
 
 
+def prepare_qt() -> None:
+    """Before Qt is imported: a system without ``icuuc.dll`` gets the hub's forwarder, said in
+    the log."""
+    note = windows_icu.prepare()
+    if note:
+        print(note, file=sys.stderr)
+
+
 def self_test(arguments: Sequence[str]) -> int:
     """Both windows' self-tests; the exit code is 0 when every one that must pass did."""
+    prepare_qt()
     from rnw.gui import classic  # noqa: PLC0415 - Qt only when it is needed
 
     code = classic.main(arguments)
@@ -58,6 +67,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return outcome.code
         instead = outcome.reason
         print(f"The classic window opens: {instead}", file=sys.stderr)
+    prepare_qt()
     try:
         from rnw.gui import classic  # noqa: PLC0415 - Qt only when it is needed
     except ImportError as error:

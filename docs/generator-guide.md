@@ -533,6 +533,15 @@ normally available on Windows 11 and current Windows 10 installations. When the 
 web view is missing, the generator opens the classic window automatically. This is
 expected when running the Workshop version through a Proton prefix without WebView2.
 
+On a Steam Deck, or any Linux system with Valve's own Proton, use **Proton Experimental**
+with generator 1.3.0 or newer, or **GE-Proton** with any version. Valve's Proton lacks the
+`icuuc.dll` that the classic window's Qt loads, so 1.2.2 and earlier stop with **The classic
+window needs PySide6 (DLL load failed while importing QtWidgets …)**; 1.3.0 carries a
+replacement for it. Valve's Proton 10.0 cannot run the generator at all, because its Wine
+lacks a math function that NumPy calls. Install GE-Proton with ProtonUp-Qt and choose it as
+the compatibility tool of the generator's shortcut, or of EU5 when you start the generator
+from its Mods menu.
+
 ### Generation stopped with an error
 
 Read the message first: it explains whether the problem concerns game files, a destination,

@@ -14,7 +14,10 @@ installed. It writes ``dist/rnw_exp_hub`` (ignored by git):
   names ``../site`` as the only place to import from;
 - ``generator/site``: the locked Windows wheels, installed with their hashes, Qt cut down to
   the modules the window imports, and our own wheel, built by maturin for Windows (with
-  ``_native.pyd``, the package metadata, the licence and the Rust SBOM).
+  ``_native.pyd``, the package metadata, the licence and the Rust SBOM);
+- ``generator/compat/icuuc.dll``: a forwarder from ``packaging/icuuc`` to ``icu.dll``, for
+  systems without an ``icuuc.dll`` of their own (Valve's Proton, the Steam Deck's), which Qt needs;
+  the generator puts its folder on the DLL search path only there (``rnw.gui.windows_icu``).
 
 Every module is compiled to ``.pyc`` with unchecked hashes, so Python never needs to write
 into the mod folder (the launcher passes ``-B`` as well). The only programs in the hub are the
@@ -31,6 +34,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -62,6 +66,16 @@ LAUNCHER_MEMBER: Final[str] = f"RandomNewWorld-Windows/{LAUNCHER}"
 LAUNCHER_SHA256: Final[str] = "49674400462cacc88be19be07bd7d27e09c35c4a0d8d5cbaa8ab85d540966932"
 AVATAR: Final[Path] = ROOT / "packaging" / "assets" / "rnw-avatar.png"
 THUMBNAIL_SIZE: Final[int] = 512
+# The ICU forwarder (packaging/icuuc): built with MinGW at a fixed image base and without a
+# timestamp, so that every build of it is the same file.
+ICU_SOURCES: Final[Path] = ROOT / "packaging" / "icuuc"
+ICU_FORWARDER: Final[str] = "icuuc.dll"
+ICU_FOLDER: Final[str] = "generator/compat"
+MINGW: Final[str] = "x86_64-w64-mingw32"
+ICU_LINK: Final[tuple[str, ...]] = (
+    "-O2", "-s", "-shared", "-nostdlib", "-Wl,-e,DllMain", "-Wl,--no-insert-timestamp",
+    "-Wl,--image-base=0x180000000",
+)  # fmt: skip
 
 
 @dataclass(frozen=True, slots=True)
@@ -312,6 +326,91 @@ def compile_modules(*folders: Path) -> None:
         ])  # fmt: skip
 
 
+def pe_imports(listing: str) -> dict[str, set[str]]:
+    """The names a library imports from each DLL, read from ``objdump -p`` output (an import by
+    ordinal is ``#ordinal``). DLL names are lower case."""
+    found: dict[str, set[str]] = {}
+    current: set[str] | None = None
+    for line in listing.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("DLL Name:"):
+            current = found.setdefault(stripped.split(":", 1)[1].strip().lower(), set())
+            continue
+        fields = stripped.split()
+        if (
+            current is not None
+            and len(fields) in {4, 5}
+            and re.fullmatch(r"[0-9a-f]{8}", fields[0])
+        ):
+            current.add(f"#{fields[1]}" if fields[3] == "<none>" else fields[3])
+    return found
+
+
+def read_imports(library: Path) -> dict[str, set[str]]:
+    """What ``library`` imports, by MinGW's ``objdump``."""
+    objdump = f"{MINGW}-objdump"
+    if shutil.which(objdump) is None:
+        message = f"{objdump} is not installed"
+        raise BuildError(message)
+    listing = subprocess.run(  # noqa: S603 - fixed tool, our argument
+        [objdump, "-p", str(library)], check=True, capture_output=True, text=True
+    ).stdout
+    return pe_imports(listing)
+
+
+def forwarded_names(definition: Path) -> set[str]:
+    """The names ``icuuc.def`` exports; each must forward to the same name in ``icu.dll``."""
+    names: set[str] = set()
+    for raw in definition.read_text(encoding="utf-8").splitlines():
+        line = raw.split(";", 1)[0].strip()
+        if "=" not in line:
+            continue
+        name, target = (part.strip() for part in line.split("=", 1))
+        if target != f"icu.{name}":
+            message = f"{definition.name} forwards {name} to {target}, not to icu.{name}"
+            raise BuildError(message)
+        names.add(name)
+    return names
+
+
+def check_icu_forwarder(site: Path, definition: Path) -> None:
+    """Qt imports from ``icuuc.dll`` only what the forwarder forwards and no other ICU library.
+
+    A PySide6 that needs more makes the build fail here, not the player's window."""
+    wanted: set[str] = set()
+    others: set[str] = set()
+    for folder in (site / "PySide6", site / "shiboken6"):
+        for library in sorted(folder.rglob("*")):
+            if library.suffix.lower() not in {".dll", ".pyd"}:
+                continue
+            for dll, names in read_imports(library).items():
+                if dll == ICU_FORWARDER:
+                    wanted |= names
+                elif dll.startswith("icu") and dll != "icu.dll":
+                    others.add(f"{dll} (in {library.name})")
+    if others:
+        message = f"Qt imports {sorted(others)}; the hub forwards only {ICU_FORWARDER}"
+        raise BuildError(message)
+    missing = sorted(wanted - forwarded_names(definition))
+    if missing:
+        message = f"Qt imports {missing} from {ICU_FORWARDER}, which {definition.name} lacks"
+        raise BuildError(message)
+
+
+def build_icu_forwarder(folder: Path, work: Path = WORK / "icuuc") -> Path:
+    """The forwarder from ``packaging/icuuc``, built into ``folder`` (the resource goes to
+    ``work``)."""
+    folder.mkdir(parents=True, exist_ok=True)
+    work.mkdir(parents=True, exist_ok=True)
+    resource, target = work / "icuuc.res.o", folder / ICU_FORWARDER
+    _run([f"{MINGW}-windres", "-O", "coff", str(ICU_SOURCES / "icuuc.rc"), str(resource)])
+    _run([
+        f"{MINGW}-gcc", *ICU_LINK, "-o", str(target),
+        str(ICU_SOURCES / "icuuc.c"), str(ICU_SOURCES / "icuuc.def"), str(resource),
+    ])  # fmt: skip
+    return target
+
+
 def build_launcher(target: Path) -> None:
     """The launcher: the verified program of release 1.0.0 (see LAUNCHER_RELEASE)."""
     archive = fetch(LAUNCHER_RELEASE, WORK / "cache")
@@ -352,6 +451,8 @@ def build(output: Path, *, replace: bool) -> Path:
     install_own_wheel(wheel, site)
     remove_scripts(site)
     compile_modules(site)
+    check_icu_forwarder(site, ICU_SOURCES / "icuuc.def")
+    forwarder = build_icu_forwarder(stage / ICU_FOLDER)
     build_launcher(stage)
     _ = window.build(stage / "generator" / "window", WORK / "window", target=WINDOW_TARGET)
     check_programs(stage)
@@ -364,7 +465,7 @@ def build(output: Path, *, replace: bool) -> Path:
     _ = shutil.move(stage, output)
     mib = 1 << 20
     print(f"{output}: {size(output) / mib:.0f} MiB ({removed / mib:.0f} MiB of Qt left out)")
-    for path in (wheel, output / LAUNCHER, output / WINDOW):
+    for path in (wheel, output / LAUNCHER, output / WINDOW, output / ICU_FOLDER / forwarder.name):
         print(f"sha256 {hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}")
     return output
 

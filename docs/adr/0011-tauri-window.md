@@ -63,6 +63,10 @@ the Python generator and the classic window's Qt stay in the packages. Linux nee
 Proton prefix has no WebView2 runtime [V-LOCAL 2026-10-30], so the hub run through Proton opens
 the classic window: under Wine 11.20 without WebView2 the window exits with code 3 and the Qt
 window opens with no error box, and the hub's self-test passes both windows [V-EXEC C444].
+Valve's own Proton builds (10.0, Experimental) also lack the `icuuc.dll` that Qt loads, so the
+classic window could not open on them either; the hub carries a forwarder to `icu.dll` that is
+used only where the system has none, which makes Experimental work, while Valve's 10.0 stops
+earlier, in NumPy [V-EXEC C553].
 Whether the window works in a Proton prefix with WebView2 installed is [UNKNOWN]; native Linux
 players get it from the Linux package. The real window was checked on WebKitGTK 2.54 in a
 headless KWin, from source and from the native package [V-EXEC C444]; Windows itself and

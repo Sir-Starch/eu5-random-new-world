@@ -79,6 +79,12 @@ Synthetic cross-platform goldens are checked in CI. Real-world reproduction also
 records the game inputs and image encoding/pixel digests; do not broaden a result
 beyond what its actual comparison measured.
 
+The hub's classic window is checked under Valve's, GE and CachyOS Proton from a built hub in a
+fresh prefix (`proton run` with a new `STEAM_COMPAT_DATA_PATH`): start `generator/python/pythonw.exe`
+by its absolute path with a short script that sets `QT_QPA_PLATFORM=offscreen` (Proton drops that
+variable), points `sys.stdout` at a file and runs `rnw.gui --self-test` with `runpy`. Do not use the
+launcher, whose error box opens on the desktop. [C553](research/claims-ledger.md) lists the results.
+
 Agents must not launch or control EU5, its console or its playsets. If new game
 observation is necessary, prepare a normal generated world with its library and
 recovery receipt. Give the owner a short combined sitting, with console shortcuts

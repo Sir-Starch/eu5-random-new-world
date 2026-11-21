@@ -1,0 +1,24 @@
+; The exports of icuuc.dll that Qt6Core.dll imports, each forwarded to icu.dll as Windows' own
+; icuuc.dll does. packaging/hub.py checks this list against the Qt it installs.
+LIBRARY icuuc.dll
+EXPORTS
+    ucnv_cbFromUWriteUChars = icu.ucnv_cbFromUWriteUChars
+    ucnv_cbToUWriteUChars = icu.ucnv_cbToUWriteUChars
+    ucnv_close = icu.ucnv_close
+    ucnv_countAvailable = icu.ucnv_countAvailable
+    UCNV_FROM_U_CALLBACK_SUBSTITUTE = icu.UCNV_FROM_U_CALLBACK_SUBSTITUTE
+    ucnv_fromUCountPending = icu.ucnv_fromUCountPending
+    ucnv_fromUnicode = icu.ucnv_fromUnicode
+    ucnv_getAvailableName = icu.ucnv_getAvailableName
+    ucnv_getFromUCallBack = icu.ucnv_getFromUCallBack
+    ucnv_getMaxCharSize = icu.ucnv_getMaxCharSize
+    ucnv_getName = icu.ucnv_getName
+    ucnv_getStandardName = icu.ucnv_getStandardName
+    ucnv_getToUCallBack = icu.ucnv_getToUCallBack
+    ucnv_open = icu.ucnv_open
+    ucnv_reset = icu.ucnv_reset
+    ucnv_setFromUCallBack = icu.ucnv_setFromUCallBack
+    ucnv_setToUCallBack = icu.ucnv_setToUCallBack
+    UCNV_TO_U_CALLBACK_SUBSTITUTE = icu.UCNV_TO_U_CALLBACK_SUBSTITUTE
+    ucnv_toUCountPending = icu.ucnv_toUCountPending
+    ucnv_toUnicode = icu.ucnv_toUnicode
