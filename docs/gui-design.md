@@ -5,7 +5,7 @@
 This documents the existing Qt Widgets interface, extracted from `gui/window.py`,
 `gui/maps.py` and `gui/preview.py`. ADR 0007 chooses the platform's controls and theme.
 The owner's 2026-10-22 screenshots authorize reorganizing the interface around generation,
-world management and application paths. The Tauri window ([ADR 0011](adr/0011-tauri-window.md)), the generator's window since 2026-10-30, is described in §9; §1–§8 describe the classic Qt window, its fallback, which keeps Qt Widgets and platform typography.
+world management and application paths. The Tauri window ([ADR 0011](adr/0011-tauri-window.md)), the generator's window since 2026-10-30, is described in §9; §1–§8 describe the classic Qt window, its fallback, which keeps Qt Widgets and platform typography and, since 2026-11-21 (owner: Qt must not fall behind Tauri), the same functions: the land tools and editor of every continent, the queue's rows, the made world's title and button, and the map's kept lands and continent names (§6, *Parity with the Tauri window*).
 
 ## 1. Structure
 
@@ -94,6 +94,34 @@ only the latest requested picture waits.
 A loading notice stays over the map until that picture arrives; stale deliveries are ignored.
 The active world's Remove and Delete actions also apply to a multiple selection and show
 its count. Batch errors remain visible below the list, including after a row disappears.
+
+**Parity with the Tauri window (2026-11-21).** The classic window does what the Tauri window does,
+with Qt's controls and the platform's palette (it follows the system theme; the Tauri window's
+own light/dark switch is not copied). Both call the same `Controller`; the Qt side adds no rule
+of its own.
+
+- *Land tools* (`gui/land_tools.py`): on the World tab, under Continents, a group with the
+  sketches button, the land editor button and a row for each continent that can be drawn: Edit in
+  the editor, Land from an image, Save template, the picture chosen and Back to generated land.
+- *Land editor* (`gui/land_editor.py`, `land_canvas.py`, `land_sheet.py`, `land_pictures.py`): a
+  maximised dialog for the sheet of any continent, drawn by the processor (a `QWidget` painted
+  with NumPy, no web view, no OpenGL, so it runs under Proton as it is). The sheet logic
+  (`land_sheet.py`) is pure NumPy: pencil, eraser, line, rectangle, ellipse, fill (by the native
+  flood fill), pipette, terrain-on-ground and filled shapes, undo kept as changed pixels. Cutting
+  the area, the generator's check, Add terrain and Use run on worker threads and are asked of
+  `studio` and the controller, exactly as the bridge asks them; ready, famous and sketched
+  lands are galleries; a drawing is kept as a draft in the data folder for each continent and
+  restored; keys, zoom, drag-and-drop and import/export follow the Tauri editor.
+- *Queue* (`gui/queue_list.py`): a row for each world waiting (▶ the one being made, ⚠ a failed
+  one with its error as the tip, ✕ to take any waiting world out).
+- *Progress*: the continents of the world being made as its title; when it is made, Open the
+  world selects it.
+- *Maps*: the lands kept from the game in one grey under the open sea (`mapstyle.kept_alpha`,
+  blurred and stepped so that the edge is soft), keyed in the legend as a row that is not
+  isolated, and the names of the continents (`mapstyle.continent_names`), written upper case and
+  bold between the zooms 0.32 and 0.55 and faded out, for a world of several continents only.
+  Both are read from `Controller.surroundings` on the drawing worker, once for an atlas; a world
+  whose surroundings cannot be read is drawn without them.
 
 ## 7. Surfaces
 
@@ -191,7 +219,7 @@ previews on hover, isolates on click and zooms on double-click, a hover card and
 location card whose values isolate their country, culture, religion, resource or area, a
 minimap, zoom in the toolbar, map-only focus that keeps the view's centre, a PNG of the whole
 lens as it is drawn (names included, one pixel per atlas pixel) and copying the current view.
-Compare shows two worlds with linked cameras. The Qt window keeps its own flat pictures.
+Compare shows two worlds with linked cameras. The Qt window draws the same maps (kept lands and continent names included, §6).
 The Tauri bridge reads and prepares the requested atlas on one cancellable background worker;
 state snapshots and comparison eligibility inspect file metadata without decoding the library's
 maps. Each viewer releases obsolete work when it switches or closes, including its relief and

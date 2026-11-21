@@ -198,9 +198,9 @@ keep the ground flat. The rest of the world is generated on that outline, which 
 map smoothly: a coast drawn in pixels becomes a curve, not a staircase, and stays where it was drawn.
 A stroke only a pixel or two wide (a hair-thin strait or island) is smoothed away, so draw those
 three pixels across. Choosing sketches is not
-possible on a drawn land, and the Wall cannot use a land image. The classic window keeps the
-sketches, **Save template…** and **Land from an image…** as buttons; the editor is in the new
-window.
+possible on a drawn land, and the Wall cannot use a land image. The classic window has the same
+tools on **World**: the sketches, the **Land editor…** and, for each continent, **Save
+template…** and **Land from an image…**.
 
 ### Give your continents more room
 

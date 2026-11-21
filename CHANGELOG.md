@@ -180,6 +180,16 @@ worlds and saves are not rewritten or migrated.
   more than the forwarder forwards. Valve's Proton 10.0 still cannot run the generator: its
   Wine lacks the `crealf` function NumPy calls, so `import numpy` stops. Use Proton
   Experimental or GE-Proton; with 1.2.2 and earlier, use GE-Proton.
+- Give the classic window everything the new window does. Its World tab has a land group with
+  *Sketch continents…*, *Land editor…* and a row for each continent that can be drawn (edit,
+  land from an image, save template, back to generated land). The land editor is the same tool,
+  drawn by the processor so that it opens under Proton too: pencil, eraser, line, rectangle,
+  ellipse, fill and pipette, terrain on ground, undo, the generator's check, Add terrain, ready,
+  famous and sketched lands to start from, a draft kept for each continent, drag and drop of an
+  image. The queue lists its worlds one by one (the world being made, a failed one with its
+  error, a button to take any out), a world being made is titled by its continents, a world just
+  made opens from the progress box, and the map shows the lands kept from the game in grey and,
+  for a world of several continents, the continents' names seen whole.
 
 ## 1.2.2 — 2026-11-11
 
