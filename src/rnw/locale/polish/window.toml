@@ -3436,3 +3436,11 @@ text = '''Ameryka zachowuje własny ląd gry, więc nie ma czego rysować.'''
 ["editor.sketch_composed"]
 source = "20ead56412fd4283"
 text = '''Gdy włączone są inne kontynenty, szkic pokazuje cały świat: wybierz go przyciskiem „Szkicuj kontynenty” na stronie nowego świata, a potem rysuj tutaj Amerykę.'''
+
+["map.kept"]
+source = "38cbbe95bac7db82"
+text = '''Ziemie zachowane z gry'''
+
+["map.kept_tip"]
+source = "70efdb9e845b1756"
+text = '''Ląd, który ten świat zachowuje taki, jak w grze. Jest pokazany, aby było widać, gdzie leżą wygenerowane kontynenty; generator go nie stworzył, więc mapa nie pokazuje o nim nic więcej.'''

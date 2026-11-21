@@ -14,6 +14,7 @@ preview as a PNG data URL. Nothing here imports Qt, and nothing changes the cont
 from __future__ import annotations
 
 import base64
+import functools
 import io
 import time
 from dataclasses import dataclass, field
@@ -24,16 +25,16 @@ from PIL import Image
 
 from rnw import __version__, history_presenter, parallel, worldname
 from rnw import atlas as atlas_module
-from rnw.app import controls, library, quick, random_types
+from rnw.app import controls, library, quick, random_types, surroundings
 from rnw.app.gamenames import game_names
 from rnw.app.library import Placement
-from rnw.app.worldcode import WorldCode, encode
+from rnw.app.worldcode import WorldCode, WorldCodeError, decode, encode
 from rnw.gui import mapstyle
 from rnw.gui.controller import NEW, STRAY, Controller, Phase, Task
 from rnw.gui.text import GROUPING, LANGUAGE_NAMES, TITLE, grouped, language, table, text
 from rnw.layers import PARTS
 from rnw.png import COLOR_RGB, encode_png
-from rnw.settings import WORLD_TYPES
+from rnw.settings import WORLD_TYPES, SettingsError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -259,7 +260,7 @@ def _library(c: Controller) -> list[dict[str, object]]:
                 "title": c.name(world),
                 "atlas_revision": atlas_revision(c, world),
                 "preset": world.preset,
-                "type": text(f"type.{world.preset}"),
+                "type": _world_type(world, short=True),
                 "created": world.created,
                 "placement": placement.value,
                 "place": text(f"list.{placement.value}"),
@@ -437,8 +438,43 @@ def _value_state(control: controls.Control, value: int, default: int) -> dict[st
 
 def _queue_type(code: WorldCode) -> str:
     """The type a queued world is called by: Total Chaos for a draw, as the window and the library
-    name it; otherwise its world type."""
-    return text("type.chaos") if code.origin == "chaos" else text(f"type.{code.preset}")
+    name it; otherwise its world type; a world of several continents by its continents."""
+    return _continents_text(encode(code), short=True, language=language())
+
+
+@functools.lru_cache(maxsize=256)
+def _continents_text(code: str, *, short: bool, language: str) -> str:
+    """What the world of ``code`` is called: its world type (or Total Chaos) when it generates
+    America alone; with other continents, each continent, with its type unless ``short``.
+    ``language`` keys the cache: the words are the window's."""
+    del language
+    decoded = decode(code)
+    alone = text("type.chaos") if decoded.origin == "chaos" else text(f"type.{decoded.preset}")
+    try:
+        settings = decoded.settings()
+    except SettingsError:
+        return alone
+    if not settings.continents.regions:
+        return alone
+    parts: list[str] = []
+    if settings.continents.america:
+        america = text("continent.america")
+        if settings.new_world.keep_geography:
+            parts.append(text("continent.america_real"))
+        else:
+            parts.append(america if short else f"{america} ({alone})")
+    for region in settings.continents.regions:
+        name = text(f"continent.{region.key}")
+        parts.append(name if short else f"{name} ({text(f'type.{region.preset}')})")
+    return ", ".join(parts)
+
+
+def _world_type(world: World, *, short: bool) -> str:
+    """What a world in the library is called by its continents (``_continents_text``)."""
+    try:
+        return _continents_text(world.code, short=short, language=language())
+    except (WorldCodeError, SettingsError):
+        return text(f"type.{world.preset}")
 
 
 def _queue(c: Controller) -> list[dict[str, object]]:
@@ -475,7 +511,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "tag": worldname.tag_of(world.id),
         "code": world.code,
         "preset": world.preset,
-        "type": text(f"type.{world.preset}"),
+        "type": _world_type(world, short=False),
         "seed": str(world.seed),
         "custom": text("custom_some", count=changed) if changed else text("custom_none"),
         "created": world.created,
@@ -712,6 +748,8 @@ def atlas_bundle(
         "layers": layers,
     }
     checkpoint()
+    bundle.update(_surroundings(controller.surroundings(world, found)))
+    checkpoint()
     reader = controller.history_reader(world)
     bundle["history"] = (
         history_data(reader, found, name, checkpoint)
@@ -720,6 +758,16 @@ def atlas_bundle(
     )
     bundle["seconds"] = round(time.perf_counter() - started, 3)
     return bundle
+
+
+def _surroundings(found: surroundings.Surroundings) -> dict[str, object]:
+    """The lands kept from the game under the box (runs like the labels': 1 kept, 0 not) and the
+    continent of each location with the window's names of the continents."""
+    return {
+        "kept": None if found.kept is None else _b64(runs(found.kept.astype(np.int32))),
+        "continent": found.continent.tolist(),
+        "continents": [text(f"continent.{key}") for key in surroundings.CONTINENTS],
+    }
 
 
 def comparable_worlds(controller: Controller) -> list[World]:

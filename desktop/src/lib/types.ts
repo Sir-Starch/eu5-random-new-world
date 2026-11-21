@@ -308,6 +308,12 @@ export interface HistoryRegion {
 }
 
 export interface AtlasBundle {
+  /** The lands the world keeps from the game under the box, as runs like ``labels`` (1 kept);
+   *  null when the world has no picture to read them from. */
+  kept?: string | null;
+  /** Each location's continent (an index into ``continents``), -1 for none. */
+  continent?: number[];
+  continents?: string[];
   history?: {countries: Record<string, HistoryDossier>; regions: Record<string, HistoryRegion>} | null;
   id: string;
   name: string;

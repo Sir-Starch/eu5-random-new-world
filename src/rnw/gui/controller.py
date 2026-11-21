@@ -38,6 +38,7 @@ from rnw.app import (
     recovery,
     service,
     session,
+    surroundings,
     transfer,
 )
 from rnw.app.discovery import GameInstall, Profile
@@ -53,6 +54,8 @@ from rnw.app.worldcode import (
     rolled,
     with_new_seed,
 )
+from rnw.eu5_map import DEFINITIONS
+from rnw.geography import read_locations
 from rnw.gui import mapstyle, phases
 from rnw.gui.text import (
     ERROR,
@@ -70,6 +73,7 @@ from rnw.landarea import EDITOR_STEP
 from rnw.layers import PARTS, rolls_of
 from rnw.messages import Said, say
 from rnw.png import COLOR_RGB, encode_png
+from rnw.pngread import read_rgb
 from rnw.progress import Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
 from rnw.settings import (
@@ -276,6 +280,8 @@ class Controller:
         self._sheet_inputs: tuple[Path, int, bool, RegionalBands] | None = None
         self.last_import: exchange.Imported | None = None
         self._history_readers: dict[int, history_presenter.Reader] = {}
+        # The installed game's continent of each region, by the game's folder and build.
+        self._regions: tuple[tuple[Path, str], dict[str, str]] | None = None
         self._words: dict[int, tuple[Atlas, tuple[str, Path | None], atlas.Words]] = {}
         self.candidates: list[candidates.Candidate] = []
         self.candidate_code: WorldCode | None = None
@@ -1676,6 +1682,37 @@ class Controller:
     def atlas(self, world: World) -> Atlas | None:
         """The world's atlas, or None when it has none."""
         return library.atlas(self.data, world)
+
+    def surroundings(self, world: World, found: Atlas) -> surroundings.Surroundings:
+        """What surrounds the world's generated lands on the map (``rnw.app.surroundings``): the
+        lands it keeps from the game, from its picture when it has one, and the continent of each
+        of its locations, from the installed game's regions."""
+        picture = library.picture(self.data, world, revealed=True)
+        preview = None
+        if picture is not None:
+            try:
+                preview = read_rgb(picture)
+            except (OSError, ValueError):
+                preview = None
+        return surroundings.surroundings(found, preview, self.game_regions())
+
+    def game_regions(self) -> dict[str, str]:
+        """The installed game's continent of each region; empty without a game or its file."""
+        game = self.game
+        if game is None:
+            return {}
+        key = (game.directory, game.build_id)
+        known = self._regions
+        if known is not None and known[0] == key:
+            return known[1]
+        found: dict[str, str] = {}
+        try:
+            for location in read_locations(game.directory / DEFINITIONS):
+                _ = found.setdefault(location.region, location.continent)
+        except (OSError, ValueError):
+            found = {}
+        self._regions = (key, found)
+        return found
 
     def history_reader(self, world: World) -> history_presenter.Reader | None:
         """Facts for either window, available only after the existing reveal action."""

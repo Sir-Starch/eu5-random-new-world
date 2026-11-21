@@ -226,6 +226,10 @@ class Atlas:
     # writes for it. None in a world made before it was recorded, where ``regions`` holds the
     # identifiers themselves.
     region_keys: tuple[str, ...] | None = None
+    # Where the box lies on the game's map: the map's row and column of its first pixel and the
+    # map's height and width; the box's pixel (r, c) is the map's (row + r * scale,
+    # (column + c * scale) mod width). None in a world made before it was recorded.
+    origin: tuple[int, int, int, int] | None = None
 
     @property
     def size(self) -> tuple[int, int]:
@@ -678,6 +682,7 @@ def to_files(atlas: Atlas) -> tuple[bytes, bytes]:
         "history": history_archive.pack(atlas.history) if atlas.history is not None else None,
         "scale": atlas.scale,
         "size": list(atlas.size),
+        **({"origin": list(atlas.origin)} if atlas.origin is not None else {}),
         "vocabulary": {name: list(words) for name, words in atlas.vocabulary.items()},
         "countries": [
             {
@@ -789,10 +794,26 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         region_keys=tuple(str(v) for v in columns["region_key"])
         if "region_key" in columns
         else None,
+        origin=_origin(data.get("origin"), labels.shape),
     )
     if found.history is not None:
         validate_history(found.history, history_links(found))
     return found
+
+
+def _origin(value: object, box: tuple[int, ...]) -> tuple[int, int, int, int] | None:
+    """The box's place on the map (``Atlas.origin``), checked to lie on a map of its size."""
+    if value is None:
+        return None
+    parts = [_int(part) for part in cast("list[object]", value)] if isinstance(value, list) else []
+    if len(parts) != 4:  # noqa: PLR2004 - row, column, height and width
+        message = f"Expected the box's row, column and the map's height and width, found {value!r}"
+        raise TypeError(message)
+    row, column, height, width = parts
+    if not (0 <= row < height and 0 <= column < width and 0 < box[0] <= height):
+        message = f"The box at {value!r} does not lie on its map"
+        raise ValueError(message)
+    return row, column, height, width
 
 
 def history_links(atlas: Atlas) -> history_archive.AtlasLinks:

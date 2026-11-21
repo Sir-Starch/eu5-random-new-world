@@ -364,6 +364,11 @@ STRINGS: Final[dict[str, str]] = {
     "land_image_clear": "Back to generated land",
     "land_image_title": "Choose the land image",
     "land_image_files": "Pictures (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)",
+    "map.kept": "Lands kept from the game",
+    "map.kept_tip": (
+        "Land this world keeps as the game has it, shown so you can see where the generated "
+        "continents lie; the generator did not make it, so the map has nothing more of it."
+    ),
     "sketch.open": "Sketch continents…",
     "sketch.open_tip": (
         "Sketch the continents switched on six times, each with a new seed, and choose the one "

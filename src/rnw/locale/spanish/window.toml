@@ -3436,3 +3436,11 @@ text = '''América conserva la tierra del propio juego, así que no hay nada que
 ["editor.sketch_composed"]
 source = "20ead56412fd4283"
 text = '''Con otros continentes activados, un esbozo muestra el mundo entero: elige uno con «Esbozar continentes» en la página del nuevo mundo y luego dibuja América aquí.'''
+
+["map.kept"]
+source = "38cbbe95bac7db82"
+text = '''Tierras conservadas del juego'''
+
+["map.kept_tip"]
+source = "70efdb9e845b1756"
+text = '''Tierra que este mundo conserva tal como la tiene el juego, mostrada para que veas dónde están los continentes generados; el generador no la creó, así que el mapa no muestra nada más de ella.'''

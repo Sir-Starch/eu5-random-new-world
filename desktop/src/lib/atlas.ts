@@ -59,7 +59,7 @@ export interface Label {
   /** How far the name's point lies from the edge of what is named, in pixels. */
   room: number;
   colour: string;
-  kind: "country" | "tribe" | "class" | "region" | "sea";
+  kind: "country" | "tribe" | "class" | "region" | "sea" | "continent";
 }
 
 export interface Settlement {
@@ -98,6 +98,15 @@ export function unroll(base64: string, width: number, height: number): Int32Arra
   return out;
 }
 
+/** The box's kept lands from their runs (``AtlasBundle.kept``): 255 where kept, else 0. */
+function keptLand(base64: string, width: number, height: number): Uint8Array {
+  // The runs hold 1 for kept land and 0 elsewhere; unrolled, kept land is 0 and the rest -1.
+  const unrolled = unroll(base64, width, height);
+  const out = new Uint8Array(unrolled.length);
+  for (let i = 0; i < unrolled.length; i++) if (unrolled[i] >= 0) out[i] = 255;
+  return out;
+}
+
 export class WorldAtlas {
   readonly data: AtlasBundle;
   readonly width: number;
@@ -109,6 +118,8 @@ export class WorldAtlas {
   readonly sumX: Float64Array;
   readonly sumY: Float64Array;
   readonly box: Int32Array;
+  /** 255 where the box shows land the world keeps from the game; null when it is not known. */
+  readonly kept: Uint8Array | null;
   private lenses = new Map<string, Lens>();
   private styled = new Map<string, StyledLens>();
   private labelCache = new Map<string, Label[]>();
@@ -122,6 +133,7 @@ export class WorldAtlas {
     [this.height, this.width] = data.size;
     this.cells = data.cells;
     this.labels = unroll(data.labels, this.width, this.height);
+    this.kept = data.kept ? keptLand(data.kept, this.width, this.height) : null;
     this.area = new Float64Array(this.cells);
     this.sumX = new Float64Array(this.cells);
     this.sumY = new Float64Array(this.cells);
@@ -372,6 +384,26 @@ export class WorldAtlas {
     }
     out.sort((a, b) => b.weight - a.weight);
     this.labelCache.set(key, out);
+    return out;
+  }
+
+  /** The names of the continents the world generates (America, Africa, Oceania), each where
+   *  its land is broadest, to be written large on the map seen from afar. */
+  continentLabels(): Label[] {
+    const cached = this.labelCache.get("continents");
+    if (cached) return cached;
+    const names = this.data.continents ?? [];
+    const of = this.data.continent ?? [];
+    const out: Label[] = [];
+    if (names.length && of.length === this.cells) {
+      poles(this, (c) => of[c] ?? -1, names.length).forEach((entry, k) => {
+        if (entry.area > 0 && names[k]) {
+          out.push({ text: names[k], colour: "", kind: "continent", x: entry.x, y: entry.y, weight: entry.area, room: entry.room });
+        }
+      });
+    }
+    out.sort((a, b) => b.weight - a.weight);
+    this.labelCache.set("continents", out);
     return out;
   }
 

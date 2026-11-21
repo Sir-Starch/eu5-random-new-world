@@ -127,3 +127,28 @@ def test_reset_all_reaches_every_continent_and_keeps_the_world_tab(tmp_path: Pat
     controller.set_value("natives.empire_permille", 800)
     controller.set_continent("america", enabled=False)
     assert "america" not in controller.changed_values()
+
+
+def test_a_world_is_called_by_its_continents(tmp_path: Path) -> None:
+    """America alone by its type; with other continents each continent, with its type in full."""
+    from rnw.app.worldcode import encode  # noqa: PLC0415 - this test alone
+    from rnw.gui import view  # noqa: PLC0415 - this test alone
+    from rnw.gui.text import language, text  # noqa: PLC0415 - this test alone
+
+    controller = Controller(data=tmp_path)
+    controller.set_preset("continents")
+
+    def called(*, short: bool) -> str:
+        code = encode(controller.world_code())
+        return view._continents_text(code, short=short, language=language())  # pyright: ignore[reportPrivateUsage]
+
+    assert called(short=False) == text("type.continents")
+    controller.set_continent("africa", enabled=True)
+    controller.set_region_preset("africa", "supercontinent")
+    assert called(short=True) == f"{text('continent.america')}, {text('continent.africa')}"
+    assert called(short=False) == (
+        f"{text('continent.america')} ({text('type.continents')}), "
+        f"{text('continent.africa')} ({text('type.supercontinent')})"
+    )
+    controller.set_value("new_world.keep_geography", 1)
+    assert called(short=True).startswith(text("continent.america_real"))

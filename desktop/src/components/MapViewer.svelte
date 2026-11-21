@@ -217,7 +217,10 @@
     class: { max: 18, area: 0.18, room: 0.9, upper: false, spacing: 0.02, weight: 600, italic: false, fill: "rgba(30, 24, 16, 0.86)", halo: "rgba(255, 251, 240, 0.58)" },
     region: { max: 18, area: 0.16, room: 0.55, upper: true, spacing: 0.24, weight: 500, italic: false, fill: "rgba(52, 40, 24, 0.74)", halo: "rgba(250, 245, 230, 0.42)" },
     sea: { max: 16, area: 0.14, room: 0.6, upper: false, spacing: 0.06, weight: 400, italic: true, fill: "rgba(214, 232, 250, 0.9)", halo: "rgba(10, 26, 54, 0.5)" },
+    continent: { max: 30, area: 0.2, room: 0, upper: true, spacing: 0.32, weight: 700, italic: false, fill: "rgba(255, 250, 238, 0.94)", halo: "rgba(16, 14, 10, 0.6)" },
   } as const;
+  // The continents' names are for the map seen whole: they fade out between these scales.
+  const CONTINENTS_FADE = [0.32, 0.55] as const;
   const FONT = '"Noto Sans Variable", "Noto Sans", sans-serif';
 
   /** Names, places and notes over the map, drawn on ``context`` for ``camera`` and ``size``. */
@@ -330,6 +333,37 @@
           context.fill();
           context.stroke();
         });
+      }
+    }
+
+    // From afar, the continents the world generates, so the parts of a world of several are
+    // told apart; the other names make way for them.
+    const near = (camera.scale - CONTINENTS_FADE[0]) / (CONTINENTS_FADE[1] - CONTINENTS_FADE[0]);
+    const strength = 1 - Math.min(1, Math.max(0, near));
+    // Named only when there are several to tell apart: America alone needs no name.
+    const continents = atlas.continentLabels();
+    if (strength > 0 && continents.length > 1) {
+      const style = NAMES.continent;
+      for (const label of continents) {
+        // A continent of islands is named over its sea too, so only its land's extent counts.
+        const font = Math.min(style.max, Math.sqrt(label.weight) * camera.scale * style.area);
+        if (font < 11) continue;
+        const [x, sy] = toScreen(camera, label.x, label.y);
+        if (!visible(x, sy, 200)) continue;
+        const text = label.text.toLocaleUpperCase();
+        context.font = `${style.weight} ${font.toFixed(1)}px ${FONT}`;
+        spacing(font * style.spacing);
+        const width = context.measureText(text).width;
+        // A continent at the map's edge keeps its whole name in view.
+        const sx = Math.min(Math.max(x, width / 2 + 8), size.width - width / 2 - 8);
+        placed.push([sx - width / 2 - 6, sy - font / 2 - 3, sx + width / 2 + 6, sy + font / 2 + 3]);
+        context.globalAlpha = strength;
+        context.lineWidth = Math.max(3, font * 0.24);
+        context.strokeStyle = style.halo;
+        context.strokeText(text, sx, sy);
+        context.fillStyle = style.fill;
+        context.fillText(text, sx, sy);
+        context.globalAlpha = 1;
       }
     }
 

@@ -162,7 +162,13 @@ are toasts; questions are in-window dialogs.
 resource names hung anywhere). It is drawn from the atlas, which holds no heightmap: vegetation
 and climate colours softened across locations, relief shaded from each location's topography
 and roughened where it is mountainous, wetlands and snow, water darkening from the coast into
-the open ocean around the New World, region and sea names, cities and towns. The other lenses
+the open ocean around the New World, region and sea names, cities and towns. Around what it
+generated the map shows the lands the world keeps from the game in one grey, read on this machine
+from the world's own picture and placed by the atlas's recorded origin (a world made before it was
+recorded is placed by matching its atlas to that picture, exactly or not at all); a world of
+several continents names America, Africa and Oceania large while the map is seen whole, each by
+its regions' continent in the installed game, and the legend keys the grey (2026-11-21, owner
+report: which continent is where, and where the game's own world lies). The other lenses
 lay their colours over it as strongly as each needs, so the relief shows through; land that
 holds nothing of a lens shows the physical map faded. Countries colours states only, as the
 game's political map does; Show tribes in its legend adds them (kept per machine). Cultures,

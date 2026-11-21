@@ -3436,3 +3436,11 @@ text = '''Amerika behält das Land des Spiels, daher gibt es nichts zu zeichnen.
 ["editor.sketch_composed"]
 source = "20ead56412fd4283"
 text = '''Mit weiteren eingeschalteten Kontinenten zeigt eine Skizze die ganze Welt: Wählen Sie eine mit „Kontinente skizzieren“ auf der Seite der neuen Welt und zeichnen Sie dann hier Amerika.'''
+
+["map.kept"]
+source = "38cbbe95bac7db82"
+text = '''Länder aus dem Spiel'''
+
+["map.kept_tip"]
+source = "70efdb9e845b1756"
+text = '''Land, das diese Welt so behält, wie das Spiel es hat. Es wird gezeigt, damit Sie sehen, wo die erzeugten Kontinente liegen; der Generator hat es nicht erschaffen, daher zeigt die Karte nichts weiter davon.'''

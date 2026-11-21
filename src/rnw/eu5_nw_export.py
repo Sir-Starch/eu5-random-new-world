@@ -5443,6 +5443,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     natives=natives,
                     mask=canvas.mask if real_america is None else society_world.labels >= 0,
                     development=development.initial,
+                    column_shift=canvas.col0 - canvas.roll,
                 )
             ),
         )

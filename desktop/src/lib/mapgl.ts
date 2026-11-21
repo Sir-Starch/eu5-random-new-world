@@ -51,6 +51,10 @@ const LAKE_DEEP = unit(COLOURS.lake_deep);
 /** The open ocean around the New World's sea zones; the viewer's background is the same. */
 export const OCEAN = unit(COLOURS.ocean);
 export const OCEAN_CSS = COLOURS.ocean;
+/** Land the world keeps from the game, around what it generated. */
+const KEPT = unit(COLOURS.kept);
+export const KEPT_CSS = COLOURS.kept;
+const KEPT_RGB = KEPT.map((v) => Math.round(v * 255)) as [number, number, number];
 
 const VERTEX = `#version 300 es
 in vec2 aPos;
@@ -65,6 +69,7 @@ uniform sampler2D uColours;
 uniform isampler2D uInfo;
 uniform sampler2D uRelief;
 uniform sampler2D uDepth;
+uniform sampler2D uKept;
 uniform vec2 uSize;
 uniform vec2 uField;
 uniform vec2 uOrigin;
@@ -89,6 +94,7 @@ const vec3 DEEP = vec3(${DEEP.join(", ")});
 const vec3 LAKE_SHALLOW = vec3(${LAKE_SHALLOW.join(", ")});
 const vec3 LAKE_DEEP = vec3(${LAKE_DEEP.join(", ")});
 const vec3 OCEAN = vec3(${OCEAN.join(", ")});
+const vec3 KEPT = vec3(${KEPT.join(", ")});
 
 int cellAt(vec2 p) {
   ivec2 q = ivec2(floor(p));
@@ -124,6 +130,8 @@ vec4 surface(vec2 p) {
     }
     rgb = land * mix(1.0, relief.a * (255.0 / 128.0), uShade);
   }
+  // Land the world keeps from the game, under the open sea around the New World.
+  if (c < 0) rgb = mix(rgb, KEPT, smoothstep(0.35, 0.65, texture(uKept, p / uSize).r));
   if (uMatch == 1 && (me.b & ${MATCH}) == 0) {
     float g = dot(rgb, vec3(0.299, 0.587, 0.114));
     rgb = mix(rgb, vec3(g), 0.7) * 0.42;
@@ -224,6 +232,7 @@ class GLRenderer implements Renderer {
   private info: WebGLTexture | null = null;
   private relief: WebGLTexture | null = null;
   private depth: WebGLTexture | null = null;
+  private kept: WebGLTexture | null = null;
   private field: Relief | null = null;
   private atlas: WorldAtlas | null = null;
   private layer = "";
@@ -284,7 +293,7 @@ class GLRenderer implements Renderer {
     this.rows = Math.max(1, Math.ceil(atlas.cells / TEX_W));
     this.flags = new Int32Array(atlas.cells);
     this.infoData = new Int32Array(TEX_W * this.rows * 4);
-    for (const texture of [this.labels, this.colours, this.info, this.relief, this.depth]) gl.deleteTexture(texture);
+    for (const texture of [this.labels, this.colours, this.info, this.relief, this.depth, this.kept]) gl.deleteTexture(texture);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     this.labels = this.texture();
     gl.texImage2D(
@@ -299,6 +308,11 @@ class GLRenderer implements Renderer {
     gl.generateMipmap(gl.TEXTURE_2D);
     this.depth = this.texture(true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, field.width, field.height, 0, gl.RED, gl.UNSIGNED_BYTE, field.depth);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    // Read smoothly, so the kept coasts do not step at the picture's eighth of the map.
+    this.kept = this.texture(true);
+    const [keptWidth, keptHeight] = atlas.kept ? [atlas.width, atlas.height] : [1, 1];
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, keptWidth, keptHeight, 0, gl.RED, gl.UNSIGNED_BYTE, atlas.kept ?? new Uint8Array(1));
     gl.generateMipmap(gl.TEXTURE_2D);
   }
 
@@ -362,6 +376,7 @@ class GLRenderer implements Renderer {
     bind(2, this.info, "uInfo");
     bind(3, this.relief, "uRelief");
     bind(4, this.depth, "uDepth");
+    bind(5, this.kept, "uKept");
     gl.uniform2f(this.uniform("uSize"), atlas.width, atlas.height);
     gl.uniform2f(this.uniform("uField"), field.width, field.height);
     gl.uniform2f(this.uniform("uOrigin"), camera.x, camera.y);
@@ -386,7 +401,7 @@ class GLRenderer implements Renderer {
 
   dispose(): void {
     const gl = this.gl;
-    for (const texture of [this.labels, this.colours, this.info, this.relief, this.depth]) gl.deleteTexture(texture);
+    for (const texture of [this.labels, this.colours, this.info, this.relief, this.depth, this.kept]) gl.deleteTexture(texture);
     gl.deleteProgram(this.program);
   }
 }
@@ -457,6 +472,7 @@ export function paintBox(atlas: WorldAtlas, lens: StyledLens, width: number, hei
       const c = atlas.labels[ay * atlas.width + ax];
       const f = Math.floor(ay / STEP) * field.width + Math.floor(ax / STEP);
       paintPixel(atlas, lens, field, c, f, image.data, (y * width + x) * 4);
+      if (c < 0 && atlas.kept?.[ay * atlas.width + ax]) image.data.set(KEPT_RGB, (y * width + x) * 4);
     }
   }
   return image;
@@ -522,7 +538,10 @@ class CanvasRenderer implements Renderer {
       const x = i % width;
       const y = (i - x) / width;
       paintPixel(atlas, lens, field, c, Math.floor(y / STEP) * field.width + Math.floor(x / STEP), out, i * 4);
-      if (c < 0) continue;
+      if (c < 0) {
+        if (atlas.kept?.[i]) out.set(KEPT_RGB, i * 4);
+        continue;
+      }
       const right = x < width - 1 ? labels[i + 1] : c;
       const below = i + width < labels.length ? labels[i + width] : c;
       const edge = [right, below].some(

@@ -419,6 +419,7 @@ def _export(  # noqa: PLR0913, PLR0915 - one pass over every stage of the export
                 natives=natives,
                 mask=canvas.mask,
                 development=development.initial,
+                column_shift=canvas.col0 - canvas.roll,
             )
         ),
     )

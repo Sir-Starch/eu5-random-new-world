@@ -43,6 +43,12 @@ worlds and saves are not rewritten or migrated.
   coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
+- Show where each continent lies. A world's map shows the lands it keeps from the game in grey
+  around what it generated, so a world of several continents no longer looks like islands adrift;
+  seen whole, it names America, Africa and Oceania, and the legend explains the grey. Worlds made
+  before this are placed by their own picture. The library, the world's header and its details
+  name a world of several continents by its continents and their types.
+
 - Sketch Africa and Oceania. *Sketch continents…* is back in the new world's header, beside the
   land editor. With Africa or Oceania switched on, each of the six sketches shows the whole map:
   every generated continent planned and coasted by the same code as the world of that seed, over

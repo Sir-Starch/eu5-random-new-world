@@ -5,6 +5,7 @@
   // brings them into view on a double-click.
   import { app, grouped, t } from "../lib/app.svelte";
   import type { Match } from "../lib/atlas";
+  import { KEPT_CSS } from "../lib/mapgl";
   import { map } from "../lib/mapSession.svelte";
   import Icon from "./Icon.svelte";
   import Check from "./ui/Check.svelte";
@@ -134,6 +135,12 @@
           <span class="bar" style:width={`${(entry.count * 100) / most}%`} style:background={entry.colour}></span>
         </button>
       {/each}
+      {#if atlas?.kept}
+        <div class="row entry kept" role="listitem" title={t("map.kept_tip")}>
+          <span class="swatch" style:background={KEPT_CSS}></span>
+          <span class="label">{t("map.kept")}</span>
+        </div>
+      {/if}
     </div>
   {/if}
   <p class="hint foot">{t("map.legend_hint")}</p>
@@ -271,6 +278,14 @@
   }
   .entry {
     grid-template-columns: 10px minmax(0, 1fr) auto;
+  }
+  /* Not generated, so nothing to light or find: a key, not a choice. */
+  .kept {
+    margin-top: 4px;
+    color: var(--text-2);
+  }
+  .kept:hover {
+    background: transparent;
   }
   .result {
     grid-template-columns: minmax(0, 1fr) auto 44px;

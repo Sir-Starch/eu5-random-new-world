@@ -3436,3 +3436,11 @@ text = '''Amerika oyunun kendi karasını korur, bu yüzden çizilecek bir şey 
 ["editor.sketch_composed"]
 source = "20ead56412fd4283"
 text = '''Başka kıtalar açıkken taslak tüm dünyayı gösterir: yeni dünya sayfasında «Kıta taslakları çıkar» ile birini seçin, sonra Amerika'yı burada çizin.'''
+
+["map.kept"]
+source = "38cbbe95bac7db82"
+text = '''Oyundan korunan topraklar'''
+
+["map.kept_tip"]
+source = "70efdb9e845b1756"
+text = '''Bu dünyanın oyundaki haliyle koruduğu kara; üretilen kıtaların nerede olduğunu görebilmeniz için gösterilir. Üreteç onu yapmadığından harita onunla ilgili başka bir şey göstermez.'''

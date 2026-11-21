@@ -71,7 +71,7 @@
     "rock": "#94887a", "wetland": "#628464", "snow": "#f6f7fa",
     "unclaimed": "#5c6054", "faded": "#8f8b7e", "tribal": "#a69c84",
     "shallow": "#3b6ea3", "deep": "#1a3666", "lake_shallow": "#6199cc", "lake_deep": "#4075b3",
-    "ocean": "#162e59"
+    "ocean": "#162e59", "kept": "#707266"
   },
   "coast_depth": 16,
   "tribe_opacity": 150,
