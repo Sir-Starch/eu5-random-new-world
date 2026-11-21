@@ -201,7 +201,8 @@ export interface State {
   fraction: number;
   generating: boolean;
   running: string;
-  stages: { label: string; state: "done" | "running" | "waiting" }[];
+  making: string;
+  stages: { label: string; state: "done" | "running" | "partial" | "waiting"; steps: string[]; done: number; total: number }[];
   eta: number | null;
   status: string;
   message: string;

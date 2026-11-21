@@ -43,6 +43,15 @@ worlds and saves are not rewritten or migrated.
   coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
+- Show a world's progress as up to nine phases in the order they run (reading the game's map,
+  generating land and seas, learning from the game's own lands, climate, naming, terrain,
+  peoples, writing the mod, installing), each with how many of its steps are done and the
+  steps that run now. Only the steps the world actually runs are counted: a world that keeps
+  the real Americas no longer shows steps waiting forever, a world of several continents
+  shows that it joins them into one map after generating them, and installing into the
+  profile is listed. Steps say what they do; the selection-screen step now reads
+  *Hiding the new lands on the country selection screen*.
+
 - Support EU5 1.4.9 (Steam build 26655995), including Across the Pillars. When the game has
   unsupported map files, both windows show a compatibility message and keep the fingerprint
   in the diagnostics.

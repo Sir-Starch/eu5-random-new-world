@@ -14,6 +14,7 @@ from functools import cache
 from typing import Final
 
 from rnw import history_presenter, translations
+from rnw.gui.phases import PHASES
 from rnw.languages import SOURCE
 from rnw.messages import MESSAGES, Said
 from rnw.progress import STAGES
@@ -25,6 +26,7 @@ GAME: Final[str] = "Europa Universalis V"
 STRINGS: Final[dict[str, str]] = {
     "continent.title": "Continents",
     "continent.america": "America",
+    "continent.america_real": "America as in the game",
     "continent.africa": "Africa",
     "continent.oceania": "Oceania",
     "continent.choose": "Select at least one continent.",
@@ -1007,6 +1009,12 @@ STRINGS: Final[dict[str, str]] = {
     "forge.drawn": "Drawn this time: {type}. A new seed draws again.",
     "dock.budget": "Locations",
     "dock.forging": "Making the world…",
+    "progress.phase_of": "Phase {number} of {count}",
+    "progress.steps_tip": "Steps of this phase that are done, of those this world runs",
+    "progress.state.done": "done",
+    "progress.state.running": "running",
+    "progress.state.partial": "partly done, waiting for another phase",
+    "progress.state.waiting": "waiting",
     "dock.open_world": "Open the world",
     "candidates.use": "Use this continent",
     "candidates.chosen": "Chosen",
@@ -1134,6 +1142,9 @@ GROUPING: Final[dict[str, str]] = {
     "turkish": ".",
 }
 STAGE: Final[str] = "stage."
+PHASE: Final[str] = "phase."
+# The stage that chooses the canvas joins the continents of a world of several into one map.
+JOINING: Final[str] = "stage_joining"
 ERROR: Final[str] = "error."
 _language: list[str] = [SOURCE]
 
@@ -1144,6 +1155,8 @@ def sources() -> dict[str, str]:
         **STRINGS,
         **history_presenter.SOURCES,
         **{STAGE + name: info.label for name, info in STAGES.items()},
+        **{PHASE + name: info.label for name, info in PHASES.items()},
+        JOINING: "Joining the continents into one map",
         **{ERROR + key: english for key, english in MESSAGES.items()},
     }
 

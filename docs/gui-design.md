@@ -200,8 +200,13 @@ window catalogues. Screens are reviewed in a browser through `npm run dev` with
 `RNW_DATA=<copy of a library>` and in the built window on WebKitGTK.
 After interface edits, rebuild the source window with `cd desktop && npx tauri build --no-bundle`
 before `uv run rnw gui`. Package builds use separate output directories and do not refresh
-the source checkout's window executable. Generation progress lists stage names in its stage
-table; the line below the progress bar holds the time estimate and queue count. The inspector's
+the source checkout's window executable. Generation progress lists the phases of
+`rnw.gui.phases` in the order they begin, each with its state (waiting, running, partly done while
+it waits for another phase, done), the count of its stages that are done of those this world runs,
+and the stages that run now; the world's kind (America alone, several continents, the real
+Americas) and whether it is installed decide which stages count, and stage keys stay those of
+`rnw.progress` (time estimate, timings, log). The line below the progress bar holds the phase
+number, the time estimate and the queue count. The inspector's
 bottom status uses the general generation/cancellation label and percentage, leaving stage names
 in the main view.
 

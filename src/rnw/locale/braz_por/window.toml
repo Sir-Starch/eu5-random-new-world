@@ -1675,32 +1675,32 @@ source = "3c8b16be15157a3f"
 text = '''Lendo os dados do jogo'''
 
 ["stage.vanilla geometry"]
-source = "c88d0868aff1c0d6"
-text = '''Medindo as localizações antigas'''
+source = "cc40ae9da6352cab"
+text = '''Medindo as localidades do jogo'''
 
 ["stage.vanilla localization keys"]
 source = "5d6474dd82c4cc82"
 text = '''Reunindo as chaves de texto do jogo'''
 
 ["stage.vanilla climate"]
-source = "ec56f139832cf607"
-text = '''Medindo o clima antigo'''
+source = "c2ed6261d84dad20"
+text = '''Aprendendo os climas do jogo'''
 
 ["stage.vanilla material levels"]
-source = "4933d186bbecc36b"
-text = '''Medindo os materiais antigos do terreno'''
+source = "c567e0e2d5b98350"
+text = '''Aprendendo os materiais de terreno do jogo'''
 
 ["stage.vanilla natives"]
-source = "e3f4bfb6adec2c92"
-text = '''Lendo os povos nativos antigos'''
+source = "3426c314190a1c67"
+text = '''Aprendendo os povos nativos do jogo'''
 
 ["stage.generate world"]
 source = "e84556e6a019ab76"
 text = '''Gerando continentes, mares e relevo'''
 
 ["stage.land character"]
-source = "eb49c460d56536ce"
-text = '''Planejando a terra e seus ermos'''
+source = "94b500a5492c54ca"
+text = '''Escolhendo clima, solo e terras ermas'''
 
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
@@ -1715,16 +1715,16 @@ source = "e14e8033766d3d1b"
 text = '''Nomeando localizações, áreas e regiões'''
 
 ["stage.world checks"]
-source = "2f4b2b5e8a3f9d61"
-text = '''Verificando o novo mundo'''
+source = "8d1bb38cef2ca390"
+text = '''Verificando o mapa pronto'''
 
 ["stage.water textures"]
 source = "4ef7590b1b28e969"
 text = '''Pintando a água e as costas'''
 
 ["stage.biomes and rivers"]
-source = "d4bd6b2dd554ff95"
-text = '''Fazendo crescer clima, biomas e rios'''
+source = "4206b1f546140a20"
+text = '''Fazendo crescer vegetação e rios'''
 
 ["stage.slot tables"]
 source = "c84fa407cadaa012"
@@ -1751,40 +1751,40 @@ source = "de062b10c1938a64"
 text = '''Fundando sociedades nativas'''
 
 ["stage.stories"]
-source = "cbe749082c75686b"
-text = '''Escrevendo as histórias e os países formáveis do mundo'''
+source = "097307f6b7fc3b67"
+text = '''Escrevendo histórias e países formáveis'''
 
 ["stage.atlas"]
-source = "2fa4552668c62056"
-text = '''Desenhando o atlas do mundo'''
+source = "7228f7d6a2926fda"
+text = '''Desenhando o mapa do mundo para o gerador'''
 
 ["stage.texts"]
 source = "f414224df1fa792b"
 text = '''Escrevendo nomes, a situação inicial e os scripts'''
 
 ["stage.script remap"]
-source = "507ba7a241bfe7f0"
-text = '''Reescrevendo os scripts do jogo'''
+source = "8549e7e97d5045a1"
+text = '''Ajustando os scripts do jogo ao novo mapa'''
 
 ["stage.spline network"]
-source = "cdd6a2ba75e40403"
-text = '''Traçando as faixas das estradas'''
+source = "6114d5ba73b773c9"
+text = '''Traçando as estradas'''
 
 ["stage.selection cover"]
-source = "7e788576dbb4ecbe"
-text = '''Cobrindo o Novo Mundo até o jogo começar'''
+source = "68b3317aa5e643cf"
+text = '''Ocultando as novas terras na tela de escolha de país'''
 
 ["stage.write files"]
-source = "7f9242d43d976453"
-text = '''Gravando o mod'''
+source = "083badfcd3605f57"
+text = '''Gravando os arquivos do mod'''
 
 ["stage.land cells"]
-source = "0d6f25d525141973"
-text = '''Fazendo crescer as localizações de terra'''
+source = "f33f54aa6215d771"
+text = '''Dividindo a terra em localidades'''
 
 ["stage.sea cells"]
-source = "42cc41a5bd88b8b7"
-text = '''Fazendo crescer as zonas marítimas'''
+source = "118e1ac752aabda4"
+text = '''Dividindo os mares em zonas'''
 
 ["stage.relief"]
 source = "74ea42c343487a9a"
@@ -3344,3 +3344,71 @@ text = '''Manter os mamelucos'''
 ["continent.mamluks.damascus"]
 source = "063f2a9ba88d6b2d"
 text = '''Sultanato de Damasco independente'''
+
+["phase.map"]
+source = "becea031a6e8a36b"
+text = '''Lendo o mapa do jogo'''
+
+["phase.land"]
+source = "b1a3a4038c622de2"
+text = '''Gerando terras e mares'''
+
+["phase.game"]
+source = "33436c33a3455487"
+text = '''Aprendendo com as terras do próprio jogo'''
+
+["phase.nature"]
+source = "ddba545e19cd48ef"
+text = '''Clima, costas e rios'''
+
+["phase.names"]
+source = "113d1ff79eb6466a"
+text = '''Nomeando e verificando o mapa'''
+
+["phase.terrain"]
+source = "8677eb5e75953b8a"
+text = '''Pintando o terreno'''
+
+["phase.peoples"]
+source = "286d52b8392fe49a"
+text = '''Fundando povos e sua história'''
+
+["phase.mod"]
+source = "7f9242d43d976453"
+text = '''Escrevendo o mod'''
+
+["phase.install"]
+source = "d67b6ac8ce47aed1"
+text = '''Instalando no seu perfil'''
+
+["stage_joining"]
+source = "c8463955917defba"
+text = '''Unindo os continentes em um só mapa'''
+
+["continent.america_real"]
+source = "58756ba7fdaa70c6"
+text = '''América como no jogo'''
+
+["progress.phase_of"]
+source = "671f436a02efdf7b"
+text = '''Fase {number} de {count}'''
+
+["progress.steps_tip"]
+source = "d790635ec598a4bd"
+text = '''Etapas desta fase já concluídas, entre as que este mundo executa'''
+
+["progress.state.done"]
+source = "a4c3ed04a95a3da1"
+text = '''concluída'''
+
+["progress.state.running"]
+source = "c071cf5f5ed6f884"
+text = '''em andamento'''
+
+["progress.state.partial"]
+source = "c628985d6630061d"
+text = '''em parte concluída, aguardando outra fase'''
+
+["progress.state.waiting"]
+source = "80cfa3e7f28dde4d"
+text = '''aguardando'''

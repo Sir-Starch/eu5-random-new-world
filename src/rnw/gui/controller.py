@@ -14,7 +14,7 @@ import json
 import threading
 import time
 import traceback
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, cast
@@ -53,8 +53,10 @@ from rnw.app.worldcode import (
     rolled,
     with_new_seed,
 )
-from rnw.gui import mapstyle
+from rnw.gui import mapstyle, phases
 from rnw.gui.text import (
+    JOINING,
+    PHASE,
     choose_language,
     explain,
     grouped,
@@ -67,7 +69,7 @@ from rnw.landarea import EDITOR_STEP
 from rnw.layers import PARTS, rolls_of
 from rnw.messages import Said, say
 from rnw.png import COLOR_RGB, encode_png
-from rnw.progress import STAGES, Cancelled, Progress, Update, active
+from rnw.progress import Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
 from rnw.settings import (
     PRESETS,
@@ -104,6 +106,19 @@ REPRODUCTION: Final[dict[Verdict, str]] = {
     Verdict.OTHER_ALGORITHM: "repro.other_algorithm",
     Verdict.NEWER_FORMAT: "repro.newer_format",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class PhaseRow:
+    """A phase of the world being made as both windows list it: its name and state
+    (``rnw.gui.phases.Row``), the names of its stages that run now and how many of its stages
+    this world runs and has done."""
+
+    label: str
+    state: str
+    steps: tuple[str, ...]
+    done: int
+    total: int
 
 
 class Phase(Enum):
@@ -232,6 +247,9 @@ class Controller:
         self.fraction: float = 0.0
         self.running: tuple[str, ...] = ()
         self.finished: frozenset[str] = frozenset()
+        # The world the thread makes now (its settings and whether it goes into the profile), for
+        # the phases its progress lists.
+        self._making: tuple[Settings, bool] | None = None
         self.message: str = ""
         self.result: service.Result | None = None
         self.checks: dict[str, service.Check] = {}
@@ -1177,25 +1195,58 @@ class Controller:
             return text("ready_no_profile")
         return None
 
-    def stage_rows(self) -> list[tuple[str, str]]:
-        """Weighted stages and geography activity in order: waiting, running or done."""
-        rows: list[tuple[str, str]] = []
-        for name, info in STAGES.items():
-            if info.weight == 0 and name not in {"relief", "sea cells", "land cells"}:
-                continue
-            state = (
-                "done"
-                if name in self.finished
-                else "running"
-                if name in self.running
-                else "waiting"
+    def phase_rows(self) -> list[PhaseRow]:
+        """The phases of the world being made, in order, with their state and what runs now; the
+        stages it does not run are left out (``rnw.gui.phases``)."""
+        with self._lock:
+            making, running, finished = self._making, self.running, self.finished
+        if making is None:
+            return []
+        settings, install = making
+        kind = phases.kind_of(settings)
+        return [
+            PhaseRow(
+                text(PHASE + row.phase),
+                row.state,
+                tuple(self.step_text(name, kind) for name in row.steps),
+                row.done,
+                row.total,
             )
-            rows.append((stage_text(name), state))
-        return rows
+            for row in phases.rows(settings, install=install, running=running, finished=finished)
+        ]
+
+    def making_text(self) -> str:
+        """The continents of the world being made, for the title of its progress."""
+        making = self._making
+        if making is None:
+            return ""
+        continents = making[0].continents
+        names = (
+            [
+                text(
+                    "continent.america_real"
+                    if making[0].new_world.keep_geography
+                    else "continent.america"
+                )
+            ]
+            if continents.america
+            else []
+        )
+        names.extend(text(f"continent.{region.key}") for region in continents.regions)
+        return ", ".join(names)
+
+    def step_text(self, name: str, kind: phases.Kind | None = None) -> str:
+        """What the window calls the stage ``name`` of the world being made."""
+        if kind is None and self.task in {Task.GENERATE, Task.QUEUE}:
+            making = self._making
+            kind = None if making is None else phases.kind_of(making[0])
+        if name == "select canvas" and kind is phases.Kind.COMPOSED:
+            return text(JOINING)
+        return stage_text(name)
 
     def running_text(self) -> str:
         """The stages that run now, in the window's language."""
-        return ", ".join(stage_text(name) for name in self.running)
+        return ", ".join(self.step_text(name) for name in self.running)
 
     def finished_line(self) -> str:
         """The status line of finished work; after a queue run it counts the worlds that stay in
@@ -1356,6 +1407,8 @@ class Controller:
                 with self._lock:
                     job = self._next_job()
                     self._queue_current = job
+                    if job is not None:
+                        self._making = (job.code.settings(), job.install)
                 if job is None:
                     break
                 try:
@@ -1421,6 +1474,7 @@ class Controller:
         request = self._request()
         self._generation_seed = request.code.seed
         self._launched_with = self.code
+        self._making = (request.code.settings(), request.install)
         generator = self.generator
 
         def work(progress: Progress) -> service.Result:
@@ -1816,7 +1870,10 @@ class Controller:
             if update.finished:
                 self.finished = self.finished | {update.stage}
                 logs.get().info(
-                    "stage %s done, %.0f%% of the work", update.stage, update.fraction * 100
+                    "stage %s %s, %.0f%% of the work",
+                    update.stage,
+                    "skipped" if update.skipped else "done",
+                    update.fraction * 100,
                 )
         self._changed()
 

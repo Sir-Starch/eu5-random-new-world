@@ -44,37 +44,37 @@ STAGES: Final[dict[str, StageInfo]] = {
     "load map": StageInfo("Reading the world map", 2),
     "select canvas": StageInfo("Choosing the area to replace", 9),
     "vanilla reads": StageInfo("Reading the game's data", 2),
-    "vanilla geometry": StageInfo("Measuring the old locations", 2),
+    "vanilla geometry": StageInfo("Measuring the game's locations", 2),
     "vanilla localization keys": StageInfo("Collecting the game's text keys", 9),
-    "vanilla climate": StageInfo("Measuring the old climate", 10),
-    "vanilla material levels": StageInfo("Measuring the old terrain materials", 7),
-    "vanilla natives": StageInfo("Reading the old native peoples", 6),
+    "vanilla climate": StageInfo("Learning the game's climates", 10),
+    "vanilla material levels": StageInfo("Learning the game's terrain materials", 7),
+    "vanilla natives": StageInfo("Learning the game's native peoples", 6),
     "vanilla Americas": StageInfo("Reading the game's own Americas", 0),
     "generate world": StageInfo("Generating continents, seas and relief", 89),
     # Substages share their parent's weight and show what is actually running.
     "relief": StageInfo("Raising mountains and valleys", 0),
-    "sea cells": StageInfo("Growing sea zones", 0),
-    "land cells": StageInfo("Growing land locations", 0),
-    "land character": StageInfo("Planning the land and its wastelands", 14),
+    "sea cells": StageInfo("Dividing the seas into zones", 0),
+    "land cells": StageInfo("Dividing the land into locations", 0),
+    "land character": StageInfo("Choosing climate, ground and wastelands", 14),
     "settle coasts": StageInfo("Giving every coast a port", 7),
     "water shapes": StageInfo("Shaping bays, straits and currents", 4),
     "identities": StageInfo("Naming locations, areas and regions", 8),
-    "world checks": StageInfo("Checking the new world", 2),
+    "world checks": StageInfo("Checking the finished map", 2),
     "water textures": StageInfo("Painting water and coasts", 15),
-    "biomes and rivers": StageInfo("Growing climate, biomes and rivers", 21),
+    "biomes and rivers": StageInfo("Growing vegetation and rivers", 21),
     "slot tables": StageInfo("Preparing terrain materials", 1),
     "location rasters": StageInfo("Drawing the location map", 2),
     "png encoding": StageInfo("Compressing the maps", 2),
     "terrain decals": StageInfo("Sculpting the terrain", 56),
     "vegetation instances": StageInfo("Planting trees and grass", 22),
     "natives": StageInfo("Founding native societies", 37),
-    "stories": StageInfo("Writing the stories and formable countries of the world", 1),
-    "atlas": StageInfo("Drawing the atlas of the world", 5),
+    "stories": StageInfo("Writing stories and formable countries", 1),
+    "atlas": StageInfo("Drawing the generator's map of the world", 5),
     "texts": StageInfo("Writing names, setup and scripts", 12),
-    "script remap": StageInfo("Rewriting game scripts", 5),
-    "spline network": StageInfo("Laying out the strips of the roads", 10),
-    "selection cover": StageInfo("Covering the New World until it is played", 10),
-    "write files": StageInfo("Writing the mod", 6),
+    "script remap": StageInfo("Fitting the game's scripts to the new map", 5),
+    "spline network": StageInfo("Laying out the roads", 10),
+    "selection cover": StageInfo("Hiding the new lands on the country selection screen", 10),
+    "write files": StageInfo("Writing the mod's files", 6),
     # Parts of the stages above: they show in the list while they run and add no weight.
     "terrain": StageInfo("Building the terrain", 0),
     # Parts of installing, after the export (``rnw.app.service``).
@@ -101,7 +101,8 @@ class Update:
     """One change of the job: the stage that moved, what runs now and how far along it is.
 
     ``running`` holds the names of the running stages; the window writes them in its language
-    (``rnw.gui.text``), ``label`` is the English of the stage that moved, for the log.
+    (``rnw.gui.text``), ``label`` is the English of the stage that moved, for the log. A stage the
+    job does not run is told once as finished and ``skipped``.
     """
 
     stage: str
@@ -109,6 +110,7 @@ class Update:
     finished: bool
     fraction: float
     running: tuple[str, ...]
+    skipped: bool = False
 
 
 class Progress:
@@ -155,11 +157,27 @@ class Progress:
             self._estimate.configure(learned, install=install)
 
     def skip(self, names: Iterable[str]) -> None:
-        """Stages this job will not run: they count as done and take no time."""
+        """Stages this job will not run: they count as done and take no time, and the listener
+        hears of each as finished, so that a window does not wait for them."""
         found = tuple(names)
         with self._lock:
+            fresh = [name for name in dict.fromkeys(found) if name not in self._done]
             self._done.update(found)
             self._estimate.skip(found)
+            updates = [
+                Update(
+                    stage=name,
+                    label=STAGES[name].label if name in STAGES else name,
+                    finished=True,
+                    fraction=self._share(),
+                    running=tuple(self._running),
+                    skipped=True,
+                )
+                for name in fresh
+            ]
+        if self._listener is not None:
+            for update in updates:
+                self._listener(update)
 
     def mark_ready(self, name: str) -> None:
         """Timestamp a dependency milestone without presenting an extra UI stage."""

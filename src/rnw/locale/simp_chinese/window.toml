@@ -1675,32 +1675,32 @@ source = "3c8b16be15157a3f"
 text = '''正在读取游戏数据'''
 
 ["stage.vanilla geometry"]
-source = "c88d0868aff1c0d6"
-text = '''正在测量原有地点'''
+source = "cc40ae9da6352cab"
+text = '''正在测量游戏的地点'''
 
 ["stage.vanilla localization keys"]
 source = "5d6474dd82c4cc82"
 text = '''正在收集游戏的文本键'''
 
 ["stage.vanilla climate"]
-source = "ec56f139832cf607"
-text = '''正在测量原有气候'''
+source = "c2ed6261d84dad20"
+text = '''正在学习游戏的气候'''
 
 ["stage.vanilla material levels"]
-source = "4933d186bbecc36b"
-text = '''正在测量原有地形材质'''
+source = "c567e0e2d5b98350"
+text = '''正在学习游戏的地形材质'''
 
 ["stage.vanilla natives"]
-source = "e3f4bfb6adec2c92"
-text = '''正在读取原有原住民'''
+source = "3426c314190a1c67"
+text = '''正在学习游戏的原住民'''
 
 ["stage.generate world"]
 source = "e84556e6a019ab76"
 text = '''正在生成大陆、海洋和地势'''
 
 ["stage.land character"]
-source = "eb49c460d56536ce"
-text = '''正在规划陆地和荒原'''
+source = "94b500a5492c54ca"
+text = '''正在确定气候、地面与荒地'''
 
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
@@ -1715,16 +1715,16 @@ source = "e14e8033766d3d1b"
 text = '''正在为地点、区域和地区命名'''
 
 ["stage.world checks"]
-source = "2f4b2b5e8a3f9d61"
-text = '''正在检查新世界'''
+source = "8d1bb38cef2ca390"
+text = '''正在检查完成的地图'''
 
 ["stage.water textures"]
 source = "4ef7590b1b28e969"
 text = '''正在绘制水面和海岸'''
 
 ["stage.biomes and rivers"]
-source = "d4bd6b2dd554ff95"
-text = '''正在培育气候、生物群系和河流'''
+source = "4206b1f546140a20"
+text = '''正在生成植被与河流'''
 
 ["stage.slot tables"]
 source = "c84fa407cadaa012"
@@ -1751,40 +1751,40 @@ source = "de062b10c1938a64"
 text = '''正在建立原住民社会'''
 
 ["stage.stories"]
-source = "cbe749082c75686b"
-text = '''正在撰写世界的故事和可成立国家'''
+source = "097307f6b7fc3b67"
+text = '''正在编写故事与可成立国家'''
 
 ["stage.atlas"]
-source = "2fa4552668c62056"
-text = '''正在绘制世界的地图集'''
+source = "7228f7d6a2926fda"
+text = '''正在为生成器绘制世界地图'''
 
 ["stage.texts"]
 source = "f414224df1fa792b"
 text = '''正在写入名称、开局状态和脚本'''
 
 ["stage.script remap"]
-source = "507ba7a241bfe7f0"
-text = '''正在改写游戏脚本'''
+source = "8549e7e97d5045a1"
+text = '''正在使游戏脚本适配新地图'''
 
 ["stage.spline network"]
-source = "cdd6a2ba75e40403"
-text = '''正在铺设道路的条带'''
+source = "6114d5ba73b773c9"
+text = '''正在铺设道路'''
 
 ["stage.selection cover"]
-source = "7e788576dbb4ecbe"
-text = '''正在遮盖新大陆，直到开始游玩'''
+source = "68b3317aa5e643cf"
+text = '''正在于国家选择界面隐藏新土地'''
 
 ["stage.write files"]
-source = "7f9242d43d976453"
-text = '''正在写入模组'''
+source = "083badfcd3605f57"
+text = '''正在写入模组文件'''
 
 ["stage.land cells"]
-source = "0d6f25d525141973"
-text = '''正在生成陆地地点'''
+source = "f33f54aa6215d771"
+text = '''正在将陆地划分为地点'''
 
 ["stage.sea cells"]
-source = "42cc41a5bd88b8b7"
-text = '''正在生成海域'''
+source = "118e1ac752aabda4"
+text = '''正在将海洋划分为海域'''
 
 ["stage.relief"]
 source = "74ea42c343487a9a"
@@ -3344,3 +3344,71 @@ text = '''保留马穆鲁克'''
 ["continent.mamluks.damascus"]
 source = "063f2a9ba88d6b2d"
 text = '''独立的大马士革苏丹国'''
+
+["phase.map"]
+source = "becea031a6e8a36b"
+text = '''正在读取游戏地图'''
+
+["phase.land"]
+source = "b1a3a4038c622de2"
+text = '''正在生成陆地与海洋'''
+
+["phase.game"]
+source = "33436c33a3455487"
+text = '''正在学习游戏原有的土地'''
+
+["phase.nature"]
+source = "ddba545e19cd48ef"
+text = '''气候、海岸与河流'''
+
+["phase.names"]
+source = "113d1ff79eb6466a"
+text = '''正在命名并检查地图'''
+
+["phase.terrain"]
+source = "8677eb5e75953b8a"
+text = '''正在绘制地形'''
+
+["phase.peoples"]
+source = "286d52b8392fe49a"
+text = '''正在建立民族及其历史'''
+
+["phase.mod"]
+source = "7f9242d43d976453"
+text = '''正在写入模组'''
+
+["phase.install"]
+source = "d67b6ac8ce47aed1"
+text = '''正在安装到你的配置'''
+
+["stage_joining"]
+source = "c8463955917defba"
+text = '''正在将各大陆合并为一张地图'''
+
+["continent.america_real"]
+source = "58756ba7fdaa70c6"
+text = '''游戏原版美洲'''
+
+["progress.phase_of"]
+source = "671f436a02efdf7b"
+text = '''第 {number} 阶段，共 {count} 个'''
+
+["progress.steps_tip"]
+source = "d790635ec598a4bd"
+text = '''本阶段已完成的步骤 / 此世界要执行的步骤'''
+
+["progress.state.done"]
+source = "a4c3ed04a95a3da1"
+text = '''已完成'''
+
+["progress.state.running"]
+source = "c071cf5f5ed6f884"
+text = '''进行中'''
+
+["progress.state.partial"]
+source = "c628985d6630061d"
+text = '''部分完成，正在等待另一阶段'''
+
+["progress.state.waiting"]
+source = "80cfa3e7f28dde4d"
+text = '''等待中'''

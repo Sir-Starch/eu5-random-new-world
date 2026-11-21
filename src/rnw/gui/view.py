@@ -137,7 +137,17 @@ def state(controller: Controller, choices: Choices) -> dict[str, object]:
         "fraction": c.fraction,
         "generating": generating and c.phase is not Phase.IDLE,
         "running": c.running_text(),
-        "stages": [{"label": label, "state": mark} for label, mark in c.stage_rows()],
+        "making": c.making_text(),
+        "stages": [
+            {
+                "label": row.label,
+                "state": row.state,
+                "steps": list(row.steps),
+                "done": row.done,
+                "total": row.total,
+            }
+            for row in c.phase_rows()
+        ],
         "eta": c.estimated_remaining(),
         "status": _status(c),
         "message": c.message,

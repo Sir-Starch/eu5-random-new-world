@@ -19,6 +19,12 @@
   const outcome = $derived(
     !busy && ours && (s?.phase === "finished" || s?.phase === "failed" || s?.phase === "cancelled") ? s.phase : null,
   );
+  const phaseRows = $derived(s?.stages ?? []);
+  // The first phase that is not done yet, counted from 1; none when every phase is.
+  const phaseNumber = $derived.by(() => {
+    const index = phaseRows.findIndex((row) => row.state !== "done");
+    return index < 0 ? 0 : index + 1;
+  });
   let dismissed = $state(-1);
   let pictures = $state<string[]>([]);
   let sketches = "";
@@ -47,19 +53,28 @@
       <div class="run" aria-live="polite">
         <div class="run-top">
           <span class="spinner"></span>
-          <h2>{s?.phase === "cancelling" ? t("cancelling") : t("dock.forging")}</h2>
+          <div class="run-title">
+            <h2>{s?.phase === "cancelling" ? t("cancelling") : t("dock.forging")}</h2>
+            {#if s?.making}<p class="making">{s.making}</p>{/if}
+          </div>
           <span class="num percent">{percent} %</span>
         </div>
         <div class="progress"><span style:width={`${percent}%`}></span></div>
         <div class="run-meta">
+          {#if phaseNumber}<span>{t("progress.phase_of", { number: phaseNumber, count: phaseRows.length })}</span>{/if}
           {#if s?.eta}<span class="num">{t("eta", { time: clock(s.eta) })}</span>{/if}
           {#if s?.task === "queue" && n?.queue.length}<span>{t("queue_count", { count: n.queue.length - n.queue_failed })}</span>{/if}
         </div>
-        <ol class="stages">
-          {#each s?.stages ?? [] as stage, index (index)}
-            <li class={stage.state}>
-              {#if stage.state === "done"}<Icon name="check" />{:else if stage.state === "running"}<span class="spinner"></span>{:else}<span class="blank"></span>{/if}
-              <span>{stage.label}</span>
+        <ol class="phases">
+          {#each phaseRows as row, index (index)}
+            <li class={row.state}>
+              <span class="mark" aria-hidden="true">
+                {#if row.state === "done"}<Icon name="check" />{:else if row.state === "running"}<span class="spinner"></span>{:else}<span class="dot"></span>{/if}
+              </span>
+              <span class="name">{row.label}</span>
+              <span class="count num" title={t("progress.steps_tip")}>{row.done}/{row.total}</span>
+              {#if row.steps.length}<span class="steps">{row.steps.join(" · ")}</span>{/if}
+              <span class="sr-only">{t(`progress.state.${row.state}`)}</span>
             </li>
           {/each}
         </ol>
@@ -278,8 +293,14 @@
     align-items: center;
     gap: 10px;
   }
-  .run-top h2 {
+  .run-title {
     flex: 1;
+    min-width: 0;
+  }
+  .making {
+    margin-top: 2px;
+    color: var(--text-2);
+    font-size: 12px;
   }
   .percent {
     font-size: 15px;
@@ -292,46 +313,82 @@
     color: var(--text-2);
     font-size: 12px;
   }
-  .stages {
+  .phases {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 3px 16px;
+    gap: 1px;
     margin: 4px 0;
-    padding: 10px 12px;
+    padding: 6px 0;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--panel);
     list-style: none;
-    font-size: 12px;
+    font-size: 12.5px;
   }
-  .stages li {
-    display: flex;
+  .phases li {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 6px;
-    min-width: 0;
+    column-gap: 6px;
+    min-height: 26px;
+    padding: 3px 12px 3px 8px;
     color: var(--text-3);
   }
-  .stages li span:last-child {
+  .phases .mark {
+    display: flex;
+    justify-content: center;
+  }
+  .phases .name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .stages li.done {
+  .phases .count {
+    color: var(--text-3);
+    font-size: 11.5px;
+  }
+  .phases .steps {
+    grid-column: 2 / -1;
+    overflow: hidden;
+    color: var(--text-2);
+    font-size: 11.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .phases li.done {
     color: var(--text-2);
   }
-  .stages li.done :global(svg) {
+  .phases li.done :global(svg) {
     color: var(--ok);
   }
-  .stages li.running {
+  .phases li.running {
+    background: var(--field);
     color: var(--text);
     font-weight: 500;
   }
-  .stages .spinner {
-    margin: 0 2px;
+  .phases li.running .count,
+  .phases li.partial .count {
+    color: var(--accent-text);
   }
-  .blank {
-    flex: none;
-    width: 16px;
+  .phases li.partial {
+    color: var(--text-2);
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--line-3);
+    border-radius: 50%;
+  }
+  .partial .dot {
+    border-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent) 50%, transparent 50%);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .sketches {
     display: grid;

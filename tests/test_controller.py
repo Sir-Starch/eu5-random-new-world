@@ -1617,9 +1617,23 @@ def test_geography_activity_is_visible_to_both_windows(
     from rnw.gui.text import stage_text  # noqa: PLC0415
 
     controller = _controller(tmp_path, fake_export)
+    controller._making = (decode(controller.code).settings(), False)  # pyright: ignore[reportPrivateUsage]
     controller.running = ("generate world", "land cells")
-    controller.finished = frozenset({"relief", "sea cells"})
-    rows = dict(controller.stage_rows())
-    assert rows[stage_text("land cells")] == "running"
-    assert rows[stage_text("relief")] == "done"
-    assert rows[stage_text("sea cells")] == "done"
+    controller.finished = frozenset({"load map", "select canvas", "relief", "sea cells"})
+    rows = controller.phase_rows()
+    assert [row.state for row in rows][:2] == ["done", "running"]
+    assert rows[1].steps == (stage_text("land cells"),)
+    assert (rows[1].done, rows[1].total) == (0, 1)
+
+
+def test_a_world_of_several_continents_says_it_joins_them(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.set_continent("africa", enabled=True)
+    controller._making = (decode(controller.code).settings(), True)  # pyright: ignore[reportPrivateUsage]
+    controller.task = Task.GENERATE
+    controller.running = ("select canvas",)
+    assert controller.running_text() == text("stage_joining")
+    assert controller.phase_rows()[-1].label == text("phase.install")
+    assert controller.making_text() == f"{text('continent.america')}, {text('continent.africa')}"

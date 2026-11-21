@@ -90,7 +90,7 @@ if TYPE_CHECKING:
 
 GIB: Final[float] = float(1 << 30)
 PROGRESS_STEPS: Final[int] = 100
-MARKS: Final[dict[str, str]] = {"done": "✓", "running": "▶", "waiting": "·"}
+MARKS: Final[dict[str, str]] = {"done": "✓", "running": "▶", "partial": "◐", "waiting": "·"}
 CLOSE_WAIT: Final[float] = 15.0
 RED: Final[str] = "color: #b00020;"
 MUTED: Final[str] = ""
@@ -2141,10 +2141,17 @@ class MainWindow(QMainWindow):
         self.bar.setValue(_progress_percent(controller.fraction) if generating else 0)
         self._refresh_progress_message(generating)
         self._refresh_eta_state()
+        self._refresh_phases(generating)
+
+    def _refresh_phases(self, generating: bool) -> None:  # noqa: FBT001 - view state
+        """The phases of the world being made, each with what of it runs now."""
         self.stage_list.clear()
-        for label, state in controller.stage_rows():
-            mark = MARKS[state] if generating else MARKS["waiting"]
-            self.stage_list.addItem(QListWidgetItem(f"{mark}  {label}"))
+        for row in self.controller.phase_rows():
+            mark = MARKS[row.state] if generating else MARKS["waiting"]
+            line = f"{mark}  {row.label}  {row.done}/{row.total}"
+            if row.steps and generating:
+                line = f"{line}\n      {' · '.join(row.steps)}"
+            self.stage_list.addItem(QListWidgetItem(line))
 
     def _refresh_progress_message(self, generating: bool) -> None:  # noqa: FBT001 - view state
         controller = self.controller
