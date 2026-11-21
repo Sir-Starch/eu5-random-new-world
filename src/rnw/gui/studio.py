@@ -60,9 +60,14 @@ SHEET_AREA: Final[tuple[int, int, int]] = (104, 110, 124)
 OTHER_AREA: Final[tuple[int, int, int]] = (70, 76, 96)
 
 
+def kinds_png(kinds: NDArray[np.uint8]) -> bytes:
+    """A picture of kinds as the PNG the generator reads (``KIND_COLORS``, opaque)."""
+    return encode_png(PALETTE[kinds], color_type=COLOR_RGB, compression="zlib")
+
+
 def kinds_url(kinds: NDArray[np.uint8]) -> str:
     """A picture of kinds as the PNG data URL the window paints from."""
-    return view.data_url(encode_png(PALETTE[kinds], color_type=COLOR_RGB, compression="zlib"))
+    return view.data_url(kinds_png(kinds))
 
 
 def png_of(url: str) -> bytes:
@@ -265,19 +270,23 @@ DECORATIONS: Final[tuple[str, ...]] = ("mountains", "highlands", "lowlands", "la
 
 def decorate(area: LandArea, url: str, seed: int, parts: Collection[str]) -> str:
     """The picture with some of ``DECORATIONS`` added to its plain land."""
+    return kinds_url(decorated(kinds_of(url, area), seed, parts))
+
+
+def decorated(kinds: NDArray[np.uint8], seed: int, parts: Collection[str]) -> NDArray[np.uint8]:
+    """The kinds with some of ``DECORATIONS`` added to their plain land."""
     unknown = set(parts) - set(DECORATIONS)
     if unknown:
         message = f"Nothing to add called {min(unknown)!r}"
         raise StudioError(message)
-    done = landeditor.decorate(
-        kinds_of(url, area),
+    return landeditor.decorate(
+        kinds,
         seed,
         mountains="mountains" in parts,
         highlands="highlands" in parts,
         lowlands="lowlands" in parts,
         lakes="lakes" in parts,
     )
-    return kinds_url(done)
 
 
 def imported(area: LandArea, path: Path) -> dict[str, str]:
@@ -296,7 +305,14 @@ def imported(area: LandArea, path: Path) -> dict[str, str]:
 
 def report(area: LandArea, url: str, settings: NewWorldSettings) -> dict[str, object]:
     """What the generator will do with the picture: numbers the window turns into sentences."""
-    found = landeditor.check(kinds_of(url, area), area, settings)
+    return report_of(kinds_of(url, area), area, settings)
+
+
+def report_of(
+    kinds: NDArray[np.uint8], area: LandArea, settings: NewWorldSettings
+) -> dict[str, object]:
+    """What the generator will do with the kinds: numbers the window turns into sentences."""
+    found = landeditor.check(kinds, area, settings)
     return {
         "land": found.land_permille,
         "mountains": found.mountains,

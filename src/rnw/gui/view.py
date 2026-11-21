@@ -442,7 +442,7 @@ def _value_state(control: controls.Control, value: int, default: int) -> dict[st
     }
 
 
-def _queue_type(code: WorldCode) -> str:
+def queue_type(code: WorldCode) -> str:
     """The type a queued world is called by: Total Chaos for a draw, as the window and the library
     name it; otherwise its world type; a world of several continents by its continents."""
     return _continents_text(encode(code), short=True, language=language())
@@ -489,7 +489,7 @@ def _queue(c: Controller) -> list[dict[str, object]]:
         {
             "code": encode(job.code),
             "seed": str(job.code.seed),
-            "type": _queue_type(job.code),
+            "type": queue_type(job.code),
             "running": running,
             "error": error,
         }

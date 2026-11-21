@@ -19,6 +19,7 @@ and whether its New World may be shown, and tells its owner when the player asks
 from __future__ import annotations
 
 import math
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
@@ -77,6 +78,7 @@ from PySide6.QtWidgets import (
 
 from rnw import atlas as atlas_module
 from rnw.app import logs
+from rnw.app import surroundings as surroundings_module
 from rnw.gui import mapstyle
 from rnw.gui.preview import ZOOM_LIMIT, PreviewView
 from rnw.gui.text import grouped, text
@@ -87,6 +89,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from PySide6.QtGui import QMouseEvent, QResizeEvent, QShowEvent, QWheelEvent
 
+    from rnw.app.surroundings import Surroundings
     from rnw.atlas import Atlas
     from rnw.history_presenter import Reader
 
@@ -140,7 +143,15 @@ NAME_STYLES: Final[dict[str, NameStyle]] = {
         largest=16, area=0.14, room=0.6, upper=False, spacing=0.06, weight=QFont.Weight.Normal,
         italic=True, fill=QColor(214, 232, 250, 230), halo=QColor(10, 26, 54, 128),
     ),
+    "continent": NameStyle(
+        largest=30, area=0.2, room=0, upper=True, spacing=0.32, weight=QFont.Weight.Bold,
+        italic=False, fill=QColor(255, 250, 238, 240), halo=QColor(16, 14, 10, 153),
+    ),
 }  # fmt: skip
+# The continents' names are for the map seen whole: they fade out between these zooms, and are
+# not written smaller than this (screen pixels).
+CONTINENTS_FADE: Final[tuple[float, float]] = (0.32, 0.55)
+SMALLEST_CONTINENT: Final[float] = 11.0
 DARK_INK: Final[QColor] = QColor(26, 20, 12, 230)
 LIGHT_HALO: Final[QColor] = QColor(255, 251, 240, 173)
 # Zooms (screen pixels per atlas pixel) from which marks appear, as in the Tauri window.
@@ -324,12 +335,21 @@ class Writing:
     centres: NDArray[np.float64]
     pixels: NDArray[np.float64]
     spots: tuple[str, ...]
+    # The continents the world generates, named when it has several; and whether the map shows
+    # the lands the world keeps from the game.
+    continents: tuple[mapstyle.Label, ...] = ()
+    kept: bool = False
 
 
 def write(
-    atlas: Atlas, lens: mapstyle.StyledLens, words: atlas_module.Words, *, tribes: bool
+    atlas: Atlas,
+    lens: mapstyle.StyledLens,
+    words: atlas_module.Words,
+    *,
+    tribes: bool,
+    around: Surroundings | None = None,
 ) -> Writing:
-    """The writing of ``lens`` on ``atlas``."""
+    """The writing of ``lens`` on ``atlas``, with the names of the continents of ``around``."""
     counts = np.bincount(atlas.labels.ravel(), minlength=atlas.cells + 1)[1:].astype(np.float64)
     spots = tuple(mapstyle.spot(atlas, lens.layer, cell, words) for cell in range(atlas.cells))
     return Writing(
@@ -338,6 +358,16 @@ def write(
         centres=mapstyle.centres(atlas),
         pixels=counts,
         spots=spots,
+        continents=tuple(
+            mapstyle.continent_names(
+                atlas,
+                around.continent,
+                [text(f"continent.{key}") for key in surroundings_module.CONTINENTS],
+            )
+            if around is not None
+            else ()
+        ),
+        kept=around is not None and around.kept is not None,
     )
 
 
@@ -410,6 +440,7 @@ class Scribe:
 
     def write(self, writing: Writing, layer: str) -> None:
         """Everything ``layer`` writes."""
+        self._continents(writing.continents)
         for place in writing.places:
             self._place(place)
         self._names(writing.names)
@@ -454,6 +485,39 @@ class Scribe:
                 self.placed.append(box)
                 fill = _rgb(place.colour)
                 self.marks.append(lambda: _diamond(self.painter, point, r, fill, 0.8))
+
+    def _continents(self, labels: Iterable[mapstyle.Label]) -> None:
+        """From afar, the continents the world generates, so that the parts of a world of several
+        are told apart; the other names make way for them."""
+        near = (self.zoom - CONTINENTS_FADE[0]) / (CONTINENTS_FADE[1] - CONTINENTS_FADE[0])
+        strength = 1 - min(1.0, max(0.0, near))
+        if strength <= 0:
+            return
+        style = NAME_STYLES["continent"]
+        for label in labels:
+            size = min(style.largest, math.sqrt(label.weight) * self.zoom * style.area)
+            pole = self.to_screen(label.x, label.y)
+            if size < SMALLEST_CONTINENT or not self.visible(pole, 200):
+                continue
+            words = label.text.upper()
+            font = _font(
+                self.base, size, style.weight, italic=style.italic, spacing=size * style.spacing
+            )
+            advance = QFontMetricsF(font).horizontalAdvance(words)
+            # A continent at the map's edge keeps its whole name in view.
+            across = min(max(pole.x(), advance / 2 + 8), self.size[0] - advance / 2 - 8)
+            self.placed.append(
+                (
+                    across - advance / 2 - 6,
+                    pole.y() - size / 2 - 3,
+                    across + advance / 2 + 6,
+                    pole.y() + size / 2 + 3,
+                )
+            )
+            self.painter.setOpacity(strength)
+            ink = Ink(style.fill, style.halo, max(3.0, size * 0.24))
+            _halo_text(self.painter, font, QPointF(across - advance / 2, pole.y()), words, ink)
+            self.painter.setOpacity(1.0)
 
     def _names(self, labels: Iterable[mapstyle.Label]) -> None:
         written = 0
@@ -589,6 +653,7 @@ class Order:
     lens: mapstyle.StyledLens | None
     base: NDArray[np.uint8] | None
     writing: Writing | None
+    around: Around | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -603,17 +668,54 @@ class Drawn:
     writing: Writing
 
 
+class Around:
+    """What surrounds a world's lands on the game's map (``rnw.app.surroundings``), worked out
+    once, on the worker thread that first needs it; none when it cannot be."""
+
+    def __init__(self, make: Callable[[], Surroundings]) -> None:
+        self._make: Callable[[], Surroundings] = make
+        self._lock: threading.Lock = threading.Lock()
+        self._done: bool = False
+        self._found: Surroundings | None = None
+        self._alpha: NDArray[np.float32] | None = None
+
+    def surroundings(self) -> Surroundings | None:
+        with self._lock:
+            if not self._done:
+                self._done = True
+                try:
+                    self._found = self._make()
+                except Exception:  # noqa: BLE001 - the map is shown without them
+                    logs.get().exception("reading what surrounds the world failed")
+                    self._found = None
+                if self._found is not None and self._found.kept is not None:
+                    self._alpha = mapstyle.kept_alpha(self._found.kept)
+            return self._found
+
+    def alpha(self) -> NDArray[np.float32] | None:
+        """The kept lands as the map lays them, or None when the world's picture places none."""
+        _ = self.surroundings()
+        return self._alpha
+
+
 def carry_out(order: Order) -> Drawn:
     """Style, draw and write a lens: the slow part, done on the panel's worker thread."""
     atlas = order.atlas
+    around = order.around.surroundings() if order.around is not None else None
     lens = order.lens or mapstyle.style(
         atlas, order.layer, order.words, tribes=order.tribes, tribes_label=text("map.tribes")
     )
     base = order.base
     if base is None:
-        base = mapstyle.picture(atlas, lens, tribes=order.tribes, overlays=order.overlays)
+        base = mapstyle.picture(
+            atlas,
+            lens,
+            tribes=order.tribes,
+            overlays=order.overlays,
+            kept=order.around.alpha() if order.around is not None else None,
+        )
     shown = base if order.isolated is None else mapstyle.isolate(atlas, base, order.isolated)
-    writing = order.writing or write(atlas, lens, order.words, tribes=order.tribes)
+    writing = order.writing or write(atlas, lens, order.words, tribes=order.tribes, around=around)
     return Drawn(order, lens, base, shown, to_image(shown), writing)
 
 
@@ -661,6 +763,7 @@ class MapsPanel(QWidget):
         super().__init__()
         self._atlas: Atlas | None = None
         self._words: atlas_module.Words = atlas_module.ENGLISH
+        self._around: Around | None = None
         self._layer: str = atlas_module.LAYERS[0]
         self._identity: tuple[int, int] = (0, 0)
         self._tribes: bool = False
@@ -922,7 +1025,7 @@ class MapsPanel(QWidget):
         """The lens shown now."""
         return self._layer
 
-    def show_world(
+    def show_world(  # noqa: PLR0913 - the world's atlas and what is read for it
         self,
         atlas: Atlas | None,
         *,
@@ -930,8 +1033,12 @@ class MapsPanel(QWidget):
         history: Reader | None = None,
         identity: int = 0,
         words: atlas_module.Words = atlas_module.ENGLISH,
+        around: Callable[[], Surroundings] | None = None,
     ) -> None:
         """Show the atlas of a world, or the reason there is nothing to show.
+
+        ``around`` reads what surrounds its lands on the game's map (the lands the world keeps,
+        the continent of each location); it runs on the drawing worker, once for an atlas.
 
         ``identity`` tells one world from another so that the picture is drawn afresh for a new
         one and kept (with its zoom) while only the lens or what is isolated changes.
@@ -960,6 +1067,7 @@ class MapsPanel(QWidget):
             self._wanted = None
             self._pending = None
             self._atlas = atlas
+            self._around = Around(around) if around is not None else None
             self._styled.clear()
             self._writing.clear()
             self._pictures.clear()
@@ -1043,6 +1151,7 @@ class MapsPanel(QWidget):
             lens=self._lens(),
             base=self._pictures.get(base_key),
             writing=self._current_writing(),
+            around=self._around,
         )
         self._wanted = key
         if order.base is None or order.lens is None or order.writing is None:
@@ -1108,6 +1217,15 @@ class MapsPanel(QWidget):
             item = QListWidgetItem(QIcon(swatch), f"{label}  ({grouped(count)})")
             item.setToolTip(label)
             item.setData(Qt.ItemDataRole.UserRole, lens.legend.index((label, colour, count)))
+            self.legend_list.addItem(item)
+        writing = self._current_writing()
+        if writing is not None and writing.kept:
+            # The grey of the lands kept from the game: a key only, there is nothing to isolate.
+            swatch = QPixmap(SWATCH, SWATCH)
+            swatch.fill(_rgb(mapstyle.COLOURS["kept"]))
+            item = QListWidgetItem(QIcon(swatch), text("map.kept"))
+            item.setToolTip(text("map.kept_tip"))
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self.legend_list.addItem(item)
         atlas = self._atlas
         tribes = sum(1 for country in atlas.countries if country.kind != "state") if atlas else 0
@@ -1486,7 +1604,7 @@ class MapsPanel(QWidget):
 
     def _entry_cells(self, item: QListWidgetItem) -> tuple[int, ...]:
         lens = self._lens()
-        if lens is None:
+        if lens is None or item.data(Qt.ItemDataRole.UserRole) is None:
             return ()
         entry = int(item.data(Qt.ItemDataRole.UserRole))
         return tuple(int(c) for c in np.flatnonzero(lens.classes == entry))
@@ -1496,7 +1614,7 @@ class MapsPanel(QWidget):
 
     def _entry_clicked(self, item: QListWidgetItem) -> None:
         lens = self._lens()
-        if lens is None:
+        if lens is None or item.data(Qt.ItemDataRole.UserRole) is None:
             return
         label, colour, _ = lens.legend[int(item.data(Qt.ItemDataRole.UserRole))]
         self._preview_timer.stop()

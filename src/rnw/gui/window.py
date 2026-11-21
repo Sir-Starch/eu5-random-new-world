@@ -72,13 +72,16 @@ from rnw.app import quick as quick_settings
 from rnw.app.library import Placement
 from rnw.gui.candidates import CandidatesDialog
 from rnw.gui.controller import NEW, STRAY, Controller, Phase, Task
+from rnw.gui.land_editor import LandEditorDialog
+from rnw.gui.land_tools import LandTools
 from rnw.gui.maps import CompareDialog, MapsPanel
 from rnw.gui.preview import PreviewView
+from rnw.gui.queue_list import QueueList
 from rnw.gui.text import LANGUAGE_NAMES, TITLE, grouped, text
 from rnw.gui.theme import install as install_theme
 from rnw.gui.view import control_name
 from rnw.languages import SOURCE
-from rnw.settings import MamlukPolicy, MoroccoPolicy
+from rnw.settings import AMERICA, MamlukPolicy, MoroccoPolicy
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -604,10 +607,7 @@ class MainWindow(QMainWindow):
     copy_button: QPushButton
     paste_button: QPushButton
     notice: QLabel
-    land_image_button: QPushButton
-    land_image_label: QLabel
-    land_image_clear: QPushButton
-    land_template_button: QPushButton
+    land_tools: LandTools
     customize_button: QToolButton
     customize_box: QWidget
     customized: QLabel
@@ -670,6 +670,7 @@ class MainWindow(QMainWindow):
         self._shown_world: str = ""
         self._reported: int = 0
         self._sketched: int = 0
+        self._editor_continent: str = AMERICA
         self.candidates_dialog: CandidatesDialog | None = None
         self.rows: list[_ControlRow] = []
         self.quick_rows: list[_QuickRow] = []
@@ -866,6 +867,8 @@ class MainWindow(QMainWindow):
     def _new_world_tab(self) -> QScrollArea:
         world, layout = self._scroll_page()
         layout.addWidget(self._continents())
+        self.land_tools = LandTools(self.controller, self._open_editor, self._sketch)
+        layout.addWidget(self.land_tools)
         self.american_types: QGroupBox = self._types()
         self.american_quick: QGroupBox = self._quick()
         layout.addWidget(self.american_types)
@@ -987,12 +990,6 @@ class MainWindow(QMainWindow):
         identity_layout = QVBoxLayout(identity)
         identity_layout.addLayout(self._seed_and_code())
         advanced_layout.addWidget(identity)
-        self.american_land_tools: QGroupBox = QGroupBox(text("land_tools"))
-        land = self.american_land_tools
-        land_layout = QVBoxLayout(land)
-        land_layout.addLayout(self._land_image_row())
-        land_layout.addLayout(self._candidate_row())
-        advanced_layout.addWidget(land)
         self.american_custom: QWidget = self._customize()
         advanced_layout.addWidget(self.american_custom)
         self.regional_pages: dict[str, QVBoxLayout] = {}
@@ -1053,6 +1050,12 @@ class MainWindow(QMainWindow):
         queue_hint.setWordWrap(True)
         queue_layout.addWidget(queue_hint)
         queue_layout.addLayout(self._queue_row())
+        self.queue_list: QueueList = QueueList(self.controller)
+        queue_layout.addWidget(self.queue_list)
+        self.queue_follows: QLabel = QLabel(text("queue_follows"))
+        self.queue_follows.setWordWrap(True)
+        self.queue_follows.setStyleSheet(MUTED)
+        queue_layout.addWidget(self.queue_follows)
         self.queue_failures: QLabel = QLabel()
         self.queue_failures.setWordWrap(True)
         self.queue_failures.setStyleSheet(MUTED)
@@ -1112,15 +1115,6 @@ class MainWindow(QMainWindow):
                 self.controller.world_file = Path(chosen)
         self.refresh()
 
-    def _candidate_row(self) -> QHBoxLayout:
-        row = QHBoxLayout()
-        self.candidates_button: QPushButton = QPushButton(text("candidates"))
-        self.candidates_button.setToolTip(text("candidates_hint"))
-        _ = self.candidates_button.clicked.connect(self._sketch)
-        row.addWidget(self.candidates_button)
-        row.addStretch(1)
-        return row
-
     def _queue_row(self) -> QHBoxLayout:
         row = QHBoxLayout()
         self.enqueue_button: QPushButton = QPushButton(text("enqueue"))
@@ -1145,6 +1139,23 @@ class MainWindow(QMainWindow):
         if problem:
             self.status.setText(problem)
 
+    def _open_editor(self, continent: str | None = None) -> None:
+        """Draw the land of a continent of the new world in the land editor, which covers the
+        window while it is open; the continent drawn last, or America, when none is asked for."""
+        controller = self.controller
+        drawable = controller.drawable_continents()
+        if not drawable or controller.busy:
+            self.status.setText(controller.editor_problem() or text("ready_busy"))
+            return
+        key = next(
+            (one for one in (continent, self._editor_continent, AMERICA) if one in drawable),
+            drawable[0],
+        )
+        dialog = LandEditorDialog(self, controller, key)
+        dialog.showMaximized()
+        _ = dialog.exec()
+        self._editor_continent = dialog.continent
+
     def _enqueue(self) -> None:
         problem = self.controller.enqueue()
         if problem:
@@ -1154,47 +1165,6 @@ class MainWindow(QMainWindow):
         problem = self.controller.start_queue()
         if problem:
             self.status.setText(problem)
-
-    def _land_image_row(self) -> QHBoxLayout:
-        row = QHBoxLayout()
-        self.land_image_button = QPushButton(text("land_image"))
-        self.land_image_button.setToolTip(text("land_image_tip"))
-        self.land_image_label = QLabel()
-        self.land_image_label.setStyleSheet(MUTED)
-        self.land_image_clear = QPushButton(text("land_image_clear"))
-        self.land_template_button = QPushButton(text("land_template"))
-        self.land_template_button.setToolTip(text("land_template_tip"))
-        for widget in (
-            self.land_image_button,
-            self.land_template_button,
-            self.land_image_label,
-            self.land_image_clear,
-        ):
-            row.addWidget(widget)
-        row.addStretch(1)
-        _ = self.land_template_button.clicked.connect(self._save_land_template)
-        _ = self.land_image_button.clicked.connect(self._choose_land_image)
-        _ = self.land_image_clear.clicked.connect(self.controller.clear_land_image)
-        return row
-
-    def _save_land_template(self) -> None:
-        title = text("land_template")
-        chosen, _ = QFileDialog.getSaveFileName(
-            self, title, str(Path.home() / "new-world-template.png"), "PNG (*.png)"
-        )
-        if chosen:
-            problem = self.controller.save_land_template(Path(chosen))
-            if problem:
-                _ = QMessageBox.warning(self, title, problem)
-
-    def _choose_land_image(self) -> None:
-        chosen, _ = QFileDialog.getOpenFileName(
-            self, text("land_image_title"), str(Path.home()), text("land_image_files")
-        )
-        if chosen:
-            problem = self.controller.choose_land_image(Path(chosen))
-            if problem:
-                _ = QMessageBox.warning(self, text("land_image"), problem)
 
     def _seed_and_code(self) -> QGridLayout:
         world = QGridLayout()
@@ -1260,6 +1230,8 @@ class MainWindow(QMainWindow):
     def _progress(self) -> QGroupBox:
         progress = QGroupBox(text("progress"))
         progress_layout = QVBoxLayout(progress)
+        self.making: QLabel = QLabel()
+        self.making.setStyleSheet("font-weight: 600")
         self.bar = QProgressBar()
         self.bar.setRange(0, PROGRESS_STEPS)
         self.status = QLabel()
@@ -1284,6 +1256,7 @@ class MainWindow(QMainWindow):
         self.progress_details.setCheckable(True)
         self.progress_details.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.progress_details.setArrowType(Qt.ArrowType.RightArrow)
+        progress_layout.addWidget(self.making)
         progress_layout.addWidget(self.bar)
         progress_layout.addWidget(self.status)
         progress_layout.addWidget(self.failure_details)
@@ -1291,6 +1264,9 @@ class MainWindow(QMainWindow):
         self.retry_button: QPushButton = QPushButton(text("retry_new_seed"))
         _ = self.retry_button.clicked.connect(self._retry_new_seed)
         progress_layout.addWidget(self.retry_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.open_made_button: QPushButton = QPushButton(text("dock.open_world"))
+        _ = self.open_made_button.clicked.connect(self._open_made)
+        progress_layout.addWidget(self.open_made_button, alignment=Qt.AlignmentFlag.AlignLeft)
         progress_layout.addWidget(self.progress_details, alignment=Qt.AlignmentFlag.AlignLeft)
         progress_layout.addWidget(self.stage_list)
         self.stage_list.setVisible(False)
@@ -2032,7 +2008,6 @@ class MainWindow(QMainWindow):
         for widget in (
             self.american_types,
             self.american_quick,
-            self.american_land_tools,
             self.american_custom,
         ):
             widget.setVisible(america)
@@ -2073,17 +2048,7 @@ class MainWindow(QMainWindow):
         # While a world is made the next one can be prepared, so only other work locks the choices.
         busy = controller.busy and not controller.can_prepare
         self._refresh_regions(busy=busy)
-        drawn = controller.land_mask
-        self.land_image_label.setText(
-            text("land_image_chosen", id=format(drawn.id, "x")) if drawn is not None else ""
-        )
-        self.land_image_clear.setVisible(drawn is not None)
-        self.land_image_button.setEnabled(not busy)
-        self.land_template_button.setEnabled(
-            not controller.busy
-            and controller.game is not None
-            and not controller.value("new_world.keep_geography")
-        )
+        self.land_tools.refresh(busy=busy)
         _ = self.type_choice.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         shown = controller.mode or controller.preset
         self.type_choice.setCurrentIndex(random_types.CHOICES.index(shown))
@@ -2165,6 +2130,14 @@ class MainWindow(QMainWindow):
             self.failure_details.setPlainText(status)
         self.retry_button.setVisible(failed and controller.task is Task.GENERATE)
         self.retry_button.setEnabled(controller.problem() is None)
+        made = (
+            controller.phase is Phase.FINISHED
+            and controller.task in {Task.GENERATE, Task.QUEUE}
+            and controller.result is not None
+        )
+        self.open_made_button.setVisible(made)
+        self.making.setText(controller.making_text() if generating else "")
+        self.making.setVisible(generating and bool(self.making.text()))
 
     def _refresh_eta_state(self) -> None:
         """Show and start the ETA timer only for one live world generation."""
@@ -2238,15 +2211,14 @@ class MainWindow(QMainWindow):
         self.queue_label.setText(self._queue_text())
         self.queue_failures.setText(self._queue_failures_text())
         self.queue_failures.setVisible(bool(controller.queue_failed))
+        self.queue_list.refresh()
+        self.queue_follows.setVisible(controller.busy and controller.queue_follows)
         self.queue_label.setToolTip(
             "\n".join(
                 f"{job.code.seed}: {error}" if error else str(job.code.seed)
                 for job, _running, error in controller.queue_entries()
             )
         )
-        sketch_problem = controller.sketch_problem()
-        self.candidates_button.setEnabled(not controller.busy and sketch_problem is None)
-        self.candidates_button.setToolTip(sketch_problem or text("candidates_hint"))
 
     def _queue_text(self) -> str:
         """How many worlds wait in the queue and how many of them could not be made."""
@@ -2287,6 +2259,7 @@ class MainWindow(QMainWindow):
             found,
             revealed=controller.revealed(world),
             history=controller.history_reader(world),
+            around=None if found is None else lambda: controller.surroundings(world, found),
             identity=sum(world.id.encode()),
             words=controller.words(found) if found is not None else atlas_module.ENGLISH,
         )
@@ -2491,6 +2464,12 @@ class MainWindow(QMainWindow):
         problem = self.controller.start()
         if problem:
             self.status.setText(problem)
+
+    def _open_made(self) -> None:
+        """Go to the world that was just made."""
+        result = self.controller.result
+        if result is not None:
+            self.controller.select(result.world.id)
 
     def _retry_new_seed(self) -> None:
         problem = self.controller.retry_new_seed()

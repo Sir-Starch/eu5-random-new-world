@@ -48,6 +48,7 @@ try:  # the window needs PySide6 and the system's graphics libraries
         QLabel,
         QMessageBox,
         QPushButton,
+        QToolButton,
         QWidget,
     )
 
@@ -182,6 +183,78 @@ def test_a_queue_world_that_failed_is_marked_in_the_queue_box_and_the_next_is_ma
 
 
 @pytest.mark.usefixtures("application")
+def test_the_queue_lists_each_world_marks_a_failed_one_and_takes_any_out(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.install_box.setChecked(False)
+    original = controller.generator
+
+    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.code.seed == 11:
+            message = "the first world failed"
+            raise OSError(message)
+        return original(request, progress)
+
+    controller.generator = generate
+    try:
+        for seed in ("11", "22", "33"):
+            _ = controller.set_seed(seed)
+            window.enqueue_button.click()
+        pump(lambda: len(window.queue_list.findChildren(QToolButton)) == 3)
+        listing = window.queue_list
+        assert not listing.isHidden()
+        seeds = [label.text().rsplit("  ·  ", 1)[-1] for label in listing.findChildren(QLabel)]
+        assert [seed for seed in seeds if seed.isdigit()] == ["11", "22", "33"]
+        # a waiting world leaves the queue by its button
+        buttons = listing.findChildren(QToolButton)
+        buttons[2].click()
+        pump(lambda: [job.code.seed for job in controller.queue] == [11, 22])
+        pump(lambda: len(listing.findChildren(QToolButton)) == 2)
+        window.run_queue_button.click()
+        pump(lambda: controller.phase is Phase.FINISHED)
+        pump(window.run_queue_button.isEnabled)
+        # the world that failed stays, marked with its error; the one made is gone
+        assert [job.code.seed for job in controller.queue] == [11]
+        pump(lambda: len(listing.findChildren(QToolButton)) == 1)
+        marks = [label for label in listing.findChildren(QLabel) if label.text() == "\u26a0"]
+        assert len(marks) == 1
+        assert "the first world failed" in marks[0].toolTip()
+        listing.findChildren(QToolButton)[0].click()
+        pump(lambda: not controller.queue)
+        pump(listing.isHidden)
+    finally:
+        _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_a_world_just_made_is_titled_and_opened_from_the_progress_box(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.install_box.setChecked(False)
+    try:
+        assert window.open_made_button.isHidden()
+        _ = controller.set_seed("44")
+        window.generate_button.click()
+        pump(lambda: controller.phase is Phase.FINISHED)
+        pump(lambda: not window.open_made_button.isHidden())
+        assert window.making.text() == window.controller.making_text()
+        assert controller.result is not None
+        made = controller.result.world.id
+        _ = controller.set_seed("45")
+        controller.select(NEW)
+        window.open_made_button.click()
+        pump(lambda: controller.selection == made)
+    finally:
+        _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_the_next_world_can_be_prepared_and_queued_while_one_is_made(
     tmp_path: Path,
     fake_export: Exporter,
@@ -207,7 +280,7 @@ def test_the_next_world_can_be_prepared_and_queued_while_one_is_made(
         pump(lambda: not window.generate_button.isEnabled())
         assert window.seed_edit.isEnabled()
         assert window.type_choice.isEnabled()
-        assert not window.candidates_button.isEnabled()
+        assert not window.land_tools.sketch_button.isEnabled()
         _ = controller.set_seed("22")
         pump(window.enqueue_button.isEnabled)
         window.enqueue_button.click()
@@ -1276,8 +1349,9 @@ def test_the_real_americas_checkbox_is_offered_by_omerika_and_hides_what_it_make
     # No ocean to expand, no New World to cover, no land to sketch and none of the land settings.
     assert not window.expand_oceans.isVisible()
     assert not window.visibility_box.isVisible()
-    assert not window.candidates_button.isEnabled()
-    assert not window.land_template_button.isEnabled()
+    assert not window.land_tools.sketch_button.isEnabled()
+    assert not window.land_tools.editor_button.isEnabled()
+    assert window.land_tools.rows["america"].isHidden()
     assert window.control_sections["land"].isHidden()
     assert window.control_sections["omerika"].isHidden()
     assert not window.control_sections["peoples"].isHidden()

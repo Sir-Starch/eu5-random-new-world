@@ -96,7 +96,7 @@ if TYPE_CHECKING:
     from rnw.atlas import Atlas
     from rnw.landarea import AreaInputs, LandArea
     from rnw.landmask import LandMask
-    from rnw.settings import RegionalSettings, Settings
+    from rnw.settings import NewWorldSettings, RegionalSettings, Settings
 
 SEED_MAX: Final[int] = (1 << 64) - 1
 ERROR_LOG: Final[str] = "last-error.log"
@@ -1257,6 +1257,13 @@ class Controller:
             for key in (AMERICA, *REGIONAL_PRESETS)
             if selected[key] and not (key == AMERICA and keeps)
         ]
+
+    def land_settings(self, continent: str = AMERICA) -> NewWorldSettings:
+        """The settings of the land of ``continent`` (its margin from the shore, its smallest
+        island), as the editor checks a drawing against them."""
+        if continent == AMERICA:
+            return self.world_code().settings().new_world
+        return self.region_settings(continent).new_world
 
     def land_sheet(self, continent: str = AMERICA) -> LandArea | None:
         """The area the editor draws ``continent`` on, when it was cut for the choices made now;

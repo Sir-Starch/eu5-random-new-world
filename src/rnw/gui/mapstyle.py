@@ -37,7 +37,7 @@ from rnw.opinions import TREATIES
 from rnw.topology import euclidean_distance
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from numpy.typing import NDArray
 
@@ -609,6 +609,18 @@ def _smooth(edge0: float, edge1: float, value: NDArray[np.float32]) -> NDArray[n
     return (t * t * (3 - 2 * t)).astype(np.float32)
 
 
+# The lands a world keeps from the game are read from its picture at an eighth of the map, so
+# their edge is softened before it is laid under the open sea: a blur of this radius (atlas
+# pixels), then the step between these two shares, as the Tauri window's shader reads it.
+KEPT_BLUR: Final[int] = 2
+KEPT_EDGE: Final[tuple[float, float]] = (0.35, 0.65)
+
+
+def kept_alpha(kept: NDArray[np.bool_]) -> NDArray[np.float32]:
+    """How much of each pixel is land the world keeps from the game: 0 to 1, with a soft edge."""
+    return _smooth(*KEPT_EDGE, blur(kept.astype(np.float32), KEPT_BLUR))
+
+
 def lines(
     atlas: Atlas, lens: StyledLens, *, tribes: bool, overlays: Overlays
 ) -> tuple[NDArray[np.float32], NDArray[np.bool_]]:
@@ -710,17 +722,19 @@ def ground(atlas: Atlas) -> Ground:
     return found
 
 
-def picture(
+def picture(  # noqa: PLR0913 - the lens and what is laid on it
     atlas: Atlas,
     lens: StyledLens,
     *,
     tribes: bool,
     overlays: Overlays | None = None,
     isolated: Iterable[int] | None = None,
+    kept: NDArray[np.float32] | None = None,
 ) -> NDArray[np.uint8]:
     """The map of ``lens``: height x width x 3, one pixel per atlas pixel, drawn in bands of
     rows so that its memory stays small. ``isolated`` locations keep their colours and are
-    outlined; the rest fades (``isolate``)."""
+    outlined; the rest fades (``isolate``). ``kept`` (``kept_alpha``) lays the lands the world
+    keeps from the game, in one grey, under the open sea around the lands it generated."""
     look = profile(lens.layer)
     physical = ground(atlas)
     height, width = atlas.size
@@ -732,6 +746,7 @@ def picture(
     ink = np.array(INK, np.float32) * 255
     foam_colour = np.array(FOAM, np.float32) * 255
     weights = np.array([0.299, 0.587, 0.114], np.float32)
+    kept_colour = np.array(COLOURS["kept"], np.float32)
     out = np.empty((height, width, 3), dtype=np.uint8)
     for start in range(0, height, BAND):
         rows = slice(start, min(height, start + BAND))
@@ -749,6 +764,9 @@ def picture(
             soil = np.where(cover > SOME_COVER, soil + (own_colours[cell] - soil) * cover, faded)
         lit = 1 + (physical.shade[rows].astype(np.float32) / 128 - 1) * look.shade
         rgb = np.where(solid, soil * lit[..., None], physical.water[rows].astype(np.float32))
+        if kept is not None:
+            share = np.where(band < 0, kept[rows], 0)[..., None]
+            rgb = rgb + (kept_colour - rgb) * share
         rgb = rgb + (ink - rgb) * ink_share[rows][..., None]
         rgb = np.where(foam[rows][..., None], rgb + (foam_colour - rgb) * 0.13, rgb)
         out[rows] = np.clip(rgb + 0.5, 0, 255).astype(np.uint8)
@@ -781,7 +799,7 @@ def isolate(atlas: Atlas, drawn: NDArray[np.uint8], cells: Iterable[int]) -> NDA
 
 # -- what is written and marked -----------------------------------------------------------------
 
-LabelKind = Literal["country", "tribe", "class", "region", "sea"]
+LabelKind = Literal["country", "tribe", "class", "region", "sea", "continent"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -852,6 +870,22 @@ def poles(
                 float(counts[k]) * STEP * STEP,
             )
     return out
+
+
+def continent_names(atlas: Atlas, continent: NDArray[np.int8], names: Sequence[str]) -> list[Label]:
+    """The names of the continents the world generates, each where its land is broadest, for the
+    map seen from afar; none unless there are several to tell apart. ``continent`` is each
+    location's index into ``names`` (-1 for none)."""
+    if len(continent) != atlas.cells:
+        return []
+    found = poles(atlas, continent.astype(np.int64), len(names))
+    labels = [
+        Label(names[number], x, y, area, depth, "continent")
+        for number, (x, y, depth, area) in enumerate(found)
+        if area > 0
+    ]
+    labels.sort(key=lambda label: -label.weight)
+    return labels if len(labels) > 1 else []
 
 
 def _country_names(atlas: Atlas, words: Words, *, tribes: bool) -> list[Label]:

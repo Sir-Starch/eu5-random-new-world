@@ -334,11 +334,7 @@ class Bridge:
 
     def _new_world(self, params: Params) -> NewWorldSettings:
         """The settings of the land of the continent a request is about."""
-        continent = _continent(params)
-        c = self.controller
-        if continent == AMERICA:
-            return c.world_code().settings().new_world
-        return c.region_settings(continent).new_world
+        return self.controller.land_settings(_continent(params))
 
     def land_editor(self, params: Params) -> dict[str, object]:
         c = self.controller
