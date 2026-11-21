@@ -1686,8 +1686,102 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
     return land, ocean, lakes
 
 
+@dataclass(frozen=True, slots=True)
+class FinishedLand:
+    """The land of a domain with its coasts finished, before any cell, relief or river.
+
+    ``whole`` is the domain as given and ``domain`` what is left of it once the island groups
+    it covers have moved (``moves``, one per group) and become its holes. ``approaches`` are the
+    land connection and the strait crossing made toward retained land, and ``landing`` where a
+    strait lands; none without them.
+    """
+
+    whole: NDArray[np.bool_]
+    domain: NDArray[np.bool_]
+    land: NDArray[np.bool_]
+    ocean: NDArray[np.bool_]
+    lakes: NDArray[np.bool_]
+    moves: tuple[tuple[int, int], ...]
+    approaches: tuple[Approach, ...]
+    landing: tuple[int, int] | None
+
+
+def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world``.
+    domain: NDArray[np.bool_],
+    *,
+    seed: int,
+    settings: NewWorldSettings,
+    drawn: NDArray[np.bool_] | None = None,
+    groups: Sequence[Footprint] = (),
+    stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None = None,
+    template: NDArray[np.bool_] | None = None,
+    lakes_drawn: NDArray[np.bool_] | None = None,
+    outside_land: NDArray[np.bool_] | None = None,
+    land_interface: NDArray[np.bool_] | None = None,
+    strait: NDArray[np.uint8] | None = None,
+    island_sites: tuple[tuple[int, int, int], ...] = (),
+    reserve_south: int = 0,
+    reserve_north: int = 0,
+    on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
+) -> FinishedLand:
+    """The land, sea and lakes of ``generate_new_world`` with the same inputs, and no more: the
+    first land, the island groups placed, the ocean islands, the regional approaches, the
+    narrowed straits and the classified coasts. A sketch of several continents draws exactly
+    this, so it shows the coasts the world will have, but for the few pixels the cells' borders
+    move them."""
+    land_domain = domain
+    if reserve_south or reserve_north:
+        land_domain = domain.copy()
+        land_domain[:reserve_north] = False
+        land_domain[len(domain) - reserve_south :] = False
+    land, ocean, lakes = _first_land(
+        land_domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
+    )
+    del land_domain
+    whole = domain
+    # Retained ocean islands stay in the open ocean, never in a new inland sea.
+    placement_ocean = (
+        _ocean(domain, land | lakes, _off_limits(domain, settings))[1] if groups else ocean
+    )
+    if groups and reserve_south:
+        placement_ocean[-reserve_south:] = False
+    moves = place(whole, land, placement_ocean, groups, margin=settings.coast_margin_px)
+    del placement_ocean
+    if on_placed is not None:
+        on_placed(tuple((int(row), int(column)) for row, column in moves))
+    domain = carve(whole, groups, moves)
+    land &= domain
+    ocean &= domain
+    lakes &= domain
+    shore = _off_limits(domain, settings, outside_land)
+    shore[:reserve_north] = True
+    shore[len(domain) - reserve_south :] = True
+    _ocean_islands(land, domain, shore, island_sites, seed)
+    if island_sites:
+        ocean &= ~land
+    approaches, landing = _regional_approaches(
+        land,
+        ocean,
+        domain,
+        shore,
+        interface=land_interface,
+        strait=strait,
+        outside_land=outside_land,
+        settings=settings,
+        seed=seed,
+    )
+    land, ocean, _ = pinch(land, ocean, shore)
+    # Narrowing can detach a small pocket from the ocean. Classify the finished coasts,
+    # including existing lakes, before any cell, port or relief field gives it an identity.
+    land, ocean, lakes = _classify(domain, land, shore, settings, lakes_drawn)
+    del shore
+    if settings.template_permille:
+        omerika.check_joined(land, _template(domain, seed, settings, template))
+    return FinishedLand(whole, domain, land, ocean, lakes, moves, approaches, landing)
+
+
 @measured
-def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world construction.
+def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     domain: NDArray[np.bool_],
     *,
     seed: int,
@@ -1755,59 +1849,32 @@ def generate_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - staged world 
     if not 0 <= row0 < row0 + domain.shape[0] <= map_height:
         message = "The generation domain rows are outside the map"
         raise ValueError(message)
-    land_domain = domain
-    if reserve_south or reserve_north:
-        land_domain = domain.copy()
-        land_domain[:reserve_north] = False
-        land_domain[len(domain) - reserve_south :] = False
-    land, ocean, lakes = _first_land(
-        land_domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
-    )
-    del land_domain
-    whole = domain
-    # Retained ocean islands stay in the open ocean, never in a new inland sea.
-    placement_ocean = (
-        _ocean(domain, land | lakes, _off_limits(domain, settings))[1] if groups else ocean
-    )
-    if groups and reserve_south:
-        placement_ocean[-reserve_south:] = False
-    moves = place(whole, land, placement_ocean, groups, margin=settings.coast_margin_px)
-    del placement_ocean
-    if on_placed is not None:
-        on_placed(tuple((int(row), int(column)) for row, column in moves))
-    domain = carve(whole, groups, moves)
-    land &= domain
-    ocean &= domain
-    lakes &= domain
-    shore = _off_limits(domain, settings, outside_land)
-    shore[:reserve_north] = True
-    shore[len(domain) - reserve_south :] = True
-    _ocean_islands(land, domain, shore, island_sites, seed)
-    if island_sites:
-        ocean &= ~land
-    approaches, landing = _regional_approaches(
-        land,
-        ocean,
+    coasts = finished_land(
         domain,
-        shore,
-        interface=land_interface,
-        strait=strait,
-        outside_land=outside_land,
-        settings=settings,
         seed=seed,
+        settings=settings,
+        drawn=drawn,
+        groups=groups,
+        stage=stage,
+        template=template,
+        lakes_drawn=lakes_drawn,
+        outside_land=outside_land,
+        land_interface=land_interface,
+        strait=strait,
+        island_sites=island_sites,
+        reserve_south=reserve_south,
+        reserve_north=reserve_north,
+        on_placed=on_placed,
     )
-    land, ocean, _ = pinch(land, ocean, shore)
-    # Narrowing can detach a small pocket from the ocean. Classify the finished coasts,
-    # including existing lakes, before any cell, port or relief field gives it an identity.
-    land, ocean, lakes = _classify(domain, land, shore, settings, lakes_drawn)
-    del shore
+    whole, domain, moves = coasts.whole, coasts.domain, coasts.moves
+    land, ocean, lakes = coasts.land, coasts.ocean, coasts.lakes
+    approaches, landing = coasts.approaches, coasts.landing
+    del coasts
     contact = (
         contact_terrain.blend(land, outside_land)
         if contact_terrain is not None and outside_land is not None
         else None
     )
-    if settings.template_permille:
-        omerika.check_joined(land, _template(domain, seed, settings, template))
     rivers_first = algorithm >= epoch.RIVERS_FIRST
     walls: NDArray[np.bool_] | None = None
     drainage: DrainagePlan | None = None
