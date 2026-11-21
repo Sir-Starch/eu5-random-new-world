@@ -3450,8 +3450,8 @@ source = "5698699cca158406"
 text = '''Na świecie'''
 
 ["editor.world_tip"]
-source = "fa2008fec651bc28"
-text = '''Ramka to arkusz, na którym rysujesz Amerykę, na mapie gry. Ciemniejsze ziemie zostają takie, jak w grze; pozostałe włączone kontynenty zajmą własne miejsca.'''
+source = "bec510abb67ff375"
+text = '''Ramka to arkusz, na którym rysujesz Amerykę, na mapie gry: szarość w jej wnętrzu to obszar, który wypełni twój ląd. Włączone Afryka i Oceania też zostaną wygenerowane; naszkicuj kontynenty, aby zobaczyć je na swoich miejscach.'''
 
 ["editor.world_sketch"]
 source = "d41a2bbba604a6b2"

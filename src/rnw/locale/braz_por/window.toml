@@ -3450,8 +3450,8 @@ source = "5698699cca158406"
 text = '''No mundo'''
 
 ["editor.world_tip"]
-source = "fa2008fec651bc28"
-text = '''A moldura é a folha em que você desenha a América, no mapa do jogo. As terras mais escuras ficam como o jogo as tem; os outros continentes ativados ocupam seus próprios lugares.'''
+source = "bec510abb67ff375"
+text = '''A moldura é a folha em que você desenha a América, no mapa do jogo: o cinza dentro dela é a área que sua terra preenche. África e Oceania, se ativadas, também são geradas; esboce continentes para vê-las em seus lugares.'''
 
 ["editor.world_sketch"]
 source = "d41a2bbba604a6b2"

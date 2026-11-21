@@ -3450,8 +3450,8 @@ source = "5698699cca158406"
 text = '''In der Welt'''
 
 ["editor.world_tip"]
-source = "fa2008fec651bc28"
-text = '''Der Rahmen ist das Blatt, auf dem Sie Amerika zeichnen, auf der Karte des Spiels. Dunklere Länder bleiben, wie das Spiel sie hat; weitere eingeschaltete Kontinente nehmen ihre eigenen Plätze ein.'''
+source = "bec510abb67ff375"
+text = '''Der Rahmen ist das Blatt, auf dem Sie Amerika zeichnen, auf der Karte des Spiels: Das Grau darin ist das Gebiet, das Ihr Land ausfüllt. Eingeschaltetes Afrika und Ozeanien werden ebenfalls erzeugt; skizzieren Sie Kontinente, um sie an ihrem Platz zu sehen.'''
 
 ["editor.world_sketch"]
 source = "d41a2bbba604a6b2"

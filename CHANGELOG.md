@@ -56,6 +56,9 @@ worlds and saves are not rewritten or migrated.
   America is laid on its area in the sketches. A disabled sketch or editor button says why. The
   land editor shows where its sheet lies in the world, on the chosen sketch or the game's map.
 
+- Speak of continents, not of the New World, in the settings that every continent has. *Distance
+  from the Old World* is now *Distance from kept shores*: Africa and Oceania have it too.
+
 - Rework the new world's inspector for several continents. The World tab lists America, Africa
   and Oceania, each with its switch and, while on, its type and its own choices in one place
   (America's basics and oceans; Africa's Morocco, Mamluks and connection to Asia) and its own

@@ -25,6 +25,7 @@ from rnw.landarea import (
     EDITOR_STEP,
     ISLANDS_GREY,
     OUTSIDE_GREY,
+    WORLD_STEP,
 )
 from rnw.landmask import KIND_COLORS, LandMask, LandMaskError
 from rnw.png import COLOR_GRAY, COLOR_RGB, encode_png
@@ -49,6 +50,11 @@ NO_SKETCH: Final[str] = "There is no such sketched continent"
 
 class StudioError(ValueError):
     """A request the editor cannot answer: the window sent something it should not have."""
+
+
+# The area the drawing fills, on the editor's view of the world: the game's land there is
+# replaced, so it is shown neither as kept land nor as sea.
+SHEET_AREA: Final[tuple[int, int, int]] = (104, 110, 124)
 
 
 def kinds_url(kinds: NDArray[np.uint8]) -> str:
@@ -114,12 +120,15 @@ def opening(
     }
 
 
-def world_view(area: LandArea, chosen: sketches.Candidate | None) -> dict[str, object] | None:
+def world_view(
+    area: LandArea, chosen: sketches.Candidate | None, step: int = EDITOR_STEP
+) -> dict[str, object] | None:
     """The whole map with the sheet's frame on it, as fractions of the picture (its left edge,
     top, width and height): the chosen sketch of the world's several continents when there is
-    one, else the game's own map in a sketch's darker colours. The map wraps east to west, so it
-    is turned to put the frame in its middle, in one piece. None when the area does not know
-    where it lies."""
+    one, else the game's own map in a sketch's darker colours with the area the drawing fills
+    (``area`` cut every ``step``th pixel) in ``SHEET_AREA``, since the game's land there is
+    replaced. The map wraps east to west, so it is turned to put the frame in its middle, in one
+    piece. None when the area does not know where it lies."""
     if area.origin is None or area.world is None:
         return None
     row, column, height, width = area.origin
@@ -133,6 +142,7 @@ def world_view(area: LandArea, chosen: sketches.Candidate | None) -> dict[str, o
             np.array(sketches.KEPT_LAND, dtype=np.uint8),
             np.array(sketches.KEPT_SEA, dtype=np.uint8),
         ).astype(np.uint8)
+        picture[_drawn_area(area, area.origin, area.world, step)] = SHEET_AREA
     # Turn the map so that the frame's middle is the picture's.
     picture_width = int(cast("tuple[int, int, int]", picture.shape)[1])
     shift = round((0.5 - (column + columns / 2) / width) * picture_width)
@@ -143,6 +153,27 @@ def world_view(area: LandArea, chosen: sketches.Candidate | None) -> dict[str, o
         "frame": [left, row / height, min(columns / width, 1.0), rows / height],
         "sketch": chosen is not None and chosen.composed,
     }
+
+
+def _drawn_area(
+    area: LandArea,
+    origin: tuple[int, int, int, int],
+    world: NDArray[np.bool_],
+    step: int,
+) -> NDArray[np.bool_]:
+    """The pixels of ``world`` (the map every ``WORLD_STEP``th pixel) that fall in the area the
+    drawing fills: the sheet ``area`` cut every ``step``th pixel from ``origin``."""
+    row, column, _height, width = origin
+    sheet_rows, sheet_columns = area.picture_shape
+    world_rows, world_columns = cast("tuple[int, int]", world.shape)
+    down = np.arange(world_rows) * WORLD_STEP - row
+    across = (np.arange(world_columns) * WORLD_STEP - column) % width
+    inside_rows = (down >= 0) & (down < sheet_rows * step)
+    inside_columns = across < sheet_columns * step
+    found = np.zeros((world_rows, world_columns), dtype=np.bool_)
+    picked = np.ix_(np.flatnonzero(inside_rows), np.flatnonzero(inside_columns))
+    found[picked] = area.area[np.ix_(down[inside_rows] // step, across[inside_columns] // step)]
+    return found
 
 
 def _grey(mask: NDArray[np.bool_]) -> bytes:

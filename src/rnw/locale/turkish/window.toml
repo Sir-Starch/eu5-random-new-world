@@ -3450,8 +3450,8 @@ source = "5698699cca158406"
 text = '''Dünyada'''
 
 ["editor.world_tip"]
-source = "fa2008fec651bc28"
-text = '''Çerçeve, oyunun haritasında Amerika'yı çizdiğiniz sayfadır. Daha koyu topraklar oyundaki gibi kalır; açılan diğer kıtalar kendi yerlerini alır.'''
+source = "bec510abb67ff375"
+text = '''Çerçeve, oyunun haritasında Amerika'yı çizdiğiniz sayfadır: içindeki gri, karanızın dolduracağı alandır. Açıksa Afrika ve Okyanusya da üretilir; onları yerlerinde görmek için kıtaların taslağını çıkarın.'''
 
 ["editor.world_sketch"]
 source = "d41a2bbba604a6b2"

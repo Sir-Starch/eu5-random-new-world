@@ -3450,8 +3450,8 @@ source = "5698699cca158406"
 text = '''En el mundo'''
 
 ["editor.world_tip"]
-source = "fa2008fec651bc28"
-text = '''El marco es la hoja en la que dibujas América, sobre el mapa del juego. Las tierras más oscuras quedan como las tiene el juego; los demás continentes activados ocupan su propio lugar.'''
+source = "bec510abb67ff375"
+text = '''El marco es la hoja en la que dibujas América, sobre el mapa del juego: el gris de dentro es el área que llena tu tierra. África y Oceanía, si están activadas, también se generan; esboza continentes para verlas en su lugar.'''
 
 ["editor.world_sketch"]
 source = "d41a2bbba604a6b2"

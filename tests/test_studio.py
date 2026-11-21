@@ -333,22 +333,35 @@ def test_the_bridge_lays_a_known_land(
 
 
 def test_the_editor_shows_its_sheet_in_one_piece_in_the_middle_of_the_world() -> None:
-    """A sheet across the map's seam is framed whole: the world is turned to centre it."""
+    """A sheet across the map's seam is framed whole: the world is turned to centre it. Without a
+    sketch the area the drawing fills is neither kept land nor sea, the rest is the game's."""
     from dataclasses import replace  # noqa: PLC0415 - this test alone
 
-    from rnw.gui.studio import world_view  # noqa: PLC0415 - this test alone
+    from rnw.app.candidates import KEPT_LAND  # noqa: PLC0415 - this test alone
+    from rnw.gui.studio import SHEET_AREA, world_view  # noqa: PLC0415 - this test alone
+    from rnw.landarea import WORLD_STEP  # noqa: PLC0415 - this test alone
 
-    world = np.zeros((32, 64), dtype=np.bool_)
-    world[:, :8] = True
-    area = replace(_full_area(), origin=(0, 3000, 2048, 4096), world=world)
+    height, width = 2048, 4096
+    world = np.ones((height // WORLD_STEP, width // WORLD_STEP), dtype=np.bool_)
+    area = replace(_sheet(), origin=(0, 3000, height, width), world=world)
     found = world_view(area, None)
     assert found is not None
-    left, top, width, height = cast("list[float]", found["frame"])
-    assert abs(left + width / 2 - 0.5) < 1 / 64
+    left, top, wide, high = cast("list[float]", found["frame"])
+    assert abs(left + wide / 2 - 0.5) < 1 / 64
     assert left >= 0
-    assert left + width <= 1
+    assert left + wide <= 1
     assert top == 0
-    assert width == area.shape[1] / 4096
-    assert height == area.shape[0] / 2048
+    assert wide == area.shape[1] / width
+    assert high == area.shape[0] / height
     assert found["sketch"] is False
+    picture = _decoded_rgb(cast("str", found["picture"]))
+    middle = picture[height // WORLD_STEP // 2, width // WORLD_STEP // 2]
+    assert tuple(middle.tolist()) == SHEET_AREA
+    assert tuple(picture[height // WORLD_STEP // 2, 2].tolist()) == KEPT_LAND
+    # The area's own margin, inside the frame, is the game's land, kept.
+    assert tuple(picture[0, width // WORLD_STEP // 2].tolist()) == KEPT_LAND
     assert world_view(replace(area, origin=None), None) is None
+
+
+def _decoded_rgb(url: str) -> NDArray[np.uint8]:
+    return np.asarray(Image.open(io.BytesIO(studio.png_of(url))).convert("RGB"))

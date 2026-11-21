@@ -3450,8 +3450,8 @@ source = "5698699cca158406"
 text = '''Dans le monde'''
 
 ["editor.world_tip"]
-source = "fa2008fec651bc28"
-text = '''Le cadre est la feuille où vous dessinez l'Amérique, sur la carte du jeu. Les terres plus sombres restent telles que le jeu les a ; les autres continents activés prennent leur propre place.'''
+source = "bec510abb67ff375"
+text = '''Le cadre est la feuille où vous dessinez l'Amérique, sur la carte du jeu : le gris à l'intérieur est la zone que vos terres remplissent. L'Afrique et l'Océanie, si elles sont activées, sont aussi générées ; esquissez des continents pour les voir à leur place.'''
 
 ["editor.world_sketch"]
 source = "d41a2bbba604a6b2"
