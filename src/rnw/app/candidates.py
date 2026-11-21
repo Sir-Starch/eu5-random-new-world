@@ -170,7 +170,7 @@ def sketch_composed(
     as the world lays it.
     """
     check_count(len(seeds))
-    if settings.mask.id and land_mask is None:
+    if settings.continents.america and settings.mask.id and land_mask is None:
         message = say("candidates.drawn")
         raise CandidateError(message)
     game_map = run_stage("load map", lambda: load_map(game_dir))
