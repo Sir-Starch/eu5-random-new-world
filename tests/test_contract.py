@@ -10,6 +10,7 @@ from typer.testing import CliRunner
 
 from rnw.cli import app
 from rnw.contract import CONTRACT_FILES, MissingContractFileError, fingerprint
+from rnw.inputs import recording
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -36,7 +37,7 @@ def test_fingerprint_is_stable_and_detects_file_change(tmp_path: Path) -> None:
 
 def test_missing_contract_file_fails_with_relative_path(tmp_path: Path) -> None:
     """A missing input cannot yield a misleading partial fingerprint."""
-    with pytest.raises(MissingContractFileError, match=r"default\.map"):
+    with pytest.raises(MissingContractFileError, match=r"default\.map"), recording(tmp_path):
         _ = fingerprint(tmp_path)
 
 

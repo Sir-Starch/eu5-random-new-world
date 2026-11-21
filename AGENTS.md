@@ -8,8 +8,9 @@ RNW **1.2.2** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-n
 [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331); updating that
 item to 1.2.2 is the owner's step (change notes: `docs/releases/1.2.2-workshop.bbcode`). The
 publication-rules review remains accepted (C437–C439, C441); the owner accepted the tagged
-Tauri-window low-confidence heuristic in writing (C532). The current compatibility target is
-**EU5 1.4.7 / Steam build 26377361**, including Across the Pillars; frozen release epochs
+Tauri-window low-confidence heuristic in writing (C532). RNW 1.2.2 targets EU5 1.4.7 / Steam
+build 26377361. The development target is **EU5 1.4.9 / Steam build 26655995**, including Across
+the Pillars ([audit](docs/research/compatibility-1-4-9.md)); frozen release epochs
 **60** (1.1.0), **61** (1.2.0), **62** (1.2.1) and **63** (1.2.2); the next release is **1.3.0**,
 whose pending epoch is **64** (natural wastelands, `rnw.barrens`; cordilleras, rivers before
 cells, open climate, rough hills, C534; pooled raw materials, C535; cells sized by what they

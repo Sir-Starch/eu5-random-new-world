@@ -43,6 +43,10 @@ worlds and saves are not rewritten or migrated.
   coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
+- Support EU5 1.4.9 (Steam build 26655995), including Across the Pillars. When the game has
+  unsupported map files, both windows show a compatibility message and keep the fingerprint
+  in the diagnostics.
+
 - Calibrate climate and vegetation from evenly spaced readings of vanilla land. The
   interiors of large desert locations now contribute in proportion to their map area,
   so suitable subtropical terrain develops broader dry belts.

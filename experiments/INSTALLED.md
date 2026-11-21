@@ -69,6 +69,23 @@ Locked checks passed with 3,651 Python and 39 native Rust tests. The desktop
 checks passed with 50 Svelte and five shell tests. The installed-game
 America-only reference matched its epoch-64 golden.
 
+2026-11-18, **1.2.2 Workshop hotfix / epoch 63 — EU5 1.4.9**.
+[V-EXEC] Generated and verified `rnw_exp_world_rggenu3kjs` in the isolated profile at
+`local_data/hotfix-122-eu5-149/profile`. The Workshop hub is staged at
+`local_data/hotfix-122-eu5-149/rnw_exp_hub` for the owner. The main Steam profile retains its
+development hub. The [compatibility check](../docs/research/compatibility-1-4-9.md#workshop-hotfix-for-rnw-122)
+records the packaged diff, checksums and self-test scope.
+
+2026-11-18, **1.3.0 development / epoch 64 — EU5 1.4.9 compatibility** (C545).
+[V-EXEC] Installed `rnw_exp_world_7bvkojbntq` into the isolated profile at
+`local_data/compat-149/profile` using the normal generation service. The separately repeated
+reference export matches the pinned hash of all 884 world files. The Windows hub candidate
+is staged at `local_data/compat-149/hub-candidate/rnw_exp_hub` with the previous candidate's
+verified binaries and the updated Python sources. Wine's server could not bind a socket in
+the sandbox, so the updater stopped before installation. The actual Steam profile was mounted
+read-only. The native generator passed both offscreen self-tests. See the
+[compatibility check](../docs/research/compatibility-1-4-9.md).
+
 2026-11-18, **1.3.0 development / epoch 64 — native wind transport** (C544).
 [V-EXEC] Updated the generator-only hub after moving the unchanged seasonal/legacy wind scans
 to bounded native strips. Locked checks pass (3,567 Python checks, 22 optional skips,

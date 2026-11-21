@@ -119,6 +119,10 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "progress_details": "Show stage details",
     "retry_new_seed": "Generate with a new seed",
+    "generation_unsupported_build": (
+        "This version of Random New World does not support the installed EU5 map files. "
+        "Update the generator or switch to a supported EU5 version."
+    ),
     "generation_sea_error": (
         "The generator could not build a consistent ocean for this world. "
         "Technical detail: {detail}"

@@ -1963,6 +1963,10 @@ text = '''이 세계의 바다를 일관되게 생성하지 못했습니다. 기
 source = "9fb1e9710c36801b"
 text = '''파일을 읽거나 쓸 수 없습니다. 파일 위치, 권한 및 디스크 여유 공간을 확인하세요. 기술 세부 정보: {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''이 버전의 Random New World는 설치된 EU5의 지도 파일을 지원하지 않습니다. 생성기를 업데이트하거나 지원되는 EU5 버전으로 전환하세요.'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''예기치 않은 오류로 세계 생성이 중단되었습니다. 기술 세부 정보: {detail}'''

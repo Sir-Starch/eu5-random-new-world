@@ -24,7 +24,7 @@ CONTRACT_FILES: Final[tuple[str, ...]] = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class MissingContractFileError(Exception):
     """A required source file for the fingerprint is absent."""
 

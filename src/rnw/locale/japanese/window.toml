@@ -1963,6 +1963,10 @@ text = '''この世界の海洋を整合性のある形で生成できません�
 source = "9fb1e9710c36801b"
 text = '''ファイルを読み書きできませんでした。場所、アクセス権、空き容量を確認してください。技術的な詳細: {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''このバージョンの Random New World は、インストールされている EU5 のマップファイルに対応していません。ジェネレーターを更新するか、対応しているバージョンの EU5 に切り替えてください。'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''予期しないエラーにより世界の生成が停止しました。技術的な詳細: {detail}'''

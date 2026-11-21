@@ -1963,6 +1963,10 @@ text = '''O gerador não conseguiu criar um oceano consistente para este mundo. 
 source = "9fb1e9710c36801b"
 text = '''Não foi possível ler ou gravar um arquivo. Verifique o local, as permissões e o espaço em disco. Detalhe técnico: {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''Esta versão de Random New World não é compatível com os arquivos de mapa do EU5 instalado. Atualize o gerador ou use uma versão compatível do EU5.'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''Um erro inesperado interrompeu a geração do mundo. Detalhe técnico: {detail}'''

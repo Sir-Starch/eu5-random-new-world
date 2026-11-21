@@ -1874,6 +1874,7 @@ class Controller:
         logs.get().exception("task failed: %s", error)
         self._write_error_log(error)
         from rnw.currents import CurrentError  # noqa: PLC0415 - load generation code only on failure
+        from rnw.eu5_export import UnsupportedBuildError  # noqa: PLC0415
         from rnw.eu5_nw_export import LocationLimitError  # noqa: PLC0415
         from rnw.eu5_rivers import RiverRasterError  # noqa: PLC0415
         from rnw.eu5_seas import SeaError  # noqa: PLC0415
@@ -1883,6 +1884,8 @@ class Controller:
         making = self.task in MAKING
         cause: BaseException | None = error
         while cause is not None:
+            if making and isinstance(cause, UnsupportedBuildError):
+                return text("generation_unsupported_build")
             if making and isinstance(cause, LocationLimitError):
                 return text(
                     "generation_location_limit",
@@ -1902,7 +1905,7 @@ class Controller:
             and not isinstance(error, (SettingsError, worldfile.WorldFileError))
             and not (error.args and isinstance(error.args[0], Said))
         ):
-            return text("generation_unexpected_error", detail=detail)
+            detail = text("generation_unexpected_error", detail=detail)
         return detail
 
     def record_fault(self, error: BaseException, what: str) -> None:

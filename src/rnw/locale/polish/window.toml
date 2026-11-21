@@ -1963,6 +1963,10 @@ text = '''Generator nie mógł utworzyć spójnego oceanu dla tego świata. Szcz
 source = "9fb1e9710c36801b"
 text = '''Nie udało się odczytać lub zapisać pliku. Sprawdź jego położenie, uprawnienia i wolne miejsce na dysku. Szczegóły techniczne: {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''Ta wersja Random New World nie obsługuje plików mapy zainstalowanej wersji EU5. Zaktualizuj generator lub przejdź na obsługiwaną wersję EU5.'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''Nieoczekiwany błąd przerwał generowanie świata. Szczegóły techniczne: {detail}'''

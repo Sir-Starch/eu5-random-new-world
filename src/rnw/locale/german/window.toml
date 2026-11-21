@@ -1963,6 +1963,10 @@ text = '''Der Generator konnte für diese Welt keinen stimmigen Ozean erzeugen. 
 source = "9fb1e9710c36801b"
 text = '''Eine Datei konnte nicht gelesen oder geschrieben werden. Prüfe ihren Speicherort, die Berechtigungen und den freien Speicherplatz. Technisches Detail: {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''Diese Version von Random New World unterstützt die installierten EU5-Kartendateien nicht. Aktualisiere den Generator oder wechsle zu einer unterstützten EU5-Version.'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''Ein unerwarteter Fehler hat die Welterstellung gestoppt. Technisches Detail: {detail}'''

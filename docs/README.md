@@ -1,8 +1,7 @@
 # Documentation
 
-RNW 1.2.2 (epoch 63) shipped on 2026-11-11 for official EU5 1.4.7 / Steam build 26377361,
-the latest compatible game version; 1.1.0 (epoch 60) targeted EU5 1.4.6. The 1.4.8 test
-branch with hourly ticks is not supported.
+RNW 1.2.2 (epoch 63) shipped on 2026-11-11 for official EU5 1.4.7 / Steam build 26377361.
+The pending RNW 1.3.0 (epoch 64) also supports official EU5 1.4.9 / Steam build 26655995.
 Continue each generated map's campaign on the exact EU5 version used to create it.
 Start with [AGENTS.md](../AGENTS.md) for working instructions and
 [architecture](architecture.md) for current code. This index distinguishes current
@@ -77,6 +76,7 @@ current instructions or turn uncertainty into a publication prohibition.
 | Record | Scope |
 |---|---|
 | [Interoperability register](research/interoperability.md) | Closed formats and written binaries, with source/compatibility rationale |
+| [1.4.9 compatibility check](research/compatibility-1-4-9.md) | Installed build, changed inputs and reference exports |
 | [1.4.7 compatibility check](research/compatibility-1-4-7.md) | Installed build, full input delta, map contract and offline checks |
 | [1.2.0 history calibration](research/history-120-calibration.md) | Development calibration, R6 held-out results, control sweeps, reference/portability and remaining acceptance scope |
 | [History contracts](research/history-contracts.md) | Installed history contracts, baseline measurements and seed matrices |

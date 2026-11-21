@@ -97,7 +97,7 @@ class ExportError(ValueError):
     """The installation or settings cannot produce a valid candidate."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class UnsupportedBuildError(ExportError):
     """The map-contract fingerprint is not a known, tested build."""
 

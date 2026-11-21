@@ -5,8 +5,8 @@ These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday us
 
 ## Game compatibility and saves
 
-- **Official EU5 1.4.7, Steam build 26377361, is the latest compatible game
-  version.** The 1.4.8 test branch with hourly ticks is not supported. This
+- **RNW 1.2.2 targets official EU5 1.4.7, Steam build 26377361.** EU5 1.4.9
+  support starts with RNW 1.3.0. This
   compatibility guidance does not migrate an existing map to a different game
   version.
 - **New 1337 campaigns only.** A generated map cannot be added to an existing

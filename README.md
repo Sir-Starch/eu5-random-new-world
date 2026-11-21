@@ -28,7 +28,7 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 ![Random New World procedural generation showcase](docs/images/showcase/rnw_showcase_full.gif)
 
 > [!IMPORTANT]
-> **Compatibility:** The latest compatible game version is official EU5 **1.4.7, Steam build 26377361**. The 1.4.8 test branch with hourly ticks is not supported. Keep each generated map and its campaign on the exact EU5 version used to generate it, and keep its world mod. Updating the generator does not migrate saves.
+> **Compatibility:** The published RNW 1.2.2 targets official EU5 **1.4.7, Steam build 26377361**. The 1.3.0 development version adds **EU5 1.4.9, Steam build 26655995**. Keep each generated map and its campaign on the exact EU5 version used to generate it, and keep its world mod.
 
 Read [Known limitations](docs/known-limitations.md) before playing: supported game
 build, save and mod compatibility, generation requirements and known visual issues.
@@ -162,7 +162,7 @@ No Python or Rust installation is required for the [released packages](https://g
 
 #### Requirements
 
-* **Europa Universalis V (official 1.4.7 / Steam build 26377361)** installed via Steam (Windows or Linux/Proton). The 1.4.8 test branch with hourly ticks is not supported. Across the Pillars is optional.
+* **Europa Universalis V (official 1.4.9 / Steam build 26655995)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
 * **Node.js 20+** (only needed when building the Tauri desktop window from source).

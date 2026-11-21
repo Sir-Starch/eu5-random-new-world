@@ -1963,6 +1963,10 @@ text = '''Le générateur n’a pas pu créer un océan cohérent pour ce monde.
 source = "9fb1e9710c36801b"
 text = '''Impossible de lire ou d’écrire un fichier. Vérifiez son emplacement, les autorisations et l’espace disque disponible. Détail technique : {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''Cette version de Random New World ne prend pas en charge les fichiers de carte de votre installation d’EU5. Mettez à jour le générateur ou utilisez une version compatible d’EU5.'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''Une erreur inattendue a interrompu la génération du monde. Détail technique : {detail}'''

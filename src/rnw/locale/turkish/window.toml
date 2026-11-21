@@ -1963,6 +1963,10 @@ text = '''Oluşturucu bu dünya için tutarlı bir okyanus oluşturamadı. Tekni
 source = "9fb1e9710c36801b"
 text = '''Bir dosya okunamadı veya yazılamadı. Konumunu, izinleri ve kullanılabilir disk alanını kontrol edin. Teknik ayrıntı: {detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''Random New World’ün bu sürümü, kurulu EU5 harita dosyalarını desteklemiyor. Üreteci güncelleyin veya desteklenen bir EU5 sürümüne geçin.'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''Beklenmeyen bir hata dünya oluşturmayı durdurdu. Teknik ayrıntı: {detail}'''

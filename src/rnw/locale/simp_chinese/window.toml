@@ -1963,6 +1963,10 @@ text = '''生成器无法为此世界构建一致的海洋。技术详情：{det
 source = "9fb1e9710c36801b"
 text = '''无法读取或写入文件。请检查文件位置、权限和可用磁盘空间。技术详情：{detail}'''
 
+["generation_unsupported_build"]
+source = "c3ee42b149e54a2b"
+text = '''此版本的 Random New World 不支持已安装的 EU5 地图文件。请更新生成器或切换到受支持的 EU5 版本。'''
+
 ["generation_unexpected_error"]
 source = "385c18532f5953e5"
 text = '''意外错误导致世界生成停止。技术详情：{detail}'''

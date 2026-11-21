@@ -7,7 +7,7 @@ while keeping the Old World intact. Each world becomes its own mod that you enab
 If you came here from Steam, start with the steps below. The default settings are enough
 for your first world; you can explore the other options whenever you want.
 
-**Current compatibility:** RNW supports **EU5 1.4.***. New patches in the 1.4 branch are usually compatible without a generator update; the latest fully verified version is **1.4.7** (Steam build 26377361). Continue each generated map's campaign on the exact EU5 version used to create it.
+**Current compatibility:** Published RNW 1.2.2 targets EU5 **1.4.7** (Steam build 26377361). The 1.3.0 development version adds EU5 **1.4.9** (Steam build 26655995). Continue each generated map's campaign on the exact EU5 version used to create it.
 See [known limitations](known-limitations.md) for game updates, saves and mod compatibility.
 
 ## Quick start: from Steam to your first campaign

@@ -16,6 +16,7 @@ from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.library import Placement
 from rnw.app.worldcode import WorldCode, decode, encode, new_code
+from rnw.contract import CONTRACT_FILES
 from rnw.eu5_lobby import SCRIPTED_GUI_FILE
 from rnw.eu5_nw_export import LocationLimitError
 from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
@@ -785,6 +786,26 @@ def test_generation_explains_the_location_limit(tmp_path: Path, fake_export: Exp
     assert "32,264" in controller.message
     assert "32,000" in controller.message
     assert "Advanced" in controller.message
+
+
+def test_generation_explains_an_unknown_game_build(tmp_path: Path, fake_export: Exporter) -> None:
+    controller = _controller(tmp_path, fake_export)
+    assert controller.game is not None
+    for relative in CONTRACT_FILES:
+        source = controller.game.directory / relative
+        source.parent.mkdir(parents=True, exist_ok=True)
+        _ = source.write_text(relative, encoding="utf-8")
+    controller.generator = service.generate
+
+    assert controller.start() is None
+    controller.wait(10)
+
+    assert controller.phase is Phase.FAILED
+    assert controller.message == text("generation_unsupported_build")
+    trace = (controller.data / "last-error.log").read_text(encoding="utf-8")
+    assert "UnsupportedBuildError: Unsupported map-contract fingerprint" in trace
+    assert "TypeError" not in trace
+    assert not controller.worlds
 
 
 def test_a_version_that_fails_is_told_in_the_generators_words_and_keeps_its_trace(
