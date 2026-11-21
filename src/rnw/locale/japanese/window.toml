@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''陸地'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''新世界のうち陸地が占める割合。陸地が多いほどロケーションは少し大きくなり、EU5が扱える32,000のロケーションに収まるようにします。'''
+source = "202abef6c8a261d1"
+text = '''アメリカの領域のうち陸地が占める割合。陸地が多いほど、EU5 が受け付ける 32,000 ロケーションに収まるよう、ロケーションが少し大きくなります。'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''先住民'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''新世界に住む民族の数と、文化の中心地の数。'''
+source = "69c8b047930d7896"
+text = '''アメリカに住む民族の数と、文化の中心地の数。'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''キャンペーン開始時に、各プレイヤーの国がこの生成された大陸のすべてのエリア（陸と海）を発見するので、全プレイヤーが初日からその大陸を見られます。コンピューターが操作する国には与えられず、ゲームと同じく探検によって見つけます。既定ではオフで、その場合は大陸は全員に発見されるのを待ちます。アメリカでは、新世界の発見を知らせるゲーム本来のイベントは、発見がすでに済んでいるため発生しません。'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''新世界のうち陸地が占める割合。'''
+source = "37136e1c0e9c9395"
+text = '''大陸の領域のうち陸地が占める割合。'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''旧世界からの距離'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''高くするほど、大陸は海の中央寄りに、旧世界の海岸から遠くなります。陸地の量は変わりません。「壁」では無視されます。'''
+source = "40ce2903abaf6b41"
+text = '''高いほど、陸地は領域の中央寄りに、周囲に残した海岸から離れて配置されます。陸地の量は変わりません。「壁」はこれを無視します。'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''金、銀、宝石'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''金、銀、宝石、真珠が出る頻度。元の新世界との比較。'''
+source = "627e955417cf6795"
+text = '''金・銀・宝石・真珠の出現頻度。100 % でゲーム本来と同じ頻度です。'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''人口'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''先住民の人口。元の新世界の人口との比較。'''
+source = "4fefa6c8a3b34b3a"
+text = '''生成された陸地に住む人口。100 % でゲーム本来の 1 ロケーションあたりの人口と同じです。'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"

@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Terres'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''Quelle part du Nouveau Monde est faite de terres. Plus de terres rend les lieux un peu plus grands, pour que le monde reste sous les 32 000 lieux que supporte EU5.'''
+source = "202abef6c8a261d1"
+text = '''La part de la surface de l'Amérique qui est terre. Plus de terres rendent les lieux un peu plus grands, pour que le monde reste dans les 32 000 lieux qu'accepte EU5.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Peuples autochtones'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''Combien de peuples vivent dans le Nouveau Monde, et combien de foyers de culture.'''
+source = "69c8b047930d7896"
+text = '''Combien de peuples vivent en Amérique, et combien de foyers culturels elle compte.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''Au début d'une campagne, le pays de chaque joueur découvre chaque zone de ce continent généré, terres et mers, de sorte que tous les joueurs le voient dès le premier jour. Les pays dirigés par l'ordinateur ne l'obtiennent pas : ils le trouvent en explorant, comme dans le jeu. Désactivé par défaut : le continent attend alors d'être découvert par tous. Pour l'Amérique, l'événement du jeu qui annonce la découverte du Nouveau Monde ne se déclenche pas, car la découverte est déjà faite.'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''Quelle part du Nouveau Monde est faite de terres.'''
+source = "37136e1c0e9c9395"
+text = '''La part de la surface du continent qui est terre.'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''Distance à l’Ancien Monde'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''Plus haut : les continents se placent plus près du milieu de l’océan, loin des côtes de l’Ancien Monde. La quantité de terres ne change pas. Le Mur l’ignore.'''
+source = "40ce2903abaf6b41"
+text = '''Plus haut : les terres se placent plus près du milieu de leur zone, plus loin des côtes conservées autour. La quantité de terres ne change pas. Le Mur l'ignore.'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''Or, argent et pierres précieuses'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''Fréquence de l'or, de l'argent, des pierres précieuses et des perles, par rapport au Nouveau Monde de base.'''
+source = "627e955417cf6795"
+text = '''La fréquence de l'or, de l'argent, des gemmes et des perles ; 100 % correspond à la fréquence du jeu.'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''Population'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''Population autochtone, par rapport à celle du Nouveau Monde de base.'''
+source = "4fefa6c8a3b34b3a"
+text = '''Combien de personnes vivent sur les terres générées ; 100 % correspond au nombre d'habitants par lieu du jeu lui-même.'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"

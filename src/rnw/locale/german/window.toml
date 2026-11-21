@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Land'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''Wie viel der Neuen Welt Land ist. Mehr Land macht die Orte etwas größer, damit die Welt unter den 32.000 Orten bleibt, die EU5 verkraftet.'''
+source = "202abef6c8a261d1"
+text = '''Wie viel von Amerikas Fläche Land ist. Mehr Land macht die Orte etwas größer, damit die Welt innerhalb der 32.000 Orte bleibt, die EU5 annimmt.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Ureinwohner'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''Wie viele Völker in der Neuen Welt leben und wie viele Kulturzentren es gibt.'''
+source = "69c8b047930d7896"
+text = '''Wie viele Völker in Amerika leben und wie viele kulturelle Zentren es gibt.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''Zu Beginn einer Kampagne entdeckt das Land jedes Spielers jedes Gebiet dieses erzeugten Kontinents, Land und Meer, sodass alle Spieler ihn vom ersten Tag an sehen. Vom Computer gesteuerte Länder erhalten dies nicht: Sie finden ihn durch Erkundung, wie im Spiel. Standardmäßig aus: Der Kontinent wartet dann darauf, von allen entdeckt zu werden. Für Amerika wird das Ereignis des Spiels, das die Entdeckung der Neuen Welt verkündet, nicht ausgelöst, weil die Entdeckung bereits gemacht ist.'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''Wie viel der Neuen Welt Land ist.'''
+source = "37136e1c0e9c9395"
+text = '''Wie viel von der Fläche des Kontinents Land ist.'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''Abstand zur Alten Welt'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''Höher: Die Kontinente liegen näher an der Mitte des Ozeans, weiter von den Küsten der Alten Welt entfernt. Die Landmenge ändert sich nicht. Die Mauer ignoriert die Einstellung.'''
+source = "40ce2903abaf6b41"
+text = '''Höher: Das Land liegt näher an der Mitte seines Gebiets, weiter von den bewahrten Küsten ringsum. Die Landmenge ändert sich nicht. Die Mauer ignoriert es.'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''Gold, Silber und Edelsteine'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''Wie oft Gold, Silber, Edelsteine und Perlen vorkommen, verglichen mit der normalen Neuen Welt.'''
+source = "627e955417cf6795"
+text = '''Wie oft Gold, Silber, Edelsteine und Perlen vorkommen; 100 % ist so oft wie im Spiel.'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''Bevölkerung'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''Einheimische Bevölkerung, verglichen mit der Bevölkerung der normalen Neuen Welt.'''
+source = "4fefa6c8a3b34b3a"
+text = '''Wie viele Menschen auf dem erzeugten Land leben; 100 % ist die Zahl der Menschen je Ort im Spiel selbst.'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"

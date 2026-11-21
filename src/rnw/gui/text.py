@@ -296,16 +296,14 @@ STRINGS: Final[dict[str, str]] = {
     "quick.custom": "custom",
     "quick.land": "Land",
     "quick.land.about": (
-        "How much of the New World is land. More land makes the locations a little larger, "
+        "How much of America's area is land. More land makes the locations a little larger, "
         "so the world stays within the 32,000 locations EU5 takes."
     ),
     "quick.land.little": "Little",
     "quick.land.normal": "Normal",
     "quick.land.much": "Much",
     "quick.peoples": "Native peoples",
-    "quick.peoples.about": (
-        "How many peoples live in the New World, and how many centres of culture."
-    ),
+    "quick.peoples.about": ("How many peoples live in America, and how many centres of culture."),
     "quick.peoples.few": "Few",
     "quick.peoples.normal": "Normal",
     "quick.peoples.many": "Many",
@@ -582,11 +580,11 @@ STRINGS: Final[dict[str, str]] = {
         "America, the game's own event that announces the discovery of the New World does not "
         "fire, because the discovery is already made."
     ),
-    "control.new_world.land_permille.about": "How much of the New World is land.",
+    "control.new_world.land_permille.about": "How much of the continent's area is land.",
     "control.new_world.centre_permille": "Distance from the Old World",
     "control.new_world.centre_permille.about": (
-        "Higher: continents lie nearer the middle of the ocean, farther from the Old World's "
-        "shores. The amount of land does not change. The Wall ignores it."
+        "Higher: the land lies nearer the middle of its area, farther from the coasts kept "
+        "around it. The amount of land does not change. The Wall ignores it."
     ),
     "control.new_world.feature_px": "Size of landmasses",
     "control.new_world.feature_px.about": ("Large: a few great landmasses. Small: many islands."),
@@ -604,7 +602,7 @@ STRINGS: Final[dict[str, str]] = {
     "control.new_world.wasteland_permille.about": "Share of the land nobody can settle.",
     "control.new_world.precious_permille": "Gold, silver and gems",
     "control.new_world.precious_permille.about": (
-        "How often gold, silver, gems and pearls occur, against the vanilla New World."
+        "How often gold, silver, gems and pearls occur; 100 % is as often as in the game."
     ),
     "control.new_world.location_px": "Location size",
     "control.new_world.location_px.about": (
@@ -617,7 +615,8 @@ STRINGS: Final[dict[str, str]] = {
     "control.new_world.province_size.about": "How many locations make a province.",
     "control.natives.population_permille": "Population",
     "control.natives.population_permille.about": (
-        "Native population, against the population of the vanilla New World."
+        "How many people live in the generated land; 100 % is the game's own number of people "
+        "per location."
     ),
     "control.natives.peasant_peak_permille": "Peasant share",
     "control.natives.peasant_peak_permille.about": (

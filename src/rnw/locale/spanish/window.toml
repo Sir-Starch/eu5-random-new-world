@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Tierra'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''Cuánto del Nuevo Mundo es tierra. Más tierra hace las localizaciones algo más grandes, para que el mundo quede dentro de las 32.000 localizaciones que admite EU5.'''
+source = "202abef6c8a261d1"
+text = '''Cuánto del área de América es tierra. Más tierra hace las localizaciones algo más grandes, para que el mundo quede dentro de las 32.000 localizaciones que admite EU5.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Pueblos nativos'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''Cuántos pueblos viven en el Nuevo Mundo y cuántos centros culturales tienen.'''
+source = "69c8b047930d7896"
+text = '''Cuántos pueblos viven en América y cuántos centros culturales hay.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''Al comienzo de una campaña, el país de cada jugador descubre todas las áreas de este continente generado, tierra y mar, de modo que todos los jugadores lo ven desde el primer día. Los países controlados por el ordenador no lo reciben: lo encuentran explorando, como en el juego. Desactivado por defecto: el continente espera entonces a ser descubierto por todos. Para América, el evento del propio juego que anuncia el descubrimiento del Nuevo Mundo no se activa, porque el descubrimiento ya está hecho.'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''Cuánto del Nuevo Mundo es tierra.'''
+source = "37136e1c0e9c9395"
+text = '''Cuánto del área del continente es tierra.'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''Distancia al Viejo Mundo'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''Más alto: los continentes quedan más cerca del centro del océano, lejos de las costas del Viejo Mundo. La cantidad de tierra no cambia. El Muro lo ignora.'''
+source = "40ce2903abaf6b41"
+text = '''Más alto: la tierra queda más cerca del centro de su área, más lejos de las costas conservadas a su alrededor. La cantidad de tierra no cambia. El Muro lo ignora.'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''Oro, plata y gemas'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''Con qué frecuencia aparecen oro, plata, gemas y perlas, comparado con el Nuevo Mundo original.'''
+source = "627e955417cf6795"
+text = '''Con qué frecuencia aparecen oro, plata, gemas y perlas; 100 % es tan a menudo como en el juego.'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''Población'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''Población nativa, comparada con la del Nuevo Mundo original.'''
+source = "4fefa6c8a3b34b3a"
+text = '''Cuántas personas viven en la tierra generada; 100 % es el número de personas por localización del propio juego.'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"

@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Kara'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''Yeni Dünya'nın ne kadarının kara olduğu. Kara arttıkça konumlar biraz büyür, böylece dünya EU5'in kaldırabildiği 32.000 konumun altında kalır.'''
+source = "202abef6c8a261d1"
+text = '''Amerika'nın alanının ne kadarının kara olduğu. Daha çok kara, dünyanın EU5'in kabul ettiği 32.000 konum içinde kalması için konumları biraz büyütür.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Yerli halklar'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''Yeni Dünya'da kaç halkın yaşadığı ve kaç kültür merkezi olduğu.'''
+source = "69c8b047930d7896"
+text = '''Amerika'da kaç halkın yaşadığı ve kaç kültür merkezi olduğu.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''Bir kampanyanın başında her oyuncunun ülkesi bu oluşturulan kıtanın karasal ve denizsel tüm bölgelerini keşfeder; böylece tüm oyuncular onu ilk günden görür. Bilgisayarın yönettiği ülkeler bunu almaz: onu oyundaki gibi keşif yaparak bulurlar. Varsayılan olarak kapalıdır: bu durumda kıta, herkes tarafından keşfedilmeyi bekler. Amerika için oyunun Yeni Dünya'nın keşfini duyuran kendi olayı tetiklenmez, çünkü keşif zaten yapılmıştır.'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''Yeni Dünya'nın ne kadarının kara olduğu.'''
+source = "37136e1c0e9c9395"
+text = '''Kıtanın alanının ne kadarının kara olduğu.'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''Eski Dünya’ya uzaklık'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''Yükseldikçe kıtalar okyanusun ortasına yaklaşır, Eski Dünya’nın kıyılarından uzaklaşır. Kara miktarı değişmez. Duvar bu ayarı yok sayar.'''
+source = "40ce2903abaf6b41"
+text = '''Daha yüksek: kara, alanının ortasına daha yakın, çevresindeki korunan kıyılardan daha uzak yer alır. Kara miktarı değişmez. Duvar bunu yok sayar.'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''Altın, gümüş ve değerli taşlar'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''Altın, gümüş, değerli taş ve incinin, oyunun özgün Yeni Dünya'sına göre ne sıklıkla görüldüğü.'''
+source = "627e955417cf6795"
+text = '''Altın, gümüş, değerli taş ve incinin ne sıklıkla çıktığı; %100 oyundaki kadar sık demektir.'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''Nüfus'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''Yerli nüfus, oyunun özgün Yeni Dünya nüfusuna göre.'''
+source = "4fefa6c8a3b34b3a"
+text = '''Üretilen karada kaç kişinin yaşadığı; %100 oyunun kendi konum başına nüfusudur.'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"

@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Ląd'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''Jaka część Nowego Świata to ląd. Więcej lądu oznacza nieco większe lokacje, aby świat zmieścił się w 32 000 lokacji, które wytrzymuje EU5.'''
+source = "202abef6c8a261d1"
+text = '''Jaka część obszaru Ameryki to ląd. Więcej lądu czyni lokacje nieco większymi, by świat zmieścił się w 32 000 lokacji, które przyjmuje EU5.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Ludy tubylcze'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''Ile ludów żyje w Nowym Świecie i ile jest ośrodków kultury.'''
+source = "69c8b047930d7896"
+text = '''Ile ludów żyje w Ameryce i ile jest ośrodków kultury.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''Na początku kampanii kraj każdego gracza odkrywa każdy obszar tego wygenerowanego kontynentu, ląd i morze, dzięki czemu wszyscy gracze widzą go od pierwszego dnia. Kraje sterowane przez komputer go nie dostają: znajdują go, eksplorując, jak w grze. Domyślnie wyłączone: kontynent czeka wtedy na odkrycie przez wszystkich. W przypadku Ameryki wydarzenie gry zapowiadające odkrycie Nowego Świata nie następuje, ponieważ odkrycie już się dokonało.'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''Jaka część Nowego Świata to ląd.'''
+source = "37136e1c0e9c9395"
+text = '''Jaka część obszaru kontynentu to ląd.'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''Odległość od Starego Świata'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''Wyżej: kontynenty leżą bliżej środka oceanu, dalej od wybrzeży Starego Świata. Ilość lądu się nie zmienia. Mur to ignoruje.'''
+source = "40ce2903abaf6b41"
+text = '''Wyżej: ląd leży bliżej środka swojego obszaru, dalej od zachowanych wokół wybrzeży. Ilość lądu się nie zmienia. Mur to ignoruje.'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''Złoto, srebro i kamienie'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''Jak często występują złoto, srebro, kamienie szlachetne i perły w porównaniu ze zwykłym Nowym Światem.'''
+source = "627e955417cf6795"
+text = '''Jak często występują złoto, srebro, klejnoty i perły; 100 % to tak często jak w grze.'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''Ludność'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''Ludność tubylcza w porównaniu z ludnością zwykłego Nowego Świata.'''
+source = "4fefa6c8a3b34b3a"
+text = '''Ilu ludzi żyje na wygenerowanym lądzie; 100 % to tyle ludzi na lokację, ile w samej grze.'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"

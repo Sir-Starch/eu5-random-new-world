@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''육지'''
 
 ["quick.land.about"]
-source = "bd552acf65a994a8"
-text = '''신대륙에서 육지가 차지하는 비율입니다. 육지가 많을수록 지역이 조금 커져, 월드가 EU5가 감당하는 지역 32,000개 안에 머뭅니다.'''
+source = "202abef6c8a261d1"
+text = '''아메리카 영역 중 육지의 비율입니다. 육지가 많을수록 EU5가 받아들이는 32,000개 지역 안에 들도록 지역이 조금 커집니다.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''원주민'''
 
 ["quick.peoples.about"]
-source = "6c1001fb2140ade3"
-text = '''신대륙에 사는 민족의 수와 문화 중심지의 수.'''
+source = "69c8b047930d7896"
+text = '''아메리카에 사는 민족의 수와 문화 중심지의 수입니다.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"
@@ -719,16 +719,16 @@ source = "e793d3ba514a2204"
 text = '''캠페인을 시작할 때 각 플레이어의 국가가 이 생성된 대륙의 모든 지역(육지와 바다)을 발견하므로, 모든 플레이어가 첫날부터 그 대륙을 볼 수 있습니다. 컴퓨터가 조종하는 국가는 이를 받지 못하며, 게임에서처럼 탐험으로 찾습니다. 기본값은 꺼짐이며, 이 경우 대륙은 모두가 발견하기를 기다립니다. 아메리카의 경우 신대륙 발견을 알리는 게임 고유의 이벤트는 이미 발견이 이루어졌으므로 발생하지 않습니다.'''
 
 ["control.new_world.land_permille.about"]
-source = "e0a693457850e1a8"
-text = '''신대륙에서 육지가 차지하는 비율.'''
+source = "37136e1c0e9c9395"
+text = '''대륙 영역 중 육지의 비율입니다.'''
 
 ["control.new_world.centre_permille"]
 source = "ed9e12b95845dde8"
 text = '''구세계와의 거리'''
 
 ["control.new_world.centre_permille.about"]
-source = "5b401b093696457b"
-text = '''높일수록 대륙이 바다 한가운데에 가깝고 구세계 해안에서 멀어집니다. 육지의 양은 변하지 않습니다. 장벽에서는 무시됩니다.'''
+source = "40ce2903abaf6b41"
+text = '''높을수록 땅이 영역의 가운데에 가깝게, 주변에 유지한 해안에서 멀리 놓입니다. 땅의 양은 바뀌지 않습니다. 장벽은 이를 무시합니다.'''
 
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
@@ -783,8 +783,8 @@ source = "1c32df89f67a4e86"
 text = '''금, 은, 보석'''
 
 ["control.new_world.precious_permille.about"]
-source = "7d06204c56e8fbbe"
-text = '''원래 신대륙과 비교해 금, 은, 보석, 진주가 나오는 빈도.'''
+source = "627e955417cf6795"
+text = '''금, 은, 보석, 진주가 나오는 빈도입니다. 100 %는 게임과 같은 빈도입니다.'''
 
 ["control.new_world.location_px"]
 source = "f9e8850d8a95bc43"
@@ -815,8 +815,8 @@ source = "5b828861aec15d60"
 text = '''인구'''
 
 ["control.natives.population_permille.about"]
-source = "cdc165c3d5206790"
-text = '''원래 신대륙의 인구와 비교한 원주민 인구.'''
+source = "4fefa6c8a3b34b3a"
+text = '''생성된 땅에 사는 인구입니다. 100 %는 게임 자체의 지역당 인구와 같습니다.'''
 
 ["control.natives.peasant_peak_permille"]
 source = "3c4a12b1562b26cc"
