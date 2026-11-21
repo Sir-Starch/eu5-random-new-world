@@ -3416,3 +3416,23 @@ text = '''aguardando'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''O mundo inteiro'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''Esboçar continentes…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''Esboçar seis vezes os continentes ativados, cada vez com uma nova semente, e escolher o que você preferir. Um esboço mostra a terra que o mundo terá; leva um pouco de tempo.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''O editor de terra desenha a América: ative a América para desenhar sua terra.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''A América mantém a terra do próprio jogo, então não há nada para desenhar.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''Com outros continentes ativados, um esboço mostra o mundo inteiro: escolha um com «Esboçar continentes» na página do novo mundo e depois desenhe a América aqui.'''

@@ -548,7 +548,8 @@
     const run = ++sketchRun;
     const found = info;
     const area = inside;
-    const count = app.now?.candidates.length ?? 0;
+    // Sketches of several continents show the whole map, not the area drawn here.
+    const count = app.now?.candidates[0]?.composed ? 0 : (app.now?.candidates.length ?? 0);
     sketchStarts = Array.from({ length: count }, (_, index) => ({
       id: `sketch:${index}`,
       label: t("editor.sketch", { number: index + 1 }),
@@ -576,6 +577,9 @@
   });
 
   const sketching = $derived(!!s?.busy && s.task === "candidates");
+  // With other continents switched on, a sketch shows the whole world: it is chosen on the new
+  // world's page, and America is drawn here.
+  const composedWorld = $derived(Object.keys(s?.new.regions ?? {}).length > 0);
 
   function again(): void {
     seed = freshSeed();
@@ -823,7 +827,8 @@
               {#each sketchStarts as item (item.id)}{@render tile(item)}{/each}
             {/if}
           </div>
-          <button class="btn" disabled={sketching || !s?.new.candidates_enabled} title={t("editor.sketch_tip")} onclick={() => app.act("sketch_candidates")}>
+          {#if composedWorld}<p class="faint note">{t("editor.sketch_composed")}</p>{/if}
+          <button class="btn" disabled={sketching || composedWorld || !s?.new.candidates_enabled} title={t("editor.sketch_tip")} onclick={() => app.act("sketch_candidates")}>
             {#if sketching}<span class="spinner"></span>{s?.running || t("stage.candidates")}{:else}<Icon name="dice" />{t("editor.sketch_run")}{/if}
           </button>
         </section>

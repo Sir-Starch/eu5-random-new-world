@@ -2244,12 +2244,9 @@ class MainWindow(QMainWindow):
                 for job, _running, error in controller.queue_entries()
             )
         )
-        self.candidates_button.setEnabled(
-            not controller.busy
-            and controller.game is not None
-            and not controller.world_code().settings().mask.id
-            and not controller.value("new_world.keep_geography")
-        )
+        sketch_problem = controller.sketch_problem()
+        self.candidates_button.setEnabled(not controller.busy and sketch_problem is None)
+        self.candidates_button.setToolTip(sketch_problem or text("candidates_hint"))
 
     def _queue_text(self) -> str:
         """How many worlds wait in the queue and how many of them could not be made."""

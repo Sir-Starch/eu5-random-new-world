@@ -78,6 +78,9 @@ export interface NewState {
   land_mask: string;
   land_mask_text: string;
   candidates_enabled: boolean;
+  /** Why the continents cannot be sketched, or the land editor open (other work aside). */
+  sketch_problem: string | null;
+  editor_problem: string | null;
   template_enabled: boolean;
   /** The area the land editor draws on has been cut for the choices made now. */
   editor_ready: boolean;
@@ -220,7 +223,8 @@ export interface State {
   new: NewState;
   world: WorldState | null;
   stray: StrayState | null;
-  candidates: { seed: string; land: number; queued: boolean }[];
+  /** The sketches; ``composed``: the whole map with several continents on it. */
+  candidates: { seed: string; land: number; queued: boolean; composed: boolean }[];
 }
 
 export interface LayerBundle {

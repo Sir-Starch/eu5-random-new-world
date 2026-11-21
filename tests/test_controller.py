@@ -1639,3 +1639,24 @@ def test_a_world_of_several_continents_says_it_joins_them(
     assert controller.running_text() == text("stage_joining")
     assert controller.phase_rows()[-1].label == text("phase.install")
     assert controller.making_text() == f"{text('continent.america')}, {text('continent.africa')}"
+
+
+def test_sketch_and_editor_say_why_they_are_off(tmp_path: Path, fake_export: Exporter) -> None:
+    """Sketches reach every continent switched on; the land editor draws America alone."""
+    controller = _controller(tmp_path, fake_export)
+    assert controller.sketch_problem() is None
+    assert controller.editor_problem() is None
+    controller.set_value("new_world.keep_geography", 1)
+    assert controller.sketch_problem() == text("error.candidates.real")
+    assert controller.editor_problem() == text("editor.real_americas")
+    # Africa beside the real Americas is sketched on the whole map.
+    controller.set_continent("africa", enabled=True)
+    assert controller.sketch_problem() is None
+    controller.set_value("new_world.keep_geography", 0)
+    controller.set_continent("america", enabled=False)
+    assert controller.sketch_problem() is None
+    assert controller.editor_problem() == text("editor.needs_america")
+    controller.set_continent("africa", enabled=False)
+    assert controller.sketch_problem() == text("continent.choose")
+    controller.game = None
+    assert controller.sketch_problem() == text("ready_no_game")

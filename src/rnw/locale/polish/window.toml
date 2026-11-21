@@ -3416,3 +3416,23 @@ text = '''czeka'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''Cały świat'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''Szkicuj kontynenty…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''Naszkicuj włączone kontynenty sześć razy, za każdym razem z nowym ziarnem, i wybierz ten, który ci się podoba. Szkic pokazuje ląd, jaki będzie miał świat; zajmuje to chwilę.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''Edytor lądu rysuje Amerykę: włącz Amerykę, aby rysować jej ląd.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''Ameryka zachowuje własny ląd gry, więc nie ma czego rysować.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''Gdy włączone są inne kontynenty, szkic pokazuje cały świat: wybierz go przyciskiem „Szkicuj kontynenty” na stronie nowego świata, a potem rysuj tutaj Amerykę.'''

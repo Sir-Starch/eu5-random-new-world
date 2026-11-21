@@ -3416,3 +3416,23 @@ text = '''대기 중'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''세계 전체'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''대륙 스케치…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''켜 둔 대륙을 매번 새 시드로 여섯 번 스케치하고 마음에 드는 것을 고릅니다. 스케치는 월드가 갖게 될 땅을 보여 줍니다. 시간이 조금 걸립니다.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''땅 편집기는 아메리카를 그립니다. 그 땅을 그리려면 아메리카를 켜세요.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''아메리카가 게임 본래의 땅을 유지하므로 그릴 것이 없습니다.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''다른 대륙이 켜져 있으면 스케치는 세계 전체를 보여 줍니다. 새 월드 페이지의 '대륙 스케치'로 하나를 고른 뒤 여기서 아메리카를 그리세요.'''

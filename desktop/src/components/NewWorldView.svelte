@@ -15,7 +15,22 @@
   const ours = $derived(s?.task === "generate" || s?.task === "queue");
   // While a world is made the next one can be prepared: the controls stay free for it.
   const locked = $derived(busy && !n?.preparable);
-  const sketched = $derived(!!s?.candidates.length && !sketching && !n?.land_mask);
+  // Sketches of several continents show the whole map, a drawn America on it too.
+  const composedSketches = $derived(!!s?.candidates[0]?.composed);
+  const sketched = $derived(!!s?.candidates.length && !sketching && (!n?.land_mask || composedSketches));
+  // The continents the world generates: America by its type, or kept as the game has it.
+  const continentsText = $derived(
+    Object.entries(n?.continents ?? {})
+      .filter(([, on]) => on)
+      .map(([key]) =>
+        key === "america"
+          ? n?.keeps_geography
+            ? t("continent.america_real")
+            : `${t("continent.america")} (${t(`type.${n?.choice}`)})`
+          : `${t(`continent.${key}`)} (${t(`type.${n?.regions[key]?.preset}`)})`,
+      )
+      .join(", "),
+  );
   const outcome = $derived(
     !busy && ours && (s?.phase === "finished" || s?.phase === "failed" || s?.phase === "cancelled") ? s.phase : null,
   );
@@ -41,10 +56,12 @@
 <div class="view">
   <div class="pane-head">
     <span class="pane-title">{t("new_world")}</span>
-    <span class="pane-sub">{t(`type.${n?.choice}`)}</span>
+    <span class="pane-sub" title={continentsText}>{continentsText}</span>
     <span class="spacer"></span>
     <div class="land-tools">
-      <button class="btn small" disabled={locked || !n?.template_enabled} title={t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
+      <button class="btn small" disabled={locked || !n?.candidates_enabled} title={n?.sketch_problem ?? t("sketch.open_tip")}
+        onclick={() => app.act("sketch_candidates")}>{t("sketch.open")}</button>
+      <button class="btn small" disabled={locked || !n?.template_enabled} title={n?.editor_problem ?? t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
     </div>
   </div>
 
@@ -160,8 +177,12 @@
             </div>
           {:else}
             <h2>{t("editor.title")}</h2>
-            <p class="dim">{t("editor.open_tip")}</p>
-            <button class="btn primary" disabled={locked || !n?.template_enabled} title={t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
+            <p class="dim">{n?.template_enabled || !n?.editor_problem ? t("editor.open_tip") : n.editor_problem}</p>
+            <div class="row">
+              <button class="btn" disabled={locked || !n?.candidates_enabled} title={n?.sketch_problem ?? t("sketch.open_tip")}
+                onclick={() => app.act("sketch_candidates")}>{t("sketch.open")}</button>
+              <button class="btn primary" disabled={locked || !n?.template_enabled} title={n?.editor_problem ?? t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
+            </div>
           {/if}
         </div>
       </div>

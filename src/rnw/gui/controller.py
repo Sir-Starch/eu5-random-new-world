@@ -55,6 +55,7 @@ from rnw.app.worldcode import (
 )
 from rnw.gui import mapstyle, phases
 from rnw.gui.text import (
+    ERROR,
     JOINING,
     PHASE,
     choose_language,
@@ -1330,12 +1331,42 @@ class Controller:
 
     # -- the work ------------------------------------------------------------------------------
 
+    def sketch_problem(self) -> str | None:
+        """Why the continents switched on cannot be sketched now (other work aside); None when
+        they can. A world of several continents is sketched whole, a drawn America on it."""
+        if self.game is None:
+            return text("ready_no_game")
+        if not any(self.continent_selection().values()):
+            return text("continent.choose")
+        settings = self.world_code().settings()
+        if settings.continents.regions:
+            drawn = settings.continents.america and settings.mask.id
+            return text("needs_land_image") if drawn and self.land_mask is None else None
+        if settings.new_world.keep_geography:
+            return text(ERROR + "candidates.real")
+        if settings.mask.id:
+            return text(ERROR + "candidates.drawn")
+        return None
+
+    def editor_problem(self) -> str | None:
+        """Why the land editor cannot open now (other work aside); None when it can. It draws
+        America's land."""
+        if self.game is None:
+            return text("ready_no_game")
+        if not self.continent_selection()["america"]:
+            return text("editor.needs_america")
+        if self.value("new_world.keep_geography"):
+            return text("editor.real_americas")
+        return None
+
     def sketch_candidates(self, count: int = 6) -> str | None:
         if self.busy:
             return text("ready_busy")
-        if self.game is None:
-            return text("ready_no_game")
+        problem = self.sketch_problem()
+        if problem is not None or self.game is None:
+            return problem
         code, game, cache = self.world_code(), self.game, service.land_cache(self.data)
+        drawn = self.land_mask
         try:
             seeds = candidates.roll(count)
         except candidates.CandidateError as error:
@@ -1343,7 +1374,9 @@ class Controller:
         self.candidates, self.candidate_code = [], None
 
         def work(_progress: Progress) -> None:
-            found = candidates.sketch(game.directory, code.settings(), seeds, cache=cache)
+            found = candidates.sketch(
+                game.directory, code.settings(), seeds, cache=cache, land_mask=drawn
+            )
             with self._lock:
                 self.candidates, self.candidate_code = found, code
 

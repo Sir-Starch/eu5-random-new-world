@@ -3416,3 +3416,23 @@ text = '''en espera'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''El mundo entero'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''Esbozar continentes…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''Esbozar seis veces los continentes activados, cada vez con una semilla nueva, y elegir el que te guste. Un esbozo muestra la tierra que tendrá el mundo; tarda un poco.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''El editor de tierra dibuja América: activa América para dibujar su tierra.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''América conserva la tierra del propio juego, así que no hay nada que dibujar.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''Con otros continentes activados, un esbozo muestra el mundo entero: elige uno con «Esbozar continentes» en la página del nuevo mundo y luego dibuja América aquí.'''

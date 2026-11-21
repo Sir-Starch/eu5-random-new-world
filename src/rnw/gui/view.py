@@ -180,7 +180,12 @@ def _candidates(c: Controller) -> list[dict[str, object]]:
     """The sketched continents; ``queued`` when the world of that seed waits in the queue."""
     waiting = c.queued_candidates()
     return [
-        {"seed": str(found.seed), "land": found.land_permille / 10, "queued": index in waiting}
+        {
+            "seed": str(found.seed),
+            "land": found.land_permille / 10,
+            "queued": index in waiting,
+            "composed": found.composed,
+        }
         for index, found in enumerate(c.candidates)
     ]
 
@@ -333,6 +338,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         else "generation_keep"
     )
     drawn = c.land_mask
+    sketch_problem, editor_problem = c.sketch_problem(), c.editor_problem()
     return {
         "continents": continents,
         "sea_circumnavigation": c.sea_circumnavigation(),
@@ -361,12 +367,10 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "land_mask": format(drawn.id, "x") if drawn is not None else "",
         "land_mask_text": text("land_image_chosen", id=format(drawn.id, "x")) if drawn else "",
         "keeps_geography": keeps,
-        "candidates_enabled": america
-        and not busy
-        and c.game is not None
-        and not c.world_code().settings().mask.id
-        and not keeps,
-        "template_enabled": america and not busy and c.game is not None and not keeps,
+        "candidates_enabled": not busy and sketch_problem is None,
+        "sketch_problem": sketch_problem,
+        "template_enabled": not busy and editor_problem is None,
+        "editor_problem": editor_problem,
         "editor_ready": c.land_sheet() is not None,
         "preparable": c.can_prepare,
         "queue_problem": queue_problem,

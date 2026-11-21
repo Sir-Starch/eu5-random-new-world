@@ -110,3 +110,38 @@ def test_sketches_made_beside_each_other_equal_one_after_the_other_and_keep_thei
         assert kept is not None
         expected = land_stage(domain.copy(), seed, SMALL)[:3]
         assert all(np.array_equal(a, b) for a, b in zip(kept, expected, strict=True))
+
+
+def test_a_composed_sketch_paints_each_continent_where_the_world_puts_it() -> None:
+    """A continent's finished coasts land on the map's grid of eighths at its own place, across
+    the map's seam too; the rest of the map keeps the game's colours."""
+    from rnw.continent_domains import CONTINENTS, Domain  # noqa: PLC0415 - this test alone
+    from rnw.newworld import FinishedLand  # noqa: PLC0415 - this test alone
+
+    width = 64
+    picture = np.zeros((4, width // 8, 3), dtype=np.uint8)
+    picture[:] = candidates.KEPT_SEA
+    mask = np.ones((20, 24), dtype=np.bool_)
+    land = np.zeros_like(mask)
+    land[:, 13:] = True  # the columns from 56 + 13 = 69, that is 5 past the seam
+    lakes = np.zeros_like(mask)
+    lakes[19, 0] = True
+    domain = Domain(CONTINENTS["africa"], 56, width, mask, mask.copy(), first_row=5)
+    coasts = FinishedLand(mask, mask, land, ~land & ~lakes, lakes, (), (), None)
+    candidates._paint(picture, domain, coasts)  # pyright: ignore[reportPrivateUsage]
+    # Rows 5..24 of the map hold the grid rows 8, 16 and 24, that is picture rows 1 to 3.
+    assert _all(picture[0:1], candidates.KEPT_SEA)
+    # Map column 56 (local 0) is sea; 64 (local 8, column 0 after the seam) sea; 72 (local 16)
+    # land.
+    assert _all(picture[1:3, 7], candidates.GENERATED_SEA)
+    # Local row 19 is map row 24, picture row 3: the lake at its first column.
+    assert _all(picture[3:4, 7], candidates.GENERATED_LAKE)
+    assert _all(picture[1:, 0], candidates.GENERATED_SEA)
+    assert _all(picture[1:, 1], candidates.GENERATED_LAND)
+    assert _all(picture[1:, 3:7], candidates.KEPT_SEA)
+
+
+def _all(pixels: NDArray[np.uint8], colour: tuple[int, int, int]) -> bool:
+    """Whether every pixel of ``pixels`` has ``colour``."""
+    same: NDArray[np.bool_] = np.equal(pixels, np.array(colour, dtype=np.uint8))
+    return bool(same.all())

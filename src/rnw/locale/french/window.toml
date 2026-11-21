@@ -3416,3 +3416,23 @@ text = '''en attente'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''Le monde entier'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''Esquisser des continents…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''Esquisser six fois les continents activés, chaque fois avec une nouvelle graine, et choisir celle qui vous plaît. Une esquisse montre les terres qu'aura le monde ; cela prend un peu de temps.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''L'éditeur de terres dessine l'Amérique : activez l'Amérique pour dessiner ses terres.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''L'Amérique garde les terres du jeu : il n'y a donc rien à dessiner.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''Avec d'autres continents activés, une esquisse montre le monde entier : choisissez-en une avec « Esquisser des continents » sur la page du nouveau monde, puis dessinez l'Amérique ici.'''

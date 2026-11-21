@@ -43,6 +43,12 @@ worlds and saves are not rewritten or migrated.
   coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
+- Sketch Africa and Oceania. *Sketch continents…* is back in the new world's header, beside the
+  land editor. With Africa or Oceania switched on, each of the six sketches shows the whole map:
+  every generated continent planned and coasted by the same code as the world of that seed, over
+  the lands kept from the game, so the world made from a sketch has the land it showed. A drawn
+  America is laid on its area in the sketches. A disabled sketch or editor button says why.
+
 - Rework the new world's inspector for several continents. The World tab lists America, Africa
   and Oceania, each with its switch and, while on, its type and its own choices in one place
   (America's basics and oceans; Africa's Morocco, Mamluks and connection to Asia) and its own

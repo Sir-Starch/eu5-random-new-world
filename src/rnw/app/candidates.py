@@ -27,8 +27,9 @@ import numpy as np
 
 from rnw import landcache, tagfont
 from rnw.eu5_map import load_map
-from rnw.landarea import american_domain, regional_bands
+from rnw.eu5_nw_export import composition_inputs, regional_coasts, regional_land_inputs
 from rnw.messages import say
+from rnw.model import CellClass
 from rnw.newworld import land_stage
 from rnw.parallel import worker_count
 from rnw.progress import checkpoint, run_stage, running
@@ -38,10 +39,26 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.continent_domains import Domain
     from rnw.eu5_canvas import Canvas
+    from rnw.eu5_map import Eu5Map
+    from rnw.landmask import LandMask
+    from rnw.newworld import FinishedLand
     from rnw.settings import Settings
 
 STEP: Final[int] = 8
+# A world of several continents is sketched in the colours of a world's picture
+# (``rnw.eu5_nw_export``): what it keeps from the game darker than what it generates.
+KEPT_SEA: Final[tuple[int, int, int]] = (25, 45, 90)
+KEPT_LAND: Final[tuple[int, int, int]] = (70, 110, 60)
+GENERATED_SEA: Final[tuple[int, int, int]] = (40, 75, 160)
+GENERATED_LAKE: Final[tuple[int, int, int]] = (90, 150, 220)
+GENERATED_LAND: Final[tuple[int, int, int]] = (96, 160, 72)
+# Peak working memory of one composed sketch per pixel of the whole map, with headroom: the plan
+# of every continent's domain and their finished coasts. Measured 2026-11-21 on EU5 1.4.9 with
+# America, Africa and Oceania: six seeds beside each other peaked at 14.7 GiB with the map, about
+# 2.1 GiB (16 bytes a map pixel) each.
+COMPOSED_BYTES_PER_PIXEL: Final[int] = 24
 SEA: Final[tuple[int, int, int]] = (30, 58, 110)
 LAKE: Final[tuple[int, int, int]] = (70, 120, 190)
 LAND: Final[tuple[int, int, int]] = (110, 160, 80)
@@ -70,6 +87,9 @@ class Candidate:
     seed: int
     picture: NDArray[np.uint8]
     land_permille: int
+    # The whole map with the generated continents on it (a world of several continents); the
+    # picture is then the map, not the area the land editor draws on.
+    composed: bool = False
 
 
 def roll(count: int) -> list[int]:
@@ -79,14 +99,23 @@ def roll(count: int) -> list[int]:
 
 
 def sketch(
-    game_dir: Path, settings: Settings, seeds: list[int], *, cache: Path | None = None
+    game_dir: Path,
+    settings: Settings,
+    seeds: list[int],
+    *,
+    cache: Path | None = None,
+    land_mask: LandMask | None = None,
 ) -> list[Candidate]:
     """The land of each seed on the canvas of ``settings``, drawn at an eighth of the map.
 
     Needs the game's map; a cancel is felt within a stage of the land model. With ``cache``
     (the land cache of ``rnw.app.service``) each sketch's land stage is kept for its world.
+    A world of several continents is sketched whole (``sketch_composed``); ``land_mask`` is then
+    the drawn America, when there is one.
     """
     check_count(len(seeds))
+    if settings.continents.regions:
+        return sketch_composed(game_dir, settings, seeds, land_mask=land_mask)
     if settings.mask.id:
         message = say("candidates.drawn")
         raise CandidateError(message)
@@ -97,7 +126,9 @@ def sketch(
         message = "Land sketches require a generated America"
         raise CandidateError(message)
     shape = settings.new_world
-    domain, footprint = _sketch_area(game_dir, settings, cache)
+    canvas = _canvas(game_dir, settings, cache)
+    domain, footprint = canvas.mask, canvas.template
+    del canvas
     # Only Omerika reads the Americas' template; the other world types do not hash it.
     template = footprint if shape.template_permille else None
     with running("candidates"):
@@ -126,24 +157,88 @@ def sketch(
     return found
 
 
-def _sketch_area(
-    game_dir: Path, settings: Settings, cache: Path | None
-) -> tuple[NDArray[np.bool_], NDArray[np.bool_] | None]:
-    if not settings.continents.regions:
-        canvas = _canvas(game_dir, settings, cache)
-        return canvas.mask, canvas.template
-    shape = settings.new_world
+def sketch_composed(
+    game_dir: Path, settings: Settings, seeds: list[int], *, land_mask: LandMask | None = None
+) -> list[Candidate]:
+    """The whole map for each seed with the continents of ``settings`` generated on it, at an
+    eighth of its size in the colours of a world's picture.
+
+    Each continent's area is planned for the seed and its coasts are finished exactly as its
+    world makes them (``rnw.eu5_nw_export.regional_coasts``), so the sketch shows the world the
+    seed makes but for the few pixels the cells' borders move the coasts. The lands the world
+    keeps from the game are drawn darker. A drawn America (``land_mask``) is laid on its area
+    as the world lays it.
+    """
+    check_count(len(seeds))
+    if settings.mask.id and land_mask is None:
+        message = say("candidates.drawn")
+        raise CandidateError(message)
     game_map = run_stage("load map", lambda: load_map(game_dir))
-    domain = run_stage(
-        "select canvas",
-        lambda: american_domain(
-            game_map,
-            shape.ocean_band_px,
-            expanded=bool(shape.expand_oceans or shape.landform),
-            regional=regional_bands(settings),
-        ),
+    composition = composition_inputs(game_dir, game_map, settings)
+    base = _kept_world(game_map)
+    with running("candidates"):
+
+        def one(seed: int) -> Candidate:
+            checkpoint()
+            picture = base.copy()
+            land_pixels = area_pixels = 0
+            for domain in composition.plan(game_map, seed):
+                checkpoint()
+                inputs = regional_land_inputs(
+                    game_map,
+                    domain,
+                    composition.geography,
+                    seed=seed,
+                    algorithm=settings.algorithm,
+                    land_mask=land_mask,
+                    southern_passage=composition.southern_passage,
+                )
+                coasts = regional_coasts(domain, inputs)
+                _paint(picture, domain, coasts)
+                land_pixels += int(np.count_nonzero(coasts.land))
+                area_pixels += int(np.count_nonzero(coasts.domain))
+            return Candidate(
+                seed, picture, land_pixels * 1000 // max(1, area_pixels), composed=True
+            )
+
+        # Each seed plans the whole map (several of its layers at once) besides its continents.
+        workers = worker_count(
+            len(seeds), bytes_each=COMPOSED_BYTES_PER_PIXEL * game_map.labels.size
+        )
+        if workers == 1:
+            return [one(seed) for seed in seeds]
+        pool = ThreadPoolExecutor(max_workers=workers)
+        try:
+            return [job.result() for job in [pool.submit(one, seed) for seed in seeds]]
+        finally:
+            pool.shutdown(wait=True, cancel_futures=True)
+
+
+def _kept_world(game_map: Eu5Map) -> NDArray[np.uint8]:
+    """The installed map at ``STEP``, its sea and lakes and its land in the darker colours of a
+    world's picture for what the world keeps."""
+    water = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
     )
-    return domain.mask, domain.footprint
+    small = water[game_map.labels[::STEP, ::STEP]]
+    return np.where(small[..., np.newaxis], KEPT_SEA, KEPT_LAND).astype(np.uint8)
+
+
+def _paint(picture: NDArray[np.uint8], domain: Domain, coasts: FinishedLand) -> None:
+    """Draw a continent's finished coasts on the map ``picture`` (at ``STEP``) where its domain
+    replaces the game's map; the island groups' holes keep the map."""
+    first_row, first_column, width = domain.first_row, domain.first_column, domain.map_width
+    # The first local row and column on the map's grid of ``STEP``.
+    row0, column0 = -first_row % STEP, -first_column % STEP
+    inside = coasts.domain[row0::STEP, column0::STEP]
+    colours = np.empty((*inside.shape, 3), dtype=np.uint8)
+    colours[:] = GENERATED_SEA
+    colours[coasts.lakes[row0::STEP, column0::STEP]] = GENERATED_LAKE
+    colours[coasts.land[row0::STEP, column0::STEP]] = GENERATED_LAND
+    local_rows, local_columns = np.nonzero(inside)
+    target_rows = (first_row + row0) // STEP + local_rows
+    target_columns = ((first_column + column0 + local_columns * STEP) % width) // STEP
+    picture[target_rows, target_columns] = colours[local_rows, local_columns]
 
 
 def _canvas(game_dir: Path, settings: Settings, cache: Path | None) -> Canvas:

@@ -130,10 +130,15 @@ Reveal while the map is covered; the inspector's tabs are World (name, favourite
 game with add/remove and folder, advice, then folding sections for details and check,
 visibility, Create a version, Share and export; delete last), Maps and Notes. For the new world,
 the middle shows its land: continent sketches to pick from (the chosen one is marked, each has
-Add to queue), the land image (with Edit in the editor), or a blank sheet ruled like a map with
-**Land editor…**, the only land button in the page's header; the land editor covers the whole window
-while it is open (ADR 0011) and holds the rest (sketching continents, the template, importing and
-using a picture; a picture dropped on the window is imported): a toolbar of
+Add to queue; with Africa or Oceania switched on each sketch is the whole map, the generated
+continents in the colours of a world's picture over the darker lands kept from the game, planned
+and coasted by the export's own code for that seed), the land image (with Edit in the editor), or
+a blank sheet ruled like a map with **Sketch continents…** and **Land editor…**, the two land
+buttons that also stand in the page's header, whose subtitle lists the continents and their types.
+A disabled button says why in its tooltip (no game, America switched off, the real Americas, a
+drawn America without its picture). The land editor draws America; it covers the whole window
+while it is open (ADR 0011) and holds the rest (its own sketches of America alone, the template,
+importing and using a picture; a picture dropped on the window is imported): a toolbar of
 brush, eraser, fill, line, rectangle, ellipse and hand on the left, the six kinds of ground and the
 brush options over the sheet, and on the right the starting lands in three groups (ready lands, famous lands, sketched continents), Add terrain, the generator's check
 and the picture's import, save and clear; the status line repeats the check's worst line. The sheet

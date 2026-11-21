@@ -3416,3 +3416,23 @@ text = '''wartet'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''Die ganze Welt'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''Kontinente skizzieren…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''Die eingeschalteten Kontinente sechsmal skizzieren, jedes Mal mit einem neuen Seed, und den gewünschten wählen. Eine Skizze zeigt das Land, das die Welt haben wird; das dauert eine kleine Weile.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''Der Land-Editor zeichnet Amerika: Schalten Sie Amerika ein, um sein Land zu zeichnen.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''Amerika behält das Land des Spiels, daher gibt es nichts zu zeichnen.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''Mit weiteren eingeschalteten Kontinenten zeigt eine Skizze die ganze Welt: Wählen Sie eine mit „Kontinente skizzieren“ auf der Seite der neuen Welt und zeichnen Sie dann hier Amerika.'''

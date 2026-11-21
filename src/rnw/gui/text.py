@@ -364,6 +364,17 @@ STRINGS: Final[dict[str, str]] = {
     "land_image_clear": "Back to generated land",
     "land_image_title": "Choose the land image",
     "land_image_files": "Pictures (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)",
+    "sketch.open": "Sketch continents…",
+    "sketch.open_tip": (
+        "Sketch the continents switched on six times, each with a new seed, and choose the one "
+        "you like. A sketch shows the land the world will have; it takes a little while."
+    ),
+    "editor.needs_america": "The land editor draws America: switch America on to draw its land.",
+    "editor.real_americas": "America keeps the game's own land, so there is nothing to draw.",
+    "editor.sketch_composed": (
+        "With other continents switched on, a sketch shows the whole world: choose one with "
+        "Sketch continents on the new world's page, then draw America here."
+    ),
     "editor.open": "Land editor…",
     "editor.open_tip": (
         "Choose the land of the new world: draw it, start from a ready land or a sketched "

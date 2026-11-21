@@ -3416,3 +3416,23 @@ text = '''等待中'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''整个世界'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''草绘大陆…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''用每次不同的新种子将已开启的大陆草绘六次，然后挑选你喜欢的一个。草图展示世界将拥有的陆地；需要一点时间。'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''陆地编辑器绘制的是美洲：请开启美洲来绘制它的陆地。'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''美洲保留游戏原有的陆地，因此没有可绘制的内容。'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''开启其他大陆时，草图展示的是整个世界：请在新世界页面用“草绘大陆”选择一个，然后在这里绘制美洲。'''

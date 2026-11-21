@@ -3416,3 +3416,23 @@ text = '''bekliyor'''
 ["whole_world"]
 source = "f33596d01e818615"
 text = '''Tüm dünya'''
+
+["sketch.open"]
+source = "cca4a3107781e368"
+text = '''Kıta taslakları çıkar…'''
+
+["sketch.open_tip"]
+source = "54c56a33e3493e48"
+text = '''Açık kıtaların her seferinde yeni bir tohumla altı taslağını çıkarın ve beğendiğinizi seçin. Taslak, dünyanın sahip olacağı karayı gösterir; biraz zaman alır.'''
+
+["editor.needs_america"]
+source = "a18ab16dd3b669fd"
+text = '''Kara düzenleyici Amerika'yı çizer: karasını çizmek için Amerika'yı açın.'''
+
+["editor.real_americas"]
+source = "c76164e3d799654f"
+text = '''Amerika oyunun kendi karasını korur, bu yüzden çizilecek bir şey yok.'''
+
+["editor.sketch_composed"]
+source = "20ead56412fd4283"
+text = '''Başka kıtalar açıkken taslak tüm dünyayı gösterir: yeni dünya sayfasında «Kıta taslakları çıkar» ile birini seçin, sonra Amerika'yı burada çizin.'''
