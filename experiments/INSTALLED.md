@@ -2165,13 +2165,14 @@ reproduced byte for byte, so no new world was installed. The locked checks passe
 production build. No world folder, save, playset or setting changed. This did not publish
 or update the Workshop item.
 
-2026-11-21, **Land editor for every continent** (source `d8e02a1`, pending epoch 64 of 1.3.0;
+2026-11-21, **Land editor for every continent** (source `6c8db56`, pending epoch 64 of 1.3.0;
 worlds without drawn Africa or Oceania are unchanged). [V-EXEC] The standard updater built and
 installed `rnw_exp_hub` in the existing Windows/Proton profile (EU5 not running). Both Wine
 offscreen self-tests passed and the installed files verified. The hub that preceded this task
-is retained at `.rnw-hub-backups/1.3.0-1795274588556048824`. Wheel SHA-256
-`ce3d7456a344501af40e68ac2603e941095fef21002e73ade1ae5ac91eef15a6`; Tauri window
-`25c64d3e2dc908101e70ee99be8be30e05eb321fdc08616cecbcb7a8e49315f3`; launcher
+is retained at `.rnw-hub-backups/1.3.0-1795274588556048824` (an intermediate one, built before
+the editor's view of the world was reworded, at `.rnw-hub-backups/1.3.0-1795275048719932849`).
+Wheel SHA-256 `00b0152d1b22e083a00a323adefbbddcc0d54982ace1b14e662eb866714bd155`; Tauri window
+`e58fa35c962896e3a0a81151f4adebc55b79562cacd48ce94d3e7bbc77d6ca32`; launcher
 `49674400462cacc88be19be07bd7d27e09c35c4a0d8d5cbaa8ab85d540966932` (unchanged).
 
 [V-EXEC] One world installed as a new folder, made through the window's own controller on
@@ -2189,8 +2190,9 @@ The change lets Africa and Oceania be drawn in the land editor as America's alwa
 in the library and the world file, and a continent's editor sheet cut from the export's own
 seeded plan. A drawn Africa alone (122 s) and a drawn Africa with Oceania (205 s) also passed
 every validator in scratch exports. The 884-file epoch-64 reference reproduced byte for byte.
-The Python suite passed (3,753 tests, 22 skipped) and the Tauri checks passed (svelte-check,
-50 tests, a production build); the native Rust tests were not run, as no native code changed.
+The locked checks (`make check`) passed with 3,753 Python tests (22 skipped) and 39 native Rust
+tests; the Tauri checks passed (svelte-check, 50 tests, a production build). The installed
+world's recovery check of its library files passed in both libraries.
 The window was driven in a headless browser on the real game map: the continent switch, each
 sheet, a drawn Africa re-opened and the chosen sketch's land offered as a start. No existing
 world folder, save, playset or setting changed. This did not publish or update the Workshop item.
