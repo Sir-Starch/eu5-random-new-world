@@ -703,8 +703,8 @@ source = "d70604e843046137"
 text = '''推荐'''
 
 ["control.new_world.expand_oceans.info"]
-source = "a791d35d238b78f0"
-text = "为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。\n\n如果陆地挤在旧世界的海岸边，请不要取消勾选此项，而是在“高级”（陆地与海洋）中调高“与旧世界的距离”。陆地会移向海洋中部，陆地总量不变，大陆仍可呈现任意形状。取消勾选则会把新世界限制在美洲周围原有的带状范围内。"
+source = "33baefdfaf77a7d2"
+text = "为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。\n\n如果陆地挤在旧世界的海岸边，请不要取消勾选此项，而是在“高级”（陆地与海洋）中调高“与保留海岸的距离”。陆地会移向海洋中部，陆地总量不变，大陆仍可呈现任意形状。取消勾选则会把新世界限制在美洲周围原有的带状范围内。"
 
 ["control.new_world.reveal_at_start"]
 source = "e1c28d96cc9cb7ce"
@@ -723,8 +723,8 @@ source = "37136e1c0e9c9395"
 text = '''大陆区域中陆地所占的比例。'''
 
 ["control.new_world.centre_permille"]
-source = "ed9e12b95845dde8"
-text = '''与旧世界的距离'''
+source = "a12b6888de34bbf6"
+text = '''与保留海岸的距离'''
 
 ["control.new_world.centre_permille.about"]
 source = "40ce2903abaf6b41"

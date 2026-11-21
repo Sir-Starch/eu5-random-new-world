@@ -703,8 +703,8 @@ source = "d70604e843046137"
 text = '''Recommandé'''
 
 ["control.new_world.expand_oceans.info"]
-source = "a791d35d238b78f0"
-text = "Laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.\n\nSi les terres se pressent contre les côtes de l’Ancien Monde, ne décochez pas cette option : augmentez plutôt « Distance à l’Ancien Monde » dans Avancé (Terre et mer). Les terres se rapprochent du milieu de l’océan sans que leur quantité change, et les continents restent libres de prendre n’importe quelle forme. Décocher l’option cantonne le Nouveau Monde à la bande d’origine autour des Amériques."
+source = "33baefdfaf77a7d2"
+text = "Laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.\n\nSi les terres se pressent contre les côtes de l’Ancien Monde, ne décochez pas cette option : augmentez plutôt « Distance aux côtes conservées » dans Avancé (Terre et mer). Les terres se rapprochent du milieu de l’océan sans que leur quantité change, et les continents restent libres de prendre n’importe quelle forme. Décocher l’option cantonne le Nouveau Monde à la bande d’origine autour des Amériques."
 
 ["control.new_world.reveal_at_start"]
 source = "e1c28d96cc9cb7ce"
@@ -723,8 +723,8 @@ source = "37136e1c0e9c9395"
 text = '''La part de la surface du continent qui est terre.'''
 
 ["control.new_world.centre_permille"]
-source = "ed9e12b95845dde8"
-text = '''Distance à l’Ancien Monde'''
+source = "a12b6888de34bbf6"
+text = '''Distance aux côtes conservées'''
 
 ["control.new_world.centre_permille.about"]
 source = "40ce2903abaf6b41"

@@ -553,7 +553,7 @@ STRINGS: Final[dict[str, str]] = {
         "the Americas. The Old World is kept; islands in the way stay or move to free water."
         "\n\n"
         "If the land crowds the Old World's shores, do not uncheck this: raise “Distance from "
-        "the Old World” in Advanced (Land and sea) instead. It moves the land toward the "
+        "kept shores” in Advanced (Land and sea) instead. It moves the land toward the "
         "middle of the ocean without changing how much land there is, and the continents stay "
         "free to take any shape. Unchecking confines the New World to the original band "
         "around the Americas."
@@ -581,7 +581,7 @@ STRINGS: Final[dict[str, str]] = {
         "fire, because the discovery is already made."
     ),
     "control.new_world.land_permille.about": "How much of the continent's area is land.",
-    "control.new_world.centre_permille": "Distance from the Old World",
+    "control.new_world.centre_permille": "Distance from kept shores",
     "control.new_world.centre_permille.about": (
         "Higher: the land lies nearer the middle of its area, farther from the coasts kept "
         "around it. The amount of land does not change. The Wall ignores it."

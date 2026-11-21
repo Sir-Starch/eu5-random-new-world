@@ -703,8 +703,8 @@ source = "d70604e843046137"
 text = '''Zalecane'''
 
 ["control.new_world.expand_oceans.info"]
-source = "a791d35d238b78f0"
-text = "Daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.\n\nJeśli ląd tłoczy się przy wybrzeżach Starego Świata, nie wyłączaj tej opcji, tylko zwiększ „Odległość od Starego Świata” na karcie „Zaawansowane” (Ląd i morze). Ląd przesuwa się wtedy ku środkowi oceanu, a jego ilość się nie zmienia; kontynenty nadal mogą mieć dowolny kształt. Wyłączenie ogranicza Nowy Świat do pierwotnego pasa wokół Ameryk."
+source = "33baefdfaf77a7d2"
+text = "Daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.\n\nJeśli ląd tłoczy się przy wybrzeżach Starego Świata, nie wyłączaj tej opcji, tylko zwiększ „Odległość od zachowanych wybrzeży” na karcie „Zaawansowane” (Ląd i morze). Ląd przesuwa się wtedy ku środkowi oceanu, a jego ilość się nie zmienia; kontynenty nadal mogą mieć dowolny kształt. Wyłączenie ogranicza Nowy Świat do pierwotnego pasa wokół Ameryk."
 
 ["control.new_world.reveal_at_start"]
 source = "e1c28d96cc9cb7ce"
@@ -723,8 +723,8 @@ source = "37136e1c0e9c9395"
 text = '''Jaka część obszaru kontynentu to ląd.'''
 
 ["control.new_world.centre_permille"]
-source = "ed9e12b95845dde8"
-text = '''Odległość od Starego Świata'''
+source = "a12b6888de34bbf6"
+text = '''Odległość od zachowanych wybrzeży'''
 
 ["control.new_world.centre_permille.about"]
 source = "40ce2903abaf6b41"

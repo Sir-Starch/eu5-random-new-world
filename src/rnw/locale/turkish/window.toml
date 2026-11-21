@@ -703,8 +703,8 @@ source = "d70604e843046137"
 text = '''Önerilir'''
 
 ["control.new_world.expand_oceans.info"]
-source = "a791d35d238b78f0"
-text = "Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.\n\nKara Eski Dünya’nın kıyılarına yığılıyorsa bu seçeneği kapatmayın; bunun yerine Gelişmiş sekmesinde (Kara ve deniz) “Eski Dünya’ya uzaklık” değerini artırın. Kara, miktarı değişmeden okyanusun ortasına doğru kayar ve kıtalar her biçimi almakta serbest kalır. Seçeneği kapatmak, Yeni Dünya’yı Amerika çevresindeki özgün şeritle sınırlar."
+source = "33baefdfaf77a7d2"
+text = "Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.\n\nKara Eski Dünya’nın kıyılarına yığılıyorsa bu seçeneği kapatmayın; bunun yerine Gelişmiş sekmesinde (Kara ve deniz) “Korunan kıyılara uzaklık” değerini artırın. Kara, miktarı değişmeden okyanusun ortasına doğru kayar ve kıtalar her biçimi almakta serbest kalır. Seçeneği kapatmak, Yeni Dünya’yı Amerika çevresindeki özgün şeritle sınırlar."
 
 ["control.new_world.reveal_at_start"]
 source = "e1c28d96cc9cb7ce"
@@ -723,8 +723,8 @@ source = "37136e1c0e9c9395"
 text = '''Kıtanın alanının ne kadarının kara olduğu.'''
 
 ["control.new_world.centre_permille"]
-source = "ed9e12b95845dde8"
-text = '''Eski Dünya’ya uzaklık'''
+source = "a12b6888de34bbf6"
+text = '''Korunan kıyılara uzaklık'''
 
 ["control.new_world.centre_permille.about"]
 source = "40ce2903abaf6b41"

@@ -704,7 +704,7 @@ in all eleven languages describes the drawn lake size. Since pending epoch 61, n
 basins can remain lakes above that size or become substantial inland seas; see
 [the basin classification policy](sea-geography.md). Water connected to the open sea stays sea.
 
-**Distance from the Old World (1.1.0; `new_world.centre_permille`, 0 by default).** The
+**Distance from kept shores (1.1.0 as Distance from the Old World; `new_world.centre_permille`, 0 by default).** The
 land lies where the density field puts it, and on the wide expanded canvas that is often against
 the Old World's shores. The control adds to the land density a lift that rises smoothly (a
 smoothstep of the Euclidean distance from the edge of the domain, on blocks of four pixels, up to

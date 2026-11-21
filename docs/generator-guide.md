@@ -204,8 +204,9 @@ Americas. The Old World is preserved; protected islands are kept, with islands i
 way kept in place or moved to free water as needed.
 
 If you want land farther from the Old World's shores, raise **Advanced → Land and sea →
-Distance from the Old World**. Higher values move land toward the middle of the ocean
-without reducing the amount of land. The Wall ignores this setting.
+Distance from kept shores**. Higher values move land toward the middle of the ocean
+without reducing the amount of land. The Wall ignores this setting. Africa and Oceania have
+the same setting in their own blocks.
 
 Turning ocean expansion off confines generation to the original band around the
 Americas. Hover over the option's information mark for a reminder of the difference.
