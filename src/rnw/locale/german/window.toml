@@ -3471,9 +3471,13 @@ source = "5698699cca158406"
 text = '''In der Welt'''
 
 ["editor.world_tip"]
-source = "46e9ed1d6e3495cb"
-text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, auf der Karte des Spiels: Das hellere Grau darin ist die Fläche, die Ihr Land füllt. Das dunklere Grau ist die Fläche eines anderen Kontinents dieser Welt, der ebenfalls erzeugt wird; skizzieren Sie die Kontinente, um sie an ihrem Platz zu sehen.'''
+source = "eae59df3163b1cf3"
+text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, auf der Karte des Spiels: Das Grau darin ist die Fläche, die Ihr Land füllt.'''
+
+["editor.world_tip_others"]
+source = "5fd5994745d2f72b"
+text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, auf der Karte des Spiels: Das hellere Grau darin ist die Fläche, die Ihr Land füllt. Das dunklere Grau markiert die anderen Kontinente, die diese Welt erzeugt; skizzieren Sie die Kontinente, um sie an ihrem Platz zu sehen.'''
 
 ["editor.world_sketch"]
-source = "8dc98de30678cc7a"
-text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, gezeigt auf der gewählten Skizze: Die anderen Kontinente sind so, wie sie sie gezeichnet hat, und {continent} wird zu dem, was Sie hier zeichnen.'''
+source = "a7f51d54c6465fb7"
+text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, gezeigt auf der gewählten Skizze: Die anderen Kontinente sind so, wie sie sie gezeichnet hat, und was Sie hier zeichnen, ersetzt das Land, das die Skizze diesem Kontinent gab.'''

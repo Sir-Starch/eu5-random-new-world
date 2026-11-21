@@ -381,5 +381,5 @@ export interface EditorInfo {
   composed: boolean;
   /** The whole map with the sheet's frame (left, top, width, height as fractions of the map;
    *  it may cross the right edge); ``sketch`` when the picture is the chosen sketch. */
-  world: { picture: string; frame: [number, number, number, number]; sketch: boolean } | null;
+  world: { picture: string; frame: [number, number, number, number]; sketch: boolean; others: boolean } | null;
 }

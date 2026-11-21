@@ -385,13 +385,18 @@ STRINGS: Final[dict[str, str]] = {
     "editor.composed_start": "The sketch you chose",
     "editor.world": "In the world",
     "editor.world_tip": (
+        "The frame is the sheet you draw {continent} on, on the game's map: the grey inside it is "
+        "the area your land fills."
+    ),
+    "editor.world_tip_others": (
         "The frame is the sheet you draw {continent} on, on the game's map: the lighter grey "
-        "inside it is the area your land fills. The darker grey is the area of another continent "
-        "of this world, which is generated too; sketch continents to see them in place."
+        "inside it is the area your land fills. The darker grey marks the other continents this "
+        "world generates; sketch continents to see them in place."
     ),
     "editor.world_sketch": (
         "The frame is the sheet you draw {continent} on, shown on the sketch you chose: the other "
-        "continents are as it drew them, and {continent} becomes what you draw here."
+        "continents are as it drew them, and what you draw here replaces the land the sketch gave "
+        "this continent."
     ),
     "editor.open": "Land editor…",
     "editor.open_tip": (

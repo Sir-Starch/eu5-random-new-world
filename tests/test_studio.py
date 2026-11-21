@@ -442,6 +442,16 @@ def test_the_view_of_the_world_shows_the_areas_of_the_other_continents() -> None
     picture = _decoded_rgb(
         cast("str", cast("dict[str, object]", world_view(area, None))["picture"])
     )
+    assert cast("dict[str, object]", world_view(area, None))["others"] is True
+    assert (
+        cast("dict[str, object]", world_view(replace(area, others=None), None))["others"] is False
+    )
+    assert (
+        cast("dict[str, object]", world_view(replace(area, others=np.zeros_like(sea)), None))[
+            "others"
+        ]
+        is False
+    )
     shown = (picture == OTHER_AREA).all(axis=-1)
     # The view is turned to centre the sheet, so only how much of it shows can be told here.
     assert shown.sum() == 200

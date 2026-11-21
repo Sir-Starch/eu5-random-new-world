@@ -3471,9 +3471,13 @@ source = "5698699cca158406"
 text = '''No mundo'''
 
 ["editor.world_tip"]
-source = "46e9ed1d6e3495cb"
-text = '''A moldura é a folha em que você desenha {continent}, no mapa do jogo: o cinza mais claro dentro dela é a área que sua terra preenche. O cinza mais escuro é a área de outro continente deste mundo, que também é gerado; esboce os continentes para vê-los nos seus lugares.'''
+source = "eae59df3163b1cf3"
+text = '''A moldura é a folha em que você desenha {continent}, no mapa do jogo: o cinza dentro dela é a área que sua terra preenche.'''
+
+["editor.world_tip_others"]
+source = "5fd5994745d2f72b"
+text = '''A moldura é a folha em que você desenha {continent}, no mapa do jogo: o cinza mais claro dentro dela é a área que sua terra preenche. O cinza mais escuro marca os outros continentes que este mundo gera; esboce os continentes para vê-los nos seus lugares.'''
 
 ["editor.world_sketch"]
-source = "8dc98de30678cc7a"
-text = '''A moldura é a folha em que você desenha {continent}, mostrada no esboço escolhido: os outros continentes estão como ele os desenhou, e {continent} passa a ser o que você desenhar aqui.'''
+source = "a7f51d54c6465fb7"
+text = '''A moldura é a folha em que você desenha {continent}, mostrada no esboço escolhido: os outros continentes estão como ele os desenhou, e o que você desenhar aqui substitui a terra que o esboço deu a este continente.'''

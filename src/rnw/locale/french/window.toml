@@ -632,7 +632,7 @@ text = '''Les terres sont dessinées sur une image ({id}).'''
 
 ["land_image_of"]
 source = "5405514d126895f3"
-text = '''Les terres de {continent} sont dessinées sur une image ({id}).'''
+text = '''{continent} : les terres sont dessinées sur une image ({id}).'''
 
 ["land_image_clear"]
 source = "925ff49784a59104"
@@ -3448,7 +3448,7 @@ text = '''Continent'''
 
 ["editor.continent_tip"]
 source = "f9b79f8c19b90054"
-text = '''Dessiner les terres de {continent}'''
+text = '''Dessiner les terres : {continent}'''
 
 ["editor.sketch_composed"]
 source = "234344329649986d"
@@ -3471,9 +3471,13 @@ source = "5698699cca158406"
 text = '''Dans le monde'''
 
 ["editor.world_tip"]
-source = "46e9ed1d6e3495cb"
-text = '''Le cadre est la feuille sur laquelle vous dessinez {continent}, sur la carte du jeu : le gris clair à l'intérieur est la zone que vos terres rempliront. Le gris plus sombre est la zone d'un autre continent de ce monde, lui aussi généré ; esquissez les continents pour les voir à leur place.'''
+source = "eae59df3163b1cf3"
+text = '''Le cadre est la feuille sur laquelle vous dessinez ce continent ({continent}), sur la carte du jeu : le gris à l'intérieur est la zone que vos terres rempliront.'''
+
+["editor.world_tip_others"]
+source = "5fd5994745d2f72b"
+text = '''Le cadre est la feuille sur laquelle vous dessinez ce continent ({continent}), sur la carte du jeu : le gris clair à l'intérieur est la zone que vos terres rempliront. Le gris plus sombre marque les autres continents que ce monde génère ; esquissez les continents pour les voir à leur place.'''
 
 ["editor.world_sketch"]
-source = "8dc98de30678cc7a"
-text = '''Le cadre est la feuille sur laquelle vous dessinez {continent}, montrée sur l'esquisse choisie : les autres continents sont tels qu'elle les a dessinés, et {continent} devient ce que vous dessinez ici.'''
+source = "a7f51d54c6465fb7"
+text = '''Le cadre est la feuille sur laquelle vous dessinez ce continent ({continent}), montrée sur l'esquisse choisie : les autres continents sont tels qu'elle les a dessinés, et ce que vous dessinez ici remplace les terres que l'esquisse donnait à ce continent.'''

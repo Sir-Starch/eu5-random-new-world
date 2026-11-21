@@ -3471,9 +3471,13 @@ source = "5698699cca158406"
 text = '''En el mundo'''
 
 ["editor.world_tip"]
-source = "46e9ed1d6e3495cb"
-text = '''El marco es la hoja en la que dibujas {continent}, sobre el mapa del juego: el gris claro de su interior es el área que ocupará tu tierra. El gris más oscuro es el área de otro continente de este mundo, que también se genera; esboza los continentes para verlos en su sitio.'''
+source = "eae59df3163b1cf3"
+text = '''El marco es la hoja en la que dibujas {continent}, sobre el mapa del juego: el gris de su interior es el área que ocupará tu tierra.'''
+
+["editor.world_tip_others"]
+source = "5fd5994745d2f72b"
+text = '''El marco es la hoja en la que dibujas {continent}, sobre el mapa del juego: el gris claro de su interior es el área que ocupará tu tierra. El gris más oscuro marca los demás continentes que genera este mundo; esboza los continentes para verlos en su sitio.'''
 
 ["editor.world_sketch"]
-source = "8dc98de30678cc7a"
-text = '''El marco es la hoja en la que dibujas {continent}, mostrada sobre el esbozo elegido: los demás continentes están como los dibujó, y {continent} pasa a ser lo que dibujes aquí.'''
+source = "a7f51d54c6465fb7"
+text = '''El marco es la hoja en la que dibujas {continent}, mostrada sobre el esbozo elegido: los demás continentes están como los dibujó, y lo que dibujes aquí sustituye la tierra que el esbozo dio a este continente.'''

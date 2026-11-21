@@ -632,7 +632,7 @@ text = '''Ląd jest narysowany na obrazie ({id}).'''
 
 ["land_image_of"]
 source = "5405514d126895f3"
-text = '''Ląd: {continent} jest narysowany na obrazie ({id}).'''
+text = '''{continent}: ląd jest narysowany na obrazie ({id}).'''
 
 ["land_image_clear"]
 source = "925ff49784a59104"
@@ -3471,9 +3471,13 @@ source = "5698699cca158406"
 text = '''Na świecie'''
 
 ["editor.world_tip"]
-source = "46e9ed1d6e3495cb"
-text = '''Ramka to arkusz, na którym rysujesz: {continent}, na mapie gry: jaśniejszy szary w środku to obszar, który wypełni twój ląd. Ciemniejszy szary to obszar innego kontynentu tego świata, który też jest generowany; naszkicuj kontynenty, aby zobaczyć je na swoich miejscach.'''
+source = "eae59df3163b1cf3"
+text = '''Ramka to arkusz, na którym rysujesz kontynent: {continent}, na mapie gry. Szary obszar w środku to teren, który wypełni twój ląd.'''
+
+["editor.world_tip_others"]
+source = "5fd5994745d2f72b"
+text = '''Ramka to arkusz, na którym rysujesz kontynent: {continent}, na mapie gry. Jaśniejszy szary w środku to teren, który wypełni twój ląd. Ciemniejszy szary zaznacza pozostałe kontynenty, które generuje ten świat; naszkicuj kontynenty, aby zobaczyć je na swoich miejscach.'''
 
 ["editor.world_sketch"]
-source = "8dc98de30678cc7a"
-text = '''Ramka to arkusz, na którym rysujesz: {continent}, pokazany na wybranym szkicu: pozostałe kontynenty są takie, jak je narysował, a {continent} stanie się tym, co narysujesz tutaj.'''
+source = "a7f51d54c6465fb7"
+text = '''Ramka to arkusz, na którym rysujesz kontynent: {continent}, pokazany na wybranym szkicu: pozostałe kontynenty są takie, jak je narysował, a to, co narysujesz tutaj, zastąpi ląd, który szkic dał temu kontynentowi.'''

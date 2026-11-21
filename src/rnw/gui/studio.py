@@ -161,6 +161,8 @@ def world_view(
         "picture": view.data_url(encode_png(picture, color_type=COLOR_RGB, compression="zlib")),
         "frame": [left, row / height, min(columns / width, 1.0), rows / height],
         "sketch": chosen is not None and chosen.composed,
+        # The areas of other continents the world generates are marked on the picture.
+        "others": bool(area.others is not None and area.others.any()),
     }
 
 

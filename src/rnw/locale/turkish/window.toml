@@ -3471,9 +3471,13 @@ source = "5698699cca158406"
 text = '''Dünyada'''
 
 ["editor.world_tip"]
-source = "46e9ed1d6e3495cb"
-text = '''Çerçeve, oyunun haritasında {continent} karasını çizdiğiniz sayfadır: içindeki açık gri, karanızın dolduracağı alandır. Koyu gri, bu dünyadaki başka bir kıtanın alanıdır ve o da üretilir; yerlerini görmek için kıtaların taslağını çıkarın.'''
+source = "eae59df3163b1cf3"
+text = '''Çerçeve, oyunun haritasında {continent} karasını çizdiğiniz sayfadır: içindeki gri, karanızın dolduracağı alandır.'''
+
+["editor.world_tip_others"]
+source = "5fd5994745d2f72b"
+text = '''Çerçeve, oyunun haritasında {continent} karasını çizdiğiniz sayfadır: içindeki açık gri, karanızın dolduracağı alandır. Koyu gri, bu dünyanın ürettiği diğer kıtaları gösterir; yerlerini görmek için kıtaların taslağını çıkarın.'''
 
 ["editor.world_sketch"]
-source = "8dc98de30678cc7a"
-text = '''Çerçeve, {continent} karasını çizdiğiniz sayfadır ve seçtiğiniz taslağın üzerinde gösterilir: diğer kıtalar taslağın çizdiği gibidir, {continent} ise burada çizdiğiniz hâle gelir.'''
+source = "a7f51d54c6465fb7"
+text = '''Çerçeve, {continent} karasını çizdiğiniz sayfadır ve seçtiğiniz taslağın üzerinde gösterilir: diğer kıtalar taslağın çizdiği gibidir, burada çizdiğiniz ise taslağın bu kıtaya verdiği karanın yerini alır.'''

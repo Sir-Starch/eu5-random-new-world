@@ -650,6 +650,12 @@
   // world's page, and the editor then offers its land of the continent drawn here.
   const composedWorld = $derived(Object.keys(s?.new.regions ?? {}).length > 0);
   const continentName = $derived(t(`continent.${continent}`));
+  /** What the view of the world shows: the sketch chosen, or the game's map with this continent's
+   *  area and, when the world has more, the others'. */
+  function worldTip(world: NonNullable<EditorInfo["world"]>): string {
+    const key = world.sketch ? "editor.world_sketch" : world.others ? "editor.world_tip_others" : "editor.world_tip";
+    return t(key, { continent: continentName });
+  }
   /** The game's own land of the continent drawn: its Americas, its Africa, its Oceania. */
   function ownLand(): string {
     return continent === "america" ? t("editor.americas") : t(`editor.own.${continent}`);
@@ -898,14 +904,14 @@
         {#if info?.world}
           <section>
             <div class="head"><h3>{t("editor.world")}</h3></div>
-            <div class="globe" title={t("editor.world_tip", { continent: continentName })}>
+            <div class="globe" title={worldTip(info.world)}>
               <img src={info.world.picture} alt="" />
               {#each frames as part, index (index)}
                 <span class="frame" style:left={`${part[0] * 100}%`} style:top={`${part[1] * 100}%`}
                   style:width={`${part[2] * 100}%`} style:height={`${part[3] * 100}%`}></span>
               {/each}
             </div>
-            <p class="faint note">{t(info.world.sketch ? "editor.world_sketch" : "editor.world_tip", { continent: continentName })}</p>
+            <p class="faint note">{worldTip(info.world)}</p>
           </section>
         {/if}
         <section>
