@@ -91,3 +91,39 @@ def test_circumnavigation_option_is_optional_and_roundtrips(tmp_path: Path) -> N
     assert land_key(restored.world_code().settings(), 17) != default
     restored.set_sea_circumnavigation(enabled=True)
     assert land_key(restored.world_code().settings(), 17) == default
+
+
+def test_reset_all_reaches_every_continent_and_keeps_the_world_tab(tmp_path: Path) -> None:
+    """The Advanced tab counts and resets the exact values of every continent switched on; the
+    World tab's choices (types, policies, oceans, each continent's reveal) stay."""
+    controller = Controller(data=tmp_path)
+    controller.set_continent("africa", enabled=True)
+    controller.set_continent("oceania", enabled=True)
+    controller.set_region_preset("africa", "continents")
+    controller.set_morocco("castile")
+    controller.set_region_value("africa", "new_world.reveal_at_start", 1)
+    controller.set_region_value("africa", "resources.coffee", 1500)
+    controller.set_region_value("africa", "new_world.land_permille", 300)
+    controller.set_region_value("oceania", "natives.population_permille", 1500)
+    controller.set_value("new_world.expand_oceans", 0)
+    controller.set_value("natives.empire_permille", 800)
+    assert controller.changed_values() == {"america": 1, "africa": 2, "oceania": 1}
+
+    # A type change keeps the reveal, which the World tab sets for each continent.
+    controller.set_region_preset("oceania", "continents")
+    controller.set_region_value("oceania", "new_world.reveal_at_start", 1)
+    controller.set_region_preset("oceania", "archipelago")
+    assert controller.region_settings("oceania").new_world.reveal_at_start
+
+    controller.reset_values()
+    assert controller.changed_values() == {"america": 0, "africa": 0, "oceania": 0}
+    africa = controller.region_settings("africa")
+    assert (africa.preset, africa.morocco) == ("continents", MoroccoPolicy.CASTILE)
+    assert africa.new_world.reveal_at_start
+    assert africa.resources == ()
+    assert controller.value("new_world.expand_oceans") == 0
+
+    # A continent switched off is not counted.
+    controller.set_value("natives.empire_permille", 800)
+    controller.set_continent("america", enabled=False)
+    assert "america" not in controller.changed_values()

@@ -291,16 +291,16 @@ source = "44c59194df93c574"
 text = '''Lobide Keşfedilmemiş Topraklar'''
 
 ["lobby_cover_about"]
-source = "6089e82813d6162b"
-text = '''Yeni Dünya'yı oynamadan önce gizler'''
+source = "5581fdbe9e88ca24"
+text = '''Oluşturulan toprakları oynamadan önce gizler'''
 
 ["lobby_cover_hint"]
-source = "7027b3756356472f"
-text = '''Yeni Dünya'yı ülke seçimi haritasında ve bu dünyanın resimlerinde Keşfedilmemiş Topraklar olarak örter; böylece oynamadan önce görmezsiniz. İşaret kaldırılırsa Yeni Dünya orada gösterilir. Bunu daha sonra dünyanın sayfasında, yeniden oluşturmadan değiştirebilirsiniz.'''
+source = "337d031e6fe83e3e"
+text = '''Oluşturulan kıtaları ülke seçimi haritasında ve bu dünyanın resimlerinde Keşfedilmemiş Topraklar olarak örter; böylece oynamadan önce görmezsiniz. İşaret kaldırılırsa orada gösterilirler. Bunu daha sonra dünyanın sayfasında, yeniden oluşturmadan değiştirebilirsiniz.'''
 
 ["about_generator"]
-source = "6ed5499d9096e55f"
-text = '''Random New World, EU5 için Yeni Dünya haritaları oluşturur. Oluşturduğu her dünya kendi başına eksiksiz bir moddur: Oynamak için oynanış setinizde işaretleyin. Kodunu ya da dünya dosyasını paylaşın. Oluşturucunun kendisini etkinleştirmeniz gerekmez.'''
+source = "5cb1898c7f0ebe50"
+text = '''Random New World, EU5 için yeni kıtalar oluşturur: Amerika, Afrika ve Okyanusya, tek tek ya da birlikte. Oluşturduğu her dünya kendi başına eksiksiz bir moddur: Oynamak için oynanış setinizde işaretleyin. Kodunu ya da dünya dosyasını paylaşın. Oluşturucunun kendisini etkinleştirmeniz gerekmez.'''
 
 ["about"]
 source = "a26ed0ddb5a99c42"
@@ -315,12 +315,12 @@ source = "913f7ad2bdaa4f8c"
 text = '''Bu uygulama hakkında bilgiler'''
 
 ["about_subtitle"]
-source = "3e1dc6d90c130516"
-text = '''Europa Universalis V için prosedürel Yeni Dünya üreticisi'''
+source = "c6a7a9d0395ffb02"
+text = '''Europa Universalis V için prosedürel kıta üreticisi'''
 
 ["about_description"]
-source = "175e3e1514d0eec1"
-text = "Random New World, Eski Dünya'yı korurken Europa Universalis V için prosedürel coğrafya, iklimler, biyomlar, nehirler, kültürler ve imparatorluklar üretir.\n\nÜretilen her dünya bağımsız, eksiksiz bir moddur: oynamak için mod listenizde etkinleştirin. Dünya kodunu veya dışa aktarım dosyasını paylaşabilirsiniz."
+source = "f5861d9ce4d4aa95"
+text = "Random New World, Europa Universalis V'in seçtiğiniz kıtaları (Amerika, Afrika, Okyanusya) için prosedürel coğrafya, iklimler, biyomlar, nehirler, kültürler ve imparatorluklar üretir; dünyanın geri kalanını oyundaki gibi bırakır.\n\nÜretilen her dünya bağımsız, eksiksiz bir moddur: oynamak için mod listenizde etkinleştirin. Dünya kodunu veya dışa aktarım dosyasını paylaşabilirsiniz."
 
 ["about_author"]
 source = "d95082a2ee57f3e4"
@@ -403,8 +403,8 @@ source = "2bcaef12e98803f1"
 text = '''Süper kıta'''
 
 ["type.supercontinent.about"]
-source = "33a2ee4977ae11b4"
-text = '''Yeni Dünya boyunca uzanan tek büyük kara parçası ve birkaç ada.'''
+source = "a66f7a8e65dd236c"
+text = '''Birkaç adası olan tek büyük bir kara kütlesi.'''
 
 ["type.continents"]
 source = "6c048f26d3b8b473"
@@ -707,16 +707,16 @@ source = "a791d35d238b78f0"
 text = "Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.\n\nKara Eski Dünya’nın kıyılarına yığılıyorsa bu seçeneği kapatmayın; bunun yerine Gelişmiş sekmesinde (Kara ve deniz) “Eski Dünya’ya uzaklık” değerini artırın. Kara, miktarı değişmeden okyanusun ortasına doğru kayar ve kıtalar her biçimi almakta serbest kalır. Seçeneği kapatmak, Yeni Dünya’yı Amerika çevresindeki özgün şeritle sınırlar."
 
 ["control.new_world.reveal_at_start"]
-source = "6dfd6b1cd0dbf532"
-text = '''Yeni Dünya'yı başlangıçta açığa çıkar'''
+source = "e1c28d96cc9cb7ce"
+text = '''Başlangıçta açığa çıkar'''
 
 ["control.new_world.reveal_at_start.about"]
 source = "ed8a19dd636b4dba"
 text = '''Çok oyunculu için'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "53b1f1dce58cd064"
-text = '''Bir kampanyanın başında her oyuncunun ülkesi bu Yeni Dünya'nın karasal ve denizsel tüm bölgelerini keşfeder; böylece tüm oyuncular onu ilk günden görür. Bilgisayarın yönettiği ülkeler bunu almaz: Yeni Dünya'yı oyundaki gibi keşif yaparak bulurlar. Varsayılan olarak kapalıdır: bu durumda Yeni Dünya, herkes tarafından keşfedilmeyi bekler. Oyunun Yeni Dünya'nın keşfini duyuran kendi olayı tetiklenmez, çünkü keşif zaten yapılmıştır.'''
+source = "e793d3ba514a2204"
+text = '''Bir kampanyanın başında her oyuncunun ülkesi bu oluşturulan kıtanın karasal ve denizsel tüm bölgelerini keşfeder; böylece tüm oyuncular onu ilk günden görür. Bilgisayarın yönettiği ülkeler bunu almaz: onu oyundaki gibi keşif yaparak bulurlar. Varsayılan olarak kapalıdır: bu durumda kıta, herkes tarafından keşfedilmeyi bekler. Amerika için oyunun Yeni Dünya'nın keşfini duyuran kendi olayı tetiklenmez, çünkü keşif zaten yapılmıştır.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -995,8 +995,8 @@ source = "8141923fca351c19"
 text = '''Dünya toplamı: yaklaşık {count} konum (EU5 motor sınırı: ~32.000).'''
 
 ["estimate_tip"]
-source = "34f3f38a503b4cdc"
-text = "EU5'te konumlar kara vilayetlerini, deniz bölgelerini ve gölleri içerir (yaklaşık 22.000 tanesi sabit Eski Dünya'ya aittir).\n\nOyun motoru 16 bitlik bir dizin kullanır (en fazla ~32.767). Çökmeleri önlemek için oluşturucu toplamı güvenli bir şekilde 31.200'ün altında tutar.\n\n«Çok kara» seçildiğinde neden daha az konum görünebilir:\nDeniz bölgeleri de birer konumdur. Daha fazla kara daha az okyanus (daha az deniz bölgesi) anlamına gelir ve büyük kara kütlelerinde motor sınırını aşmamak için kara hücrelerinin boyutu otomatik olarak büyütülür. Sonuç olarak toplam konum sayısı azalabilir; bu bir hata değil, beklenen bütçe dengelemesidir."
+source = "8ee429c8b642b1d2"
+text = "EU5'te konumlar kara vilayetlerini, deniz bölgelerini ve gölleri içerir (çoğu oyundaki gibi korunan topraklara aittir).\n\nOyun motoru 16 bitlik bir dizin kullanır (en fazla ~32.767). Çökmeleri önlemek için oluşturucu toplamı güvenli bir şekilde 31.200'ün altında tutar.\n\n«Çok kara» seçildiğinde neden daha az konum görünebilir:\nDeniz bölgeleri de birer konumdur. Daha fazla kara daha az okyanus (daha az deniz bölgesi) anlamına gelir ve büyük kara kütlelerinde motor sınırını aşmamak için kara hücrelerinin boyutu otomatik olarak büyütülür. Sonuç olarak toplam konum sayısı azalabilir; bu bir hata değil, beklenen bütçe dengelemesidir."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1007,12 +1007,12 @@ source = "4bfbafc4c2ab883b"
 text = '''Ad kaydedildi. Oyun şu an bu dünyanın dosyalarını kullanıyor; mod listesi adı, dünya yeniden eklendikten sonra gösterecek.'''
 
 ["preview_hidden"]
-source = "04b86c1fa26bdb53"
-text = '''Yeni Dünya terra incognita olarak gizli.'''
+source = "8862387a4461b924"
+text = '''Oluşturulan topraklar terra incognita olarak gizli.'''
 
 ["preview_shown"]
-source = "de7b43db7ffe45e6"
-text = '''Yeni Dünya görünüyor.'''
+source = "2e1547f1f7dc4cf9"
+text = '''Oluşturulan topraklar görünüyor.'''
 
 ["preview_missing"]
 source = "c21d71a0de202b2f"
@@ -1223,8 +1223,8 @@ source = "bb1ed31b2c6d66f5"
 text = '''Resmi kaydet…'''
 
 ["save_picture_tip"]
-source = "fb774db84a221988"
-text = '''Gösterilen resmi PNG olarak kaydedin; Yeni Dünya açığa çıkarılmadıkça örtülüdür.'''
+source = "d020e4c333d37577"
+text = '''Gösterilen resmi PNG olarak kaydedin; oluşturulan topraklar açığa çıkarılmadıkça örtülüdür.'''
 
 ["picture_saved"]
 source = "482f5b2eebc6b886"
@@ -1291,8 +1291,8 @@ source = "6d03c0632ec309b2"
 text = '''Bu dünyanın haritalarını oluşturucuda göster. Ayarlar aksini söylemedikçe oyunun mod listesi onu örtülü tutmaya devam eder.'''
 
 ["covered_maps"]
-source = "72895291a8506c4f"
-text = '''Bu dünyanın Yeni Dünya'sı, oyunda keşfedebilesiniz diye örtülü. Oynamadan önce ülkelerini, kültürlerini, dinlerini ve kaynaklarını görmek için açığa çıkarın.'''
+source = "b7ffdf58f84cd59b"
+text = '''Bu dünyanın oluşturulan toprakları, oyunda keşfedebilesiniz diye örtülü. Oynamadan önce ülkelerini, kültürlerini, dinlerini ve kaynaklarını görmek için açığa çıkarın.'''
 
 ["no_atlas"]
 source = "87cac289c6484f74"
@@ -2837,8 +2837,8 @@ source = "8a604db947b5994e"
 text = '''Yalnızca halklar'''
 
 ["control.new_world.keep_geography.info"]
-source = "ec2c59bae05bf945"
-text = '''Amerikalar, oyunun çizdiği haliyle aynen kalır: hiçbir kara, kıyı, kabartma, nehir veya yer üretilmez ya da değiştirilmez. Yalnızca halkları üretilir: devletler, kültürler, dinler, tarih, yasalar ve 1337’nin geri kalan toplumu. Kara, okyanus, harita ve kaynak ayarları geçerli değildir ve Yeni Dünya lobide örtülmez.'''
+source = "d0a8d4ea574a2dbe"
+text = '''Amerikalar, oyunun çizdiği haliyle aynen kalır: hiçbir kara, kıyı, kabartma, nehir veya yer üretilmez ya da değiştirilmez. Yalnızca halkları üretilir: devletler, kültürler, dinler, tarih, yasalar ve 1337’nin geri kalan toplumu. Kara, okyanus, harita ve kaynak ayarları geçerli değildir ve Amerikalar lobide örtülmez.'''
 
 ["error.candidates.real"]
 source = "50020d09ce8b62af"
@@ -3412,3 +3412,7 @@ text = '''kısmen tamamlandı, başka bir aşamayı bekliyor'''
 ["progress.state.waiting"]
 source = "80cfa3e7f28dde4d"
 text = '''bekliyor'''
+
+["whole_world"]
+source = "f33596d01e818615"
+text = '''Tüm dünya'''

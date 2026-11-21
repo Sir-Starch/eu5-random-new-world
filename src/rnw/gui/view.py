@@ -298,6 +298,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     busy = c.busy
     values: dict[str, object] = {}
     continents = c.continent_selection()
+    changed = c.changed_values()
     america = continents["america"]
     keeps = america and bool(c.value("new_world.keep_geography"))
     for control in controls.CONTROLS:
@@ -336,7 +337,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "continents": continents,
         "sea_circumnavigation": c.sea_circumnavigation(),
         "regional_types": controls.REGION_TYPES,
-        "regions": _regions(c, continents),
+        "regions": _regions(c, continents, changed),
         "choice": c.mode or c.preset,
         "preset": c.preset,
         "mode": c.mode,
@@ -347,7 +348,8 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "notice": c.notice,
         "values": values,
         "quick": {item.name: c.quick_level(item.name) for item in quick.QUICK},
-        "changed": len(c.changes),
+        "changed": sum(changed.values()),
+        "changed_by": changed,
         "estimate": estimate,
         "estimate_text": text("estimate", count=grouped(estimate)) if estimate is not None else "",
         "over_budget": estimate is not None and estimate > controls.LOCATION_BUDGET,
@@ -377,7 +379,9 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     }
 
 
-def _regions(c: Controller, selection: dict[str, bool]) -> dict[str, object]:
+def _regions(
+    c: Controller, selection: dict[str, bool], changed: dict[str, int]
+) -> dict[str, object]:
     result: dict[str, object] = {}
     for name, enabled in selection.items():
         if name == "america" or not enabled:
@@ -385,6 +389,15 @@ def _regions(c: Controller, selection: dict[str, bool]) -> dict[str, object]:
         settings = c.region_settings(name)
         defaults = c.region_settings(name, defaults=True)
         members = controls.regional_controls(name)
+        values = {
+            control.key: _value_state(
+                control,
+                controls.region_value(control, settings),
+                controls.region_value(control, defaults),
+            )
+            for control in members
+            if control.field not in controls.PAGE_OPTIONS
+        }
         result[name] = {
             "preset": settings.preset,
             "morocco": settings.morocco.value if settings.morocco is not None else "",
@@ -399,15 +412,11 @@ def _regions(c: Controller, selection: dict[str, bool]) -> dict[str, object]:
                     else "",
                 }
                 for control in members
+                if control.field not in controls.PAGE_OPTIONS
             ],
-            "values": {
-                control.key: _value_state(
-                    control,
-                    controls.region_value(control, settings),
-                    controls.region_value(control, defaults),
-                )
-                for control in members
-            },
+            "values": values,
+            "changed": changed.get(name, 0),
+            "reveal": bool(settings.new_world.reveal_at_start),
         }
     return result
 

@@ -291,16 +291,16 @@ source = "44c59194df93c574"
 text = '''Terra incognita dans le lobby'''
 
 ["lobby_cover_about"]
-source = "6089e82813d6162b"
-text = '''Cache le Nouveau Monde avant de jouer'''
+source = "5581fdbe9e88ca24"
+text = '''Cache les terres générées avant de jouer'''
 
 ["lobby_cover_hint"]
-source = "7027b3756356472f"
-text = '''Couvre le Nouveau Monde comme une terra incognita sur la carte du choix du pays et dans les images de ce monde, pour que vous ne le voyiez pas avant de jouer. Décoché, le Nouveau Monde y est montré. Vous pourrez changer cela plus tard sur la page du monde sans le recréer.'''
+source = "337d031e6fe83e3e"
+text = '''Couvre les continents générés comme une terra incognita sur la carte du choix du pays et dans les images de ce monde, pour que vous ne les voyiez pas avant de jouer. Décoché, ils y sont montrés. Vous pourrez changer cela plus tard sur la page du monde sans le recréer.'''
 
 ["about_generator"]
-source = "6ed5499d9096e55f"
-text = '''Random New World crée des cartes du Nouveau Monde pour EU5. Chaque monde créé est un mod complet à lui seul : cochez-le dans votre playset pour y jouer. Partagez son code ou son fichier de monde. Le générateur lui-même n'a pas besoin d'être activé.'''
+source = "5cb1898c7f0ebe50"
+text = '''Random New World génère de nouveaux continents pour EU5 : l'Amérique, l'Afrique et l'Océanie, seuls ou ensemble. Chaque monde créé est un mod complet à lui seul : cochez-le dans votre playset pour y jouer. Partagez son code ou son fichier de monde. Le générateur lui-même n'a pas besoin d'être activé.'''
 
 ["about"]
 source = "a26ed0ddb5a99c42"
@@ -315,12 +315,12 @@ source = "913f7ad2bdaa4f8c"
 text = '''Informations sur cette application'''
 
 ["about_subtitle"]
-source = "3e1dc6d90c130516"
-text = '''Générateur procédural du Nouveau Monde pour Europa Universalis V'''
+source = "c6a7a9d0395ffb02"
+text = '''Générateur procédural de continents pour Europa Universalis V'''
 
 ["about_description"]
-source = "175e3e1514d0eec1"
-text = "Random New World génère une géographie procédurale, des climats, des biomes, des fleuves, des cultures et des empires pour Europa Universalis V, tout en préservant l'Ancien Monde intact.\n\nChaque monde généré est un mod complet et autonome : activez-le dans votre ensemble de mods pour jouer. Partagez son code de monde ou son fichier d'exportation."
+source = "f5861d9ce4d4aa95"
+text = "Random New World génère une géographie procédurale, des climats, des biomes, des fleuves, des cultures et des empires pour les continents d'Europa Universalis V que vous choisissez (Amérique, Afrique, Océanie), et garde le reste du monde tel que le jeu le présente.\n\nChaque monde généré est un mod complet et autonome : activez-le dans votre ensemble de mods pour jouer. Partagez son code de monde ou son fichier d'exportation."
 
 ["about_author"]
 source = "d95082a2ee57f3e4"
@@ -403,8 +403,8 @@ source = "2bcaef12e98803f1"
 text = '''Supercontinent'''
 
 ["type.supercontinent.about"]
-source = "33a2ee4977ae11b4"
-text = '''Une seule grande masse de terre à travers le Nouveau Monde, avec quelques îles.'''
+source = "a66f7a8e65dd236c"
+text = '''Une grande masse de terre avec quelques îles.'''
 
 ["type.continents"]
 source = "6c048f26d3b8b473"
@@ -707,16 +707,16 @@ source = "a791d35d238b78f0"
 text = "Laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.\n\nSi les terres se pressent contre les côtes de l’Ancien Monde, ne décochez pas cette option : augmentez plutôt « Distance à l’Ancien Monde » dans Avancé (Terre et mer). Les terres se rapprochent du milieu de l’océan sans que leur quantité change, et les continents restent libres de prendre n’importe quelle forme. Décocher l’option cantonne le Nouveau Monde à la bande d’origine autour des Amériques."
 
 ["control.new_world.reveal_at_start"]
-source = "6dfd6b1cd0dbf532"
-text = '''Révéler le Nouveau Monde au début'''
+source = "e1c28d96cc9cb7ce"
+text = '''Révéler au début'''
 
 ["control.new_world.reveal_at_start.about"]
 source = "ed8a19dd636b4dba"
 text = '''Pour le multijoueur'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "53b1f1dce58cd064"
-text = '''Au début d'une campagne, le pays de chaque joueur découvre chaque zone de ce Nouveau Monde, terres et mers, de sorte que tous les joueurs le voient dès le premier jour. Les pays dirigés par l'ordinateur ne l'obtiennent pas : ils trouvent le Nouveau Monde en explorant, comme dans le jeu. Désactivé par défaut : le Nouveau Monde attend alors d'être découvert par tous. L'événement du jeu qui annonce la découverte du Nouveau Monde ne se déclenche pas, car la découverte est déjà faite.'''
+source = "e793d3ba514a2204"
+text = '''Au début d'une campagne, le pays de chaque joueur découvre chaque zone de ce continent généré, terres et mers, de sorte que tous les joueurs le voient dès le premier jour. Les pays dirigés par l'ordinateur ne l'obtiennent pas : ils le trouvent en explorant, comme dans le jeu. Désactivé par défaut : le continent attend alors d'être découvert par tous. Pour l'Amérique, l'événement du jeu qui annonce la découverte du Nouveau Monde ne se déclenche pas, car la découverte est déjà faite.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -995,8 +995,8 @@ source = "8141923fca351c19"
 text = '''Total mondial : environ {count} lieux (limite du moteur EU5 : ~32 000).'''
 
 ["estimate_tip"]
-source = "34f3f38a503b4cdc"
-text = "Dans EU5, les lieux comprennent les provinces terrestres, les zones maritimes et les lacs du monde entier (~22 000 appartiennent à l'Ancien Monde inchangé).\n\nLe moteur utilise un index 16 bits (~32 767 au maximum). Pour éviter les plantages, le générateur reste prudemment sous 31 200.\n\nPourquoi « beaucoup de terres » peut afficher moins de lieux :\nLes zones maritimes sont aussi des lieux. Plus de terre signifie moins d'océan (moins de zones maritimes), et la taille des cellules terrestres augmente automatiquement pour les grandes masses afin de respecter la limite. Le total peut donc diminuer ; c'est un équilibrage normal et non une erreur."
+source = "8ee429c8b642b1d2"
+text = "Dans EU5, les lieux comprennent les provinces terrestres, les zones maritimes et les lacs du monde entier (la plupart appartiennent aux terres conservées telles que dans le jeu).\n\nLe moteur utilise un index 16 bits (~32 767 au maximum). Pour éviter les plantages, le générateur reste prudemment sous 31 200.\n\nPourquoi « beaucoup de terres » peut afficher moins de lieux :\nLes zones maritimes sont aussi des lieux. Plus de terre signifie moins d'océan (moins de zones maritimes), et la taille des cellules terrestres augmente automatiquement pour les grandes masses afin de respecter la limite. Le total peut donc diminuer ; c'est un équilibrage normal et non une erreur."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1007,12 +1007,12 @@ source = "4bfbafc4c2ab883b"
 text = '''Le nom est enregistré. Le jeu utilise en ce moment les fichiers de ce monde ; sa liste de mods affichera le nom une fois le monde ajouté de nouveau.'''
 
 ["preview_hidden"]
-source = "04b86c1fa26bdb53"
-text = '''Le Nouveau Monde est caché, terra incognita.'''
+source = "8862387a4461b924"
+text = '''Les terres générées sont cachées, terra incognita.'''
 
 ["preview_shown"]
-source = "de7b43db7ffe45e6"
-text = '''Le Nouveau Monde est visible.'''
+source = "2e1547f1f7dc4cf9"
+text = '''Les terres générées sont visibles.'''
 
 ["preview_missing"]
 source = "c21d71a0de202b2f"
@@ -1223,8 +1223,8 @@ source = "bb1ed31b2c6d66f5"
 text = '''Enregistrer l'image…'''
 
 ["save_picture_tip"]
-source = "fb774db84a221988"
-text = '''Enregistrer l'image affichée en PNG ; elle reste couverte tant que le Nouveau Monde n'est pas dévoilé.'''
+source = "d020e4c333d37577"
+text = '''Enregistrer l'image affichée en PNG ; elle reste couverte tant que les terres générées ne sont pas dévoilées.'''
 
 ["picture_saved"]
 source = "482f5b2eebc6b886"
@@ -1291,8 +1291,8 @@ source = "6d03c0632ec309b2"
 text = '''Afficher les cartes de ce monde dans le générateur. La liste de mods du jeu le garde couvert, sauf indication contraire des paramètres.'''
 
 ["covered_maps"]
-source = "72895291a8506c4f"
-text = '''Le Nouveau Monde de ce monde est couvert, pour que vous puissiez encore le découvrir en jeu. Dévoilez-le pour voir ses pays, cultures, religions et ressources avant de jouer.'''
+source = "b7ffdf58f84cd59b"
+text = '''Les terres générées de ce monde sont couvertes, pour que vous puissiez encore les découvrir en jeu. Dévoilez-les pour voir leurs pays, cultures, religions et ressources avant de jouer.'''
 
 ["no_atlas"]
 source = "87cac289c6484f74"
@@ -2837,8 +2837,8 @@ source = "8a604db947b5994e"
 text = '''Peuples seulement'''
 
 ["control.new_world.keep_geography.info"]
-source = "ec2c59bae05bf945"
-text = '''Les Amériques restent exactement comme le jeu les dessine : aucune terre, côte, relief, rivière ni localité n’est générée ou modifiée. Seuls leurs peuples sont générés : États, cultures, religions, histoire, lois et le reste de la société de 1337. Les réglages de terre, d’océan, de carte et de ressources ne s’appliquent pas, et le Nouveau Monde n’est pas masqué dans le salon.'''
+source = "d0a8d4ea574a2dbe"
+text = '''Les Amériques restent exactement comme le jeu les dessine : aucune terre, côte, relief, rivière ni localité n’est générée ou modifiée. Seuls leurs peuples sont générés : États, cultures, religions, histoire, lois et le reste de la société de 1337. Les réglages de terre, d’océan, de carte et de ressources ne s’appliquent pas, et les Amériques ne sont pas masquées dans le salon.'''
 
 ["error.candidates.real"]
 source = "50020d09ce8b62af"
@@ -3412,3 +3412,7 @@ text = '''en partie terminée, en attente d'une autre phase'''
 ["progress.state.waiting"]
 source = "80cfa3e7f28dde4d"
 text = '''en attente'''
+
+["whole_world"]
+source = "f33596d01e818615"
+text = '''Le monde entier'''

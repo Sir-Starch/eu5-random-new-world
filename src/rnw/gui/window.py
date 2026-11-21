@@ -2115,7 +2115,7 @@ class MainWindow(QMainWindow):
                 shown=not (keeps and quick_row.quick.name in controls.REAL_AMERICAS_QUICK)
             )
             quick_row.refresh(controller.quick_level(quick_row.quick.name), enabled=not busy)
-        count = len(controller.changes)
+        count = sum(controller.changed_values().values())
         self.customized.setText(text("customized", count=count) if count else "")
         self.reset_all.setEnabled(bool(count) and not busy)
         problem = controller.problem()

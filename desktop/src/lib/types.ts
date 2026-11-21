@@ -50,7 +50,7 @@ export interface NewState {
   continents: Record<string, boolean>;
   sea_circumnavigation?: boolean | null;
   regional_types: string[];
-  regions: Record<string, { preset: string; morocco: string; mamluks: string; require_asia_connection: boolean; controls: ControlInfo[]; values: Record<string, ValueState> }>;
+  regions: Record<string, { preset: string; morocco: string; mamluks: string; require_asia_connection: boolean; controls: ControlInfo[]; values: Record<string, ValueState>; changed: number; reveal: boolean }>;
   choice: string;
   preset: string;
   mode: string | null;
@@ -64,7 +64,9 @@ export interface NewState {
   values: Record<string, ValueState>;
   quick: Record<string, string | null>;
   keeps_geography: boolean;
+  /** Exact values changed from the type's, of all continents switched on and of each. */
   changed: number;
+  changed_by: Record<string, number>;
   estimate: number | null;
   estimate_text: string;
   over_budget: boolean;

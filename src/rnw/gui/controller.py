@@ -108,6 +108,10 @@ REPRODUCTION: Final[dict[Verdict, str]] = {
 }
 
 
+# A continent's settings in its ``new_world`` that the World tab holds, not the Advanced tab.
+REGION_KEPT: Final[frozenset[str]] = frozenset({"reveal_at_start"})
+
+
 @dataclass(frozen=True, slots=True)
 class PhaseRow:
     """A phase of the world being made as both windows list it: its name and state
@@ -459,10 +463,53 @@ class Controller:
         self._changed()
 
     def set_region_preset(self, key: str, preset: str) -> None:
+        """Choose a continent's type; its exact values go back to the type's own, and its reveal,
+        a choice of the World tab, stays."""
         if key in REGIONAL_PRESETS and preset in controls.REGION_TYPES:
             self._edit_region(
-                key, {"preset": preset, "new_world": {}, "natives": {}, "resources": {}}
+                key,
+                {
+                    "preset": preset,
+                    "new_world": self._region_kept(key),
+                    "natives": {},
+                    "resources": {},
+                },
             )
+
+    def _region_kept(self, key: str) -> dict[str, object]:
+        """The continent's own settings that its type and the Advanced tab leave alone."""
+        return {"reveal_at_start": 1} if self.region_settings(key).new_world.reveal_at_start else {}
+
+    def _region_customised(self, key: str) -> bool:
+        configured = self._continent_document().get(key)
+        if not isinstance(configured, dict):
+            return False
+        region = cast("dict[str, object]", configured)
+        world = region.get("new_world")
+        own: set[str] = set(cast("dict[str, object]", world)) if isinstance(world, dict) else set()
+        return bool(region.get("natives") or region.get("resources") or own - REGION_KEPT)
+
+    def changed_values(self) -> dict[str, int]:
+        """How many exact values (those of the Advanced tab) differ from the type's, for each
+        continent switched on."""
+        selection = self.continent_selection()
+        found: dict[str, int] = {}
+        if selection["america"]:
+            found["america"] = sum(
+                1 for key in self.changes if controls.BY_KEY[key].field not in controls.PAGE_OPTIONS
+            )
+        for key in REGIONAL_PRESETS:
+            if not selection[key]:
+                continue
+            settings, defaults = self.region_settings(key), self.region_settings(key, defaults=True)
+            found[key] = sum(
+                1
+                for control in controls.regional_controls(key)
+                if control.field not in controls.PAGE_OPTIONS
+                and controls.region_value(control, settings)
+                != controls.region_value(control, defaults)
+            )
+        return found
 
     def set_morocco(self, policy: str) -> None:
         if policy in {mode.value for mode in MoroccoPolicy}:
@@ -660,11 +707,23 @@ class Controller:
             self._changed()
 
     def reset_values(self) -> None:
-        """Give every setting back the world type's value."""
-        if self.changes or self.other_changes.keys() - {"continents"}:
+        """Give every exact value of every continent back to its type's (and drop the drawn
+        land). The World tab's choices stay: the continents, their types and policies, the
+        oceans, the real Americas and each continent's reveal."""
+        kept = {
+            key: number
+            for key, number in self.changes.items()
+            if controls.BY_KEY[key].field in controls.PAGE_OPTIONS
+        }
+        customised = [key for key in REGIONAL_PRESETS if self._region_customised(key)]
+        if self.changes != kept or self.other_changes.keys() - {"continents"} or customised:
             self.origin = "chaos_custom" if self.mode == random_types.CHAOS else ""
-            self.changes, self.other_changes = {}, self._keep_continents()
+            self.changes, self.other_changes = kept, self._keep_continents()
             self.land_mask = None
+            for key in customised:
+                self._edit_region(
+                    key, {"new_world": self._region_kept(key), "natives": {}, "resources": {}}
+                )
             self._changed()
 
     def _keep_continents(self) -> dict[str, object]:

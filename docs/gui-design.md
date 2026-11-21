@@ -142,8 +142,13 @@ pixels only. While a world is made, its
 progress, stages, ETA and Cancel, with the queue under them; afterwards the outcome with Open
 the world or a retry. The queue (its worlds, Run queue, Clear queue, a remove button for each)
 sits below the sketches at rest, so that the grid does not move with each world added. The inspector's tabs are World
-(type and basics as lists, oceans, seed and code), Advanced (exact values by group) and Save and
-play (destination, install, visibility, queue); under every tab stay the location budget, Add to
+(Continents: a row for each continent with its switch and, while on, its type and its own choices:
+America's basics as lists, the real Americas, the oceans; Africa's Morocco, Mamluks and connection
+to Asia; and each continent's reveal at the start; then The whole world: the sea route around it
+and the lobby cover, shown while any land is generated; then seed and code), Advanced (a switch
+between the continents that are on, each with its count of changed values; the exact values of
+the chosen continent by group; Reset all gives back every continent's exact values and keeps the
+World tab's choices) and Save and play (destination, install, queue); under every tab stay the location budget, Add to
 queue and Generate. Folded sections stay folded. Messages that the Qt window wrote under a page
 are toasts; questions are in-window dialogs.
 

@@ -523,7 +523,9 @@ def test_choices_are_validated_and_a_type_resets_its_values(
     wild = encode(new_code("continents", 5, {"new_world": {"land_permille": 800}}))
     assert controller.use_code(wild) is not None
     controller.reset_values()
-    assert controller.changes == {}
+    # Reset all gives back the Advanced tab's values; the World tab's choices stay.
+    assert controller.changed_values() == {"america": 0}
+    assert controller.changes == {"new_world.expand_oceans": 0}
 
 
 def test_a_quick_answer_sets_the_controls_and_travels_in_the_code(

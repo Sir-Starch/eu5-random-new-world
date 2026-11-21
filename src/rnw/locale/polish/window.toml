@@ -291,16 +291,16 @@ source = "44c59194df93c574"
 text = '''Terra incognita w lobby'''
 
 ["lobby_cover_about"]
-source = "6089e82813d6162b"
-text = '''Ukrywa Nowy Świat przed grą'''
+source = "5581fdbe9e88ca24"
+text = '''Ukrywa wygenerowane ziemie przed grą'''
 
 ["lobby_cover_hint"]
-source = "7027b3756356472f"
-text = '''Zakrywa Nowy Świat jako terra incognita na mapie wyboru kraju i w obrazach tego świata, aby nie był widoczny przed grą. Po odznaczeniu Nowy Świat jest tam pokazany. Możesz to później zmienić na stronie świata bez ponownego tworzenia.'''
+source = "337d031e6fe83e3e"
+text = '''Zakrywa wygenerowane kontynenty jako terra incognita na mapie wyboru kraju i w obrazach tego świata, aby nie były widoczne przed grą. Po odznaczeniu są tam pokazane. Możesz to później zmienić na stronie świata bez ponownego tworzenia.'''
 
 ["about_generator"]
-source = "6ed5499d9096e55f"
-text = '''Random New World tworzy mapy Nowego Świata dla EU5. Każdy utworzony świat jest osobnym, kompletnym modem: zaznacz go w swoim zestawie modów, aby w niego grać. Udostępniaj jego kod lub plik świata. Samego generatora nie trzeba włączać.'''
+source = "5cb1898c7f0ebe50"
+text = '''Random New World tworzy dla EU5 nowe kontynenty: Amerykę, Afrykę i Oceanię, osobno lub razem. Każdy utworzony świat jest osobnym, kompletnym modem: zaznacz go w swoim zestawie modów, aby w niego grać. Udostępniaj jego kod lub plik świata. Samego generatora nie trzeba włączać.'''
 
 ["about"]
 source = "a26ed0ddb5a99c42"
@@ -315,12 +315,12 @@ source = "913f7ad2bdaa4f8c"
 text = '''Informacje o programie'''
 
 ["about_subtitle"]
-source = "3e1dc6d90c130516"
-text = '''Generator proceduralnego Nowego Świata dla Europa Universalis V'''
+source = "c6a7a9d0395ffb02"
+text = '''Proceduralny generator kontynentów dla Europa Universalis V'''
 
 ["about_description"]
-source = "175e3e1514d0eec1"
-text = "Random New World tworzy proceduralną geografię, klimaty, biomy, rzeki, kultury i imperia dla Europa Universalis V, pozostawiając Stary Świat nienaruszonym.\n\nKażdy wygenerowany świat to kompletny, samodzielny mod: włącz go w zestawie modów, aby zagrać. Dziel się kodem świata lub plikiem eksportu."
+source = "f5861d9ce4d4aa95"
+text = "Random New World tworzy proceduralną geografię, klimaty, biomy, rzeki, kultury i imperia dla wybranych przez ciebie kontynentów Europa Universalis V (Ameryka, Afryka, Oceania), a resztę świata zostawia taką, jaka jest w grze.\n\nKażdy wygenerowany świat to kompletny, samodzielny mod: włącz go w zestawie modów, aby zagrać. Dziel się kodem świata lub plikiem eksportu."
 
 ["about_author"]
 source = "d95082a2ee57f3e4"
@@ -403,8 +403,8 @@ source = "2bcaef12e98803f1"
 text = '''Superkontynent'''
 
 ["type.supercontinent.about"]
-source = "33a2ee4977ae11b4"
-text = '''Jeden wielki ląd przez cały Nowy Świat i kilka wysp.'''
+source = "a66f7a8e65dd236c"
+text = '''Jeden wielki ląd z kilkoma wyspami.'''
 
 ["type.continents"]
 source = "6c048f26d3b8b473"
@@ -707,16 +707,16 @@ source = "a791d35d238b78f0"
 text = "Daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.\n\nJeśli ląd tłoczy się przy wybrzeżach Starego Świata, nie wyłączaj tej opcji, tylko zwiększ „Odległość od Starego Świata” na karcie „Zaawansowane” (Ląd i morze). Ląd przesuwa się wtedy ku środkowi oceanu, a jego ilość się nie zmienia; kontynenty nadal mogą mieć dowolny kształt. Wyłączenie ogranicza Nowy Świat do pierwotnego pasa wokół Ameryk."
 
 ["control.new_world.reveal_at_start"]
-source = "6dfd6b1cd0dbf532"
-text = '''Odkryj Nowy Świat na starcie'''
+source = "e1c28d96cc9cb7ce"
+text = '''Odkryj na starcie'''
 
 ["control.new_world.reveal_at_start.about"]
 source = "ed8a19dd636b4dba"
 text = '''Dla trybu wieloosobowego'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "53b1f1dce58cd064"
-text = '''Na początku kampanii kraj każdego gracza odkrywa każdy obszar tego Nowego Świata, ląd i morze, dzięki czemu wszyscy gracze widzą go od pierwszego dnia. Kraje sterowane przez komputer go nie dostają: znajdują Nowy Świat, eksplorując, jak w grze. Domyślnie wyłączone: Nowy Świat czeka wtedy na odkrycie przez wszystkich. Wydarzenie gry zapowiadające odkrycie Nowego Świata nie następuje, ponieważ odkrycie już się dokonało.'''
+source = "e793d3ba514a2204"
+text = '''Na początku kampanii kraj każdego gracza odkrywa każdy obszar tego wygenerowanego kontynentu, ląd i morze, dzięki czemu wszyscy gracze widzą go od pierwszego dnia. Kraje sterowane przez komputer go nie dostają: znajdują go, eksplorując, jak w grze. Domyślnie wyłączone: kontynent czeka wtedy na odkrycie przez wszystkich. W przypadku Ameryki wydarzenie gry zapowiadające odkrycie Nowego Świata nie następuje, ponieważ odkrycie już się dokonało.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -995,8 +995,8 @@ source = "8141923fca351c19"
 text = '''Łącznie na świecie: około {count} lokacji (limit silnika EU5: ~32 000).'''
 
 ["estimate_tip"]
-source = "34f3f38a503b4cdc"
-text = "W EU5 lokacje obejmują prowincje lądowe, strefy morskie oraz jeziora na całym świecie (~22 000 przypada na niezmieniony Stary Świat).\n\nSilnik korzysta z 16-bitowego indeksu (maksymalnie ~32 767). Aby zapobiec awariom, generator utrzymuje łączną liczbę bezpiecznie poniżej 31 200.\n\nDlaczego przy wyborze „dużo lądu” liczba lokacji może spaść:\nStrefy morskie to również lokacje. Więcej lądu oznacza mniejszą powierzchnię oceanu (mniej stref morskich), a rozmiar komórek lądowych jest automatycznie zwiększany przy dużych lądach, by nie przekroczyć limitu silnika. W rezultacie łączna liczba może być mniejsza — to normalne równoważenie budżetu, a nie błąd."
+source = "8ee429c8b642b1d2"
+text = "W EU5 lokacje obejmują prowincje lądowe, strefy morskie oraz jeziora na całym świecie (większość z nich przypada na ziemie zachowane tak jak w grze).\n\nSilnik korzysta z 16-bitowego indeksu (maksymalnie ~32 767). Aby zapobiec awariom, generator utrzymuje łączną liczbę bezpiecznie poniżej 31 200.\n\nDlaczego przy wyborze „dużo lądu” liczba lokacji może spaść:\nStrefy morskie to również lokacje. Więcej lądu oznacza mniejszą powierzchnię oceanu (mniej stref morskich), a rozmiar komórek lądowych jest automatycznie zwiększany przy dużych lądach, by nie przekroczyć limitu silnika. W rezultacie łączna liczba może być mniejsza — to normalne równoważenie budżetu, a nie błąd."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1007,12 +1007,12 @@ source = "4bfbafc4c2ab883b"
 text = '''Nazwa została zapisana. Gra korzysta teraz z plików tego świata, więc lista modów pokaże nazwę, gdy świat zostanie dodany ponownie.'''
 
 ["preview_hidden"]
-source = "04b86c1fa26bdb53"
-text = '''Nowy Świat jest zakryty jako terra incognita.'''
+source = "8862387a4461b924"
+text = '''Wygenerowane ziemie są zakryte jako terra incognita.'''
 
 ["preview_shown"]
-source = "de7b43db7ffe45e6"
-text = '''Nowy Świat jest widoczny.'''
+source = "2e1547f1f7dc4cf9"
+text = '''Wygenerowane ziemie są widoczne.'''
 
 ["preview_missing"]
 source = "c21d71a0de202b2f"
@@ -1223,8 +1223,8 @@ source = "bb1ed31b2c6d66f5"
 text = '''Zapisz obraz…'''
 
 ["save_picture_tip"]
-source = "fb774db84a221988"
-text = '''Zapisać pokazany obraz jako PNG; jest zakryty, dopóki Nowy Świat nie zostanie odsłonięty.'''
+source = "d020e4c333d37577"
+text = '''Zapisać pokazany obraz jako PNG; jest zakryty, dopóki wygenerowane ziemie nie zostaną odsłonięte.'''
 
 ["picture_saved"]
 source = "482f5b2eebc6b886"
@@ -1291,8 +1291,8 @@ source = "6d03c0632ec309b2"
 text = '''Pokazać mapy tego świata w generatorze. Lista modów gry nadal go zakrywa, chyba że ustawienia mówią inaczej.'''
 
 ["covered_maps"]
-source = "72895291a8506c4f"
-text = '''Nowy Świat tego świata jest zakryty, żebyś mógł go jeszcze odkryć w grze. Odsłoń go, aby zobaczyć jego kraje, kultury, religie i zasoby przed grą.'''
+source = "b7ffdf58f84cd59b"
+text = '''Wygenerowane ziemie tego świata są zakryte, żebyś mógł je jeszcze odkryć w grze. Odsłoń je, aby zobaczyć ich kraje, kultury, religie i zasoby przed grą.'''
 
 ["no_atlas"]
 source = "87cac289c6484f74"
@@ -2837,8 +2837,8 @@ source = "8a604db947b5994e"
 text = '''Tylko ludy'''
 
 ["control.new_world.keep_geography.info"]
-source = "ec2c59bae05bf945"
-text = '''Ameryki pozostają dokładnie takie, jak rysuje je gra: nie generuje się ani nie zmienia żadnego lądu, wybrzeża, rzeźby terenu, rzeki ani miejsca. Generowane są tylko ich ludy: państwa, kultury, religie, historia, prawa i reszta społeczeństwa z 1337 roku. Ustawienia lądu, oceanu, mapy i zasobów nie obowiązują, a Nowy Świat nie jest zakrywany w lobby.'''
+source = "d0a8d4ea574a2dbe"
+text = '''Ameryki pozostają dokładnie takie, jak rysuje je gra: nie generuje się ani nie zmienia żadnego lądu, wybrzeża, rzeźby terenu, rzeki ani miejsca. Generowane są tylko ich ludy: państwa, kultury, religie, historia, prawa i reszta społeczeństwa z 1337 roku. Ustawienia lądu, oceanu, mapy i zasobów nie obowiązują, a Ameryki nie są zakrywane w lobby.'''
 
 ["error.candidates.real"]
 source = "50020d09ce8b62af"
@@ -3412,3 +3412,7 @@ text = '''częściowo gotowe, czeka na inny etap'''
 ["progress.state.waiting"]
 source = "80cfa3e7f28dde4d"
 text = '''czeka'''
+
+["whole_world"]
+source = "f33596d01e818615"
+text = '''Cały świat'''

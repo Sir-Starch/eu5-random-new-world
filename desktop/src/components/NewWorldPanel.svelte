@@ -1,6 +1,7 @@
 <script lang="ts">
-  // The inspector of the new world: its type and basics, seed and code; the exact values; where
-  // it goes and the queue. Under every tab: the location budget and Generate.
+  // The inspector of the new world: its continents, each with its type and own choices, what
+  // holds for the whole world, seed and code; the exact values of each continent; where it goes
+  // and the queue. Under every tab: the location budget and Generate.
   import { app, grouped, t, type NewTab } from "../lib/app.svelte";
   import { copyText, pickFolder, readText, saveFile } from "../lib/native";
   import Icon from "./Icon.svelte";
@@ -29,6 +30,15 @@
   const running = $derived(busy && (s?.task === "generate" || s?.task === "queue"));
   const percent = $derived(Math.round((s?.fraction ?? 0) * 100));
   const groups = $derived(app.info?.groups ?? []);
+  // The continents in their order, and those switched on (whose exact values the Advanced tab
+  // holds); the lobby cover applies while any land is generated.
+  const continentKeys = $derived(Object.keys(n?.continents ?? {}));
+  const enabledKeys = $derived(Object.keys(n?.changed_by ?? {}));
+  const showCover = $derived(!!n && (!n.keeps_geography || Object.keys(n.regions ?? {}).length > 0));
+  let pickedContinent = $state("america");
+  const advancedContinent = $derived(
+    enabledKeys.includes(pickedContinent) ? pickedContinent : (enabledKeys[0] ?? "america"),
+  );
   const controls = $derived(app.info?.controls.filter((c) => c.advanced) ?? []);
 
   async function seedDone(): Promise<void> {
@@ -86,157 +96,149 @@
 
   {#if app.newTab === "world"}
     <Section id="new.continents" title={t("continent.title")}>
-      {#each Object.entries(n?.continents ?? {}) as [key, enabled] (key)}
-        <Check
-          checked={enabled}
-          disabled={locked}
-          label={t(`continent.${key}`)}
-          onchange={(value) => app.call("set_continent", { key, value })}
-        />
-      {/each}
-      {#if n?.sea_circumnavigation != null}
-        <Check checked={n.sea_circumnavigation} disabled={locked}
-          label={t("continent.sea_circumnavigation")}
-          onchange={(enabled) => app.call("set_sea_circumnavigation", { enabled })} />
-      {/if}
-      {#each Object.entries(n?.regions ?? {}) as [key, region] (key)}
-        <div class="props">
-          <label for={`preset-${key}`} class="key">{t(`continent.${key}`)} · {t("type")}</label>
-          <select id={`preset-${key}`} class="input val" disabled={locked} value={region.preset}
-            onchange={(event) => app.call("set_region_preset", { key, preset: event.currentTarget.value })}>
-            {#each n?.regional_types ?? [] as type (type)}
-              <option value={type}>{t(`type.${type}`)}</option>
-            {/each}
-          </select>
-          {#if region.morocco}
-            <label for="morocco-policy" class="key">{t("continent.morocco")}</label>
-            <select id="morocco-policy" class="input val" disabled={locked} value={region.morocco}
-              onchange={(event) => app.call("set_morocco", { policy: event.currentTarget.value })}>
-              {#each ["restore", "emirate", "castile", "granada"] as policy (policy)}
-                <option value={policy}>{t(`continent.morocco.${policy}`)}</option>
-              {/each}
-            </select>
-          {/if}
-          {#if region.mamluks}
-            <label for="mamluk-policy" class="key">{t("continent.mamluks")}</label>
-            <select id="mamluk-policy" class="input val" disabled={locked} value={region.mamluks}
-              onchange={(event) => app.call("set_mamluks", { policy: event.currentTarget.value })}>
-              {#each ["restore", "damascus"] as policy (policy)}
-                <option value={policy}>{t(`continent.mamluks.${policy}`)}</option>
-              {/each}
-            </select>
-          {/if}
-          {#if key === "africa"}
-            <div class="wide">
-              <Check checked={region.require_asia_connection} disabled={locked}
-                label={t("continent.africa.asia_connection")}
-                onchange={(required) => app.call("set_asia_connection", { required })} />
+      {#each continentKeys as key (key)}
+        {@const enabled = !!n?.continents[key]}
+        {@const region = n?.regions[key]}
+        <div class="continent" class:off={!enabled}>
+          <div class="continent-head">
+            <Check checked={enabled} disabled={locked} label={t(`continent.${key}`)}
+              onchange={(value) => app.call("set_continent", { key, value })} />
+            {#if enabled && key === "america"}
+              <select class="input type" aria-label={t("type")} title={t("type")} value={n?.choice} disabled={locked}
+                onchange={(event) => app.call("set_choice", { choice: event.currentTarget.value })}>
+                {#each app.info?.choices ?? [] as choice (choice)}
+                  <option value={choice}>{t(`type.${choice}`)}</option>
+                {/each}
+              </select>
+            {:else if enabled && region}
+              <select class="input type" aria-label={t("type")} title={t("type")} value={region.preset} disabled={locked}
+                onchange={(event) => app.call("set_region_preset", { key, preset: event.currentTarget.value })}>
+                {#each n?.regional_types ?? [] as type (type)}
+                  <option value={type}>{t(`type.${type}`)}</option>
+                {/each}
+              </select>
+            {/if}
+          </div>
+          {#if enabled && key === "america" && n}
+            <div class="continent-body">
+              <p class="hint">
+                {t(`type.${n.choice}.about`)}
+                {#if n.mode}{t("forge.drawn", { type: t(`type.${n.preset}`) })}{/if}
+              </p>
+              {#if n.mode === "chaos"}
+                <div>
+                  <button class="btn small" disabled={locked} title={t("randomize_settings.about")}
+                    onclick={() => app.call("randomize_settings")}>{t("randomize_settings")}</button>
+                </div>
+              {/if}
+              <div class="props">
+                {#each (app.info?.quick ?? []).filter((item) => !(n?.keeps_geography && item.geography)) as item (item.name)}
+                  <label class="key" for={`quick-${item.name}`} title={t(`quick.${item.name}.about`)}>{t(`quick.${item.name}`)}</label>
+                  <select
+                    id={`quick-${item.name}`}
+                    class="input val"
+                    class:custom={n.quick[item.name] === null}
+                    title={t(`quick.${item.name}.about`)}
+                    value={n.quick[item.name] ?? ""}
+                    disabled={locked}
+                    onchange={(event) => app.call("set_quick", { name: item.name, level: event.currentTarget.value })}
+                  >
+                    {#if n.quick[item.name] === null}<option value="" disabled>{t("quick.custom")}</option>{/if}
+                    {#each item.levels as level (level)}
+                      <option value={level}>{t(`quick.${item.name}.${level}`)}</option>
+                    {/each}
+                  </select>
+                {/each}
+              </div>
+              {#if n.values["new_world.keep_geography"]}
+                <Check
+                  checked={(n.values["new_world.keep_geography"].shown ?? 0) > 0}
+                  disabled={locked}
+                  label={t("control.new_world.keep_geography")}
+                  hint={t("control.new_world.keep_geography.about")}
+                  info={t("control.new_world.keep_geography.info")}
+                  onchange={(value) => app.call("set_value", { key: "new_world.keep_geography", value: value ? 1 : 0 })}
+                />
+              {/if}
+              {#if n.values["new_world.expand_oceans"]}
+                <Check
+                  checked={(n.values["new_world.expand_oceans"].shown ?? 0) > 0}
+                  disabled={locked}
+                  label={t("control.new_world.expand_oceans")}
+                  hint={t("control.new_world.expand_oceans.about")}
+                  info={t("control.new_world.expand_oceans.info")}
+                  onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
+                />
+              {/if}
+              <Check
+                checked={(n.values["new_world.reveal_at_start"]?.shown ?? 0) > 0}
+                disabled={locked}
+                label={t("control.new_world.reveal_at_start")}
+                hint={t("control.new_world.reveal_at_start.about")}
+                info={t("control.new_world.reveal_at_start.info")}
+                onchange={(value) => app.call("set_value", { key: "new_world.reveal_at_start", value: value ? 1 : 0 })}
+              />
+            </div>
+          {:else if enabled && region}
+            <div class="continent-body">
+              <p class="hint">{t(`type.${region.preset}.about`)}</p>
+              {#if region.morocco}
+                <label class="field">
+                  <span class="key">{t("continent.morocco")}</span>
+                  <select class="input" disabled={locked} value={region.morocco}
+                    onchange={(event) => app.call("set_morocco", { policy: event.currentTarget.value })}>
+                    {#each ["restore", "emirate", "castile", "granada"] as policy (policy)}
+                      <option value={policy}>{t(`continent.morocco.${policy}`)}</option>
+                    {/each}
+                  </select>
+                </label>
+              {/if}
+              {#if region.mamluks}
+                <label class="field">
+                  <span class="key">{t("continent.mamluks")}</span>
+                  <select class="input" disabled={locked} value={region.mamluks}
+                    onchange={(event) => app.call("set_mamluks", { policy: event.currentTarget.value })}>
+                    {#each ["restore", "damascus"] as policy (policy)}
+                      <option value={policy}>{t(`continent.mamluks.${policy}`)}</option>
+                    {/each}
+                  </select>
+                </label>
+              {/if}
+              {#if key === "africa"}
+                <Check checked={region.require_asia_connection} disabled={locked}
+                  label={t("continent.africa.asia_connection")}
+                  onchange={(required) => app.call("set_asia_connection", { required })} />
+              {/if}
+              <Check
+                checked={region.reveal}
+                disabled={locked}
+                label={t("control.new_world.reveal_at_start")}
+                hint={t("control.new_world.reveal_at_start.about")}
+                info={t("control.new_world.reveal_at_start.info")}
+                onchange={(value) => app.call("set_region_value", { region: key, key: "new_world.reveal_at_start", value: value ? 1 : 0 })}
+              />
             </div>
           {/if}
         </div>
       {/each}
-      {#if n && (n.continents?.america === false || n.keeps_geography) && Object.keys(n.regions ?? {}).length}
-        <div class="oceans">
-          <Check checked={!s?.preferences.show_new_world} disabled={locked}
-            label={t("lobby_cover")} hint={t("lobby_cover_about")} info={t("lobby_cover_hint")}
-            onchange={(value) => app.call("set_show_new_world", { value: !value })} />
-        </div>
-      {/if}
     </Section>
 
-    {#if n?.continents?.america !== false}
-    <Section id="new.basics" title={t("quick")}>
-      <div class="props">
-        <label class="key" for="world-type">{t("type")}</label>
-        <select
-          id="world-type"
-          class="input val"
-          value={n?.choice}
-          disabled={locked}
-          onchange={(event) => app.call("set_choice", { choice: event.currentTarget.value })}
-        >
-          {#each app.info?.choices ?? [] as choice (choice)}
-            <option value={choice}>{t(`type.${choice}`)}</option>
-          {/each}
-        </select>
-        {#if n?.mode === "chaos"}
-          <div class="wide">
-            <button class="btn" disabled={locked} title={t("randomize_settings.about")}
-              onclick={() => app.call("randomize_settings")}>{t("randomize_settings")}</button>
-          </div>
-        {/if}
-        <p class="wide hint">
-          {t(`type.${n?.choice}.about`)}
-          {#if n?.mode}{t("forge.drawn", { type: t(`type.${n.preset}`) })}{/if}
-        </p>
-
-        {#each (app.info?.quick ?? []).filter((item) => !(n?.keeps_geography && item.geography)) as item (item.name)}
-          <label class="key" for={`quick-${item.name}`} title={t(`quick.${item.name}.about`)}>{t(`quick.${item.name}`)}</label>
-          <select
-            id={`quick-${item.name}`}
-            class="input val"
-            class:custom={n?.quick[item.name] === null}
-            title={t(`quick.${item.name}.about`)}
-            value={n?.quick[item.name] ?? ""}
-            disabled={locked}
-            onchange={(event) => app.call("set_quick", { name: item.name, level: event.currentTarget.value })}
-          >
-            {#if n?.quick[item.name] === null}<option value="" disabled>{t("quick.custom")}</option>{/if}
-            {#each item.levels as level (level)}
-              <option value={level}>{t(`quick.${item.name}.${level}`)}</option>
-            {/each}
-          </select>
-        {/each}
-
-        {#if n?.values["new_world.keep_geography"]}
-          <div class="wide oceans">
-            <Check
-              checked={(n.values["new_world.keep_geography"].shown ?? 0) > 0}
-              disabled={locked}
-              label={t("control.new_world.keep_geography")}
-              hint={t("control.new_world.keep_geography.about")}
-              info={t("control.new_world.keep_geography.info")}
-              onchange={(value) => app.call("set_value", { key: "new_world.keep_geography", value: value ? 1 : 0 })}
-            />
-          </div>
-        {/if}
-        {#if n?.values["new_world.expand_oceans"]}
-        <div class="wide oceans">
-          <Check
-            checked={(n?.values["new_world.expand_oceans"]?.shown ?? 0) > 0}
-            disabled={locked}
-            label={t("control.new_world.expand_oceans")}
-            hint={t("control.new_world.expand_oceans.about")}
-            info={t("control.new_world.expand_oceans.info")}
-            onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
-          />
+    {#if n && (n.sea_circumnavigation != null || showCover)}
+      <Section id="new.whole" title={t("whole_world")}>
+        <div class="values">
+          {#if n.sea_circumnavigation != null}
+            <Check checked={n.sea_circumnavigation} disabled={locked}
+              label={t("continent.sea_circumnavigation")}
+              onchange={(enabled) => app.call("set_sea_circumnavigation", { enabled })} />
+          {/if}
+          {#if showCover}
+            <!-- The stored preference says "shown"; this box says "covered", so it is inverted. -->
+            <Check checked={!s?.preferences.show_new_world} disabled={locked}
+              label={t("lobby_cover")} hint={t("lobby_cover_about")} info={t("lobby_cover_hint")}
+              onchange={(value) => app.call("set_show_new_world", { value: !value })} />
+          {/if}
         </div>
-        {/if}
-        {#if !n?.keeps_geography}
-        <div class="wide oceans">
-          <!-- The stored preference says "shown"; this box says "covered", so it is inverted. -->
-          <Check
-            checked={!s?.preferences.show_new_world}
-            disabled={locked}
-            label={t("lobby_cover")}
-            hint={t("lobby_cover_about")}
-            info={t("lobby_cover_hint")}
-            onchange={(value) => app.call("set_show_new_world", { value: !value })}
-          />
-        </div>
-        {/if}
-        <div class="wide oceans">
-          <Check
-            checked={(n?.values["new_world.reveal_at_start"]?.shown ?? 0) > 0}
-            disabled={locked}
-            label={t("control.new_world.reveal_at_start")}
-            hint={t("control.new_world.reveal_at_start.about")}
-            info={t("control.new_world.reveal_at_start.info")}
-            onchange={(value) => app.call("set_value", { key: "new_world.reveal_at_start", value: value ? 1 : 0 })}
-          />
-        </div>
-      </div>
-    </Section>
+      </Section>
     {/if}
 
     <Section id="new.identity" title={t("world_identity")}>
@@ -293,51 +295,66 @@
       <p class="hint">{t("customize_hint")}</p>
       <button class="btn small" disabled={!n?.changed || locked} onclick={() => app.call("reset_values")}>{t("reset_all")}</button>
     </div>
-    {#each groups as group (group)}
-      {@const members = controls.filter((c) => c.group === group && n?.values[c.key])}
-      {@const changed = members.filter((c) => n?.values[c.key]?.changed).length}
-      {#if members.length}
-      <Section id={`new.group.${group}`} title={t(`group.${group}`)}>
-        {#snippet aside()}{#if changed}<span class="changed">{t("custom_some", { count: changed })}</span>{/if}{/snippet}
-        {#if group === "resources"}<p class="hint">{t("group.resources.about")}</p>{/if}
-        <div class="values">
-          {#each members as control (control.key)}
-            {#if n?.values[control.key]}
-              {#if control.toggle}
-                <Check checked={n.values[control.key].shown > 0} disabled={locked}
-                  label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
-                  onchange={(value) => app.call("set_value", { key: control.key, value: value ? 1 : 0 })} />
-              {:else}
-                <ValueField {control} value={n.values[control.key]} disabled={locked} />
-              {/if}
-            {/if}
-          {/each}
-        </div>
-      </Section>
-      {/if}
-    {/each}
-    {#each Object.entries(n?.regions ?? {}) as [name, region] (name)}
-      <Section id={`new.advanced.${name}`} title={t(`continent.${name}`)} closed>
-        {#each groups as group (group)}
-          {@const controlsHere = region.controls.filter((control) => control.group === group)}
-          {#if controlsHere.length}
-            <Section id={`new.advanced.${name}.${group}`} title={t(`group.${group}`)}>
-              <div class="values">
-                {#each controlsHere as control (control.key)}
-                  {#if control.toggle}
-                    <Check checked={region.values[control.key].shown > 0} disabled={locked}
-                      label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
-                      onchange={(value) => app.call("set_region_value", { region: name, key: control.key, value: value ? 1 : 0 })} />
-                  {:else}
-                    <ValueField {control} value={region.values[control.key]} disabled={locked} region={name} />
-                  {/if}
-                {/each}
-              </div>
-            </Section>
-          {/if}
+    {#if enabledKeys.length > 1 || (enabledKeys.length === 1 && enabledKeys[0] !== "america")}
+      <div class="switch" role="tablist" aria-label={t("continent.title")}>
+        {#each enabledKeys as key (key)}
+          <button role="tab" class="switch-item" class:active={key === advancedContinent}
+            aria-selected={key === advancedContinent} onclick={() => (pickedContinent = key)}>
+            <span>{t(`continent.${key}`)}</span>
+            {#if n?.changed_by[key]}<span class="count num" title={t("custom_some", { count: n.changed_by[key] })}>{n.changed_by[key]}</span>{/if}
+          </button>
         {/each}
-      </Section>
-    {/each}
+      </div>
+    {/if}
+    {#if advancedContinent === "america"}
+      {#each groups as group (group)}
+        {@const members = controls.filter((c) => c.group === group && n?.values[c.key])}
+        {@const changed = members.filter((c) => n?.values[c.key]?.changed).length}
+        {#if members.length}
+        <Section id={`new.group.${group}`} title={t(`group.${group}`)}>
+          {#snippet aside()}{#if changed}<span class="changed">{t("custom_some", { count: changed })}</span>{/if}{/snippet}
+          {#if group === "resources"}<p class="hint">{t("group.resources.about")}</p>{/if}
+          <div class="values">
+            {#each members as control (control.key)}
+              {#if n?.values[control.key]}
+                {#if control.toggle}
+                  <Check checked={n.values[control.key].shown > 0} disabled={locked}
+                    label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
+                    onchange={(value) => app.call("set_value", { key: control.key, value: value ? 1 : 0 })} />
+                {:else}
+                  <ValueField {control} value={n.values[control.key]} disabled={locked} />
+                {/if}
+              {/if}
+            {/each}
+          </div>
+        </Section>
+        {/if}
+      {/each}
+    {:else if n?.regions[advancedContinent]}
+      {@const name = advancedContinent}
+      {@const region = n.regions[advancedContinent]}
+      {#each groups as group (group)}
+        {@const members = region.controls.filter((control) => control.group === group)}
+        {@const changed = members.filter((control) => region.values[control.key]?.changed).length}
+        {#if members.length}
+          <Section id={`new.advanced.${name}.${group}`} title={t(`group.${group}`)}>
+            {#snippet aside()}{#if changed}<span class="changed">{t("custom_some", { count: changed })}</span>{/if}{/snippet}
+            {#if group === "resources"}<p class="hint">{t("group.resources.about")}</p>{/if}
+            <div class="values">
+              {#each members as control (control.key)}
+                {#if control.toggle}
+                  <Check checked={region.values[control.key].shown > 0} disabled={locked}
+                    label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
+                    onchange={(value) => app.call("set_region_value", { region: name, key: control.key, value: value ? 1 : 0 })} />
+                {:else}
+                  <ValueField {control} value={region.values[control.key]} disabled={locked} region={name} />
+                {/if}
+              {/each}
+            </div>
+          </Section>
+        {/if}
+      {/each}
+    {/if}
   {:else}
     <Section id="new.output" title={t("output")}>
       <div class="choices" role="radiogroup" aria-label={t("output")}>
@@ -421,8 +438,93 @@
   .custom {
     color: var(--warn);
   }
-  .oceans {
-    padding-top: 4px;
+  .continent {
+    display: grid;
+    gap: 4px;
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+  }
+  .continent:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .continent:last-child {
+    padding-bottom: 0;
+  }
+  .continent-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 26px;
+  }
+  .continent-head > :global(.check) {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+  }
+  .continent.off > .continent-head > :global(.check) {
+    font-weight: 400;
+    color: var(--text-2);
+  }
+  .continent-head > .type {
+    flex: none;
+    width: 52%;
+    height: 24px;
+    font-size: 12.5px;
+  }
+  .continent-body {
+    display: grid;
+    gap: 6px;
+    padding-left: 22px;
+  }
+  .switch {
+    display: flex;
+    gap: 2px;
+    margin: 10px 12px 2px;
+    padding: 2px;
+    border-radius: 6px;
+    background: var(--field);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+  .switch-item {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    height: 24px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-2);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .switch-item > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .switch-item:hover:not(.active) {
+    color: var(--text);
+  }
+  .switch-item.active {
+    background: var(--accent-soft);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .switch-item .count {
+    margin-left: 0;
+    background: var(--panel);
+    color: var(--accent-text);
+    font-weight: 400;
+  }
+  .continent-body .field .input {
+    height: 24px;
+    font-size: 12.5px;
   }
   .row {
     display: flex;

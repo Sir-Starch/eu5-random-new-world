@@ -25,6 +25,7 @@ TITLE: Final[str] = "Random New World"
 GAME: Final[str] = "Europa Universalis V"
 STRINGS: Final[dict[str, str]] = {
     "continent.title": "Continents",
+    "whole_world": "The whole world",
     "continent.america": "America",
     "continent.america_real": "America as in the game",
     "continent.africa": "Africa",
@@ -179,26 +180,28 @@ STRINGS: Final[dict[str, str]] = {
     # The box is "covered" where the stored preference (`show_new_world`) says "shown": checked
     # means the New World is hidden, which is the default.
     "lobby_cover": "Terra Incognita in the lobby",
-    "lobby_cover_about": "Hides the New World before you play",
+    "lobby_cover_about": "Hides the generated lands before you play",
     "lobby_cover_hint": (
-        "Covers the New World as terra incognita on the country-selection map and in this "
-        "world's pictures, so that you do not see it before you play. Unchecked, the New World "
-        "is shown there. You can change this later on the world's page without generating it "
+        "Covers the generated continents as terra incognita on the country-selection map and in "
+        "this world's pictures, so that you do not see them before you play. Unchecked, they "
+        "are shown there. You can change this later on the world's page without generating it "
         "again."
     ),
     "about_generator": (
-        "Random New World makes New World maps for EU5. Every world it makes is a complete "
+        "Random New World generates new continents for EU5: America, Africa and Oceania, alone "
+        "or together. Every world it makes is a complete "
         "mod of its own: tick it in your playset to play it. Share its code or world file. "
         "This generator does not need to be enabled."
     ),
     "about": "About…",
     "about_title": "About Random New World",
     "about_tip": "About this application",
-    "about_subtitle": "Procedural New World generator for Europa Universalis V",
+    "about_subtitle": "Procedural continent generator for Europa Universalis V",
     "about_description": (
         "Random New World generates genuine procedural geography, climates, "
-        "biomes, rivers, societies, and native empires for Europa Universalis V, "
-        "while preserving the Old World intact.\n\n"
+        "biomes, rivers, societies, and native empires for the continents of Europa "
+        "Universalis V that you choose (America, Africa, Oceania), and keeps the rest of the "
+        "world as the game has it.\n\n"
         "Every generated world is a complete, self-contained mod: enable it in your "
         "playset to play. Share its world code or export file."
     ),
@@ -227,7 +230,7 @@ STRINGS: Final[dict[str, str]] = {
     # -- a new world --
     "type": "World type",
     "type.supercontinent": "Supercontinent",
-    "type.supercontinent.about": "One great landmass across the New World, with a few islands.",
+    "type.supercontinent.about": "One great landmass with a few islands.",
     "type.continents": "Continents",
     "type.continents.about": (
         "Large continents, often joined by isthmuses as the Americas are, and islands."
@@ -542,17 +545,17 @@ STRINGS: Final[dict[str, str]] = {
         "The Americas stay exactly as the game draws them: no land, coast, relief, river or "
         "place is generated or changed. Only their peoples are generated: states, cultures, "
         "religions, history, laws and the rest of the society of 1337. The land, ocean, map and "
-        "resource settings do not apply, and the New World is not covered in the lobby."
+        "resource settings do not apply, and the Americas are not covered in the lobby."
     ),
-    "control.new_world.reveal_at_start": "Reveal the New World at the start",
+    "control.new_world.reveal_at_start": "Reveal at the start",
     "control.new_world.reveal_at_start.about": "For multiplayer",
     "control.new_world.reveal_at_start.info": (
         "At the start of a campaign the country of every player discovers every area of this "
-        "New World, land and sea, so that every player sees it from the first day. Countries "
-        "run by the computer are not given it: they find the New World by exploring, as in the "
-        "game. Off by default: the New World then waits to be discovered by everyone. The "
-        "game's own event that announces the discovery of the New World does not fire, because "
-        "the discovery is already made."
+        "generated continent, land and sea, so that every player sees it from the first day. "
+        "Countries run by the computer are not given it: they find it by exploring, as in the "
+        "game. Off by default: the continent then waits to be discovered by everyone. For "
+        "America, the game's own event that announces the discovery of the New World does not "
+        "fire, because the discovery is already made."
     ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
     "control.new_world.centre_permille": "Distance from the Old World",
@@ -657,7 +660,7 @@ STRINGS: Final[dict[str, str]] = {
     "estimate": "World total: about {count} locations (EU5 engine limit: ~32,000).",
     "estimate_tip": (
         "In EU5, locations include land provinces, sea zones, and lakes across the entire globe "
-        "(~22,000 belong to the fixed Old World).\n\n"
+        "(most of them belong to the lands kept from the game).\n\n"
         "The engine uses a 16-bit index (~32,767 maximum). To prevent crashes, the generator "
         "keeps the total safely below 31,200.\n\n"
         "Why “much land” can show fewer locations:\n"
@@ -672,8 +675,8 @@ STRINGS: Final[dict[str, str]] = {
         "The name is saved. The game holds this world's files now, so its mod list shows the "
         "name after the world is added again."
     ),
-    "preview_hidden": "The New World is hidden as terra incognita.",
-    "preview_shown": "The New World is shown.",
+    "preview_hidden": "The generated lands are hidden as terra incognita.",
+    "preview_shown": "The generated lands are shown.",
     "preview_missing": "This world has no picture.",
     "zoom_hint": "Scroll to zoom, drag to move, double-click to fit.",
     "detail.code": "World code",
@@ -762,7 +765,7 @@ STRINGS: Final[dict[str, str]] = {
     "compare_need_two": "Two worlds with revealed maps are needed to compare.",
     "save_picture": "Save picture…",
     "save_picture_tip": (
-        "Save the picture shown as a PNG; it is covered unless the New World is revealed."
+        "Save the picture shown as a PNG; it is covered unless the generated lands are revealed."
     ),
     "picture_saved": "Saved: {path}",
     "tab.maps": "Maps",
@@ -784,8 +787,9 @@ STRINGS: Final[dict[str, str]] = {
         "covered unless Settings says so."
     ),
     "covered_maps": (
-        "The New World of this world is covered, so you can still meet it in the game. "
-        "Reveal it to see its countries, cultures, religions and resources before you play."
+        "The generated lands of this world are covered, so you can still meet them in the "
+        "game. Reveal them to see their countries, cultures, religions and resources before "
+        "you play."
     ),
     "no_atlas": "This world's atlas is missing. Open a world file with its maps to restore it.",
     "facts_hint": "Move over the map to see what lies there.",

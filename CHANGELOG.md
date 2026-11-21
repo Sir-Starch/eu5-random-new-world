@@ -43,6 +43,14 @@ worlds and saves are not rewritten or migrated.
   coasts, so it is no wall with a comb edge. The height and its weight reach the painted detail by
   interpolation, so no grid of two-pixel blocks shows beside the seam.
 
+- Rework the new world's inspector for several continents. The World tab lists America, Africa
+  and Oceania, each with its switch and, while on, its type and its own choices in one place
+  (America's basics and oceans; Africa's Morocco, Mamluks and connection to Asia) and its own
+  *Reveal at the start*; the sea route and the lobby cover are shown once, under *The whole
+  world*. The Advanced tab switches between the continents that are on and counts the changed
+  values of each; *Reset all* now reaches every continent and keeps the World tab's choices.
+  Texts that said *New World* for every generated land now speak of the generated lands.
+
 - Show a world's progress as up to nine phases in the order they run (reading the game's map,
   generating land and seas, learning from the game's own lands, climate, naming, terrain,
   peoples, writing the mod, installing), each with how many of its steps are done and the
