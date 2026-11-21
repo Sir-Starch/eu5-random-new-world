@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import base64
 import binascii
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
@@ -83,10 +83,11 @@ def opening(
     drawn: LandMask | None,
     found: Sequence[sketches.Candidate],
     settings: NewWorldSettings,
+    chosen: sketches.Candidate | None = None,
 ) -> dict[str, object]:
     """What the window needs to open the editor on the sheet ``area`` (the area at
     ``EDITOR_STEP``): the sheet, the picture chosen now (laid on it, with how it was laid), the
-    ready lands and the sketched continents."""
+    ready lands, the sketched continents and the sheet's place in the world (``world_view``)."""
     height, width = area.picture_shape
     image, fit = ("", "") if drawn is None else _lay(drawn, area)
     return {
@@ -109,6 +110,38 @@ def opening(
         "sketches": [
             index for index, one in enumerate(found) if one.picture.shape[:2] == area.picture_shape
         ],
+        "world": world_view(area, chosen),
+    }
+
+
+def world_view(area: LandArea, chosen: sketches.Candidate | None) -> dict[str, object] | None:
+    """The whole map with the sheet's frame on it, as fractions of the picture (its left edge,
+    top, width and height): the chosen sketch of the world's several continents when there is
+    one, else the game's own map in a sketch's darker colours. The map wraps east to west, so it
+    is turned to put the frame in its middle, in one piece. None when the area does not know
+    where it lies."""
+    if area.origin is None or area.world is None:
+        return None
+    row, column, height, width = area.origin
+    rows, columns = area.shape
+    picture: NDArray[np.uint8]
+    if chosen is not None and chosen.composed:
+        picture = np.ascontiguousarray(chosen.picture[::2, ::2])
+    else:
+        picture = np.where(
+            area.world[..., np.newaxis],
+            np.array(sketches.KEPT_LAND, dtype=np.uint8),
+            np.array(sketches.KEPT_SEA, dtype=np.uint8),
+        ).astype(np.uint8)
+    # Turn the map so that the frame's middle is the picture's.
+    picture_width = int(cast("tuple[int, int, int]", picture.shape)[1])
+    shift = round((0.5 - (column + columns / 2) / width) * picture_width)
+    picture = np.ascontiguousarray(np.roll(picture, shift, axis=1))
+    left = (column / width + shift / picture_width) % 1.0
+    return {
+        "picture": view.data_url(encode_png(picture, color_type=COLOR_RGB, compression="zlib")),
+        "frame": [left, row / height, min(columns / width, 1.0), rows / height],
+        "sketch": chosen is not None and chosen.composed,
     }
 
 

@@ -330,3 +330,25 @@ def test_the_bridge_lays_a_known_land(
     assert np.count_nonzero(_decoded(image) == LAND) > 0
     with pytest.raises(BridgeError, match="no known land"):
         _ = bridge.call("land_known", {"land": "pangaea"})
+
+
+def test_the_editor_shows_its_sheet_in_one_piece_in_the_middle_of_the_world() -> None:
+    """A sheet across the map's seam is framed whole: the world is turned to centre it."""
+    from dataclasses import replace  # noqa: PLC0415 - this test alone
+
+    from rnw.gui.studio import world_view  # noqa: PLC0415 - this test alone
+
+    world = np.zeros((32, 64), dtype=np.bool_)
+    world[:, :8] = True
+    area = replace(_full_area(), origin=(0, 3000, 2048, 4096), world=world)
+    found = world_view(area, None)
+    assert found is not None
+    left, top, width, height = cast("list[float]", found["frame"])
+    assert abs(left + width / 2 - 0.5) < 1 / 64
+    assert left >= 0
+    assert left + width <= 1
+    assert top == 0
+    assert width == area.shape[1] / 4096
+    assert height == area.shape[0] / 2048
+    assert found["sketch"] is False
+    assert world_view(replace(area, origin=None), None) is None

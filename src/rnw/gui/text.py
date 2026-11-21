@@ -380,6 +380,15 @@ STRINGS: Final[dict[str, str]] = {
         "With other continents switched on, a sketch shows the whole world: choose one with "
         "Sketch continents on the new world's page, then draw America here."
     ),
+    "editor.world": "In the world",
+    "editor.world_tip": (
+        "The frame is the sheet you draw America on, on the game's map. Darker lands stay as the "
+        "game has them; other continents switched on take their own places."
+    ),
+    "editor.world_sketch": (
+        "The frame is the sheet you draw America on, shown on the sketch you chose: the other "
+        "continents are as it drew them, and America becomes what you draw here."
+    ),
     "editor.open": "Land editor…",
     "editor.open_tip": (
         "Choose the land of the new world: draw it, start from a ready land or a sketched "

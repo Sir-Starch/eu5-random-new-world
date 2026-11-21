@@ -3444,3 +3444,15 @@ text = '''Terras mantidas do jogo'''
 ["map.kept_tip"]
 source = "70efdb9e845b1756"
 text = '''Terra que este mundo mantém como o jogo a tem, mostrada para que você veja onde ficam os continentes gerados; o gerador não a criou, então o mapa não mostra mais nada dela.'''
+
+["editor.world"]
+source = "5698699cca158406"
+text = '''No mundo'''
+
+["editor.world_tip"]
+source = "fa2008fec651bc28"
+text = '''A moldura é a folha em que você desenha a América, no mapa do jogo. As terras mais escuras ficam como o jogo as tem; os outros continentes ativados ocupam seus próprios lugares.'''
+
+["editor.world_sketch"]
+source = "d41a2bbba604a6b2"
+text = '''A moldura é a folha em que você desenha a América, no esboço escolhido: os outros continentes são como ele os desenhou, e a América será o que você desenhar aqui.'''

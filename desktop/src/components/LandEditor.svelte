@@ -577,6 +577,14 @@
   });
 
   const sketching = $derived(!!s?.busy && s.task === "candidates");
+  // The sheet's frame on the whole map; across the map's right edge it goes on at the left.
+  const frames = $derived.by((): [number, number, number, number][] => {
+    const frame = info?.world?.frame;
+    if (!frame) return [];
+    const [left, top, width, height] = frame;
+    const right = left + width;
+    return right <= 1 ? [frame] : [[left, top, 1 - left, height], [0, top, right - 1, height]];
+  });
   // With other continents switched on, a sketch shows the whole world: it is chosen on the new
   // world's page, and America is drawn here.
   const composedWorld = $derived(Object.keys(s?.new.regions ?? {}).length > 0);
@@ -804,6 +812,19 @@
       </div>
 
       <aside class="side scroll">
+        {#if info?.world}
+          <section>
+            <div class="head"><h3>{t("editor.world")}</h3></div>
+            <div class="globe" title={t("editor.world_tip")}>
+              <img src={info.world.picture} alt="" />
+              {#each frames as part, index (index)}
+                <span class="frame" style:left={`${part[0] * 100}%`} style:top={`${part[1] * 100}%`}
+                  style:width={`${part[2] * 100}%`} style:height={`${part[3] * 100}%`}></span>
+              {/each}
+            </div>
+            <p class="faint note">{info.world.sketch ? t("editor.world_sketch") : t("editor.world_tip")}</p>
+          </section>
+        {/if}
         <section>
           <div class="head">
             <h3>{t("editor.start")}</h3>
@@ -1101,6 +1122,27 @@
     margin: 0;
     font-size: 12px;
     line-height: 1.45;
+  }
+  .globe {
+    position: relative;
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--map-bg);
+  }
+  .globe img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+  .frame {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1.5px solid var(--map-accent, #ffd54a);
+    background: color-mix(in srgb, var(--map-accent, #ffd54a) 14%, transparent);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
   }
   .gallery {
     display: grid;

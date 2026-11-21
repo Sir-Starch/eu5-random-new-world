@@ -17,12 +17,15 @@ from rnw.app import service
 from rnw.contract import FileFingerprint
 from rnw.eu5_canvas import Canvas
 from rnw.islands import Footprint
+from rnw.model import CellClass
 from rnw.settings import PRESETS
 from tests.fakes import build_game
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
+
+    from numpy.typing import NDArray
 
 
 def _canvas() -> Canvas:
@@ -106,8 +109,13 @@ def counted(monkeypatch: pytest.MonkeyPatch) -> _Counter:
 
     @final
     class MapStub:
-        keys: tuple[str, ...] = ("a",)
+        keys: tuple[str, ...] = ("a", "b")
         inputs: tuple[str, ...] = ("map 1 0",)
+        # The whole map: land (location 1) in its left half, sea (location 0) in its right.
+        classes: tuple[CellClass, ...] = (CellClass.SEA, CellClass.LAND)
+        labels: NDArray[np.int32] = np.repeat(
+            np.array([[1] * 64 + [0] * 64], dtype=np.int32), 96, axis=0
+        )
 
     def load(_root: Path) -> MapStub:
         counter.loads += 1
@@ -135,6 +143,14 @@ def test_the_area_is_kept_so_the_map_is_read_once(tmp_path: Path, counted: _Coun
         assert np.array_equal(one, other)
     assert np.array_equal(first.islands, again.islands)
     assert first.shape == again.shape
+    # Where the sheet lies on the map and the map's land, for the editor's view of the world.
+    assert first.origin == again.origin == (0, 0, 96, 128)
+    assert first.world is not None
+    assert again.world is not None
+    assert np.array_equal(first.world, again.world)
+    assert first.world.shape == (96 // landarea.WORLD_STEP, 128 // landarea.WORLD_STEP)
+    assert first.world[:, :4].all()
+    assert not first.world[:, 4:].any()
     other_band = landarea.get_area(cache, tmp_path, 120, expanded=True)
     assert counted.loads == 2
     assert np.array_equal(other_band.area, first.area)

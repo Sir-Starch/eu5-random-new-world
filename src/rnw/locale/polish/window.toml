@@ -3444,3 +3444,15 @@ text = '''Ziemie zachowane z gry'''
 ["map.kept_tip"]
 source = "70efdb9e845b1756"
 text = '''Ląd, który ten świat zachowuje taki, jak w grze. Jest pokazany, aby było widać, gdzie leżą wygenerowane kontynenty; generator go nie stworzył, więc mapa nie pokazuje o nim nic więcej.'''
+
+["editor.world"]
+source = "5698699cca158406"
+text = '''Na świecie'''
+
+["editor.world_tip"]
+source = "fa2008fec651bc28"
+text = '''Ramka to arkusz, na którym rysujesz Amerykę, na mapie gry. Ciemniejsze ziemie zostają takie, jak w grze; pozostałe włączone kontynenty zajmą własne miejsca.'''
+
+["editor.world_sketch"]
+source = "d41a2bbba604a6b2"
+text = '''Ramka to arkusz, na którym rysujesz Amerykę, na wybranym szkicu: pozostałe kontynenty są takie, jak je narysował, a Ameryką stanie się to, co narysujesz tutaj.'''

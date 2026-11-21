@@ -326,7 +326,9 @@ class Bridge:
 
     def land_editor(self) -> dict[str, object]:
         c = self.controller
-        return studio.opening(self._sheet(), c.land_mask, c.candidates, self._new_world())
+        seed = c.world_code().seed
+        chosen = next((one for one in c.candidates if one.composed and one.seed == seed), None)
+        return studio.opening(self._sheet(), c.land_mask, c.candidates, self._new_world(), chosen)
 
     def land_preset(self, params: Params) -> str:
         return studio.preset(

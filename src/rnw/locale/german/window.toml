@@ -3444,3 +3444,15 @@ text = '''Länder aus dem Spiel'''
 ["map.kept_tip"]
 source = "70efdb9e845b1756"
 text = '''Land, das diese Welt so behält, wie das Spiel es hat. Es wird gezeigt, damit Sie sehen, wo die erzeugten Kontinente liegen; der Generator hat es nicht erschaffen, daher zeigt die Karte nichts weiter davon.'''
+
+["editor.world"]
+source = "5698699cca158406"
+text = '''In der Welt'''
+
+["editor.world_tip"]
+source = "fa2008fec651bc28"
+text = '''Der Rahmen ist das Blatt, auf dem Sie Amerika zeichnen, auf der Karte des Spiels. Dunklere Länder bleiben, wie das Spiel sie hat; weitere eingeschaltete Kontinente nehmen ihre eigenen Plätze ein.'''
+
+["editor.world_sketch"]
+source = "d41a2bbba604a6b2"
+text = '''Der Rahmen ist das Blatt, auf dem Sie Amerika zeichnen, auf der gewählten Skizze: Die anderen Kontinente sind so, wie sie sie gezeichnet hat, und Amerika wird, was Sie hier zeichnen.'''

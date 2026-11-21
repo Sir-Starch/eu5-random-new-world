@@ -53,7 +53,8 @@ worlds and saves are not rewritten or migrated.
   land editor. With Africa or Oceania switched on, each of the six sketches shows the whole map:
   every generated continent planned and coasted by the same code as the world of that seed, over
   the lands kept from the game, so the world made from a sketch has the land it showed. A drawn
-  America is laid on its area in the sketches. A disabled sketch or editor button says why.
+  America is laid on its area in the sketches. A disabled sketch or editor button says why. The
+  land editor shows where its sheet lies in the world, on the chosen sketch or the game's map.
 
 - Rework the new world's inspector for several continents. The World tab lists America, Africa
   and Oceania, each with its switch and, while on, its type and its own choices in one place

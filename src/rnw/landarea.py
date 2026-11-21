@@ -30,6 +30,7 @@ from rnw import landcache
 from rnw.continent_domains import CONTINENTS, plan_domains
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_map import input_fingerprints, load_map
+from rnw.model import CellClass
 from rnw.png import COLOR_GRAY, encode_png
 from rnw.progress import run_stage
 
@@ -60,7 +61,9 @@ ISLANDS_GREY: Final[int] = 62
 AMERICAS_GREY: Final[int] = 118
 # The first number of a key is the layout of the entry; a change of it keeps an older entry
 # from being read.
-LAYOUT: Final[int] = 1
+LAYOUT: Final[int] = 2
+# The whole map is kept every sixteenth pixel, for the editor's view of where its sheet lies.
+WORLD_STEP: Final[int] = 16
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -71,6 +74,11 @@ class LandArea:
     area: NDArray[np.bool_]
     americas: NDArray[np.bool_]
     islands: NDArray[np.bool_]
+    # Where the sheet lies on the game's map: the map's row and column of its first pixel and the
+    # map's height and width (columns wrap); and the whole map's land every ``WORLD_STEP``th
+    # pixel. For the editor's view of the world; None when not known.
+    origin: tuple[int, int, int, int] | None = None
+    world: NDArray[np.bool_] | None = None
 
     @property
     def picture_shape(self) -> tuple[int, int]:
@@ -90,6 +98,8 @@ class LandArea:
             np.ascontiguousarray(self.area[::every, ::every]),
             np.ascontiguousarray(self.americas[::every, ::every]),
             np.ascontiguousarray(self.islands[::every, ::every]),
+            self.origin,
+            self.world,
         )
 
     def picture(self) -> NDArray[np.uint8]:
@@ -155,11 +165,27 @@ def get_area(
         if area is not None:
             landcache.touch(target)
             return area
+    game_map = run_stage("load map", lambda: load_map(game_dir))
+    height, width = (int(size) for size in game_map.labels.shape)
     if regional:
-        domain = _composed_area(game_dir, band_px, expanded=expanded, regional=regional)
-        area = from_domain(domain)
+        domain = run_stage(
+            "select canvas",
+            lambda: american_domain(game_map, band_px, expanded=expanded, regional=regional),
+        )
+        area = replace(
+            from_domain(domain),
+            origin=(domain.first_row, domain.first_column, height, domain.map_width),
+        )
     else:
-        area = from_canvas(_canvas(cache, game_dir, band_px, expanded=expanded))
+        canvas = run_stage(
+            "select canvas",
+            lambda: landcache.get_canvas(cache, game_map, band_px, expanded=expanded),
+        )
+        area = replace(
+            from_canvas(canvas), origin=(0, (canvas.col0 - canvas.roll) % width, height, width)
+        )
+    # The map is let go on return.
+    area = replace(area, world=world_land(game_map))
     if target is not None and cache is not None:
         _write(target, area)
         landcache.prune(cache)
@@ -172,16 +198,6 @@ def from_domain(domain: Domain) -> LandArea:
     americas = np.ascontiguousarray(domain.footprint[::TEMPLATE_STEP, ::TEMPLATE_STEP])
     rows, columns = domain.mask.shape
     return LandArea((int(rows), int(columns)), area, americas, np.zeros_like(area))
-
-
-def _composed_area(
-    game_dir: Path, band_px: int, *, expanded: bool, regional: RegionalBands
-) -> Domain:
-    game_map = run_stage("load map", lambda: load_map(game_dir))
-    return run_stage(
-        "select canvas",
-        lambda: american_domain(game_map, band_px, expanded=expanded, regional=regional),
-    )
 
 
 def american_domain(
@@ -197,22 +213,25 @@ def american_domain(
     return plan_domains(game_map, settings)[0]
 
 
-def _canvas(cache: Path | None, game_dir: Path, band_px: int, *, expanded: bool) -> Canvas:
-    """The canvas of the installed map; the map is let go on return."""
-    game_map = run_stage("load map", lambda: load_map(game_dir))
-    return run_stage(
-        "select canvas",
-        lambda: landcache.get_canvas(cache, game_map, band_px, expanded=expanded),
+def world_land(game_map: Eu5Map) -> NDArray[np.bool_]:
+    """The game's land every ``WORLD_STEP``th pixel of its whole map."""
+    water = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=np.bool_
     )
+    return np.ascontiguousarray(~water[game_map.labels[::WORLD_STEP, ::WORLD_STEP]])
 
 
 def _write(target: Path, area: LandArea) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
+    world = area.world if area.world is not None else np.zeros((0, 0), dtype=np.bool_)
     arrays = {
         "shape": np.array([*area.shape, *area.picture_shape], dtype=np.int64),
         "area": np.packbits(area.area, axis=None),
         "americas": np.packbits(area.americas, axis=None),
         "islands": np.packbits(area.islands, axis=None),
+        "origin": np.array(area.origin or (), dtype=np.int64),
+        "world_shape": np.array(world.shape, dtype=np.int64),
+        "world": np.packbits(world, axis=None),
     }
     with NamedTemporaryFile(dir=target.parent, prefix=".area-", suffix=".npz", delete=False) as out:
         np.savez(out, **arrays)  # pyright: ignore[reportArgumentType]
@@ -234,6 +253,16 @@ def _read(target: Path) -> LandArea | None:
                 .reshape(picture_rows, picture_columns)
                 for name in ("area", "americas", "islands")
             ]
+            placed = tuple(int(value) for value in data["origin"].tolist())
+            world_rows, world_columns = (int(value) for value in data["world_shape"].tolist())
+            world = (
+                np.unpackbits(data["world"], count=world_rows * world_columns)
+                .astype(np.bool_)
+                .reshape(world_rows, world_columns)
+            )
     except (OSError, ValueError, KeyError):
         return None
-    return LandArea((rows, columns), layers[0], layers[1], layers[2])
+    origin = (placed[0], placed[1], placed[2], placed[3]) if len(placed) == 4 else None  # noqa: PLR2004
+    return LandArea(
+        (rows, columns), layers[0], layers[1], layers[2], origin, world if world.size else None
+    )

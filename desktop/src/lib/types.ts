@@ -371,4 +371,7 @@ export interface EditorInfo {
   lands: string[];
   /** Indices of the sketched continents that fit the sheet. */
   sketches: number[];
+  /** The whole map with the sheet's frame (left, top, width, height as fractions of the map;
+   *  it may cross the right edge); ``sketch`` when the picture is the chosen sketch. */
+  world: { picture: string; frame: [number, number, number, number]; sketch: boolean } | null;
 }

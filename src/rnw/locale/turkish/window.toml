@@ -3444,3 +3444,15 @@ text = '''Oyundan korunan topraklar'''
 ["map.kept_tip"]
 source = "70efdb9e845b1756"
 text = '''Bu dünyanın oyundaki haliyle koruduğu kara; üretilen kıtaların nerede olduğunu görebilmeniz için gösterilir. Üreteç onu yapmadığından harita onunla ilgili başka bir şey göstermez.'''
+
+["editor.world"]
+source = "5698699cca158406"
+text = '''Dünyada'''
+
+["editor.world_tip"]
+source = "fa2008fec651bc28"
+text = '''Çerçeve, oyunun haritasında Amerika'yı çizdiğiniz sayfadır. Daha koyu topraklar oyundaki gibi kalır; açılan diğer kıtalar kendi yerlerini alır.'''
+
+["editor.world_sketch"]
+source = "d41a2bbba604a6b2"
+text = '''Çerçeve, seçtiğiniz taslakta Amerika'yı çizdiğiniz sayfadır: diğer kıtalar taslağın çizdiği gibidir, Amerika ise burada çizdiğiniz şey olur.'''

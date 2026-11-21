@@ -3444,3 +3444,15 @@ text = '''Tierras conservadas del juego'''
 ["map.kept_tip"]
 source = "70efdb9e845b1756"
 text = '''Tierra que este mundo conserva tal como la tiene el juego, mostrada para que veas dónde están los continentes generados; el generador no la creó, así que el mapa no muestra nada más de ella.'''
+
+["editor.world"]
+source = "5698699cca158406"
+text = '''En el mundo'''
+
+["editor.world_tip"]
+source = "fa2008fec651bc28"
+text = '''El marco es la hoja en la que dibujas América, sobre el mapa del juego. Las tierras más oscuras quedan como las tiene el juego; los demás continentes activados ocupan su propio lugar.'''
+
+["editor.world_sketch"]
+source = "d41a2bbba604a6b2"
+text = '''El marco es la hoja en la que dibujas América, sobre el esbozo elegido: los demás continentes son como los dibujó, y América será lo que dibujes aquí.'''

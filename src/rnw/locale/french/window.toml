@@ -3444,3 +3444,15 @@ text = '''Terres conservées du jeu'''
 ["map.kept_tip"]
 source = "70efdb9e845b1756"
 text = '''Terres que ce monde garde telles que le jeu les a, montrées pour situer les continents générés ; le générateur ne les a pas créées, la carte n'en montre donc rien de plus.'''
+
+["editor.world"]
+source = "5698699cca158406"
+text = '''Dans le monde'''
+
+["editor.world_tip"]
+source = "fa2008fec651bc28"
+text = '''Le cadre est la feuille où vous dessinez l'Amérique, sur la carte du jeu. Les terres plus sombres restent telles que le jeu les a ; les autres continents activés prennent leur propre place.'''
+
+["editor.world_sketch"]
+source = "d41a2bbba604a6b2"
+text = '''Le cadre est la feuille où vous dessinez l'Amérique, sur l'esquisse choisie : les autres continents sont tels qu'elle les a dessinés, et l'Amérique devient ce que vous dessinez ici.'''

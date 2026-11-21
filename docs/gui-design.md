@@ -137,8 +137,10 @@ a blank sheet ruled like a map with **Sketch continentsâ€¦** and **Land editorâ€
 buttons that also stand in the page's header, whose subtitle lists the continents and their types.
 A disabled button says why in its tooltip (no game, America switched off, the real Americas, a
 drawn America without its picture). The land editor draws America; it covers the whole window
-while it is open (ADR 0011) and holds the rest (its own sketches of America alone, the template,
-importing and using a picture; a picture dropped on the window is imported): a toolbar of
+while it is open (ADR 0011) and holds the rest (In the world: the whole map turned to put the
+sheet's frame in its middle, the chosen sketch of several continents when there is one, else the
+game's map; its own sketches of America alone, the template, importing and using a picture; a
+picture dropped on the window is imported): a toolbar of
 brush, eraser, fill, line, rectangle, ellipse and hand on the left, the six kinds of ground and the
 brush options over the sheet, and on the right the starting lands in three groups (ready lands, famous lands, sketched continents), Add terrain, the generator's check
 and the picture's import, save and clear; the status line repeats the check's worst line. The sheet
