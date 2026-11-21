@@ -3,7 +3,9 @@
 Two kinds, both ZIP archives read as hostile input:
 
 * **``.rnworld``, compact.** ``world.json`` (the record of how the world was made, its code,
-  name and version), and the atlas (``atlas.json``, ``atlas_labels.png``). A few megabytes.
+  name and version), the atlas (``atlas.json``, ``atlas_labels.png``) and the land drawn in the
+  editor when the world has any (``land_mask.png`` for America, ``land_mask_africa.png`` and
+  ``land_mask_oceania.png`` for the others). A few megabytes.
   Whoever opens it gets the world's maps at once and, with the game, the world made again byte for
   byte from its code. Everything in it is ours (``rnw.atlas``, H): it can be shared.
 * **``.rnworld-mod``, a built world transferred.** The same, and the mod's files under ``mod/``,
@@ -30,7 +32,7 @@ import stat
 import zipfile
 import zlib
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING, Final, cast
 
@@ -38,6 +40,7 @@ from rnw import __version__
 from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.bundle import COVER_COPY
+from rnw.landmask import DRAWN_FILES
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Mapping
@@ -49,6 +52,10 @@ MOD_EXTENSION: Final[str] = ".rnworld-mod"
 META: Final[str] = "rnworld.json"
 WORLD: Final[str] = "world.json"
 LAND_MASK: Final[str] = "land_mask.png"
+# The pictures the other continents are drawn from, by the continent's key.
+REGIONAL_LAND_MASKS: Final[dict[str, str]] = {
+    key: name for key, name in DRAWN_FILES.items() if name != LAND_MASK
+}
 MOD_FOLDER: Final[str] = "mod"
 BUNDLE_FILES: Final[tuple[str, ...]] = ("manifest.json", "inputs.json")
 KIND_WORLD: Final[str] = "world"
@@ -60,6 +67,7 @@ LIMITS: Final[dict[str, int]] = {
     ATLAS_JSON: 32 * MEBIBYTE,
     ATLAS_LABELS: 64 * MEBIBYTE,
     LAND_MASK: 32 * MEBIBYTE,
+    **dict.fromkeys(REGIONAL_LAND_MASKS.values(), 32 * MEBIBYTE),
     "manifest.json": 64 * MEBIBYTE,
     "inputs.json": 64 * MEBIBYTE,
 }
@@ -98,6 +106,8 @@ class WorldFile:
     files: dict[str, str]
     exported_by: str
     land_mask: bytes | None = None
+    # The pictures the other continents are drawn from, by the continent's key.
+    regional_masks: Mapping[str, bytes] = field(default_factory=dict[str, bytes])
 
 
 def sha256(data: bytes) -> str:
@@ -230,7 +240,7 @@ def read(path: Path) -> WorldFile:
         meta = _header(archive, members)
         listed = _listing(meta)
         kind = str(meta["kind"])
-        allowed = {META, WORLD, ATLAS_JSON, ATLAS_LABELS, LAND_MASK}
+        allowed = {META, WORLD, ATLAS_JSON, ATLAS_LABELS, LAND_MASK, *REGIONAL_LAND_MASKS.values()}
         if kind == KIND_MOD:
             allowed |= set(BUNDLE_FILES)
         stray = sorted(
@@ -269,6 +279,9 @@ def read(path: Path) -> WorldFile:
             files=listed,
             exported_by=str(meta.get("exported_by", "")),
             land_mask=loaded.get(LAND_MASK),
+            regional_masks={
+                key: loaded[name] for key, name in REGIONAL_LAND_MASKS.items() if name in loaded
+            },
         )
 
 
@@ -277,6 +290,7 @@ def write(
     record: Mapping[str, object],
     atlas: tuple[bytes, bytes] | None,
     land_mask: bytes | None = None,
+    regional_masks: Mapping[str, bytes] | None = None,
 ) -> Path:
     """Write a compact world file at ``output`` (replaced); returns it."""
     parts: dict[str, bytes] = {WORLD: _dump(record)}
@@ -284,6 +298,8 @@ def write(
         parts[ATLAS_JSON], parts[ATLAS_LABELS] = atlas
     if land_mask is not None:
         parts[LAND_MASK] = land_mask
+    for key, data in (regional_masks or {}).items():
+        parts[REGIONAL_LAND_MASKS[key]] = data
     meta = _meta(KIND_WORLD, {name: sha256(data) for name, data in parts.items()})
     output.parent.mkdir(parents=True, exist_ok=True)
     scratch = output.with_name(f".{output.name}.new")
@@ -327,6 +343,7 @@ def write_mod(  # noqa: PLR0913 - the parts of a built world
     mod: Path,
     *,
     land_mask: bytes | None = None,
+    regional_masks: Mapping[str, bytes] | None = None,
 ) -> Path:
     """Write a transferred built world at ``output`` (replaced); returns it.
 
@@ -337,6 +354,8 @@ def write_mod(  # noqa: PLR0913 - the parts of a built world
         parts[ATLAS_JSON], parts[ATLAS_LABELS] = atlas
     if land_mask is not None:
         parts[LAND_MASK] = land_mask
+    for key, data in (regional_masks or {}).items():
+        parts[REGIONAL_LAND_MASKS[key]] = data
     parts.update(bundle)
     listing = {name: sha256(data) for name, data in parts.items()}
     relatives = mod_files(mod)

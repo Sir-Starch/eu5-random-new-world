@@ -23,6 +23,7 @@ from rnw.record import Verdict, manifest_digest
 from tests.fakes import write_bundle_record
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
     from rnw.landmask import LandMask
@@ -49,6 +50,7 @@ class FakeExport:
         self.calls: list[tuple[int, str | None]] = []
         self.labels: list[Label | None] = []
         self.masks: list[LandMask | None] = []
+        self.regional: list[dict[str, LandMask]] = []
         self.algorithms: list[int] = []
 
     def __call__(  # noqa: PLR0913
@@ -66,9 +68,11 @@ class FakeExport:
         world_code: str | None = None,
         world_label: Label | None = None,
         land_mask: LandMask | None = None,
+        regional_masks: Mapping[str, LandMask] | None = None,
         cache_dir: Path | None = None,
     ) -> dict[str, object]:
         del settings_file, accept_build, replace, check_memory, cache_dir
+        self.regional.append(dict(regional_masks or {}))
         algorithm = cast("Settings", settings).algorithm
         self.algorithms.append(algorithm)
         self.calls.append((seed, world_code))

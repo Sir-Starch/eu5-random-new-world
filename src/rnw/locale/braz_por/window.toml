@@ -630,6 +630,10 @@ text = '''Desenhando o modelo…'''
 source = "4d9e51e05f272e57"
 text = '''A terra está desenhada numa imagem ({id}).'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''A terra de {continent} está desenhada numa imagem ({id}).'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''Voltar à terra gerada'''
@@ -1950,7 +1954,6 @@ text = '''Escolha entre 1 e {count} esboços.'''
 source = "75f72c48760efe1b"
 text = '''Os esboços precisam de terra gerada. Volte primeiro à terra gerada.'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''Gerar com outra semente'''
@@ -2238,7 +2241,6 @@ text = '''Nada encontrado.'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''Mostrando {name}'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''Editor de terra…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''Escolha a terra do novo mundo: desenhe-a, parta de uma terra pronta ou de um continente esboçado, ou traga a sua própria imagem. O terreno é pintado em seis tipos, e o gerador diz o que fará com ele.'''
+source = "e63d89cd7f4d5b7c"
+text = '''Escolha a terra de um continente que o mundo gera: desenhe-a, parta de uma terra pronta ou de um continente esboçado, ou traga a sua própria imagem. O terreno é pintado em seis tipos, e o gerador diz o que fará com ele.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''Mostrar o seu desenho'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''Mostrar as Américas do jogo'''
+source = "844e366e5c8b4303"
+text = '''Mostrar a terra do próprio jogo'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''Ilhas dispersas'''
 source = "80e3026403729d93"
 text = '''As Américas do jogo'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''A África do jogo'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''A Oceania do jogo'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''Esboço {number}'''
@@ -3247,7 +3257,6 @@ text = '''Kalimdor'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''Esboçar continentes…'''
 source = "54c56a33e3493e48"
 text = '''Esboçar seis vezes os continentes ativados, cada vez com uma nova semente, e escolher o que você preferir. Um esboço mostra a terra que o mundo terá; leva um pouco de tempo.'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''O editor de terra desenha a América: ative a América para desenhar sua terra.'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''A América mantém a terra do próprio jogo, então não há nada para desenhar.'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''{continent} não é gerada neste mundo, então não há nada para desenhar.'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''Continente'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''Desenhar a terra de {continent}'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''Com outros continentes ativados, um esboço mostra o mundo inteiro: escolha um com «Esboçar continentes» na página do novo mundo e depois desenhe a América aqui.'''
+source = "234344329649986d"
+text = '''Com outros continentes ativados, um esboço mostra o mundo inteiro: escolha um com «Esboçar continentes» na página do novo mundo, e o editor oferece a terra dele deste continente como ponto de partida.'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''O esboço que você escolheu'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''No mundo'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''A moldura é a folha em que você desenha a América, no mapa do jogo: o cinza dentro dela é a área que sua terra preenche. África e Oceania, se ativadas, também são geradas; esboce continentes para vê-las em seus lugares.'''
+source = "46e9ed1d6e3495cb"
+text = '''A moldura é a folha em que você desenha {continent}, no mapa do jogo: o cinza mais claro dentro dela é a área que sua terra preenche. O cinza mais escuro é a área de outro continente deste mundo, que também é gerado; esboce os continentes para vê-los nos seus lugares.'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''A moldura é a folha em que você desenha a América, no esboço escolhido: os outros continentes são como ele os desenhou, e a América será o que você desenhar aqui.'''
+source = "8dc98de30678cc7a"
+text = '''A moldura é a folha em que você desenha {continent}, mostrada no esboço escolhido: os outros continentes estão como ele os desenhou, e {continent} passa a ser o que você desenhar aqui.'''

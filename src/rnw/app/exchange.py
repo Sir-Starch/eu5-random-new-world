@@ -26,6 +26,7 @@ from rnw.app import install, library
 from rnw.app.worldcode import WorldCodeError, decode
 from rnw.png import COLOR_RGB, encode_png
 from rnw.record import NewerFormatError, RecordError
+from rnw.settings import AMERICA, drawn_ids
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -80,7 +81,17 @@ def export_world(data: Path, world: World, output: Path) -> Path:
     record = library.document(replace(world, revealed=False))
     image = library.folder(data, world) / library.LAND_MASK
     drawn = image.read_bytes() if image.is_file() else None
-    return worldfile.write(output, record, atlas_files(data, world), drawn)
+    regional = regional_files(library.folder(data, world))
+    return worldfile.write(output, record, atlas_files(data, world), drawn, regional)
+
+
+def regional_files(folder: Path) -> dict[str, bytes]:
+    """The pictures the world's folder holds of the other continents' drawn lands, by key."""
+    return {
+        key: (folder / name).read_bytes()
+        for key, name in worldfile.REGIONAL_LAND_MASKS.items()
+        if (folder / name).is_file()
+    }
 
 
 def atlas_files(data: Path, world: World) -> tuple[bytes, bytes] | None:
@@ -130,39 +141,54 @@ def import_world(data: Path, path: Path) -> Imported:
     world = checked_world(found.record)
     if found.atlas is not None:
         check_atlas(found.atlas)
-    if found.land_mask is not None:
-        check_land_mask(found.land_mask, world)
+    check_land_masks(found, world)
     target = library.folder(data, world)
     existing = library.load_one(target)
     if existing is None:
         library.save(data, world)
     if found.atlas is not None:
         keep_atlas(target, found.atlas)
-    if found.land_mask is not None:
-        keep_land_mask(target, found.land_mask)
+    keep_land_masks(target, found)
     draw_previews(target)
     return Imported(existing or world, created=existing is None)
 
 
-def check_land_mask(data: bytes, world: World) -> None:
-    """The land image of a file must be the one the world's code names, before it is kept."""
+def check_land_mask(data: bytes, world: World, key: str = AMERICA) -> None:
+    """The land image of a file, America's or that of the continent ``key``, must be the one the
+    world's code names for it, before it is kept."""
     try:
         mask = land_mask_module.from_bytes(data)
     except land_mask_module.LandMaskError as error:
         message = f"The land image in the file is not usable: {error}"
         raise ExchangeError(message) from error
-    wanted = decode(world.code).settings().mask.id
+    wanted = drawn_ids(decode(world.code).settings()).get(key, 0)
     if mask.id != wanted:
         message = "The land image in the file is not the one the world's code names"
         raise ExchangeError(message)
 
 
-def keep_land_mask(target: Path, data: bytes) -> None:
+def keep_land_mask(target: Path, data: bytes, name: str = library.LAND_MASK) -> None:
     """Write a file's land image into a world's folder if it has none."""
-    image = target / library.LAND_MASK
+    image = target / name
     if not image.is_file():
         target.mkdir(parents=True, exist_ok=True)
         _ = image.write_bytes(data)
+
+
+def check_land_masks(found: worldfile.WorldFile, world: World) -> None:
+    """Every land image of a file must be the one the world's code names for its continent."""
+    if found.land_mask is not None:
+        check_land_mask(found.land_mask, world)
+    for key, picture in found.regional_masks.items():
+        check_land_mask(picture, world, key)
+
+
+def keep_land_masks(target: Path, found: worldfile.WorldFile) -> None:
+    """Write a file's land images into a world's folder where it has none."""
+    if found.land_mask is not None:
+        keep_land_mask(target, found.land_mask)
+    for key, data in found.regional_masks.items():
+        keep_land_mask(target, data, worldfile.REGIONAL_LAND_MASKS[key])
 
 
 def check_atlas(files: tuple[bytes, bytes]) -> None:

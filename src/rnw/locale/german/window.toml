@@ -630,6 +630,10 @@ text = '''Zeichne die Vorlage…'''
 source = "4d9e51e05f272e57"
 text = '''Das Land ist auf einem Bild gezeichnet ({id}).'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''Das Land von {continent} ist auf einem Bild gezeichnet ({id}).'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''Zurück zu erzeugtem Land'''
@@ -1950,7 +1954,6 @@ text = '''Wählen Sie zwischen 1 und {count} Skizzen.'''
 source = "75f72c48760efe1b"
 text = '''Skizzen brauchen erzeugtes Land. Kehren Sie zuerst zu erzeugtem Land zurück.'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''Mit neuem Startwert erzeugen'''
@@ -2238,7 +2241,6 @@ text = '''Nichts gefunden.'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''Zeigt {name}'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''Land-Editor…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''Wähle das Land der neuen Welt: zeichne es, beginne mit einem fertigen Land oder einem skizzierten Kontinent oder bringe ein eigenes Bild mit. Das Gelände wird in sechs Arten gemalt, und der Generator sagt, was er daraus macht.'''
+source = "e63d89cd7f4d5b7c"
+text = '''Wähle das Land eines Kontinents, den die Welt erzeugt: zeichne es, beginne mit einem fertigen Land oder einem skizzierten Kontinent oder bringe ein eigenes Bild mit. Das Gelände wird in sechs Arten gemalt, und der Generator sagt, was er daraus macht.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''Deine Zeichnung anzeigen'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''Die Amerikas des Spiels anzeigen'''
+source = "844e366e5c8b4303"
+text = '''Das Land des Spiels anzeigen'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''Verstreute Inseln'''
 source = "80e3026403729d93"
 text = '''Die Amerikas des Spiels'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''Das Afrika des Spiels'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''Das Ozeanien des Spiels'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''Skizze {number}'''
@@ -3247,7 +3257,6 @@ text = '''Kalimdor'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''Kontinente skizzieren…'''
 source = "54c56a33e3493e48"
 text = '''Die eingeschalteten Kontinente sechsmal skizzieren, jedes Mal mit einem neuen Seed, und den gewünschten wählen. Eine Skizze zeigt das Land, das die Welt haben wird; das dauert eine kleine Weile.'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''Der Land-Editor zeichnet Amerika: Schalten Sie Amerika ein, um sein Land zu zeichnen.'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''Amerika behält das Land des Spiels, daher gibt es nichts zu zeichnen.'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''{continent} wird in dieser Welt nicht erzeugt, daher gibt es nichts zu zeichnen.'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''Kontinent'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''Das Land von {continent} zeichnen'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''Mit weiteren eingeschalteten Kontinenten zeigt eine Skizze die ganze Welt: Wählen Sie eine mit „Kontinente skizzieren“ auf der Seite der neuen Welt und zeichnen Sie dann hier Amerika.'''
+source = "234344329649986d"
+text = '''Mit weiteren eingeschalteten Kontinenten zeigt eine Skizze die ganze Welt: Wählen Sie eine mit „Kontinente skizzieren“ auf der Seite der neuen Welt, und der Editor bietet ihr Land dieses Kontinents als Ausgangspunkt an.'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''Die gewählte Skizze'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''In der Welt'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''Der Rahmen ist das Blatt, auf dem Sie Amerika zeichnen, auf der Karte des Spiels: Das Grau darin ist das Gebiet, das Ihr Land ausfüllt. Eingeschaltetes Afrika und Ozeanien werden ebenfalls erzeugt; skizzieren Sie Kontinente, um sie an ihrem Platz zu sehen.'''
+source = "46e9ed1d6e3495cb"
+text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, auf der Karte des Spiels: Das hellere Grau darin ist die Fläche, die Ihr Land füllt. Das dunklere Grau ist die Fläche eines anderen Kontinents dieser Welt, der ebenfalls erzeugt wird; skizzieren Sie die Kontinente, um sie an ihrem Platz zu sehen.'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''Der Rahmen ist das Blatt, auf dem Sie Amerika zeichnen, auf der gewählten Skizze: Die anderen Kontinente sind so, wie sie sie gezeichnet hat, und Amerika wird, was Sie hier zeichnen.'''
+source = "8dc98de30678cc7a"
+text = '''Der Rahmen ist das Blatt, auf dem Sie {continent} zeichnen, gezeigt auf der gewählten Skizze: Die anderen Kontinente sind so, wie sie sie gezeichnet hat, und {continent} wird zu dem, was Sie hier zeichnen.'''

@@ -90,6 +90,13 @@ IS_LAND: Final[tuple[bool, ...]] = (False, True, True, True, True, False)
 CHROMA_MIN: Final[int] = 40
 COLOR_TOLERANCE: Final[int] = 70
 STRIP_ROWS: Final[int] = 256
+# The file that holds the picture a continent is drawn from, by the continent's key. America's
+# keeps the name it always had; the others' are named after their continent.
+DRAWN_FILES: Final[dict[str, str]] = {
+    "america": "land_mask.png",
+    "africa": "land_mask_africa.png",
+    "oceania": "land_mask_oceania.png",
+}
 
 
 class LandMaskError(ValueError):

@@ -77,13 +77,17 @@ export interface NewState {
   target: string;
   land_mask: string;
   land_mask_text: string;
+  /** The continents the world generates, whose land can be drawn (America, Africa, Oceania). */
+  drawable: string[];
+  /** The id of the image each drawn continent's land is made from, by the continent's key. */
+  drawn: Record<string, string>;
   candidates_enabled: boolean;
   /** Why the continents cannot be sketched, or the land editor open (other work aside). */
   sketch_problem: string | null;
   editor_problem: string | null;
   template_enabled: boolean;
-  /** The area the land editor draws on has been cut for the choices made now. */
-  editor_ready: boolean;
+  /** The continents whose area the land editor draws on has been cut for the choices made now. */
+  editor_ready: string[];
   /** The new world can be changed and queued now, also while a world is being made. */
   preparable: boolean;
   /** Why the world chosen now cannot be queued, or null. */
@@ -352,6 +356,8 @@ export interface AtlasBundle {
 /** What the generator gives the land editor when it opens (``land_editor``): the sheet, the picture
  * chosen now and the ready lands. Pictures are PNG data URLs. */
 export interface EditorInfo {
+  /** The continent whose land this sheet draws. */
+  continent: string;
   width: number;
   height: number;
   /** Pixels of the map to a pixel of the sheet. */
@@ -371,6 +377,8 @@ export interface EditorInfo {
   lands: string[];
   /** Indices of the sketched continents that fit the sheet. */
   sketches: number[];
+  /** The sketch chosen for the world's several continents has this one's land to start from. */
+  composed: boolean;
   /** The whole map with the sheet's frame (left, top, width, height as fractions of the map;
    *  it may cross the right edge); ``sketch`` when the picture is the chosen sketch. */
   world: { picture: string; frame: [number, number, number, number]; sketch: boolean } | null;

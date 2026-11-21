@@ -36,6 +36,7 @@
   import Check from "./ui/Check.svelte";
 
   const IMAGES = [{ name: "PNG, JPEG, BMP, TIFF", extensions: ["png", "jpg", "jpeg", "bmp", "tif", "tiff"] }];
+  // A draft is kept for each continent, so that going from one to another loses nothing.
   const DRAFT = "rnw.landeditor.draft";
   const KIND_NAMES = ["sea", "land", "mountains", "highlands", "lowlands", "lake"] as const;
   const TOOL_ICONS: Record<Tool, string> = {
@@ -61,6 +62,9 @@
   }
 
   const s = $derived(app.now);
+  const drawable = $derived(s?.new.drawable ?? []);
+  // The continent whose land is drawn now (America when it is the world's only one).
+  let continent = $state(app.editorContinent);
   let stage = $state<Stage>("preparing");
   let failure = $state("");
   let armed = $state(false);
@@ -149,12 +153,20 @@
   // -- opening ---------------------------------------------------------------------------------
 
   onMount(() => {
+    const open = app.now?.new.drawable ?? [];
+    if (open.length && !open.includes(continent)) continent = open[0]!;
+    begin();
+  });
+
+  /** Cut the area of the continent drawn now (a second from the land cache, else several). */
+  function begin(): void {
     startedRuns = app.now?.runs ?? 0;
-    void app.act("prepare_land_area").then((ok) => {
+    armed = false;
+    void app.act("prepare_land_area", { continent }).then((ok) => {
       if (ok) armed = true;
       else close();
     });
-  });
+  }
 
   onDestroy(() => {
     cancelAnimationFrame(frame);
@@ -168,7 +180,7 @@
   // The area is cut (a few seconds the first time, then from the land cache): open the sheet.
   $effect(() => {
     if (!armed || stage !== "preparing" || !s) return;
-    if (s.new.editor_ready && !s.busy) void open();
+    if (s.new.editor_ready.includes(continent) && !s.busy) void open();
     else if (!s.busy && s.phase === "failed" && s.task === "template" && s.runs > startedRuns) {
       failure = s.message;
       stage = "failed";
@@ -177,7 +189,7 @@
 
   async function open(): Promise<void> {
     stage = "loading";
-    const found = await app.call<EditorInfo>("land_editor");
+    const found = await app.call<EditorInfo>("land_editor", { continent });
     if (!found) {
       close();
       return;
@@ -205,9 +217,46 @@
     void loadKnown();
   }
 
+  function draftKey(): string {
+    return continent === "america" ? DRAFT : `${DRAFT}.${continent}`;
+  }
+
+  /** Go to another continent's sheet: this one's draft is kept, its pictures are let go. */
+  function choose(key: string): void {
+    if (key === continent || stage === "preparing" || stage === "loading") return;
+    if (sheet && info && version > 0) {
+      try {
+        localStorage.setItem(draftKey(), JSON.stringify({ width: sheet.width, height: sheet.height, image: urlOf() }));
+      } catch {
+        // A draft is a convenience.
+      }
+    }
+    clearTimeout(checkTimer);
+    clearTimeout(draftTimer);
+    cancelAnimationFrame(frame);
+    frame = 0;
+    startRun++;
+    knownRun++;
+    sketchRun++;
+    checkRun++;
+    sheet = null;
+    info = null;
+    report = null;
+    checking = false;
+    starts = [];
+    knownStarts = [];
+    sketchStarts = [];
+    sketched = "";
+    version = 0;
+    app.editorContinent = key;
+    continent = key;
+    stage = "preparing";
+    begin();
+  }
+
   async function savedDraft(found: EditorInfo): Promise<Uint8Array | null> {
     try {
-      const kept = JSON.parse(localStorage.getItem(DRAFT) ?? "null") as { width: number; height: number; image: string } | null;
+      const kept = JSON.parse(localStorage.getItem(draftKey()) ?? "null") as { width: number; height: number; image: string } | null;
       if (kept && kept.width === found.width && kept.height === found.height && kept.image) {
         return await kindsOfUrl(kept.image, found.palette);
       }
@@ -223,7 +272,7 @@
       if (!sheet || !info) return;
       try {
         const image = urlOfKinds(sheet.kinds, sheet.width, sheet.height, info.palette);
-        localStorage.setItem(DRAFT, JSON.stringify({ width: sheet.width, height: sheet.height, image }));
+        localStorage.setItem(draftKey(), JSON.stringify({ width: sheet.width, height: sheet.height, image }));
       } catch {
         // A draft is a convenience.
       }
@@ -482,7 +531,7 @@
   async function runCheck(): Promise<void> {
     if (!sheet || !info) return;
     const run = ++checkRun;
-    const found = await app.call<Report>("land_check", { image: urlOf() });
+    const found = await app.call<Report>("land_check", { image: urlOf(), continent });
     if (run !== checkRun) return;
     report = found;
     checking = false;
@@ -506,9 +555,9 @@
       ...found.presets.map((preset) => ({
         id: `preset:${preset}`,
         label: t(`editor.preset.${preset}`),
-        call: () => app.call<string>("land_preset", { preset, seed }),
+        call: () => app.call<string>("land_preset", { preset, seed, continent: found.continent }),
       })),
-      { id: "americas", label: t("editor.americas"), call: () => app.call<string>("land_americas") },
+      { id: "own", label: ownLand(), call: () => app.call<string>("land_americas", { continent: found.continent }) },
     ];
     starts = wanted.map((item) => ({ id: item.id, label: item.label, kinds: null, thumb: "" }));
     for (const [index, item] of wanted.entries()) {
@@ -531,7 +580,7 @@
     const area = inside;
     knownStarts = found.lands.map((land) => ({ id: `land:${land}`, label: t(`editor.land.${land}`), kinds: null, thumb: "" }));
     for (const [index, land] of found.lands.entries()) {
-      const url = await app.call<string>("land_known", { land });
+      const url = await app.call<string>("land_known", { land, continent: found.continent });
       if (run !== knownRun) return;
       if (!url) continue;
       const kinds = await kindsOfUrl(url, found.palette);
@@ -548,7 +597,19 @@
     const run = ++sketchRun;
     const found = info;
     const area = inside;
-    // Sketches of several continents show the whole map, not the area drawn here.
+    // Sketches of several continents show the whole map, not the area drawn here: the one chosen
+    // for this world has the land of this continent to start from.
+    if (found.composed) {
+      sketchStarts = [{ id: "composed", label: t("editor.composed_start"), kinds: null, thumb: "" }];
+      const url = await app.call<string>("land_composed", { continent: found.continent });
+      if (run !== sketchRun) return;
+      if (url) {
+        const kinds = await kindsOfUrl(url, found.palette);
+        if (run !== sketchRun) return;
+        sketchStarts = [{ ...sketchStarts[0]!, kinds, thumb: thumbnail(kinds, found.width, found.height, THUMB_EVERY, area) }];
+      }
+      return;
+    }
     const count = app.now?.candidates[0]?.composed ? 0 : (app.now?.candidates.length ?? 0);
     sketchStarts = Array.from({ length: count }, (_, index) => ({
       id: `sketch:${index}`,
@@ -557,7 +618,7 @@
       thumb: "",
     }));
     for (let index = 0; index < count; index++) {
-      const url = await app.call<string>("land_sketch", { index });
+      const url = await app.call<string>("land_sketch", { index, continent: found.continent });
       if (run !== sketchRun) return;
       if (!url) continue;
       const kinds = await kindsOfUrl(url, found.palette);
@@ -586,8 +647,13 @@
     return right <= 1 ? [frame] : [[left, top, 1 - left, height], [0, top, right - 1, height]];
   });
   // With other continents switched on, a sketch shows the whole world: it is chosen on the new
-  // world's page, and America is drawn here.
+  // world's page, and the editor then offers its land of the continent drawn here.
   const composedWorld = $derived(Object.keys(s?.new.regions ?? {}).length > 0);
+  const continentName = $derived(t(`continent.${continent}`));
+  /** The game's own land of the continent drawn: its Americas, its Africa, its Oceania. */
+  function ownLand(): string {
+    return continent === "america" ? t("editor.americas") : t(`editor.own.${continent}`);
+  }
 
   function again(): void {
     seed = freshSeed();
@@ -602,7 +668,7 @@
     if (!parts.length) return;
     working = true;
     try {
-      const done = await app.call<string>("land_decorate", { image: urlOf(), seed: seed + ++decorations, parts });
+      const done = await app.call<string>("land_decorate", { image: urlOf(), seed: seed + ++decorations, parts, continent });
       if (!done) return;
       const kinds = await kindsOfUrl(done, info.palette);
       if (!take(kinds)) app.toast("info", t("editor.nothing_added"), 4);
@@ -621,7 +687,7 @@
     if (!info || working) return;
     working = true;
     try {
-      const got = await app.call<{ image: string; fit: string }>("land_import", { path });
+      const got = await app.call<{ image: string; fit: string }>("land_import", { path, continent });
       if (!got) return;
       take(await kindsOfUrl(got.image, info.palette));
       if (got.fit === "stretched" || got.fit === "centered") app.toast("info", t(`editor.fit.${got.fit}`), 8);
@@ -642,7 +708,7 @@
   async function useAsIs(): Promise<void> {
     const path = await openFile(t("land_image_title"), IMAGES);
     if (!path) return;
-    if (await app.act("choose_land_image", { path })) {
+    if (await app.act("choose_land_image", { path, continent })) {
       app.toast("success", t("editor.used"), 5);
       close();
     }
@@ -651,7 +717,7 @@
   /** The grey picture of the area to paint on elsewhere, saved where the player says. */
   async function saveTemplate(): Promise<void> {
     const path = await saveFile(t("land_template"), "new-world-template.png", [{ name: "PNG", extensions: ["png"] }]);
-    if (!path || !(await app.act("save_land_template", { path }))) return;
+    if (!path || !(await app.act("save_land_template", { path, continent }))) return;
     for (let waited = 0; waited < 600 && app.now?.busy; waited++) await new Promise((done) => setTimeout(done, 100));
     if (app.now?.phase === "finished") app.toast("success", t("picture_saved", { path }), 5);
   }
@@ -668,7 +734,7 @@
     if (!sheet || !info || !usable) return;
     working = true;
     try {
-      if (await app.act("use_land_picture", { image: urlOf() })) {
+      if (await app.act("use_land_picture", { image: urlOf(), continent })) {
         app.toast("success", t("editor.used"), 5);
         close();
       }
@@ -689,7 +755,7 @@
     if (sheet && info && version > 0) {
       try {
         const image = urlOfKinds(sheet.kinds, sheet.width, sheet.height, info.palette);
-        localStorage.setItem(DRAFT, JSON.stringify({ width: sheet.width, height: sheet.height, image }));
+        localStorage.setItem(draftKey(), JSON.stringify({ width: sheet.width, height: sheet.height, image }));
       } catch {
         // A draft is a convenience.
       }
@@ -706,6 +772,23 @@
 <div class="editor" role="dialog" aria-modal="true" aria-label={t("editor.title")}>
   <header class="top">
     <span class="pane-title">{t("editor.title")}</span>
+    {#if drawable.length > 1}
+      <div class="continents" role="radiogroup" aria-label={t("editor.continent")}>
+        {#each drawable as key (key)}
+          <button
+            class="btn small ghost"
+            class:on={continent === key}
+            role="radio"
+            aria-checked={continent === key}
+            disabled={stage === "preparing" || stage === "loading"}
+            title={t("editor.continent_tip", { continent: t(`continent.${key}`) })}
+            onclick={() => choose(key)}
+          >{t(`continent.${key}`)}</button>
+        {/each}
+      </div>
+    {:else}
+      <span class="pane-sub">{continentName}</span>
+    {/if}
     {#if info}<span class="pane-sub num">{info.width} × {info.height}</span>{/if}
     <span class="sep"></span>
     <button class="btn icon small ghost" disabled={!canUndo} title={`${t("editor.undo")} (Ctrl+Z)`} aria-label={t("editor.undo")} onclick={undo}><Icon name="undo" /></button>
@@ -815,14 +898,14 @@
         {#if info?.world}
           <section>
             <div class="head"><h3>{t("editor.world")}</h3></div>
-            <div class="globe" title={t("editor.world_tip")}>
+            <div class="globe" title={t("editor.world_tip", { continent: continentName })}>
               <img src={info.world.picture} alt="" />
               {#each frames as part, index (index)}
                 <span class="frame" style:left={`${part[0] * 100}%`} style:top={`${part[1] * 100}%`}
                   style:width={`${part[2] * 100}%`} style:height={`${part[3] * 100}%`}></span>
               {/each}
             </div>
-            <p class="faint note">{info.world.sketch ? t("editor.world_sketch") : t("editor.world_tip")}</p>
+            <p class="faint note">{t(info.world.sketch ? "editor.world_sketch" : "editor.world_tip", { continent: continentName })}</p>
           </section>
         {/if}
         <section>
@@ -933,6 +1016,11 @@
     border-bottom: 1px solid var(--line);
     background: var(--panel);
     overflow: hidden;
+  }
+  .continents {
+    display: inline-flex;
+    gap: 2px;
+    margin: 0 6px;
   }
   .sep {
     width: 1px;

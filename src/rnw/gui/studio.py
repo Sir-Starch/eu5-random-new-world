@@ -29,6 +29,7 @@ from rnw.landarea import (
 )
 from rnw.landmask import KIND_COLORS, LandMask, LandMaskError
 from rnw.png import COLOR_GRAY, COLOR_RGB, encode_png
+from rnw.settings import AMERICA
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
@@ -55,6 +56,8 @@ class StudioError(ValueError):
 # The area the drawing fills, on the editor's view of the world: the game's land there is
 # replaced, so it is shown neither as kept land nor as sea.
 SHEET_AREA: Final[tuple[int, int, int]] = (104, 110, 124)
+# The areas of the world's other generated continents, which the generator makes anew as well.
+OTHER_AREA: Final[tuple[int, int, int]] = (70, 76, 96)
 
 
 def kinds_url(kinds: NDArray[np.uint8]) -> str:
@@ -84,19 +87,22 @@ def kinds_of(url: str, area: LandArea) -> NDArray[np.uint8]:
     return kinds
 
 
-def opening(
+def opening(  # noqa: PLR0913, PLR0917 - what the editor opens on: the sheet, its picture, the rest.
     area: LandArea,
     drawn: LandMask | None,
     found: Sequence[sketches.Candidate],
     settings: NewWorldSettings,
     chosen: sketches.Candidate | None = None,
+    continent: str = AMERICA,
 ) -> dict[str, object]:
-    """What the window needs to open the editor on the sheet ``area`` (the area at
-    ``EDITOR_STEP``): the sheet, the picture chosen now (laid on it, with how it was laid), the
-    ready lands, the sketched continents and the sheet's place in the world (``world_view``)."""
+    """What the window needs to open the editor on the sheet ``area`` of ``continent`` (the area
+    at ``EDITOR_STEP``): the sheet, the picture chosen now (laid on it, with how it was laid), the
+    ready lands, the sketched continents (and whether the chosen sketch of several continents
+    has this one's land to start from) and the sheet's place in the world (``world_view``)."""
     height, width = area.picture_shape
     image, fit = ("", "") if drawn is None else _lay(drawn, area)
     return {
+        "continent": continent,
         "width": width,
         "height": height,
         "step": EDITOR_STEP,
@@ -116,6 +122,7 @@ def opening(
         "sketches": [
             index for index, one in enumerate(found) if one.picture.shape[:2] == area.picture_shape
         ],
+        "composed": chosen is not None and chosen.composed and area.origin is not None,
         "world": world_view(area, chosen),
     }
 
@@ -142,6 +149,8 @@ def world_view(
             np.array(sketches.KEPT_LAND, dtype=np.uint8),
             np.array(sketches.KEPT_SEA, dtype=np.uint8),
         ).astype(np.uint8)
+        if area.others is not None:
+            picture[area.others] = OTHER_AREA
         picture[_drawn_area(area, area.origin, area.world, step)] = SHEET_AREA
     # Turn the map so that the frame's middle is the picture's.
     picture_width = int(cast("tuple[int, int, int]", picture.shape)[1])
@@ -215,6 +224,28 @@ def known(area: LandArea, name: str, settings: NewWorldSettings) -> str:
 def real_americas(area: LandArea) -> str:
     """The game's own Americas as the land to start from."""
     return kinds_url(landeditor.americas(area))
+
+
+def composed_start(area: LandArea, found: Sequence[sketches.Candidate], seed: int) -> str:
+    """The land the generator sketched on the sheet's own area, in the sketch of the world's
+    several continents that was made for ``seed``, as the land to start from."""
+    chosen = next((one for one in found if one.composed and one.seed == seed), None)
+    if chosen is None or area.origin is None:
+        raise StudioError(NO_SKETCH)
+    row, column, _height, width = area.origin
+    rows, columns = area.picture_shape
+    picture = chosen.picture
+    last_row, last_column = (extent - 1 for extent in cast("tuple[int, int]", picture.shape[:2]))
+    # The sketch keeps every ``STEP``th pixel of the whole map, the sheet every ``EDITOR_STEP``th
+    # of its own area: each sheet pixel takes the sketch pixel nearest it.
+    take_rows = np.minimum((row + np.arange(rows) * EDITOR_STEP) // sketches.STEP, last_row)
+    take_columns = np.minimum(
+        ((column + np.arange(columns) * EDITOR_STEP) % width) // sketches.STEP, last_column
+    )
+    cut = picture[np.ix_(take_rows, take_columns)]
+    kinds = landeditor.from_sketch(cut, lake=sketches.GENERATED_LAKE, land=sketches.GENERATED_LAND)
+    kinds[~area.area] = landmask.SEA
+    return kinds_url(kinds)
 
 
 def sketch(area: LandArea, found: Sequence[sketches.Candidate], index: int) -> str:

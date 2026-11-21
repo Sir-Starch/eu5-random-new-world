@@ -630,6 +630,10 @@ text = '''Rysowanie szablonu…'''
 source = "4d9e51e05f272e57"
 text = '''Ląd jest narysowany na obrazie ({id}).'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''Ląd: {continent} jest narysowany na obrazie ({id}).'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''Wróć do wygenerowanego lądu'''
@@ -1950,7 +1954,6 @@ text = '''Wybierz od 1 do {count} szkiców.'''
 source = "75f72c48760efe1b"
 text = '''Szkice wymagają wygenerowanego lądu. Najpierw wróć do wygenerowanego lądu.'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''Generuj z nowym ziarnem'''
@@ -2238,7 +2241,6 @@ text = '''Nic nie znaleziono.'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''Pokazano: {name}'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''Edytor lądu…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''Wybierz ląd nowego świata: narysuj go, zacznij od gotowego lądu lub naszkicowanego kontynentu albo przynieś własny obraz. Teren maluje się w sześciu rodzajach, a generator mówi, co z tego zrobi.'''
+source = "e63d89cd7f4d5b7c"
+text = '''Wybierz ląd kontynentu, który generuje świat: narysuj go, zacznij od gotowego lądu lub naszkicowanego kontynentu albo przynieś własny obraz. Teren maluje się w sześciu rodzajach, a generator mówi, co z tego zrobi.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''Pokaż twój rysunek'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''Pokaż Ameryki z gry'''
+source = "844e366e5c8b4303"
+text = '''Pokaż własny ląd gry'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''Rozproszone wyspy'''
 source = "80e3026403729d93"
 text = '''Ameryki z gry'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''Afryka z gry'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''Oceania z gry'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''Szkic {number}'''
@@ -3247,7 +3257,6 @@ text = '''Kalimdor'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''Szkicuj kontynenty…'''
 source = "54c56a33e3493e48"
 text = '''Naszkicuj włączone kontynenty sześć razy, za każdym razem z nowym ziarnem, i wybierz ten, który ci się podoba. Szkic pokazuje ląd, jaki będzie miał świat; zajmuje to chwilę.'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''Edytor lądu rysuje Amerykę: włącz Amerykę, aby rysować jej ląd.'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''Ameryka zachowuje własny ląd gry, więc nie ma czego rysować.'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''{continent} nie jest generowana w tym świecie, więc nie ma czego rysować.'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''Kontynent'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''Rysuj ląd: {continent}'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''Gdy włączone są inne kontynenty, szkic pokazuje cały świat: wybierz go przyciskiem „Szkicuj kontynenty” na stronie nowego świata, a potem rysuj tutaj Amerykę.'''
+source = "234344329649986d"
+text = '''Gdy włączone są inne kontynenty, szkic pokazuje cały świat: wybierz go przyciskiem „Szkicuj kontynenty” na stronie nowego świata, a edytor zaproponuje jego ląd tego kontynentu jako punkt wyjścia.'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''Wybrany szkic'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''Na świecie'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''Ramka to arkusz, na którym rysujesz Amerykę, na mapie gry: szarość w jej wnętrzu to obszar, który wypełni twój ląd. Włączone Afryka i Oceania też zostaną wygenerowane; naszkicuj kontynenty, aby zobaczyć je na swoich miejscach.'''
+source = "46e9ed1d6e3495cb"
+text = '''Ramka to arkusz, na którym rysujesz: {continent}, na mapie gry: jaśniejszy szary w środku to obszar, który wypełni twój ląd. Ciemniejszy szary to obszar innego kontynentu tego świata, który też jest generowany; naszkicuj kontynenty, aby zobaczyć je na swoich miejscach.'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''Ramka to arkusz, na którym rysujesz Amerykę, na wybranym szkicu: pozostałe kontynenty są takie, jak je narysował, a Ameryką stanie się to, co narysujesz tutaj.'''
+source = "8dc98de30678cc7a"
+text = '''Ramka to arkusz, na którym rysujesz: {continent}, pokazany na wybranym szkicu: pozostałe kontynenty są takie, jak je narysował, a {continent} stanie się tym, co narysujesz tutaj.'''

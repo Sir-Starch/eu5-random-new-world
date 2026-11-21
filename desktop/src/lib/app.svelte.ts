@@ -85,6 +85,14 @@ class App {
   modal = $state<Modal | null>(null);
   /** The land editor covers the window. */
   editor = $state(false);
+  /** The continent whose land the editor draws when it opens (it goes to the first one the world
+   *  generates when this is not one of them). */
+  editorContinent = $state("america");
+  /** Open the land editor on a continent's land. */
+  openEditor(continent?: string): void {
+    if (continent) this.editorContinent = continent;
+    this.editor = true;
+  }
   /** A picture dropped on the window that the editor is to take onto its sheet. */
   importPath = $state("");
   /** Files are being dragged over the window. */

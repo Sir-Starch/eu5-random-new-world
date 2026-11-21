@@ -630,6 +630,10 @@ text = '''Şablon çiziliyor…'''
 source = "4d9e51e05f272e57"
 text = '''Kara bir resim üzerine çizilmiş ({id}).'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''{continent} karası bir resim üzerine çizilmiş ({id}).'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''Oluşturulan karaya dön'''
@@ -1950,7 +1954,6 @@ text = '''1 ile {count} arasında taslak seçin.'''
 source = "75f72c48760efe1b"
 text = '''Taslaklar için oluşturulan kara gerekir. Önce oluşturulan karaya dönün.'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''Yeni tohumla oluştur'''
@@ -2238,7 +2241,6 @@ text = '''Hiçbir şey bulunamadı.'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''{name} gösteriliyor'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''Kara düzenleyici…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''Yeni dünyanın karasını seçin: çizin, hazır bir karadan ya da taslağı çıkarılmış bir kıtadan başlayın veya kendi resminizi getirin. Arazi altı türde boyanır ve üreteç bundan ne yapacağını söyler.'''
+source = "e63d89cd7f4d5b7c"
+text = '''Dünyanın ürettiği bir kıtanın karasını seçin: çizin, hazır bir karadan ya da taslağı çıkarılmış bir kıtadan başlayın veya kendi resminizi getirin. Arazi altı türde boyanır ve üreteç bundan ne yapacağını söyler.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''Çiziminizi göster'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''Oyunun Amerikaları'nı göster'''
+source = "844e366e5c8b4303"
+text = '''Oyunun kendi karasını göster'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''Dağınık adalar'''
 source = "80e3026403729d93"
 text = '''Oyunun Amerikaları'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''Oyunun Afrika'sı'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''Oyunun Okyanusya'sı'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''Taslak {number}'''
@@ -3247,7 +3257,6 @@ text = '''Kalimdor'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''Kıta taslakları çıkar…'''
 source = "54c56a33e3493e48"
 text = '''Açık kıtaların her seferinde yeni bir tohumla altı taslağını çıkarın ve beğendiğinizi seçin. Taslak, dünyanın sahip olacağı karayı gösterir; biraz zaman alır.'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''Kara düzenleyici Amerika'yı çizer: karasını çizmek için Amerika'yı açın.'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''Amerika oyunun kendi karasını korur, bu yüzden çizilecek bir şey yok.'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''{continent} bu dünyada üretilmiyor, bu yüzden çizilecek bir şey yok.'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''Kıta'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''{continent} karasını çiz'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''Başka kıtalar açıkken taslak tüm dünyayı gösterir: yeni dünya sayfasında «Kıta taslakları çıkar» ile birini seçin, sonra Amerika'yı burada çizin.'''
+source = "234344329649986d"
+text = '''Başka kıtalar açıkken taslak tüm dünyayı gösterir: yeni dünya sayfasında «Kıta taslakları çıkar» ile birini seçin, düzenleyici de onun bu kıtadaki karasını başlangıç olarak sunar.'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''Seçtiğiniz taslak'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''Dünyada'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''Çerçeve, oyunun haritasında Amerika'yı çizdiğiniz sayfadır: içindeki gri, karanızın dolduracağı alandır. Açıksa Afrika ve Okyanusya da üretilir; onları yerlerinde görmek için kıtaların taslağını çıkarın.'''
+source = "46e9ed1d6e3495cb"
+text = '''Çerçeve, oyunun haritasında {continent} karasını çizdiğiniz sayfadır: içindeki açık gri, karanızın dolduracağı alandır. Koyu gri, bu dünyadaki başka bir kıtanın alanıdır ve o da üretilir; yerlerini görmek için kıtaların taslağını çıkarın.'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''Çerçeve, seçtiğiniz taslakta Amerika'yı çizdiğiniz sayfadır: diğer kıtalar taslağın çizdiği gibidir, Amerika ise burada çizdiğiniz şey olur.'''
+source = "8dc98de30678cc7a"
+text = '''Çerçeve, {continent} karasını çizdiğiniz sayfadır ve seçtiğiniz taslağın üzerinde gösterilir: diğer kıtalar taslağın çizdiği gibidir, {continent} ise burada çizdiğiniz hâle gelir.'''

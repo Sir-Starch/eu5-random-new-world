@@ -56,6 +56,16 @@ worlds and saves are not rewritten or migrated.
   America is laid on its area in the sketches. A disabled sketch or editor button says why. The
   land editor shows where its sheet lies in the world, on the chosen sketch or the game's map.
 
+- Draw the land of Africa and Oceania as America's always could be drawn. The land editor has a
+  switch in its header for the continents the world generates; each keeps its own drawing and its
+  own draft, and a world made on drawn land of several continents is made from every one of them.
+  The sheet of a continent in a world of several is the area its generation will really fill, cut
+  from the world's own seed, so what is drawn fits what is made; the view of the world marks the
+  areas of the other continents, and the sketch chosen for the world offers its land of the
+  continent drawn as one more place to start from. A world code, the library, the sketches and a
+  world file (`land_mask_africa.png`, `land_mask_oceania.png` beside America's `land_mask.png`)
+  carry the images; worlds without drawn Africa or Oceania come out byte for byte as before.
+
 - Speak of continents, not of the New World, in the settings that every continent has. *Distance
   from the Old World* is now *Distance from kept shores*: Africa and Oceania have it too.
 

@@ -14,6 +14,7 @@ from PIL import Image
 
 from rnw import landarea, landcache, landmask
 from rnw.app import service
+from rnw.continent_domains import CONTINENTS, Domain
 from rnw.contract import FileFingerprint
 from rnw.eu5_canvas import Canvas
 from rnw.islands import Footprint
@@ -199,3 +200,56 @@ def test_the_template_is_written_from_the_kept_area(tmp_path: Path, counted: _Co
     assert counted.loads == 1
     assert first.read_bytes() == second.read_bytes()
     assert np.array_equal(np.asarray(Image.open(first)), landarea.from_canvas(_canvas()).picture())
+
+
+def _domain(first_row: int, first_column: int, rows: int, columns: int, map_width: int) -> Domain:
+
+    mask = np.ones((rows, columns), dtype=np.bool_)
+    return Domain(
+        CONTINENTS["africa"], first_column, map_width, mask, mask.copy(), first_row=first_row
+    )
+
+
+def test_the_areas_of_the_other_continents_are_marked_on_the_map_as_it_is_drawn_for_the_view() -> (
+    None
+):
+    step = landarea.WORLD_STEP
+    width = 32 * step
+    # One domain inside the map, one across its seam (it begins four world pixels before the end).
+    inside = _domain(2 * step, 4 * step, 3 * step, 5 * step, width)
+    across = _domain(8 * step, width - 4 * step, 2 * step, 8 * step, width)
+    marked = landarea.world_areas([inside, across], (16 * step, width))
+    assert marked.shape == (16, 32)
+    assert marked[2:5, 4:9].all()
+    assert marked[8:10, 28:32].all()
+    assert marked[8:10, 0:4].all()
+    assert marked.sum() == 3 * 5 + 2 * 8
+    assert not landarea.world_areas([], (16 * step, width)).any()
+
+
+def test_the_other_continents_areas_are_kept_with_the_area(tmp_path: Path) -> None:
+    sheet = landarea.from_canvas(_canvas())
+    others = np.zeros((6, 8), dtype=np.bool_)
+    others[1:3, 2:5] = True
+    kept = landarea.LandArea(
+        sheet.shape,
+        sheet.area,
+        sheet.americas,
+        sheet.islands,
+        (0, 0, 96, 128),
+        np.ones((6, 8), dtype=np.bool_),
+        others,
+    )
+    target = tmp_path / "area.npz"
+    landarea.write_area(target, kept)
+    back = landarea.read_area(target)
+    assert back is not None
+    assert back.others is not None
+    assert np.array_equal(back.others, others)
+    alone = landarea.LandArea(
+        sheet.shape, sheet.area, sheet.americas, sheet.islands, (0, 0, 96, 128), kept.world
+    )
+    landarea.write_area(target, alone)
+    again = landarea.read_area(target)
+    assert again is not None
+    assert again.others is None

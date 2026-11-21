@@ -15,6 +15,7 @@ from rnw.png import COLOR_RGB, encode_png
 from tests.fakes import write_bundle_record
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
     from rnw.app.service import Exporter
@@ -51,9 +52,11 @@ def fake_export() -> Exporter:
         world_code: str | None = None,
         world_label: Label | None = None,
         land_mask: LandMask | None = None,
+        regional_masks: Mapping[str, LandMask] | None = None,
         cache_dir: Path | None = None,
     ) -> dict[str, object]:
         del settings, accept_build, settings_file, replace, check_memory, land_mask, cache_dir
+        del regional_masks
         title = world_label.title if world_label is not None else f"seed {seed}"
         if progress is not None:
             progress.begin("generate world")

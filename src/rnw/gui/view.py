@@ -367,12 +367,18 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "target": str(target) if target is not None else "",
         "land_mask": format(drawn.id, "x") if drawn is not None else "",
         "land_mask_text": text("land_image_chosen", id=format(drawn.id, "x")) if drawn else "",
+        "drawable": c.drawable_continents(),
+        "drawn": {
+            key: format(mask.id, "x")
+            for key, mask in c.drawings().items()
+            if key in c.drawable_continents()
+        },
         "keeps_geography": keeps,
         "candidates_enabled": not busy and sketch_problem is None,
         "sketch_problem": sketch_problem,
         "template_enabled": not busy and editor_problem is None,
         "editor_problem": editor_problem,
-        "editor_ready": c.land_sheet() is not None,
+        "editor_ready": [key for key in c.drawable_continents() if c.land_sheet(key) is not None],
         "preparable": c.can_prepare,
         "queue_problem": queue_problem,
         "queue": _queue(c),

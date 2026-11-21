@@ -630,6 +630,10 @@ text = '''Dessin du modèle…'''
 source = "4d9e51e05f272e57"
 text = '''Les terres sont dessinées sur une image ({id}).'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''Les terres de {continent} sont dessinées sur une image ({id}).'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''Revenir aux terres générées'''
@@ -1950,7 +1954,6 @@ text = '''Choisissez entre 1 et {count} esquisses.'''
 source = "75f72c48760efe1b"
 text = '''Les esquisses demandent des terres générées. Revenez d'abord aux terres générées.'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''Générer avec une autre graine'''
@@ -2238,7 +2241,6 @@ text = '''Rien trouvé.'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''Affichage : {name}'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''Éditeur de terres…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''Choisissez les terres du nouveau monde : dessinez-les, partez d'une terre prête ou d'un continent esquissé, ou apportez votre propre image. Le relief se peint en six types, et le générateur dit ce qu'il en fera.'''
+source = "e63d89cd7f4d5b7c"
+text = '''Choisissez les terres d'un continent que le monde génère : dessinez-les, partez d'une terre prête ou d'un continent esquissé, ou apportez votre propre image. Le relief se peint en six types, et le générateur dit ce qu'il en fera.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''Afficher votre dessin'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''Afficher les Amériques du jeu'''
+source = "844e366e5c8b4303"
+text = '''Afficher les terres du jeu'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''Îles éparses'''
 source = "80e3026403729d93"
 text = '''Les Amériques du jeu'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''L'Afrique du jeu'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''L'Océanie du jeu'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''Esquisse {number}'''
@@ -3247,7 +3257,6 @@ text = '''Kalimdor'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''Esquisser des continents…'''
 source = "54c56a33e3493e48"
 text = '''Esquisser six fois les continents activés, chaque fois avec une nouvelle graine, et choisir celle qui vous plaît. Une esquisse montre les terres qu'aura le monde ; cela prend un peu de temps.'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''L'éditeur de terres dessine l'Amérique : activez l'Amérique pour dessiner ses terres.'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''L'Amérique garde les terres du jeu : il n'y a donc rien à dessiner.'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''{continent} n'est pas générée dans ce monde : il n'y a donc rien à dessiner.'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''Continent'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''Dessiner les terres de {continent}'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''Avec d'autres continents activés, une esquisse montre le monde entier : choisissez-en une avec « Esquisser des continents » sur la page du nouveau monde, puis dessinez l'Amérique ici.'''
+source = "234344329649986d"
+text = '''Avec d'autres continents activés, une esquisse montre le monde entier : choisissez-en une avec « Esquisser des continents » sur la page du nouveau monde, et l'éditeur proposera ses terres de ce continent comme point de départ.'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''L'esquisse que vous avez choisie'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''Dans le monde'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''Le cadre est la feuille où vous dessinez l'Amérique, sur la carte du jeu : le gris à l'intérieur est la zone que vos terres remplissent. L'Afrique et l'Océanie, si elles sont activées, sont aussi générées ; esquissez des continents pour les voir à leur place.'''
+source = "46e9ed1d6e3495cb"
+text = '''Le cadre est la feuille sur laquelle vous dessinez {continent}, sur la carte du jeu : le gris clair à l'intérieur est la zone que vos terres rempliront. Le gris plus sombre est la zone d'un autre continent de ce monde, lui aussi généré ; esquissez les continents pour les voir à leur place.'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''Le cadre est la feuille où vous dessinez l'Amérique, sur l'esquisse choisie : les autres continents sont tels qu'elle les a dessinés, et l'Amérique devient ce que vous dessinez ici.'''
+source = "8dc98de30678cc7a"
+text = '''Le cadre est la feuille sur laquelle vous dessinez {continent}, montrée sur l'esquisse choisie : les autres continents sont tels qu'elle les a dessinés, et {continent} devient ce que vous dessinez ici.'''

@@ -342,7 +342,7 @@ from rnw.history_output_checks import verify_combined_text, verify_diplomacy
 from rnw.history_output_checks import verify_text as verify_history_text
 from rnw.history_plan_checks import validate_projection
 from rnw.land_contact import ContactTerrain, contact_box
-from rnw.landmask import Fitted, LandMask, fit_drawing
+from rnw.landmask import DRAWN_FILES, Fitted, LandMask, fit_drawing
 from rnw.languages import official_languages
 from rnw.layers import PEOPLES, RESOURCES, layer_seed
 from rnw.loc_keys import KeySpace, key_hash, key_hashes
@@ -3830,6 +3830,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     world_code: str | None = None,
     world_label: Label | None = None,
     land_mask: LandMask | None = None,
+    regional_masks: Mapping[str, LandMask] | None = None,
     cache_dir: Path | None = None,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report.
@@ -3842,7 +3843,8 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     ``Cancelled`` and leaves nothing behind. ``world_label`` is the title the game's mod list
     shows and the tag drawn on a covered picture (``rnw.worldname``); without one the world is
     titled by its type and a tag made from its code. ``land_mask`` is the land drawn in an image
-    (``rnw.landmask``): the settings' mask id must be its id, and the world is made on it.
+    (``rnw.landmask``): the settings' mask id must be its id, and the world is made on it;
+    ``regional_masks`` are the same for the other continents drawn, by the continent's key.
     """
     check_new_output(output, MOD_NAME, game_dir, replace=replace)
     if check_memory:
@@ -3865,6 +3867,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
             world_code=world_code,
             world_label=world_label,
             land_mask=land_mask,
+            regional_masks=regional_masks or {},
             cache_dir=cache_dir,
         )
 
@@ -4426,6 +4429,21 @@ class CompositionInputs:
         )
 
 
+def retained_facts(game_dir: Path) -> tuple[frozenset[str], tuple[str, ...]]:
+    """What the plan of a world of several continents keeps clear of, from the installed game:
+    the endpoints of the retained Sound tolls and the closed waters (ocean wastelands)."""
+    return (
+        sound_toll_locations(_read(game_dir, DEFAULT_MAP)),
+        tuple(
+            sorted(
+                key
+                for key, water in read_waters(_read(game_dir, TEMPLATES)).items()
+                if water.topography == Topography.OCEAN_WASTELAND
+            )
+        ),
+    )
+
+
 def composition_inputs(game_dir: Path, game_map: Eu5Map, settings: Settings) -> CompositionInputs:
     """The inputs of the plan of the composed world of ``settings`` on the installed game."""
     geography = {region.key: region.new_world for region in settings.continents.regions}
@@ -4437,17 +4455,12 @@ def composition_inputs(game_dir: Path, game_map: Eu5Map, settings: Settings) -> 
         and not (settings.continents.america and settings.new_world.landform)
         else 0
     )
+    tolls, closed = retained_facts(game_dir)
     return CompositionInputs(
         geography,
         any(region.require_asia_connection for region in settings.continents.regions),
-        sound_toll_locations(_read(game_dir, DEFAULT_MAP)),
-        tuple(
-            sorted(
-                key
-                for key, water in read_waters(_read(game_dir, TEMPLATES)).items()
-                if water.topography == Topography.OCEAN_WASTELAND
-            )
-        ),
+        tolls,
+        closed,
         southern_passage,
     )
 
@@ -4472,10 +4485,11 @@ def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes
     *,
     seed: int,
     algorithm: int,
-    land_mask: LandMask | None,
+    drawings: Mapping[str, LandMask],
     southern_passage: int,
 ) -> ContinentLand:
-    """The land inputs of ``domain`` in a world of several continents."""
+    """The land inputs of ``domain`` in a world of several continents; ``drawings`` are the
+    images the continents' lands are drawn from, by the continent's key."""
     name = domain.continent.key
     mask = domain.mask
     knobs = geography[name]
@@ -4486,9 +4500,7 @@ def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes
         nominal = min(area, land + game_map.labels.size // SHARED_OCEAN_DIVISOR)
         knobs = replace(knobs, land_permille=knobs.land_permille * nominal // area)
     drawing = (
-        fit_drawing(land_mask, domain.mask.shape, algorithm)
-        if name == NEW_WORLD and land_mask is not None
-        else None
+        fit_drawing(drawings[name], domain.mask.shape, algorithm) if name in drawings else None
     )
     return ContinentLand(
         seed if name == NEW_WORLD else derive_seed(seed, "continent", name),
@@ -4497,6 +4509,42 @@ def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes
         domain.land_interface if domain.join_asia else None,
         south,
     )
+
+
+def _drawings(
+    land_mask: LandMask | None, regional_masks: Mapping[str, LandMask]
+) -> dict[str, LandMask]:
+    """The images the continents' lands are drawn from, by the continent's key."""
+    found = dict(regional_masks)
+    if land_mask is not None:
+        found[NEW_WORLD] = land_mask
+    return found
+
+
+def require_drawings(
+    settings: Settings, land_mask: LandMask | None, regional_masks: Mapping[str, LandMask]
+) -> None:
+    """Each continent's drawn land is the image its settings name, and no other is given."""
+    if settings.mask.id != (0 if land_mask is None else land_mask.id):
+        message = (
+            "The settings name a drawn land that was not given, or the given one is not it"
+            if land_mask is None
+            else "The land image is not the one the settings name (its id differs)"
+        )
+        raise NewWorldExportError(message)
+    wanted = {region.key: region.mask.id for region in settings.continents.regions}
+    if set(regional_masks) - wanted.keys():
+        message = "A land image is given for a continent that the world does not make"
+        raise NewWorldExportError(message)
+    for key, drawn in wanted.items():
+        given = regional_masks.get(key)
+        if drawn != (0 if given is None else given.id):
+            message = (
+                f"The settings name a land drawn for {key} that was not given"
+                if given is None
+                else f"The land image of {key} is not the one the settings name (its id differs)"
+            )
+            raise NewWorldExportError(message)
 
 
 def regional_coasts(domain: Domain, inputs: ContinentLand) -> FinishedLand:
@@ -4528,7 +4576,7 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     seed: int,
     algorithm: int,
     sizes: SizeModel,
-    land_mask: LandMask | None,
+    drawings: Mapping[str, LandMask],
     cache_dir: Path | None,
     store: DecalStore,
 ) -> tuple[WorldRegion, ...]:
@@ -4543,7 +4591,7 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             geography,
             seed=seed,
             algorithm=algorithm,
-            land_mask=land_mask,
+            drawings=drawings,
             southern_passage=southern_passage,
         )
         mask, drawing = domain.mask, land_inputs.drawing
@@ -4644,7 +4692,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     seed: int,
     resources_seed: int,
     settings: Settings,
-    land_mask: LandMask | None,
+    drawings: Mapping[str, LandMask],
     cache_dir: Path | None,
 ) -> _ExportGeography:
     """Compose regional surfaces before running the common geography and texture stages."""
@@ -4669,7 +4717,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             seed=seed,
             algorithm=settings.algorithm,
             sizes=sizes,
-            land_mask=land_mask,
+            drawings=drawings,
             cache_dir=cache_dir,
             store=terrain_store,
         ),
@@ -5163,17 +5211,12 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     world_code: str | None,
     world_label: Label | None,
     land_mask: LandMask | None,
+    regional_masks: Mapping[str, LandMask],
     cache_dir: Path | None,
 ) -> dict[str, object]:
     _ = configure()
     _require_algorithm(settings)
-    if settings.mask.id != (0 if land_mask is None else land_mask.id):
-        message = (
-            "The settings name a drawn land that was not given, or the given one is not it"
-            if land_mask is None
-            else "The land image is not the one the settings name (its id differs)"
-        )
-        raise NewWorldExportError(message)
+    require_drawings(settings, land_mask, regional_masks)
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
     spec = run_spec(seed, settings)
     resources_seed = layer_seed(seed, RESOURCES, settings.rolls.resources)
@@ -5197,18 +5240,32 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     game_map, hierarchy = run_stage("load map", load)
     composed = bool(settings.continents.regions)
     with Stages(stage_workers()) as stages:
-        prepare = _prepare_composed_geography if composed else _prepare_american_geography
-        prepared = prepare(
-            stages,
-            spool,
-            game_dir,
-            game_map,
-            hierarchy,
-            seed=seed,
-            resources_seed=resources_seed,
-            settings=settings,
-            land_mask=land_mask,
-            cache_dir=cache_dir,
+        prepared = (
+            _prepare_composed_geography(
+                stages,
+                spool,
+                game_dir,
+                game_map,
+                hierarchy,
+                seed=seed,
+                resources_seed=resources_seed,
+                settings=settings,
+                drawings=_drawings(land_mask, regional_masks),
+                cache_dir=cache_dir,
+            )
+            if composed
+            else _prepare_american_geography(
+                stages,
+                spool,
+                game_dir,
+                game_map,
+                hierarchy,
+                seed=seed,
+                resources_seed=resources_seed,
+                settings=settings,
+                land_mask=land_mask,
+                cache_dir=cache_dir,
+            )
         )
         game_map, canvas, clean = prepared.game_map, prepared.canvas, prepared.cover_canvas
         shapes, final_labels, moved_groups = prepared.shape, prepared.final, prepared.moved
@@ -5696,6 +5753,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         ]
         if land_mask is not None:
             atlas_records.append(write_bytes(stage, LAND_MASK_FILE, land_mask.png()))
+        atlas_records.extend(
+            write_bytes(stage, DRAWN_FILES[key], regional_masks[key].png())
+            for key in sorted(regional_masks)
+        )
         record, inputs_record = _reproducibility(
             stage,
             recorder,
@@ -5721,6 +5782,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "land_mask": None
             if land_mask is None
             else {"id": land_mask.id, "sha256": land_mask.sha256, "size": list(land_mask.size)},
+            **(
+                {
+                    "land_masks": {
+                        key: {"id": one.id, "sha256": one.sha256, "size": list(one.size)}
+                        for key, one in sorted(regional_masks.items())
+                    }
+                }
+                if regional_masks
+                else {}
+            ),
             "spec": spec,
             "spec_sha256": spec_digest(spec),
             "record": record.to_json(),

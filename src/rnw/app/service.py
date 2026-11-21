@@ -11,32 +11,32 @@ from __future__ import annotations
 
 import shutil
 import time
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
-from rnw import __version__, epoch, worldname
+from rnw import __version__, epoch, landarea, worldname
 from rnw.app import estimates, exchange, install, library, logs, recovery
 from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
 from rnw.eu5_world_export import export_world
 from rnw.inputs import compare
-from rnw.landarea import get_area, regional_bands
+from rnw.landarea import get_area
+from rnw.landmask import LandMask
 from rnw.messages import say
 from rnw.parallel import cores
 from rnw.png import COLOR_GRAY, encode_png
 from rnw.progress import Cancelled, active, checkpoint, running
 from rnw.record import Record, RecordError, Verdict, manifest_digest, output_entries, verdict
-from rnw.settings import PRESETS
+from rnw.settings import AMERICA, PRESETS, drawn_ids
 
 if TYPE_CHECKING:
-    from collections.abc import Collection
+    from collections.abc import Collection, Mapping
     from pathlib import Path
 
     from rnw.app.discovery import GameInstall, Profile
     from rnw.app.library import World
     from rnw.app.worldcode import WorldCode
-    from rnw.landarea import LandArea, RegionalBands
-    from rnw.landmask import LandMask
+    from rnw.landarea import AreaInputs, LandArea
     from rnw.progress import Progress
     from rnw.settings import Settings
     from rnw.worldname import Label
@@ -68,6 +68,7 @@ class Exporter(Protocol):
         world_code: str | None = None,
         world_label: Label | None = None,
         land_mask: LandMask | None = None,
+        regional_masks: Mapping[str, LandMask] | None = None,
         cache_dir: Path | None = None,
     ) -> dict[str, object]: ...
 
@@ -88,6 +89,8 @@ class Request:
     parent: str = ""
     part: str = ""
     land_mask: LandMask | None = None
+    # The images the other continents' lands are drawn from, by the continent's key.
+    regional_masks: Mapping[str, LandMask] = field(default_factory=dict[str, LandMask])
     output_folder: Path | None = None
     world_file: Path | None = None
     # The algorithm epoch the world is made by (``rnw.epoch``): an older one only for a code
@@ -252,6 +255,7 @@ def generate(
         world_code=text,
         world_label=library.label(world),
         land_mask=request.land_mask,
+        regional_masks=request.regional_masks,
         cache_dir=land_cache(request.data),
     )
     world = replace(
@@ -346,6 +350,7 @@ def add_to_game(  # noqa: PLR0913 - a world, where it goes and how the work is s
         show_new_world=shown,
         name=world.name if world.game_build == game.build_id else "",
         land_mask=required_land_mask(data, world),
+        regional_masks=required_regional_masks(data, world),
     )
     return make(request, progress) if make is not None else generate(request, progress, exporter)
 
@@ -417,49 +422,72 @@ def required_land_mask(data: Path, world: World) -> LandMask | None:
     return found
 
 
+def required_regional_masks(data: Path, world: World) -> dict[str, LandMask]:
+    """The land images the world's other continents are drawn from, by the continent's key.
+
+    Raises ``LandImageError`` when the world's code names an image and the world's folder no
+    longer holds it.
+    """
+    held = library.regional_masks(data, world)
+    chosen: dict[str, LandMask] = {}
+    for key, wanted in drawn_ids(decode(world.code).settings()).items():
+        if key == AMERICA:
+            continue
+        found = held.get(key)
+        if found is None or found.id != wanted:
+            message = say("land_image.gone")
+            raise LandImageError(message)
+        chosen[key] = found
+    return chosen
+
+
 def land_area(
-    game: GameInstall, settings: Settings = PRESETS["continents"], *, data: Path | None = None
+    game: GameInstall,
+    settings: Settings = PRESETS["continents"],
+    *,
+    data: Path | None = None,
+    continent: str = AMERICA,
+    seed: int = 0,
 ) -> LandArea:
-    """The area the New World can fill with ``settings``: read from the land cache when it was
-    chosen before (a fraction of a second), else chosen from the installed game's map (seconds)
-    and kept there."""
-    directory, band, expanded, regional = area_inputs(game, settings)
+    """The area ``continent`` (America by default) can fill in the world ``settings`` and ``seed``
+    make: read from the land cache when it was chosen before (a fraction of a second), else
+    chosen from the installed game's map (seconds) and kept there. America alone has the same
+    area for every seed; the areas of a world of several continents follow the seed."""
+    inputs = area_inputs(game, settings, continent, seed)
     return get_area(
         None if data is None else land_cache(data),
-        directory,
-        band,
-        expanded=expanded,
-        regional=regional,
+        inputs.game_dir,
+        inputs.band_px,
+        expanded=inputs.expanded,
+        plan=inputs.plan,
     )
 
 
-def area_inputs(game: GameInstall, settings: Settings) -> tuple[Path, int, bool, RegionalBands]:
-    """Identify the American area by its own settings and neighboring coastal claims."""
-    shape = settings.new_world
-    return (
-        game.directory,
-        shape.ocean_band_px,
-        bool(shape.expand_oceans or shape.landform),
-        regional_bands(settings),
-    )
+def area_inputs(
+    game: GameInstall, settings: Settings, continent: str = AMERICA, seed: int = 0
+) -> AreaInputs:
+    """Identify the area of ``continent`` by what the export's plan reads of the settings."""
+    return landarea.area_inputs(game.directory, settings, continent, seed)
 
 
-def land_template(
+def land_template(  # noqa: PLR0913 - the game, the file, the world's settings and the continent.
     game: GameInstall,
     output: Path,
     settings: Settings = PRESETS["continents"],
     *,
     data: Path | None = None,
+    continent: str = AMERICA,
+    seed: int = 0,
 ) -> tuple[int, int]:
-    """Write a picture of the area the New World can fill, to draw land on; returns its size.
+    """Write a picture of the area a continent can fill, to draw land on; returns its size.
 
-    Dark grey is the area and black is outside it; the game's own Americas are a lighter grey
-    and the Old World's island groups that the area covers a darker one. The player paints land
-    in white (any program), and ``Land from an image`` builds the world on it. The picture shows
-    the area at a quarter of the map's size and is for the player's own use: it is cut from the
-    installed game's map.
+    Dark grey is the area and black is outside it; the game's own land of the continent (the
+    Americas) is a lighter grey and the Old World's island groups that the area covers a darker
+    one. The player paints land in white (any program), and ``Land from an image`` builds the
+    world on it. The picture shows the area at a quarter of the map's size and is for the
+    player's own use: it is cut from the installed game's map.
     """
-    picture = land_area(game, settings, data=data).picture()
+    picture = land_area(game, settings, data=data, continent=continent, seed=seed).picture()
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_bytes(encode_png(picture, color_type=COLOR_GRAY, compression="zlib"))
     height, width = cast("tuple[int, int]", picture.shape)
@@ -547,6 +575,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
             world_code=record.code,
             world_label=None,
             land_mask=required_land_mask(data, world),
+            regional_masks=required_regional_masks(data, world),
         )
     finally:
         shutil.rmtree(scratch, ignore_errors=True)

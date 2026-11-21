@@ -56,7 +56,13 @@ def send_mod(data: Path, world: World, mod: Path, output: Path) -> Path:
     image = folder / library.LAND_MASK
     drawn = image.read_bytes() if image.is_file() else None
     return worldfile.write_mod(
-        output, record, exchange.atlas_files(data, world), bundle, mod, land_mask=drawn
+        output,
+        record,
+        exchange.atlas_files(data, world),
+        bundle,
+        mod,
+        land_mask=drawn,
+        regional_masks=exchange.regional_files(folder),
     )
 
 
@@ -78,8 +84,7 @@ def receive_mod(data: Path, path: Path, game: GameInstall) -> Imported:
         raise ExchangeError(message)
     if found.atlas is not None:
         exchange.check_atlas(found.atlas)
-    if found.land_mask is not None:
-        exchange.check_land_mask(found.land_mask, world)
+    exchange.check_land_masks(found, world)
     bundle = worldfile.read_bundle(path)
     _same_game(game, record.game.fingerprint_sha256, bundle.get("inputs.json"))
     target = library.folder(data, world)
@@ -101,8 +106,7 @@ def receive_mod(data: Path, path: Path, game: GameInstall) -> Imported:
         _ = destination.write_bytes(content)
     if found.atlas is not None:
         exchange.keep_atlas(target, found.atlas)
-    if found.land_mask is not None:
-        exchange.keep_land_mask(target, found.land_mask)
+    exchange.keep_land_masks(target, found)
     if found.record.get("mod_folder") and found.record["mod_folder"] != world.folder:
         metadata = final / install.METADATA
         value = cast("object", json.loads(metadata.read_text(encoding="utf-8-sig")))

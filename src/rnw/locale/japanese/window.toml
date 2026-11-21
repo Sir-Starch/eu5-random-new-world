@@ -630,6 +630,10 @@ text = '''テンプレートを描いています…'''
 source = "4d9e51e05f272e57"
 text = '''陸地は画像に描かれています（{id}）。'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''{continent}の陸地は画像に描かれています（{id}）。'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''生成された陸地に戻す'''
@@ -1950,7 +1954,6 @@ text = '''スケッチは1〜{count}個の間で選んでください。'''
 source = "75f72c48760efe1b"
 text = '''スケッチには生成された陸地が必要です。先に生成された陸地に戻してください。'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''別のシードで生成'''
@@ -2238,7 +2241,6 @@ text = '''見つかりません。'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''{name} を表示中'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''陸地エディター…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''新しい世界の陸地を決めます。描く、用意された陸地やスケッチした大陸から始める、または自分の画像を持ち込めます。地形は6種類で塗り分けられ、ジェネレーターがどう扱うかを表示します。'''
+source = "e63d89cd7f4d5b7c"
+text = '''ワールドが生成する大陸の陸地を決めます。描く、用意された陸地やスケッチした大陸から始める、または自分の画像を持ち込めます。地形は6種類で塗り分けられ、ジェネレーターがどう扱うかを表示します。'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''描いた絵を表示'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''ゲームのアメリカ大陸を表示'''
+source = "844e366e5c8b4303"
+text = '''ゲーム本来の陸地を表示'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''散らばった島々'''
 source = "80e3026403729d93"
 text = '''ゲームのアメリカ大陸'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''ゲームのアフリカ'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''ゲームのオセアニア'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''スケッチ {number}'''
@@ -3247,7 +3257,6 @@ text = '''カリムドア'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''アンサロン'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''大陸をスケッチ…'''
 source = "54c56a33e3493e48"
 text = '''オンにした大陸を毎回新しいシードで6回スケッチし、気に入ったものを選びます。スケッチはワールドが持つことになる陸地を示します。少し時間がかかります。'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''陸地エディターはアメリカを描きます。その陸地を描くにはアメリカをオンにしてください。'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''アメリカはゲーム本来の陸地のままなので、描くものはありません。'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''このワールドでは{continent}は生成されないため、描くものはありません。'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''大陸'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''{continent}の陸地を描く'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''ほかの大陸がオンのとき、スケッチは世界全体を示します。新しいワールドのページの「大陸をスケッチ」で選んでから、ここでアメリカを描いてください。'''
+source = "234344329649986d"
+text = '''ほかの大陸がオンのとき、スケッチは世界全体を示します。新しいワールドのページの「大陸をスケッチ」で選ぶと、エディターがその大陸の陸地を出発点として提案します。'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''選んだスケッチ'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''世界の中で'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''枠は、ゲームの地図上でアメリカを描くシートです。枠内の灰色は、あなたの陸地が埋める領域です。オンにしたアフリカとオセアニアも生成されます。それぞれの位置で見るには大陸をスケッチしてください。'''
+source = "46e9ed1d6e3495cb"
+text = '''枠は、ゲームの地図上で{continent}を描くシートです。枠内の明るいグレーは、あなたの陸地が占める範囲です。暗いグレーはこのワールドの別の大陸の範囲で、こちらも生成されます。大陸をスケッチすると、それぞれの位置を確認できます。'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''枠は、選んだスケッチ上でアメリカを描くシートです。ほかの大陸はスケッチのとおりで、アメリカはここで描いたものになります。'''
+source = "8dc98de30678cc7a"
+text = '''枠は{continent}を描くシートで、選んだスケッチの上に表示しています。ほかの大陸はスケッチのとおりで、{continent}はここで描いたものになります。'''

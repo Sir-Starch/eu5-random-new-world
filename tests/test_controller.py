@@ -22,7 +22,7 @@ from rnw.eu5_nw_export import LocationLimitError
 from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
 from rnw.gui.text import text
 from rnw.record import Verdict
-from rnw.settings import WORLD_TYPES
+from rnw.settings import WORLD_TYPES, drawn_ids
 from tests.fakes import made_by_older_generator
 
 if TYPE_CHECKING:
@@ -1491,6 +1491,64 @@ def test_the_land_can_be_drawn_in_an_image_and_the_world_is_made_on_it(
     assert "cannot be read" in (controller.choose_land_image(junk) or "")
 
 
+def test_the_land_of_africa_can_be_drawn_in_the_editor_and_the_world_is_made_on_it(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The image's id goes into Africa's settings and the image into the request; it stays with
+    the continent's draft, and a change of the world type forgets it."""
+    seen: list[service.Request] = []
+
+    def capture(request: service.Request, progress: Progress | None = None) -> service.Result:
+        seen.append(request)
+        return service.generate(request, progress, fake_export)
+
+    controller = _controller(tmp_path, fake_export)
+    controller.generator = capture
+    picture = _land_picture(tmp_path / "land.png").read_bytes()
+    controller.set_continent("africa", enabled=True)
+    assert controller.use_land_picture(picture, "africa") is None
+    drawing = controller.regional_masks["africa"]
+    assert controller.land_mask is None
+    [africa] = decode(controller.code).settings().continents.regions
+    assert africa.mask.id == drawing.id
+    assert controller.problem() is None
+    # Oceania is not made: there is nothing to draw its land on.
+    assert controller.use_land_picture(picture, "oceania") is None
+    assert "oceania" not in controller.regional_masks
+    assert controller.start() is None
+    _finish(controller)
+    assert seen[0].land_mask is None
+    assert {key: mask.id for key, mask in seen[0].regional_masks.items()} == {"africa": drawing.id}
+    controller.set_continent("africa", enabled=False)
+    controller.set_continent("africa", enabled=True)
+    assert decode(controller.code).settings().continents.regions[0].mask.id == drawing.id
+    controller.clear_land_image("africa")
+    assert controller.regional_masks == {}
+    assert decode(controller.code).settings().continents.regions[0].mask.id == 0
+    assert controller.use_land_picture(picture, "africa") is None
+    controller.set_preset("islands")
+    assert controller.regional_masks == {}
+    assert drawn_ids(decode(controller.code).settings()) == {}
+
+
+def test_a_code_that_names_a_regional_image_cannot_be_made_without_it(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    picture = _land_picture(tmp_path / "land.png").read_bytes()
+    controller.set_continent("africa", enabled=True)
+    assert controller.use_land_picture(picture, "africa") is None
+    code = controller.code
+    controller.clear_land_image("africa")
+    assert controller.problem() is None
+    assert controller.use_code(code) is None
+    assert "land image" in controller.notice
+    assert controller.problem() == text("needs_land_image")
+    assert controller.sketch_problem() == text("needs_land_image")
+    assert controller.use_land_picture(picture, "africa") is None
+    assert controller.problem() is None
+
+
 def test_a_code_that_names_an_image_cannot_be_made_without_it(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
@@ -1642,20 +1700,28 @@ def test_a_world_of_several_continents_says_it_joins_them(
 
 
 def test_sketch_and_editor_say_why_they_are_off(tmp_path: Path, fake_export: Exporter) -> None:
-    """Sketches reach every continent switched on; the land editor draws America alone."""
+    """Sketches reach every continent switched on; the land editor draws any that is generated."""
     controller = _controller(tmp_path, fake_export)
     assert controller.sketch_problem() is None
     assert controller.editor_problem() is None
+    assert controller.drawable_continents() == ["america"]
     controller.set_value("new_world.keep_geography", 1)
     assert controller.sketch_problem() == text("error.candidates.real")
     assert controller.editor_problem() == text("editor.real_americas")
-    # Africa beside the real Americas is sketched on the whole map.
+    assert controller.drawable_continents() == []
+    # Africa beside the real Americas is sketched on the whole map, and drawn.
     controller.set_continent("africa", enabled=True)
     assert controller.sketch_problem() is None
+    assert controller.editor_problem() is None
+    assert controller.drawable_continents() == ["africa"]
     controller.set_value("new_world.keep_geography", 0)
+    controller.set_continent("oceania", enabled=True)
+    assert controller.drawable_continents() == ["america", "africa", "oceania"]
     controller.set_continent("america", enabled=False)
     assert controller.sketch_problem() is None
-    assert controller.editor_problem() == text("editor.needs_america")
+    assert controller.editor_problem() is None
+    assert controller.drawable_continents() == ["africa", "oceania"]
+    controller.set_continent("oceania", enabled=False)
     controller.set_continent("africa", enabled=False)
     assert controller.sketch_problem() == text("continent.choose")
     controller.game = None

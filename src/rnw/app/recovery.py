@@ -22,8 +22,10 @@ from rnw.app.exchange import checked_world
 from rnw.app.worldcode import IN_TEXT, decode
 from rnw.bundle import COVER_COPY
 from rnw.epoch import parse
+from rnw.landmask import DRAWN_FILES
 from rnw.pngread import read_rgb
 from rnw.record import manifest_digest
+from rnw.settings import drawn_ids
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -38,7 +40,7 @@ ASSETS: Final[tuple[str, ...]] = (
     "settings.json",
     atlas.JSON_FILE,
     atlas.LABELS_FILE,
-    library.LAND_MASK,
+    *DRAWN_FILES.values(),
 )
 Signature = tuple[tuple[str, int, int], ...]
 
@@ -173,9 +175,9 @@ def _verify_assets(data: Path, world: library.World) -> None:
             message = "The recovery bundle does not match the world's reproducibility record"
             raise ValueError(message)
         _verify_bundle_files(target)
-        wanted = decode(world.code).settings().mask.id
-        if wanted:
-            mask = library.land_mask(data, world)
+        drawn = library.drawings(data, world)
+        for key, wanted in drawn_ids(decode(world.code).settings()).items():
+            mask = drawn.get(key)
             if mask is None or mask.id != wanted:
                 message = "The recovery land image is missing or does not match the world code"
                 raise ValueError(message)

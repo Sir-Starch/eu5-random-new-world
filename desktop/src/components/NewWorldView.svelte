@@ -17,7 +17,13 @@
   const locked = $derived(busy && !n?.preparable);
   // Sketches of several continents show the whole map, a drawn America on it too.
   const composedSketches = $derived(!!s?.candidates[0]?.composed);
-  const sketched = $derived(!!s?.candidates.length && !sketching && (!n?.land_mask || composedSketches));
+  // The continents whose land is drawn in an image, by key.
+  const drawn = $derived(Object.entries(n?.drawn ?? {}));
+  const sketched = $derived(!!s?.candidates.length && !sketching && (!drawn.length || composedSketches));
+  // A world of one continent says it as it always did; with several each is named.
+  function drawnText(key: string, id: string): string {
+    return (n?.drawable.length ?? 0) > 1 ? t("land_image_of", { continent: t(`continent.${key}`), id }) : (n?.land_mask_text ?? "");
+  }
   // The continents the world generates: America by its type, or kept as the game has it.
   const continentsText = $derived(
     Object.entries(n?.continents ?? {})
@@ -61,7 +67,7 @@
     <div class="land-tools">
       <button class="btn small" disabled={locked || !n?.candidates_enabled} title={n?.sketch_problem ?? t("sketch.open_tip")}
         onclick={() => app.act("sketch_candidates")}>{t("sketch.open")}</button>
-      <button class="btn small" disabled={locked || !n?.template_enabled} title={n?.editor_problem ?? t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
+      <button class="btn small" disabled={locked || !n?.template_enabled} title={n?.editor_problem ?? t("editor.open_tip")} onclick={() => app.openEditor()}>{t("editor.open")}</button>
     </div>
   </div>
 
@@ -167,21 +173,24 @@
           {#if sketching}
             <span class="spinner"></span>
             <p class="dim">{s?.running || t("stage.candidates")}</p>
-          {:else if n?.land_mask}
+          {:else if drawn.length}
             <Icon name="image" />
-            <p>{n.land_mask_text}</p>
-            <code class="faint selectable">{n.land_mask}</code>
-            <div class="row">
-              <button class="btn small" disabled={locked || !n.template_enabled} onclick={() => (app.editor = true)}>{t("editor.edit")}</button>
-              <button class="btn small" disabled={locked} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
-            </div>
+            {#each drawn as [key, id] (key)}
+              <div class="drawn">
+                <p>{drawnText(key, id)}</p>
+                <div class="row">
+                  <button class="btn small" disabled={locked || !n?.template_enabled} onclick={() => app.openEditor(key)}>{t("editor.edit")}</button>
+                  <button class="btn small" disabled={locked} onclick={() => app.call("clear_land_image", { continent: key })}>{t("land_image_clear")}</button>
+                </div>
+              </div>
+            {/each}
           {:else}
             <h2>{t("editor.title")}</h2>
             <p class="dim">{n?.template_enabled || !n?.editor_problem ? t("editor.open_tip") : n.editor_problem}</p>
             <div class="row">
               <button class="btn" disabled={locked || !n?.candidates_enabled} title={n?.sketch_problem ?? t("sketch.open_tip")}
                 onclick={() => app.act("sketch_candidates")}>{t("sketch.open")}</button>
-              <button class="btn primary" disabled={locked || !n?.template_enabled} title={n?.editor_problem ?? t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
+              <button class="btn primary" disabled={locked || !n?.template_enabled} title={n?.editor_problem ?? t("editor.open_tip")} onclick={() => app.openEditor()}>{t("editor.open")}</button>
             </div>
           {/if}
         </div>
@@ -266,15 +275,16 @@
   .sheet h2 {
     color: var(--text);
   }
+  .drawn {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+  }
   .row {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
-  }
-  .sheet code {
-    max-width: 100%;
-    overflow-wrap: anywhere;
   }
   .outcome {
     flex: none;

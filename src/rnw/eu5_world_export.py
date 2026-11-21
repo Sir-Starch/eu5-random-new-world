@@ -13,6 +13,7 @@ from rnw.eu5_nw_export import NewWorldExportError, export_new_world
 from rnw.eu5_vanilla_export import export_vanilla_world
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
     from rnw.landmask import LandMask
@@ -35,6 +36,7 @@ def export_world(  # noqa: PLR0913 - the CLI contract names each input.
     world_code: str | None = None,
     world_label: Label | None = None,
     land_mask: LandMask | None = None,
+    regional_masks: Mapping[str, LandMask] | None = None,
     cache_dir: Path | None = None,
 ) -> dict[str, object]:
     """Generate, validate and stage one world's mod bundle; return its report."""
@@ -70,5 +72,6 @@ def export_world(  # noqa: PLR0913 - the CLI contract names each input.
         world_code=world_code,
         world_label=world_label,
         land_mask=land_mask,
+        regional_masks=regional_masks,
         cache_dir=cache_dir,
     )

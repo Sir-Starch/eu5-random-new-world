@@ -232,6 +232,8 @@ class MaskSettings:
 
 
 MASK: Final[MaskSettings] = MaskSettings()
+# The key of America among the continents a world is made of (``eu5_canvas.NEW_WORLD``).
+AMERICA: Final[str] = "america"
 NATIVES: Final[NativeSettings] = NativeSettings(
     population_permille=1000,
     hearths_per_10k=6,
@@ -264,6 +266,8 @@ class RegionalSettings:
     morocco: MoroccoPolicy | None = None
     require_asia_connection: bool = False
     mamluks: MamlukPolicy | None = None
+    # The land drawn in an image instead of by the generator, as America's ``Settings.mask``.
+    mask: MaskSettings = MASK
 
     def document(self) -> dict[str, object]:
         data: dict[str, object] = {
@@ -271,6 +275,8 @@ class RegionalSettings:
             "new_world": asdict(self.new_world),
             "natives": asdict(self.natives),
         }
+        if self.mask != MASK:
+            data["mask"] = asdict(self.mask)
         if self.resources:
             data["resources"] = dict(self.resources)
         if self.morocco is not None:
@@ -678,7 +684,7 @@ def _merge[
 
 def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings:
     fallback, band = REGIONAL_PRESETS[key]
-    allowed = {"preset", "new_world", "natives", "resources"}
+    allowed = {"preset", "new_world", "natives", "resources", "mask"}
     if key == "africa":
         allowed.update(("morocco", "mamluks", "require_asia_connection"))
     if unknown := fields_.keys() - allowed:
@@ -725,6 +731,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
         morocco,
         connection,
         mamluks,
+        _merge(MASK, f"{key} drawing", fields_.get("mask", {})),
     )
 
 
@@ -797,6 +804,17 @@ def _continents(raw: object) -> ContinentSettings:
         message = "Choose at least one continent"
         raise SettingsError(message)
     return ContinentSettings(america, tuple(configured), circumnavigation)
+
+
+def drawn_ids(settings: Settings) -> dict[str, int]:
+    """The id of the image each continent's land is drawn from, by the continent's key: America's
+    and the other continents' that the world makes. A continent whose land the generator draws
+    has none."""
+    found = {AMERICA: settings.mask.id} if settings.mask.id else {}
+    for region in settings.continents.regions:
+        if region.mask.id:
+            found[region.key] = region.mask.id
+    return found
 
 
 def build_settings(preset: str, overrides: dict[str, object] | None = None) -> Settings:

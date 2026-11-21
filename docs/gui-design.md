@@ -135,12 +135,17 @@ continents in the colours of a world's picture over the darker lands kept from t
 and coasted by the export's own code for that seed), the land image (with Edit in the editor), or
 a blank sheet ruled like a map with **Sketch continents…** and **Land editor…**, the two land
 buttons that also stand in the page's header, whose subtitle lists the continents and their types.
-A disabled button says why in its tooltip (no game, America switched off, the real Americas, a
-drawn America without its picture). The land editor draws America; it covers the whole window
+A disabled button says why in its tooltip (no game, no continent to draw, the real Americas, a
+drawn continent without its picture). The land editor draws the land of any continent the world
+generates (America, Africa, Oceania): a switch in its header changes the continent, each with
+its own sheet (cut from the game's map as the export plans it for the world's seed, so a drawing
+fits what is made), draft and picture, and the new world's page lists each drawn continent with
+its own Edit in the editor and Back to generated land. It covers the whole window
 while it is open (ADR 0011) and holds the rest (In the world: the whole map turned to put the
 sheet's frame in its middle, the chosen sketch of several continents when there is one, else the
-game's map; its own sketches of America alone, the template, importing and using a picture; a
-picture dropped on the window is imported): a toolbar of
+game's map with the areas of the other generated continents in a darker grey; its own sketches of
+America alone, or the chosen sketch's land of the continent drawn as a place to start from, the
+template, importing and using a picture; a picture dropped on the window is imported): a toolbar of
 brush, eraser, fill, line, rectangle, ellipse and hand on the left, the six kinds of ground and the
 brush options over the sheet, and on the right the starting lands in three groups (ready lands, famous lands, sketched continents), Add terrain, the generator's check
 and the picture's import, save and clear; the status line repeats the check's worst line. The sheet

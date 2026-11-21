@@ -152,12 +152,18 @@ algorithm, the application warns you that the result may change.
 To make a world again by an older algorithm, see
 [Experimental features](#experimental-features-an-older-algorithm-epoch).
 
-For a world with custom-drawn land, share a **`.rnworld`** file to include the land image.
+For a world with custom-drawn land, share a **`.rnworld`** file to include the land image (the
+images of every continent drawn in the editor).
 
 ### Choose the land: sketches, drawing, your own picture
 
 **Land editor…** is the one button for the land of a new world. It opens the editor over the
-window on the area the New World can fill. Start from one of eight ready lands (a supercontinent,
+window on the area the continent can fill. With Africa or Oceania switched on, a switch in its
+header (America, Africa, Oceania) chooses whose land you draw: each continent has its own sheet,
+draft and picture, and the world is made on the drawn land of every continent that has one. A
+continent's sheet follows the world's seed (the oceans the continents share drift with it), so a
+drawing you made on one seed is stretched a little to the sheet of another when you change the
+seed afterwards. Start from one of eight ready lands (a supercontinent,
 two or three continents, an archipelago, an island chain, a ring, a crescent, scattered islands),
 the game's own Americas, one of four famous lands (Westeros, Tamriel, Kalimdor and Ansalon: the
 outline of the coast from a map, scaled to the area and put where it fits) or a continent sketched

@@ -630,6 +630,10 @@ text = '''正在绘制模板…'''
 source = "4d9e51e05f272e57"
 text = '''陆地绘制在图片上（{id}）。'''
 
+["land_image_of"]
+source = "5405514d126895f3"
+text = '''{continent}的陆地绘制在图片上（{id}）。'''
+
 ["land_image_clear"]
 source = "925ff49784a59104"
 text = '''改回生成的陆地'''
@@ -1950,7 +1954,6 @@ text = '''请选择1到{count}幅草图。'''
 source = "75f72c48760efe1b"
 text = '''草图需要生成的陆地。请先改回生成的陆地。'''
 
-
 ["retry_new_seed"]
 source = "616e3b176052b958"
 text = '''使用新种子生成'''
@@ -2238,7 +2241,6 @@ text = '''未找到。'''
 ["map.showing"]
 source = "2a5f7a682264ac8f"
 text = '''正在显示 {name}'''
-
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
@@ -2853,8 +2855,8 @@ source = "60c0db7d7b3fb78e"
 text = '''陆地编辑器…'''
 
 ["editor.open_tip"]
-source = "b02393190cbcee2b"
-text = '''选择新世界的陆地：自己绘制，从现成的陆地或草绘的大陆开始，或带来您自己的图片。地形分六种类型绘制，生成器会告诉您它将如何处理。'''
+source = "e63d89cd7f4d5b7c"
+text = '''选择世界所生成大陆的陆地：自己绘制，从现成的陆地或草绘的大陆开始，或带来您自己的图片。地形分六种类型绘制，生成器会告诉您它将如何处理。'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -2933,8 +2935,8 @@ source = "4f6d08084be4e7c3"
 text = '''显示您的绘图'''
 
 ["editor.layer.americas"]
-source = "51d00c1eb3b98ab3"
-text = '''显示游戏中的美洲'''
+source = "844e366e5c8b4303"
+text = '''显示游戏原有的陆地'''
 
 ["editor.layer.islands"]
 source = "dcc743a8b7be8c94"
@@ -3096,6 +3098,14 @@ text = '''散落的岛屿'''
 source = "80e3026403729d93"
 text = '''游戏中的美洲'''
 
+["editor.own.africa"]
+source = "cb4e0ac2ca44e3c8"
+text = '''游戏中的非洲'''
+
+["editor.own.oceania"]
+source = "1054d2b32a907467"
+text = '''游戏中的大洋洲'''
+
 ["editor.sketch"]
 source = "561bef5d36a97b04"
 text = '''草图 {number}'''
@@ -3247,7 +3257,6 @@ text = '''卡利姆多'''
 ["editor.land.ansalon"]
 source = "57db4d540d7253f0"
 text = '''安萨隆'''
-
 
 ["settings.experimental"]
 source = "6c39e69019727335"
@@ -3425,17 +3434,29 @@ text = '''草绘大陆…'''
 source = "54c56a33e3493e48"
 text = '''用每次不同的新种子将已开启的大陆草绘六次，然后挑选你喜欢的一个。草图展示世界将拥有的陆地；需要一点时间。'''
 
-["editor.needs_america"]
-source = "a18ab16dd3b669fd"
-text = '''陆地编辑器绘制的是美洲：请开启美洲来绘制它的陆地。'''
-
 ["editor.real_americas"]
 source = "c76164e3d799654f"
 text = '''美洲保留游戏原有的陆地，因此没有可绘制的内容。'''
 
+["editor.not_drawn"]
+source = "cdd3d347c83a105f"
+text = '''此世界不生成{continent}，因此没有可绘制的内容。'''
+
+["editor.continent"]
+source = "099b592263a65c89"
+text = '''大陆'''
+
+["editor.continent_tip"]
+source = "f9b79f8c19b90054"
+text = '''绘制{continent}的陆地'''
+
 ["editor.sketch_composed"]
-source = "20ead56412fd4283"
-text = '''开启其他大陆时，草图展示的是整个世界：请在新世界页面用“草绘大陆”选择一个，然后在这里绘制美洲。'''
+source = "234344329649986d"
+text = '''开启其他大陆时，草图展示的是整个世界：请在新世界页面用“草绘大陆”选择一个，编辑器就会提供它在这块大陆上的陆地作为起点。'''
+
+["editor.composed_start"]
+source = "73b88cac7ac2b482"
+text = '''您选择的草图'''
 
 ["map.kept"]
 source = "38cbbe95bac7db82"
@@ -3450,9 +3471,9 @@ source = "5698699cca158406"
 text = '''在世界中'''
 
 ["editor.world_tip"]
-source = "bec510abb67ff375"
-text = '''边框是你在游戏地图上绘制美洲的画布：其中的灰色是你的陆地将填充的区域。已开启的非洲和大洋洲也会生成；草绘大陆即可看到它们的位置。'''
+source = "46e9ed1d6e3495cb"
+text = '''边框是您在游戏地图上绘制{continent}的画布：框内较浅的灰色是您的陆地将占据的区域；较深的灰色是本世界另一块大陆的区域，它同样会被生成。草绘大陆即可看到它们各自的位置。'''
 
 ["editor.world_sketch"]
-source = "d41a2bbba604a6b2"
-text = '''边框是你在所选草图上绘制美洲的画布：其他大陆保持草图所绘的样子，美洲则会成为你在这里绘制的内容。'''
+source = "8dc98de30678cc7a"
+text = '''边框是您绘制{continent}的画布，显示在您选择的草图上：其他大陆保持草图中的样子，{continent}则会变成您在这里绘制的样子。'''

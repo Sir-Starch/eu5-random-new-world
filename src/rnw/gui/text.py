@@ -359,6 +359,7 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "task.template": "Drawing the template…",
     "land_image_chosen": "The land is drawn in an image ({id}).",
+    "land_image_of": "The land of {continent} is drawn in an image ({id}).",
     "land_image_clear": "Back to generated land",
     "land_image_title": "Choose the land image",
     "land_image_files": "Pictures (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)",
@@ -372,27 +373,31 @@ STRINGS: Final[dict[str, str]] = {
         "Sketch the continents switched on six times, each with a new seed, and choose the one "
         "you like. A sketch shows the land the world will have; it takes a little while."
     ),
-    "editor.needs_america": "The land editor draws America: switch America on to draw its land.",
     "editor.real_americas": "America keeps the game's own land, so there is nothing to draw.",
+    "editor.not_drawn": "{continent} is not generated in this world, so there is nothing to draw.",
+    "editor.continent": "Continent",
+    "editor.continent_tip": "Draw the land of {continent}",
     "editor.sketch_composed": (
         "With other continents switched on, a sketch shows the whole world: choose one with "
-        "Sketch continents on the new world's page, then draw America here."
+        "Sketch continents on the new world's page, and the editor offers its land of this "
+        "continent to start from."
     ),
+    "editor.composed_start": "The sketch you chose",
     "editor.world": "In the world",
     "editor.world_tip": (
-        "The frame is the sheet you draw America on, on the game's map: the grey inside it is the "
-        "area your land fills. Africa and Oceania, when switched on, are generated too; sketch "
-        "continents to see them in place."
+        "The frame is the sheet you draw {continent} on, on the game's map: the lighter grey "
+        "inside it is the area your land fills. The darker grey is the area of another continent "
+        "of this world, which is generated too; sketch continents to see them in place."
     ),
     "editor.world_sketch": (
-        "The frame is the sheet you draw America on, shown on the sketch you chose: the other "
-        "continents are as it drew them, and America becomes what you draw here."
+        "The frame is the sheet you draw {continent} on, shown on the sketch you chose: the other "
+        "continents are as it drew them, and {continent} becomes what you draw here."
     ),
     "editor.open": "Land editor…",
     "editor.open_tip": (
-        "Choose the land of the new world: draw it, start from a ready land or a sketched "
-        "continent, or bring your own picture. The ground is painted in six kinds, and the "
-        "generator says what it will make of it."
+        "Choose the land of a continent the world generates: draw it, start from a ready land or "
+        "a sketched continent, or bring your own picture. The ground is painted in six kinds, "
+        "and the generator says what it will make of it."
     ),
     "editor.edit": "Edit in the editor",
     "editor.title": "Land editor",
@@ -417,7 +422,7 @@ STRINGS: Final[dict[str, str]] = {
     "editor.zoom_fit": "Show the whole sheet",
     "editor.zoom_100": "Actual size",
     "editor.layer.drawing": "Show your drawing",
-    "editor.layer.americas": "Show the game's Americas",
+    "editor.layer.americas": "Show the game's own land",
     "editor.layer.islands": "Show the Old World's island groups",
     "editor.layer.margin": "Show the coast margin: land drawn in the hatched band is dropped",
     "editor.tools": "Tools",
@@ -470,6 +475,8 @@ STRINGS: Final[dict[str, str]] = {
     "editor.preset.crescent": "Crescent",
     "editor.preset.scattered": "Scattered islands",
     "editor.americas": "The game's Americas",
+    "editor.own.africa": "The game's Africa",
+    "editor.own.oceania": "The game's Oceania",
     "editor.group_ready": "Ready lands",
     "editor.group_known": "Famous lands",
     "editor.group_sketches": "Sketched continents",

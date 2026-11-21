@@ -40,6 +40,7 @@ from rnw.gui import studio, view
 from rnw.gui import text as window
 from rnw.gui.atlas_loading import AtlasRequests
 from rnw.gui.controller import NEW, Controller, Phase, Task
+from rnw.settings import AMERICA
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -100,6 +101,11 @@ def _bool(params: Params, name: str) -> bool:
     return value
 
 
+def _continent(params: Params) -> str:
+    """The continent a land editor request is about; America when it names none."""
+    return _str(params, "continent") if "continent" in params else AMERICA
+
+
 def _ids(params: Params, name: str) -> tuple[str, ...]:
     value = params.get(name)
     if not isinstance(value, list) or not all(
@@ -153,15 +159,20 @@ class Bridge:
             "set_show_new_world": lambda p: c.set_show_new_world(_bool(p, "value")),
             "set_experimental": lambda p: c.set_experimental(_bool(p, "value")),
             "set_algorithm": lambda p: c.set_algorithm(_int(p, "value")),
-            "choose_land_image": lambda p: c.choose_land_image(Path(_str(p, "path"))),
-            "clear_land_image": lambda _p: c.clear_land_image(),
-            "save_land_template": lambda p: c.save_land_template(Path(_str(p, "path"))),
-            "prepare_land_area": lambda _p: c.prepare_land_area(),
-            "land_editor": lambda _p: self._studio(self.land_editor),
+            "choose_land_image": lambda p: c.choose_land_image(
+                Path(_str(p, "path")), _continent(p)
+            ),
+            "clear_land_image": lambda p: c.clear_land_image(_continent(p)),
+            "save_land_template": lambda p: c.save_land_template(
+                Path(_str(p, "path")), _continent(p)
+            ),
+            "prepare_land_area": lambda p: c.prepare_land_area(_continent(p)),
+            "land_editor": lambda p: self._studio(self.land_editor, p),
             "land_preset": lambda p: self._studio(self.land_preset, p),
-            "land_americas": lambda _p: self._studio(self.land_americas),
+            "land_americas": lambda p: self._studio(self.land_americas, p),
             "land_known": lambda p: self._studio(self.land_known, p),
             "land_sketch": lambda p: self._studio(self.land_sketch, p),
+            "land_composed": lambda p: self._studio(self.land_composed, p),
             "land_decorate": lambda p: self._studio(self.land_decorate, p),
             "land_import": lambda p: self._studio(self.land_import, p),
             "land_check": lambda p: self._studio(self.land_check, p),
@@ -315,54 +326,75 @@ class Bridge:
         except studio.StudioError as error:
             raise BridgeError(str(error)) from error
 
-    def _sheet(self) -> LandArea:
-        area = self.controller.land_sheet()
+    def _sheet(self, params: Params) -> LandArea:
+        area = self.controller.land_sheet(_continent(params))
         if area is None:
             raise studio.StudioError(studio.UNPREPARED)
         return area
 
-    def _new_world(self) -> NewWorldSettings:
-        return self.controller.world_code().settings().new_world
-
-    def land_editor(self) -> dict[str, object]:
+    def _new_world(self, params: Params) -> NewWorldSettings:
+        """The settings of the land of the continent a request is about."""
+        continent = _continent(params)
         c = self.controller
+        if continent == AMERICA:
+            return c.world_code().settings().new_world
+        return c.region_settings(continent).new_world
+
+    def land_editor(self, params: Params) -> dict[str, object]:
+        c = self.controller
+        continent = _continent(params)
         seed = c.world_code().seed
         chosen = next((one for one in c.candidates if one.composed and one.seed == seed), None)
-        return studio.opening(self._sheet(), c.land_mask, c.candidates, self._new_world(), chosen)
+        return studio.opening(
+            self._sheet(params),
+            c.drawings().get(continent),
+            c.candidates,
+            self._new_world(params),
+            chosen,
+            continent,
+        )
 
     def land_preset(self, params: Params) -> str:
         return studio.preset(
-            self._sheet(), _str(params, "preset"), _int(params, "seed"), self._new_world()
+            self._sheet(params),
+            _str(params, "preset"),
+            _int(params, "seed"),
+            self._new_world(params),
         )
 
-    def land_americas(self) -> str:
-        return studio.real_americas(self._sheet())
+    def land_americas(self, params: Params) -> str:
+        return studio.real_americas(self._sheet(params))
 
     def land_known(self, params: Params) -> str:
-        return studio.known(self._sheet(), _str(params, "land"), self._new_world())
+        return studio.known(self._sheet(params), _str(params, "land"), self._new_world(params))
 
     def land_sketch(self, params: Params) -> str:
-        return studio.sketch(self._sheet(), self.controller.candidates, _int(params, "index"))
+        return studio.sketch(self._sheet(params), self.controller.candidates, _int(params, "index"))
+
+    def land_composed(self, params: Params) -> str:
+        return studio.composed_start(
+            self._sheet(params), self.controller.candidates, self.controller.world_code().seed
+        )
 
     def land_decorate(self, params: Params) -> str:
         return studio.decorate(
-            self._sheet(), _str(params, "image"), _int(params, "seed"), _ids(params, "parts")
+            self._sheet(params), _str(params, "image"), _int(params, "seed"), _ids(params, "parts")
         )
 
     def land_import(self, params: Params) -> dict[str, str]:
-        return studio.imported(self._sheet(), Path(_str(params, "path")))
+        return studio.imported(self._sheet(params), Path(_str(params, "path")))
 
     def land_check(self, params: Params) -> dict[str, object]:
-        return studio.report(self._sheet(), _str(params, "image"), self._new_world())
+        return studio.report(self._sheet(params), _str(params, "image"), self._new_world(params))
 
     def use_land_picture(self, params: Params) -> str | None:
-        """Make the land of the new world the picture the editor drew; returns what is wrong
+        """Make the land of the continent the picture the editor drew; returns what is wrong
         with it, or None."""
         try:
             data = studio.png_of(_str(params, "image"))
         except studio.StudioError as error:
             raise BridgeError(str(error)) from error
-        return self.controller.use_land_picture(data)
+        return self.controller.use_land_picture(data, _continent(params))
 
     def candidate_pictures(self, _params: Params) -> list[str]:
         return [view.array_picture(found.picture) for found in self.controller.candidates]

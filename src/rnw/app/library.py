@@ -40,7 +40,7 @@ from rnw.atlas import Atlas, AtlasError
 from rnw.atlas import from_files as atlas_from_files
 from rnw.atlas import totals as atlas_totals
 from rnw.bundle import COVER_COPY
-from rnw.landmask import LandMask, LandMaskError
+from rnw.landmask import DRAWN_FILES, LandMask, LandMaskError
 from rnw.landmask import read as read_land_mask
 from rnw.layers import land_key
 from rnw.messages import say
@@ -48,7 +48,7 @@ from rnw.pictures import center_column, tagged, thumbnail
 from rnw.png import COLOR_RGB, encode_png
 from rnw.pngread import read_rgb
 from rnw.record import Manifest, NewerFormatError, Record, RecordError, output_entries
-from rnw.settings import SettingsError, build_settings
+from rnw.settings import AMERICA, SettingsError, build_settings
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -375,6 +375,28 @@ def land_mask(data: Path, world: World) -> LandMask | None:
     with contextlib.suppress(OSError, LandMaskError):
         return read_land_mask(path)
     return None
+
+
+def regional_masks(data: Path, world: World) -> dict[str, LandMask]:
+    """The images the world's other continents are drawn from (America's is ``land_mask``),
+    by the continent's key, for those the world's folder still holds."""
+    found: dict[str, LandMask] = {}
+    for key, name in DRAWN_FILES.items():
+        if key == AMERICA:
+            continue
+        with contextlib.suppress(OSError, LandMaskError):
+            found[key] = read_land_mask(folder(data, world) / name)
+    return found
+
+
+def drawings(data: Path, world: World) -> dict[str, LandMask]:
+    """The images of every continent the world draws, by the continent's key, for those the
+    world's folder still holds."""
+    found = regional_masks(data, world)
+    america = land_mask(data, world)
+    if america is not None:
+        found[AMERICA] = america
+    return found
 
 
 def inputs_manifest(data: Path, world: World) -> Manifest | None:

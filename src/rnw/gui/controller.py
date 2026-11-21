@@ -77,6 +77,7 @@ from rnw.pngread import read_rgb
 from rnw.progress import Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
 from rnw.settings import (
+    AMERICA,
     PRESETS,
     REGIONAL_PRESETS,
     WORLD_TYPES,
@@ -84,6 +85,7 @@ from rnw.settings import (
     MoroccoPolicy,
     SettingsError,
     build_settings,
+    drawn_ids,
 )
 from rnw.wording import render
 
@@ -92,7 +94,7 @@ if TYPE_CHECKING:
 
     from rnw.app.library import World
     from rnw.atlas import Atlas
-    from rnw.landarea import LandArea, RegionalBands
+    from rnw.landarea import AreaInputs, LandArea
     from rnw.landmask import LandMask
     from rnw.settings import RegionalSettings, Settings
 
@@ -275,9 +277,10 @@ class Controller:
         self._playset: dict[tuple[str, str], tuple[float, playset.Check | None]] = {}
         self.runs: int = 0
         self.land_mask: LandMask | None = None
-        # The area a New World can fill at the land editor's step, and what it was cut for.
-        self.sheet: LandArea | None = None
-        self._sheet_inputs: tuple[Path, int, bool, RegionalBands] | None = None
+        # The images the other continents' lands are drawn from, by the continent's key.
+        self.regional_masks: dict[str, LandMask] = {}
+        # The area each continent can fill at the land editor's step, and what it was cut for.
+        self._sheets: dict[str, tuple[AreaInputs, LandArea]] = {}
         self.last_import: exchange.Imported | None = None
         self._history_readers: dict[int, history_presenter.Reader] = {}
         # The installed game's continent of each region, by the game's folder and build.
@@ -556,7 +559,7 @@ class Controller:
             self.preset = name
             continents = self._continent_document()
             self.changes, self.other_changes = {}, {"continents": continents} if continents else {}
-            self.land_mask = None
+            self._forget_drawings()
             self.notice = ""
             self._changed()
 
@@ -565,7 +568,7 @@ class Controller:
         if mode in random_types.MODES:
             self.mode = mode
             self.other_changes, self.notice = self._keep_continents(), ""
-            self.land_mask = None
+            self._forget_drawings()
             self._draw()
             self._changed()
 
@@ -580,7 +583,7 @@ class Controller:
         if self.mode != random_types.CHAOS or (self.busy and not self.can_prepare):
             return
         self.other_changes, self.notice = self._keep_continents(), ""
-        self.land_mask = None
+        self._forget_drawings()
         self._draw()
         self._changed()
 
@@ -662,9 +665,7 @@ class Controller:
             notices.append(text("other_version", made=code.generator, current=__version__))
         if set(other) - {"rolls", "mask", "continents"}:
             notices.append(text("other_changes"))
-        wanted = code.settings().mask.id
-        self.land_mask = self.land_mask if self.land_mask and self.land_mask.id == wanted else None
-        if wanted and self.land_mask is None:
+        if not self._keep_drawings_of(code.settings()):
             notices.append(text("needs_land_image"))
         rolls = {part: number for part, number in rolls_of(code.settings()).items() if number}
         if rolls:
@@ -726,7 +727,7 @@ class Controller:
         if self.changes != kept or self.other_changes.keys() - {"continents"} or customised:
             self.origin = "chaos_custom" if self.mode == random_types.CHAOS else ""
             self.changes, self.other_changes = kept, self._keep_continents()
-            self.land_mask = None
+            self._forget_drawings()
             for key in customised:
                 self._edit_region(
                     key, {"new_world": self._region_kept(key), "natives": {}, "resources": {}}
@@ -935,6 +936,7 @@ class Controller:
         self.other_changes = other
         _ = self.other_changes.pop("rolls", None)
         self.land_mask = library.land_mask(self.data, world)
+        self.regional_masks = library.regional_masks(self.data, world)
         self.seed = random_seed()
         self.notice = ""
         self.selection = NEW
@@ -995,6 +997,7 @@ class Controller:
         self.other_changes = other
         self._regional_drafts.clear()
         self.land_mask = library.land_mask(self.data, world)
+        self.regional_masks = library.regional_masks(self.data, world)
         self.notice = ""
         self.selection = NEW
         self._changed()
@@ -1067,6 +1070,7 @@ class Controller:
         try:
             code = self._in_epoch(rolled(decode(world.code), part), made)
             drawn = service.required_land_mask(self.data, world)
+            regional = service.required_regional_masks(self.data, world)
         except (WorldCodeError, service.LandImageError) as error:
             return explain(error)
         game, data, generator = self.game, self.data, self.generator
@@ -1081,6 +1085,7 @@ class Controller:
             parent=world.id,
             part=part,
             land_mask=drawn,
+            regional_masks=regional,
             algorithm=made,
         )
 
@@ -1166,72 +1171,140 @@ class Controller:
                 count=grouped(estimate),
                 budget=grouped(controls.LOCATION_BUDGET),
             )
-        wanted = code.settings().mask.id
-        if wanted and (self.land_mask is None or self.land_mask.id != wanted):
+        if self._missing_drawing(code.settings()):
             return text("needs_land_image")
         return None
 
-    def choose_land_image(self, path: Path) -> str | None:
-        """Make the land of the new world the picture at ``path`` (white is land, black is sea);
-        returns what is wrong with the picture, or None."""
+    def choose_land_image(self, path: Path, continent: str = AMERICA) -> str | None:
+        """Make the land of ``continent`` (America's by default) the picture at ``path`` (white is
+        land, black is sea); returns what is wrong with the picture, or None."""
         try:
-            return self._use_land(landmask.read(path))
+            return self._use_land(landmask.read(path), continent)
         except landmask.LandMaskError as error:
             return explain(error)
 
-    def use_land_picture(self, data: bytes) -> str | None:
-        """Make the land of the new world the picture the editor drew (the bytes of a PNG);
-        returns what is wrong with it, or None."""
+    def use_land_picture(self, data: bytes, continent: str = AMERICA) -> str | None:
+        """Make the land of ``continent`` (America's by default) the picture the editor drew (the
+        bytes of a PNG); returns what is wrong with it, or None."""
         try:
-            return self._use_land(landmask.from_bytes(data))
+            return self._use_land(landmask.from_bytes(data), continent)
         except landmask.LandMaskError as error:
             return explain(error)
 
-    def _use_land(self, mask: LandMask) -> None:
-        self.land_mask = mask
+    def _use_land(self, mask: LandMask, continent: str = AMERICA) -> None:
+        if continent == AMERICA:
+            self.land_mask = mask
+            self.other_changes["mask"] = {"id": mask.id}
+        else:
+            if not self.continent_selection().get(continent):
+                return
+            self.regional_masks[continent] = mask
+            self._edit_region(continent, {"mask": {"id": mask.id}})
         self._custom_origin()
-        self.other_changes["mask"] = {"id": mask.id}
         self.notice = ""
         self._changed()
 
-    def land_sheet(self) -> LandArea | None:
-        """The area the editor draws on, when it was cut for the choices made now; else None."""
-        if self.game is None or self.sheet is None or not self.continent_selection()["america"]:
+    def drawings(self) -> dict[str, LandMask]:
+        """The images the continents' lands are drawn from, by the continent's key."""
+        found = dict(self.regional_masks)
+        if self.land_mask is not None:
+            found[AMERICA] = self.land_mask
+        return found
+
+    def _missing_drawing(self, settings: Settings, *, sketch: bool = False) -> bool:
+        """Whether a continent of ``settings`` is drawn from an image the window does not hold;
+        a sketch ignores America's when America is switched off."""
+        held = self.drawings()
+        return any(
+            key not in held or held[key].id != wanted
+            for key, wanted in drawn_ids(settings).items()
+            if not (sketch and key == AMERICA and not settings.continents.america)
+        )
+
+    def _keep_drawings_of(self, settings: Settings) -> bool:
+        """Keep only the images ``settings`` name; whether it names no other."""
+        wanted = drawn_ids(settings)
+        kept = {key: mask for key, mask in self.drawings().items() if wanted.get(key) == mask.id}
+        self.land_mask = kept.pop(AMERICA, None)
+        self.regional_masks = kept
+        return all(key in self.drawings() for key in wanted)
+
+    def _forget_drawings(self) -> None:
+        """Go back to land the generator draws, for every continent."""
+        self.land_mask, self.regional_masks = None, {}
+        raw = self._continent_document()
+        for key in REGIONAL_PRESETS:
+            region = raw.get(key)
+            if isinstance(region, dict) and "mask" in region:
+                raw[key] = {
+                    k: v for k, v in cast("dict[str, object]", region).items() if k != "mask"
+                }
+        if raw:
+            self.other_changes["continents"] = raw
+        for key, draft in list(self._regional_drafts.items()):
+            if isinstance(draft, dict):
+                self._regional_drafts[key] = {
+                    k: v for k, v in cast("dict[str, object]", draft).items() if k != "mask"
+                }
+
+    def drawable_continents(self) -> list[str]:
+        """The continents the world generates, whose land can be drawn: America unless it keeps
+        the game's own, and the others when switched on."""
+        selected = self.continent_selection()
+        keeps = bool(self.value("new_world.keep_geography"))
+        return [
+            key
+            for key in (AMERICA, *REGIONAL_PRESETS)
+            if selected[key] and not (key == AMERICA and keeps)
+        ]
+
+    def land_sheet(self, continent: str = AMERICA) -> LandArea | None:
+        """The area the editor draws ``continent`` on, when it was cut for the choices made now;
+        else None."""
+        held = self._sheets.get(continent)
+        if self.game is None or held is None or continent not in self.drawable_continents():
             return None
-        wanted = service.area_inputs(self.game, self._area_settings())
-        return self.sheet if self._sheet_inputs == wanted else None
+        return held[1] if held[0] == self._area_inputs(continent) else None
+
+    def _area_inputs(self, continent: str) -> AreaInputs:
+        assert self.game is not None  # noqa: S101 - the callers have checked the game
+        return service.area_inputs(self.game, self._area_settings(), continent, self.seed)
 
     def _area_settings(self) -> Settings:
         return build_settings(self.preset, self._change_document())
 
-    def prepare_land_area(self) -> str | None:
-        """Cut the area the editor draws on from the installed game's map, as a task (a second
-        or two from the land cache, else several); returns why not, or None. When the area is
-        ready already nothing is started."""
+    def prepare_land_area(self, continent: str = AMERICA) -> str | None:
+        """Cut the area the editor draws ``continent`` on from the installed game's map, as a task
+        (a second or two from the land cache, else several); returns why not, or None. When the
+        area is ready already nothing is started."""
         if self.busy:
             return text("ready_busy")
         if self.game is None:
             return text("ready_no_game")
-        game, settings = self.game, self._area_settings()
-        if self.land_sheet() is not None:
+        if continent not in self.drawable_continents():
+            return text("editor.not_drawn", continent=text(f"continent.{continent}"))
+        game, settings, seed = self.game, self._area_settings(), self.seed
+        if self.land_sheet(continent) is not None:
             return None
-        inputs = service.area_inputs(game, settings)
+        inputs = self._area_inputs(continent)
 
         def work(_progress: Progress) -> None:
-            area = service.land_area(game, settings, data=self.data).at(EDITOR_STEP)
+            area = service.land_area(
+                game, settings, data=self.data, continent=continent, seed=seed
+            ).at(EDITOR_STEP)
             with self._lock:
-                self.sheet, self._sheet_inputs = area, inputs
+                self._sheets[continent] = inputs, area
 
         return self._run(Task.TEMPLATE, EDITOR, work)
 
-    def save_land_template(self, output: Path) -> str | None:
-        """Write the picture of the area the New World can fill, to draw land on, as a task;
+    def save_land_template(self, output: Path, continent: str = AMERICA) -> str | None:
+        """Write the picture of the area ``continent`` can fill, to draw land on, as a task;
         returns why not, or None."""
         if self.busy:
             return text("ready_busy")
         if self.game is None:
             return text("ready_no_game")
-        game = self.game
+        game, seed = self.game, self.seed
 
         def work(_progress: Progress) -> None:
             _ = service.land_template(
@@ -1239,17 +1312,34 @@ class Controller:
                 output,
                 build_settings(self.preset, self._change_document()),
                 data=self.data,
+                continent=continent,
+                seed=seed,
             )
 
         return self._run(Task.TEMPLATE, str(output), work)
 
-    def clear_land_image(self) -> None:
-        """Go back to land the generator draws."""
-        if self.land_mask is not None or "mask" in self.other_changes:
-            self._custom_origin()
-        self.land_mask = None
-        _ = self.other_changes.pop("mask", None)
+    def clear_land_image(self, continent: str = AMERICA) -> None:
+        """Go back to land the generator draws, for ``continent`` (America by default)."""
+        if continent == AMERICA:
+            if self.land_mask is not None or "mask" in self.other_changes:
+                self._custom_origin()
+            self.land_mask = None
+            _ = self.other_changes.pop("mask", None)
+        else:
+            if continent in self.regional_masks:
+                self._custom_origin()
+            _ = self.regional_masks.pop(continent, None)
+            self._drop_region_mask(continent)
         self._changed()
+
+    def _drop_region_mask(self, continent: str) -> None:
+        raw = self._continent_document()
+        region = raw.get(continent)
+        if isinstance(region, dict) and "mask" in region:
+            raw[continent] = {
+                k: v for k, v in cast("dict[str, object]", region).items() if k != "mask"
+            }
+            self.other_changes["continents"] = raw
 
     def world_problem(self) -> str | None:
         """Why the world actions cannot run now, or None when they can."""
@@ -1346,8 +1436,9 @@ class Controller:
             return text("continent.choose")
         settings = self.world_code().settings()
         if settings.continents.regions:
-            drawn = settings.continents.america and settings.mask.id
-            return text("needs_land_image") if drawn and self.land_mask is None else None
+            return (
+                text("needs_land_image") if self._missing_drawing(settings, sketch=True) else None
+            )
         if settings.new_world.keep_geography:
             return text(ERROR + "candidates.real")
         if settings.mask.id:
@@ -1355,13 +1446,11 @@ class Controller:
         return None
 
     def editor_problem(self) -> str | None:
-        """Why the land editor cannot open now (other work aside); None when it can. It draws
-        America's land."""
+        """Why the land editor cannot open now (other work aside); None when it can. It draws the
+        land of any continent the world generates."""
         if self.game is None:
             return text("ready_no_game")
-        if not self.continent_selection()["america"]:
-            return text("editor.needs_america")
-        if self.value("new_world.keep_geography"):
+        if not self.drawable_continents():
             return text("editor.real_americas")
         return None
 
@@ -1372,7 +1461,7 @@ class Controller:
         if problem is not None or self.game is None:
             return problem
         code, game, cache = self.world_code(), self.game, service.land_cache(self.data)
-        drawn = self.land_mask
+        drawn = self.drawings()
         try:
             seeds = candidates.roll(count)
         except candidates.CandidateError as error:
@@ -1381,7 +1470,7 @@ class Controller:
 
         def work(_progress: Progress) -> None:
             found = candidates.sketch(
-                game.directory, code.settings(), seeds, cache=cache, land_mask=drawn
+                game.directory, code.settings(), seeds, cache=cache, drawings=drawn
             )
             with self._lock:
                 self.candidates, self.candidate_code = found, code
@@ -1549,16 +1638,20 @@ class Controller:
         if self.game is None:
             message = "Choose the game before generating"
             raise SettingsError(message)
+        code = code or self.world_code()
+        # The images the code names; a drawn continent the window no longer holds is left out,
+        # and the export says so.
+        wanted = drawn_ids(code.settings())
+        drawn = {key: mask for key, mask in self.drawings().items() if wanted.get(key) == mask.id}
         return service.Request(
             game=self.game,
-            code=code or self.world_code(),
+            code=code,
             data=self.data,
             profile=self.profile,
             install=self.install,
             show_new_world=self.preferences.show_new_world,
-            land_mask=self.land_mask
-            if code is None and self.continent_selection()["america"]
-            else None,
+            land_mask=drawn.get(AMERICA),
+            regional_masks={key: mask for key, mask in drawn.items() if key != AMERICA},
             output_folder=self.output_folder,
             world_file=self.world_file,
             algorithm=self.algorithm,

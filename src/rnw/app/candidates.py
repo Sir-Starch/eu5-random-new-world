@@ -33,8 +33,10 @@ from rnw.model import CellClass
 from rnw.newworld import land_stage
 from rnw.parallel import worker_count
 from rnw.progress import checkpoint, run_stage, running
+from rnw.settings import AMERICA, drawn_ids
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -104,18 +106,18 @@ def sketch(
     seeds: list[int],
     *,
     cache: Path | None = None,
-    land_mask: LandMask | None = None,
+    drawings: Mapping[str, LandMask] | None = None,
 ) -> list[Candidate]:
     """The land of each seed on the canvas of ``settings``, drawn at an eighth of the map.
 
     Needs the game's map; a cancel is felt within a stage of the land model. With ``cache``
     (the land cache of ``rnw.app.service``) each sketch's land stage is kept for its world.
-    A world of several continents is sketched whole (``sketch_composed``); ``land_mask`` is then
-    the drawn America, when there is one.
+    A world of several continents is sketched whole (``sketch_composed``); ``drawings`` are then
+    the images the continents' lands are drawn from, by the continent's key, when there are any.
     """
     check_count(len(seeds))
     if settings.continents.regions:
-        return sketch_composed(game_dir, settings, seeds, land_mask=land_mask)
+        return sketch_composed(game_dir, settings, seeds, drawings=drawings)
     if settings.mask.id:
         message = say("candidates.drawn")
         raise CandidateError(message)
@@ -158,7 +160,11 @@ def sketch(
 
 
 def sketch_composed(
-    game_dir: Path, settings: Settings, seeds: list[int], *, land_mask: LandMask | None = None
+    game_dir: Path,
+    settings: Settings,
+    seeds: list[int],
+    *,
+    drawings: Mapping[str, LandMask] | None = None,
 ) -> list[Candidate]:
     """The whole map for each seed with the continents of ``settings`` generated on it, at an
     eighth of its size in the colours of a world's picture.
@@ -166,11 +172,16 @@ def sketch_composed(
     Each continent's area is planned for the seed and its coasts are finished exactly as its
     world makes them (``rnw.eu5_nw_export.regional_coasts``), so the sketch shows the world the
     seed makes but for the few pixels the cells' borders move the coasts. The lands the world
-    keeps from the game are drawn darker. A drawn America (``land_mask``) is laid on its area
-    as the world lays it.
+    keeps from the game are drawn darker. A continent drawn in an image (``drawings``, by the
+    continent's key) is laid on its area as the world lays it.
     """
     check_count(len(seeds))
-    if settings.continents.america and settings.mask.id and land_mask is None:
+    drawings = dict(drawings or {})
+    if any(
+        key not in drawings or drawings[key].id != wanted
+        for key, wanted in drawn_ids(settings).items()
+        if key != AMERICA or settings.continents.america
+    ):
         message = say("candidates.drawn")
         raise CandidateError(message)
     game_map = run_stage("load map", lambda: load_map(game_dir))
@@ -190,7 +201,7 @@ def sketch_composed(
                     composition.geography,
                     seed=seed,
                     algorithm=settings.algorithm,
-                    land_mask=land_mask,
+                    drawings=drawings,
                     southern_passage=composition.southern_passage,
                 )
                 coasts = regional_coasts(domain, inputs)
