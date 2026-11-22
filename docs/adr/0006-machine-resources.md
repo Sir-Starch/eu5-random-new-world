@@ -67,3 +67,14 @@ A world of seed 319218363 made before and after has the same 894 files byte for 
 | `RNW_THREADS=1 RNW_MEMORY=1500` (the floor) | 6.81 GiB | 357 s |
 
 The floor is 6.8 GiB. Decision 5's margin of 0.7 GiB gives 7.5 GiB, rounded up to **8 GiB**: `EXPORT_MEMORY` is 8 GiB and the player-facing text says "about 8 GB of free RAM". The adaptive sizing of decision 4 holds: with 7.5 GiB free and six threads the process stayed at 7.2 GiB. The default peak fell little (9.1 to 8.9 GiB): the humps of overlapped stages remain, and the highest is now in the terrain stages (a resident 6.9 GiB before them, +2 GiB while they build), so a machine that overlaps stages (10 GiB free, `OVERLAP_MEMORY`) still holds under its free memory. What the export keeps at the end of its stages is still large (the old and the new label raster 0.5 GiB each, the coast 0.6 GiB, the location picture 0.4 GiB); lowering the floor further means releasing those earlier. Not measured again: Omerika, six threads with plenty of memory, and the Windows build.
+
+## Amendment, 2026-11-22: no huge-page requests from numpy
+
+A machine that lagged during exports showed, in a sampler of `/proc/pressure` and `/proc/vmstat` beside a full export (continents, three regions, 16 threads, `nice 10`, Linux, THP `enabled=always`, `defrag=madvise`), no CPU or IO contention (CPU pressure 2 s in 204 s, scheduler overshoot at most 5 ms, IO pressure 0) but memory stalls: numpy calls `madvise(MADV_HUGEPAGE)` on every large array, and the kernel then makes the allocating thread reclaim and compact memory directly. [V-EXEC: the same export twice, fresh data folders, seed 909]
+
+| Run | direct reclaim | compaction stalls | all tasks stalled on memory | time |
+|---|---|---|---|---|
+| default | 198 723 pages | 1 820 | 1 241 ms (pressure peak 4.7 %) | 204 s |
+| `NUMPY_MADVISE_HUGEPAGE=0` | 0 | 0 | 2 ms | 212 s |
+
+`rnw/__init__.py` sets the variable before numpy is imported (a value the user has set stays); the output is unchanged. This removes one measured source of stalls; it does not claim to be the whole of what a user feels as lag.

@@ -16,6 +16,11 @@ worlds and saves are not rewritten or migrated.
   of the all-continents selection five stopped before and all seven generate now; the output
   of a world changes only where a bridge is refused.
 
+- Stop the export from stalling the whole machine. numpy asked the kernel for huge pages on every
+  large array, and with the usual kernel setting the allocating thread then reclaimed and
+  compacted memory itself: a full export stalled every task for 1.2 s in bursts. The request is
+  switched off; the same export stalls for 2 ms and takes as long. No world changes.
+
 - Redraw the **physical map** of the window (Tauri and classic) and stop it floating in an endless
   sea. The map is now a sheet on the window's own ground, with a faint graticule that moves with
   it, a soft shadow and a hairline along its edge, in the colours of the chosen appearance, so land
