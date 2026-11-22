@@ -56,10 +56,12 @@ The main window has three parts:
 After generation, select your world to find its **World**, **Maps** and **Notes** tabs.
 The World tab includes adding it to the game, creating versions, sharing and exporting.
 
-**Settings** holds game and application paths, language and diagnostics. The generator
+**Settings** holds game and application paths, language, appearance and diagnostics. The generator
 normally uses the language Steam runs EU5 in. You can choose any official game language
 there; restart the generator to apply a language change. Button names in this guide are
-the English ones.
+the English ones. The new window's **Appearance** follows the system's colours or is set to
+Dark, Light or **Terra Incognita** (an aged chart in leather and gold); the choice is kept on
+this computer, and the classic window always follows the system.
 
 If your window has a different layout, it may be the **classic window**, which opens
 automatically on systems that need it, including the usual Proton setup. Its **Advanced**

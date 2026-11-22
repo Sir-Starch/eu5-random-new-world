@@ -62,6 +62,7 @@
       <option value="system">{t("settings.theme.system")}</option>
       <option value="dark">{t("settings.theme.dark")}</option>
       <option value="light">{t("settings.theme.light")}</option>
+      <option value="incognita">{t("settings.theme.incognita")}</option>
     </select>
 
     <div class="span spaced">

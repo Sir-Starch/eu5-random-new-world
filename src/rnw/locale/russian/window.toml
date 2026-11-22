@@ -2122,6 +2122,10 @@ text = '''Тёмное'''
 source = "dbcd5e7bb7a0f538"
 text = '''Светлое'''
 
+["settings.theme.incognita"]
+source = "5d4e04e358a3f535"
+text = '''Терра инкогнита'''
+
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''Выпало на этот раз: {type}. Новое зерно разыгрывает заново.'''

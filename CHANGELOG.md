@@ -5,6 +5,15 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Add a **Terra Incognita** appearance to the new (Tauri) window (Settings, Appearance): an aged
+  chart under lamplight, with paper grain and foxing over leather-dark panels, double gilt frames
+  with engraved corners, brass-plate buttons, a gilded primary action and serif small-cap
+  headings. An empty view becomes a graduated chart with rhumb lines and compass roses. All
+  pictures are our own drawings, and its drop-down lists are drawn by the window instead of the
+  system's white list; it is kept per machine like the dark and light ones. The classic window
+  keeps following the system's colours. Its name is the game's own word for the concept in every
+  language.
+
 - Stop **generation errors in worlds with Africa**. A land bridge from Africa to the European
   coast could shut a bay of water off round a retained islet, or leave a pocket of the Levant's
   coast with no sea of its own to lead out of it, and the export ended with "Sea cutout at cell

@@ -1,13 +1,14 @@
-// The window's colours: as the system's, or dark or light by the player's choice (kept per
-// machine in the web view's storage, as it concerns only this window).
+// The window's colours: as the system's, or dark, light or Terra Incognita (an old chart in
+// leather and gold) by the player's choice (kept per machine in the web view's storage, as it
+// concerns only this window).
 
-export type ThemeChoice = "system" | "dark" | "light";
+export type ThemeChoice = "system" | "dark" | "light" | "incognita";
 const KEY = "rnw.theme";
 
 function stored(): ThemeChoice {
   try {
     const value = localStorage.getItem(KEY);
-    return value === "dark" || value === "light" ? value : "system";
+    return value === "dark" || value === "light" || value === "incognita" ? value : "system";
   } catch {
     return "system";
   }

@@ -2122,6 +2122,10 @@ text = '''ダーク'''
 source = "dbcd5e7bb7a0f538"
 text = '''ライト'''
 
+["settings.theme.incognita"]
+source = "5d4e04e358a3f535"
+text = '''未知領域'''
+
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''今回の抽選: {type}。新しいシードで再抽選します。'''

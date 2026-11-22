@@ -5,6 +5,7 @@
 
 @import "@fontsource-variable/noto-sans/index.css";
 @import "@fontsource/jetbrains-mono/400.css";
+@import "./incognita.css";
 
 :root {
   color-scheme: dark;
@@ -74,8 +75,48 @@
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 }
 
+/* Terra Incognita: the look of an old chart where the known world ends. Smoked leather and
+   ink-brown panels, vellum-coloured text, antique gold for selection and the primary action,
+   the way the game dresses its own windows. Headings take a book serif from the system; no
+   font is added. */
+:root[data-theme="incognita"] {
+  color-scheme: dark;
+  --bg: #17120d;
+  --panel: #201912;
+  --field: #120e0a;
+  --canvas: #15100b;
+  --fill: rgba(201, 162, 84, 0.26);
+  --raised: #2b2218;
+  --raised-hover: #382d1e;
+  --hover: rgba(232, 205, 150, 0.07);
+  --line: #3a2e1f;
+  --line-2: #55432c;
+  --line-3: #7a6240;
+  --text: #ecdfc2;
+  --text-2: #cdbb92;
+  --text-3: #a39270;
+  --accent: #b8862f;
+  --accent-hover: #cb9a41;
+  --accent-text: #e2b960;
+  --accent-soft: rgba(201, 162, 84, 0.24);
+  --on-accent: #1a1209;
+  --ok: #7fa860;
+  --warn: #e0a838;
+  --danger: #d4624a;
+  --ok-soft: rgba(127, 168, 96, 0.14);
+  --warn-soft: rgba(224, 168, 56, 0.14);
+  --danger-soft: rgba(212, 98, 74, 0.14);
+  --map-bg: #0f0b07;
+  --map-accent: #f0c660;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+  --radius: 2px;
+  --display: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", "Noto Serif", Georgia,
+    "Noto Serif CJK JP", "Songti SC", serif;
+  --gild: linear-gradient(180deg, #d9ae55 0%, #b8862f 52%, #8f6420 100%);
+}
+
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
+  :root:not([data-theme="dark"]):not([data-theme="incognita"]) {
     color-scheme: light;
     --bg: #ebebec;
     --panel: #f4f4f5;

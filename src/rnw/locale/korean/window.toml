@@ -2122,6 +2122,10 @@ text = '''어둡게'''
 source = "dbcd5e7bb7a0f538"
 text = '''밝게'''
 
+["settings.theme.incognita"]
+source = "5d4e04e358a3f535"
+text = '''테라 인코그니타'''
+
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''이번 추첨: {type}. 새 시드로 다시 추첨합니다.'''

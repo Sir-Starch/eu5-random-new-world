@@ -263,7 +263,7 @@
     --rule: rgba(0, 0, 0, 0.06);
   }
   @media (prefers-color-scheme: light) {
-    :global(:root:not([data-theme="dark"])) .sheet {
+    :global(:root:not([data-theme="dark"]):not([data-theme="incognita"])) .sheet {
       --rule: rgba(0, 0, 0, 0.06);
     }
   }

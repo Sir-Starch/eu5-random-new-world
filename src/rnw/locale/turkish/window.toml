@@ -2122,6 +2122,10 @@ text = '''Koyu'''
 source = "dbcd5e7bb7a0f538"
 text = '''Açık'''
 
+["settings.theme.incognita"]
+source = "5d4e04e358a3f535"
+text = '''Keşfedilmemiş Topraklar'''
+
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''Bu sefer çıkan: {type}. Yeni bir tohum yeniden çeker.'''

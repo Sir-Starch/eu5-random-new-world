@@ -97,7 +97,7 @@ its count. Batch errors remain visible below the list, including after a row dis
 
 **Parity with the Tauri window (2026-11-21).** The classic window does what the Tauri window does,
 with Qt's controls and the platform's palette (it follows the system theme; the Tauri window's
-own light/dark switch is not copied). Both call the same `Controller`; the Qt side adds no rule
+own appearance choice (Dark, Light, Terra Incognita) is not copied). Both call the same `Controller`; the Qt side adds no rule
 of its own.
 
 - *Land tools* (`gui/land_tools.py`): on the World tab, under Continents, a group with the
@@ -131,22 +131,48 @@ Use native window chrome, frames and separators. No web styling or additional sh
 
 Keep labels and tooltips meaningful, preserve native keyboard navigation, and avoid
 colour as the only status signal. Exercise empty, busy, failed and completed states in
-offscreen Qt tests. Capture the desktop window in light and dark themes for layout review.
+offscreen Qt tests. Capture the desktop window in light and dark themes for layout review (the
+Tauri window also in Terra Incognita, section 9).
 
 ## 9. The Tauri window
 
 **Look.** A workbench that sits beside the game, the same on every system (owner reviews
 2026-10-30: the first candidate read as a website, the second as the old layout repainted).
 Neutral greys with one blue accent for selection, focus and the primary action; light and dark
-(System/Dark/Light in Settings, kept per machine). Noto Sans 13 px for text and map names,
+(System/Dark/Light in Settings, kept per machine; Terra Incognita is a fourth, below). Noto Sans 13 px for text and map names,
 JetBrains Mono for codes; both bundled. Every pane starts with a 32 px header, so the library's
 title, the view's title and tools and the inspector's tabs read as one band. Controls are 24–26 px
 high with 3 px corners; panels are flat and divided by hairlines, without cards, gradients, glows
-or blur; the middle is a darker canvas. An exact value is a bar filled to its value with a tick at
+or blur (the Dark and Light looks; Terra Incognita dresses them differently); the middle is a darker canvas. An exact value is a bar filled to its value with a tick at
 the world type's value: drag it, click to type, step with the arrow keys, Backspace resets.
 Icons are a small 16-unit, one-pixel set used only in toolbars and icon buttons; other buttons
 carry text. Tokens live in `desktop/src/app.css`; components use them rather than literal
 colours. The only motion is the busy spinner. Default window 1160×740, minimum 860×560.
+
+**Terra Incognita appearance.** The fourth choice of Settings → Appearance (`data-theme="incognita"`
+on the root, kept per machine in the web view's storage like the others; the classic window
+keeps the system palette). A palette alone read as the old window aged (owner review 2026-11-21),
+so the look is carried by surfaces and ornament, an aged chart under lamplight: the tokens in
+`desktop/src/app.css` give leather-dark panels, vellum text and antique gold; `desktop/src/incognita.css`
+adds one baked, seamless 512 px JPEG tile for each of the ground, the panes, the dialogs and the
+canvas (paper grain and foxing in the tile), double gilt frames with engraved corners, brass-plate
+buttons, a gilded primary action, serif small-cap headings (the system's book serifs; no font is
+added) and, where a view is empty, a graduated chart with rhumb lines and compass roses
+(`desktop/src/assets/incognita/`). Every picture is our own drawing; nothing comes from the game.
+The list a web view opens for a `<select>` is the platform's widget and cannot be styled, so in
+this appearance `desktop/src/lib/selectMenu.ts` takes the click and draws the same options in a
+menu of the window's own; the `<select>` stays the single source of truth (choosing sets it and
+fires `input` and `change`), and the arrow keys on a focused select stay the browser's.
+Decoration must stay cheap; measured by tracing raster work in headless Chromium (CDP, repeated
+four times as runs differ by about 8 ms): one opaque tile per big surface, not stacked layers or
+`feTurbulence`; grain only on large static surfaces; a scroller over a textured parent takes
+`background-attachment: local` (a transparent one costs about ten times the raster); no blur,
+large shadow or full-size overlay over the WebGL map or the land editor, which repaint on every
+pointer move (the frame lies round them as margin, border and an outer shadow; the corners are two
+thin strips); and a theme rule is scoped (`.stage.scroll`) so that it does not hit a class of the
+same name in another component. The tiles were baked from FFT noise with NumPy and are kept as
+the images they are (no baking script is kept); a new one must be seamless at its edges. A change
+to the theme is checked in a screenshot of the window.
 
 **Structure.** Three panes over a status bar: the library (filter with All/In the game/Favourite,
 New world as its first row, thumbnails, versions drawn as branches under their world,

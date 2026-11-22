@@ -2122,6 +2122,10 @@ text = '''Escuro'''
 source = "dbcd5e7bb7a0f538"
 text = '''Claro'''
 
+["settings.theme.incognita"]
+source = "5d4e04e358a3f535"
+text = '''Terra Incognita'''
+
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''Sorteado desta vez: {type}. Uma nova semente sorteia de novo.'''

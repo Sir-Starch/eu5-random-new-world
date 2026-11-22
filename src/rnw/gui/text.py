@@ -1020,6 +1020,7 @@ STRINGS: Final[dict[str, str]] = {
     "settings.theme.system": "System",
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
+    "settings.theme.incognita": "Terra Incognita",
     "settings.experimental": "Experimental features",
     "settings.experimental.about": (
         "Features that are still being tried out. Each one shows where it works, and any of "

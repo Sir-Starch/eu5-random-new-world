@@ -2122,6 +2122,10 @@ text = '''深色'''
 source = "dbcd5e7bb7a0f538"
 text = '''浅色'''
 
+["settings.theme.incognita"]
+source = "5d4e04e358a3f535"
+text = '''未知之地'''
+
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''本次抽到：{type}。新种子会重新抽取。'''

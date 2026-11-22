@@ -169,8 +169,9 @@
     const light = document.documentElement.dataset.theme === "light" ||
       (!document.documentElement.dataset.theme &&
         matchMedia("(prefers-color-scheme: light)").matches);
+    const incognita = document.documentElement.dataset.theme === "incognita";
     theme = {
-      ink: light ? [44, 32, 18] : [8, 10, 14],
+      ink: incognita ? [26, 18, 9] : light ? [44, 32, 18] : [8, 10, 14],
       accent: parse("--map-accent", [255, 213, 74]),
       // Beyond the map's edge lies the window's own ground, ruled in the colour of its lines.
       ground: parse("--map-bg", light ? [211, 215, 220] : [20, 23, 27]),
