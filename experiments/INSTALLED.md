@@ -2213,3 +2213,9 @@ world folder, save, playset or setting changed. This did not publish or update t
 |---|---|---|
 | Africa alone, Red Sea and Mediterranean shore without the old coast | `rnw_exp_world_rx5k2vwo6x` | `6073fce2ea2f0a60ad48606ac8579d939e806146d9d1df5982e49c9abe741b91` |
 | Africa with Oceania | `rnw_exp_world_irwmcanret` | `1b630904bbc567433fba6c469d959ed6cf144ea5abf00c876631b7537afebbf0` |
+
+2026-11-22, **Composed worlds past the sea, culture and port checks** (source `c1183a1`, pending epoch 64 of 1.3.0; America-only worlds are byte for byte as before, and a composed world differs only where a bridge to the European coast is refused). [V-EXEC] The world of a screenshot that stopped with "Sea cutout at cell 10054 has no coast or retained sea" (America, Africa and Oceania, seed 15416744192514873304) installed as a new folder by `rnw world` (EU5 1.4.9 / build 26655995, 207 s at 16 threads). The same seed also stops at the pre-fix commit `b7e0bb1` with that message. Of seven seeds of that selection five stopped at `b7e0bb1` (sea cells unreachable, Old World sea boundary, Sea cutout) and all seven generate now; 14 more exports of the selections with Africa and Oceania, with America, and Africa alone generate too.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| America, Africa and Oceania, the Mediterranean bridge without a closed bay | `rnw_exp_world_jyz3oph7te` | `a363296962c709e0012aca4b894baef12f8a54a876cc6978289d978462b84245` |
