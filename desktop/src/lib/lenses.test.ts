@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WorldAtlas } from "./atlas";
 import { colourClasses, PROFILES } from "./lenses";
-import { blur, distance, poles, relief } from "./relief";
+import { blur, DEPTH_SCALE, distance, euclid, poles, relief, spread } from "./relief";
 import type { AtlasBundle } from "./types";
 
 function base64(bytes: Uint8Array): string {
@@ -62,6 +62,24 @@ describe("relief", () => {
     expect(spread[12]).toBeLessThan(1);
   });
 
+  it("measures exact Euclidean distance and smooths a height over the land only", () => {
+    // One seed in the corner of a 5 x 5 box: the far corner is 3-4-5 away, exactly.
+    const seed = new Uint8Array(25);
+    seed[0] = 1;
+    const far = euclid(seed, 5, 5);
+    expect(far[4 * 5 + 3]).toBeCloseTo(5, 5);
+    expect(far[1]).toBeCloseTo(1, 5);
+    expect(far[5 + 1]).toBeCloseTo(Math.SQRT2, 5);
+    // Left half land at height 1, right half sea at 0: with no weight on the sea nothing pulls
+    // the land's mean down, so the height at the shore is the land's own.
+    const heights = new Float32Array(20);
+    const weight = new Float32Array(20);
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) { heights[y * 5 + x] = 1; weight[y * 5 + x] = 1; }
+    const flat = spread(heights, weight, 5, 4, 1);
+    expect(flat[1]).toBeCloseTo(1, 5);
+    expect(flat[4]).toBe(0);
+  });
+
   it("names each class inside itself and draws land, water and shade", () => {
     const atlas = new WorldAtlas(bundle());
     const found = poles(atlas, (c) => (c < 2 ? c : -1), 2);
@@ -72,7 +90,8 @@ describe("relief", () => {
     const field = relief(atlas);
     expect(field.width).toBe(3);
     expect(field.land[3]).toBeGreaterThan(0);
-    expect(field.depth[2]).toBe(1);
+    // One pixel from the land, in quarter pixels.
+    expect(field.depth[2]).toBe(DEPTH_SCALE);
   });
 });
 
@@ -107,6 +126,40 @@ describe("lakes on the physical map", () => {
     for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) far.push([x, y]);
     for (const [x, y] of [[5, 5], [6, 6]]) expect(field.depth[y * field.width + x]).toBeGreaterThan(0);
     expect(deviation(ring)).toBeLessThan(deviation(far) + 0.15);
+  });
+});
+
+// Mountains on the left half of a 24 x 24 box and the sea on the right.
+function mountainShore(): AtlasBundle {
+  const size = 24;
+  const runs: number[] = [];
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) runs.push(x < 12 ? 2 : 1, 1);
+  return {
+    ...bundle(),
+    size: [size, size],
+    labels: base64(new Uint8Array(new Uint32Array(runs).buffer)),
+    kind: [0, 0, 2, 3],
+    centre: [0, 0, 0, 0, 0, 0, 12, 12],
+  };
+}
+
+describe("shore shade", () => {
+  it("is no stronger at a mountain shore than inland: no cliff for the light to catch", () => {
+    const atlas = new WorldAtlas(mountainShore());
+    const field = relief(atlas);
+    const shade = (x: number, y: number) => field.land[(y * field.width + x) * 4 + 3];
+    let shore = 0;
+    let inland = 0;
+    for (let y = 3; y < 9; y++) {
+      shore = Math.max(shore, Math.abs(shade(5, y) - 128), Math.abs(shade(4, y) - 128));
+      inland = Math.max(inland, Math.abs(shade(1, y) - 128), Math.abs(shade(2, y) - 128));
+    }
+    expect(shore).toBeLessThanOrEqual(inland + 24);
+    // Shade is bounded: never wholly black or burned out.
+    for (let i = 3; i < field.land.length; i += 4) {
+      expect(field.land[i]).toBeGreaterThanOrEqual(1);
+      expect(field.land[i]).toBeLessThanOrEqual(255);
+    }
   });
 });
 

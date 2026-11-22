@@ -1,5 +1,5 @@
 {
-  "_about": "How the windows draw the lenses of a world's map: the colours of the physical map that lies under every lens, the water, each thematic lens's palette and how strongly it covers the land. Read by the classic window (rnw.gui.mapstyle) and the Tauri window (desktop/src/lib/lenses.ts, relief.ts, mapgl.ts), so both draw the same map.",
+  "_about": "How the windows draw the lenses of a world's map: the colours of the physical map that lies under every lens, the water, the light that falls on its relief, each thematic lens's palette and how strongly it covers the land. Read by the classic window (rnw.gui.mapstyle) and the Tauri window (desktop/src/lib/lenses.ts, relief.ts, mapgl.ts), so both draw the same map.",
   "profiles": {
     "land": { "physical": true, "shade": 1, "borders": 0, "political": 0.3, "names": "regions", "spots": null, "opacity": 225 },
     "countries": { "physical": false, "shade": 0.7, "borders": 0, "political": 0.82, "names": "countries", "spots": null, "opacity": 232 },
@@ -70,10 +70,33 @@
   "colours": {
     "rock": "#94887a", "wetland": "#628464", "snow": "#f6f7fa",
     "unclaimed": "#5c6054", "faded": "#8f8b7e", "tribal": "#a69c84",
-    "shallow": "#3b6ea3", "deep": "#1a3666", "lake_shallow": "#6199cc", "lake_deep": "#4075b3",
+    "shallow": "#37699e", "deep": "#1a3666", "lake_shallow": "#6199cc", "lake_deep": "#4075b3",
     "ocean": "#162e59", "kept": "#707266"
   },
   "coast_depth": 16,
+  "relief": {
+    "lights": [[315, 0.4], [270, 0.25], [0, 0.25], [225, 0.1]],
+    "light_height": 42,
+    "z": 26,
+    "gain": 2.6,
+    "shadow": [0.42, 0.38, 0.30],
+    "lamp": [255, 243, 214],
+    "highlight": 0.2,
+    "shelf": 3,
+    "upland": [0.12, 0.6, 0.3],
+    "snow": {
+      "width": 0.2,
+      "share": 0.55,
+      "default": 0.8,
+      "lines": {
+        "arctic": 0.3, "subpolar": 0.42, "cold_arid": 0.5, "cold_semi_arid": 0.55,
+        "continental": 0.66, "oceanic": 0.7, "mediterranean": 0.76, "subtropical": 0.82,
+        "tropical": 0.88, "hot_semi_arid": 0.9, "arid": 0.95
+      }
+    },
+    "ridge": 0.3,
+    "warp": 4
+  },
   "tribe_opacity": 150,
   "ramp_opacity": [105, 140]
 }

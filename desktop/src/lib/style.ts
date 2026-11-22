@@ -54,5 +54,20 @@ export const CLIMATE_TINTS: Record<string, [RGB, number]> = Object.fromEntries(
 export const TOPOGRAPHY: Record<string, { height: number; rough: number; rock: number }> = STYLE.topography;
 export const COLOURS = STYLE.colours;
 export const COAST_DEPTH: number = STYLE.coast_depth;
+/** How the relief is lit and how the land and water take its shade (``lenses.json``, ``relief``). */
+export const RELIEF = STYLE.relief as unknown as {
+  lights: [number, number][];
+  light_height: number;
+  z: number;
+  gain: number;
+  shadow: RGB;
+  lamp: RGB;
+  highlight: number;
+  shelf: number;
+  upland: [number, number, number];
+  snow: { width: number; share: number; default: number; lines: Record<string, number> };
+  ridge: number;
+  warp: number;
+};
 export const TRIBE_OPACITY: number = STYLE.tribe_opacity;
 export const RAMP_OPACITY: [number, number] = [STYLE.ramp_opacity[0], STYLE.ramp_opacity[1]];

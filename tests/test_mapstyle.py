@@ -10,6 +10,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from rnw import atlas as atlas_module
 from rnw import barrens
@@ -43,6 +44,12 @@ def test_both_windows_read_one_look() -> None:
         atlas_module.LAYERS
     )
     assert "src/rnw/gui/lenses.json" in DESKTOP.read_text(encoding="utf-8")
+    # The light and the shelf of the physical map are numbers in that file as well, read by both.
+    relief = json.loads(STYLE.read_text(encoding="utf-8"))["relief"]
+    assert "STYLE.relief" in DESKTOP.read_text(encoding="utf-8")
+    assert sum(share for _, share in relief["lights"]) == pytest.approx(1)
+    assert tuple((float(a), float(b)) for a, b in relief["lights"]) == mapstyle.LIGHTS
+    assert relief["snow"]["lines"] == mapstyle.SNOW_LINES
     assert mapstyle.profile("land").physical
     assert mapstyle.profile("resources").names == "none"
 
@@ -162,7 +169,7 @@ def _mountains_with_a_lake() -> atlas_module.Atlas:
 
 def test_a_lake_in_mountains_is_no_crater_on_the_physical_map() -> None:
     """Around a lake the shade is no darker or brighter than in the mountains far from it: the
-    lake is not a shore whose walls the light would draw as a crater (0.70 against 0.17)."""
+    lake is not a shore whose walls the light would draw as a crater."""
     field = mapstyle.relief(_mountains_with_a_lake())
     assert np.all(field.depth[10:14, 10:14] > 0)
     shade = field.shade
@@ -171,9 +178,64 @@ def test_a_lake_in_mountains_is_no_crater_on_the_physical_map() -> None:
     ring[10:14, 10:14] = False
     far = np.zeros(shade.shape, dtype=bool)
     far[2:6, 2:6] = True
-    ring_deviation = float(np.abs(shade[ring] - 1).mean())
-    far_deviation = float(np.abs(shade[far] - 1).mean())
+    ring_deviation = float(np.abs(shade[ring]).mean())
+    far_deviation = float(np.abs(shade[far]).mean())
     assert ring_deviation < far_deviation + 0.15
+
+
+def _mountains_by_the_sea() -> atlas_module.Atlas:
+    """One mountainous land location on the left half of the box and the sea on the right."""
+    found = synthetic_atlas()
+    mountains = int(np.flatnonzero((found.kinds == mapstyle.LAND) & (found.topography == 1))[0])
+    sea = int(np.flatnonzero(found.kinds == mapstyle.SEA)[0])
+    labels = np.full((48, 48), sea + 1, dtype=np.int32)
+    labels[:, :24] = mountains + 1
+    return replace(found, labels=labels)
+
+
+def test_a_mountain_shore_is_lit_as_the_mountain_inland_is() -> None:
+    """The height is smoothed over the land alone and not dragged to nothing at the shore, so
+    the shore is no cliff: its shade is as mild as the mountain's far from it (the black and
+    burned coasts of a forced slope) and every shade lies between full shadow and full light."""
+    field = mapstyle.relief(_mountains_by_the_sea())
+    land = field.depth == 0
+    assert land.any()
+    assert np.all(np.abs(field.shade) <= 1)
+    columns = np.arange(field.shade.shape[1], dtype=np.int64)
+    near = land & (np.abs(columns - 11) <= 1)[None, :]
+    inland = land & (np.abs(columns - 3) <= 1)[None, :]
+    rows = slice(4, -4)
+    shore = float(np.abs(field.shade[rows][near[rows]]).max())
+    deep = float(np.abs(field.shade[rows][inland[rows]]).max())
+    assert shore <= deep + 0.1
+
+
+def test_light_on_the_land_darkens_and_warms_without_burning_or_blackening() -> None:
+    soil = np.array([[200.0, 160.0, 90.0]], dtype=np.float32)
+    level = mapstyle.lit(soil, np.zeros(1, dtype=np.float32))
+    assert np.array_equal(level, soil)
+    dark = mapstyle.lit(soil, np.full(1, -1.0, dtype=np.float32))
+    bright = mapstyle.lit(soil, np.full(1, 1.0, dtype=np.float32))
+    # In full shadow no channel loses more than its share; in full light none passes the lamp.
+    assert np.all(dark >= soil * (1 - np.array(mapstyle.SHADOW, np.float32)) - 1e-3)
+    assert np.all(dark > 0)
+    assert np.all(bright <= np.array(mapstyle.LAMP, np.float32) + 1e-3)
+    assert np.all(bright >= soil)
+    # The shadow is cooler than the light: the blue is kept better than the red.
+    assert dark[0, 2] / soil[0, 2] > dark[0, 0] / soil[0, 0]
+
+
+def test_the_water_darkens_smoothly_from_the_shore_to_the_open_ocean() -> None:
+    """The shelf is a fall with no step: the colour moves a little at each pixel from the shore."""
+    found = _mountains_by_the_sea()
+    drawn = mapstyle.picture(
+        found,
+        mapstyle.style(found, "land", atlas_module.ENGLISH, tribes=False, tribes_label="T"),
+        tribes=False,
+    )
+    row = drawn[24, 24:].astype(int)
+    steps = np.abs(np.diff(row, axis=0)).max(axis=1)
+    assert steps[2:].max() <= 6
 
 
 def test_the_rules_line_names_the_game_region_only_where_the_world_names_it_otherwise() -> None:

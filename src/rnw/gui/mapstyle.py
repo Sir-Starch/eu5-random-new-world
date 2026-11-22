@@ -58,8 +58,37 @@ LAKE: Final[int] = atlas_module.KINDS.index("lake")
 INK: Final[tuple[float, float, float]] = (8 / 255, 10 / 255, 14 / 255)
 ACCENT: Final[tuple[float, float, float]] = (1.0, 213 / 255, 74 / 255)
 FOAM: Final[tuple[float, float, float]] = (0.86, 0.93, 1.0)
-LIGHT: Final[tuple[float, float, float]] = (-0.55, -0.62, 0.56)
-RELIEF_Z: Final[float] = 9.0
+# How the physical map is lit (``lenses.json``, ``relief``): the relief from four sides at once,
+# the north-west most (azimuth in degrees clockwise from north, share of the light), at one
+# height above the horizon, so a hill is never wholly black on its far side nor wholly white on
+# its near one. Level ground reads 0; a slope reads between -1 (in shadow) and 1 (in full light)
+# once the gain has squeezed it. In shadow a colour darkens by ``shadow`` per channel (the blue
+# least, so the shadows are cool rather than black); in light it moves ``highlight`` of the way to
+# the ``lamp``. Land turns to bare rock between two heights (and by how much), to snow on its
+# crests above the snow line of its climate (and by how much), and the water darkens from the
+# shore in ``shelf`` e-folds of the coast depth.
+_RELIEF: Final[dict[str, object]] = cast("dict[str, object]", STYLE["relief"])
+LIGHTS: Final[tuple[tuple[float, float], ...]] = tuple(
+    (float(a), float(b)) for a, b in cast("list[list[float]]", _RELIEF["lights"])
+)
+LIGHT_HEIGHT: Final[float] = float(cast("float", _RELIEF["light_height"]))
+RELIEF_Z: Final[float] = float(cast("float", _RELIEF["z"]))
+SHADE_GAIN: Final[float] = float(cast("float", _RELIEF["gain"]))
+SHADOW: Final[tuple[float, ...]] = tuple(cast("list[float]", _RELIEF["shadow"]))
+LAMP: Final[tuple[float, ...]] = tuple(cast("list[float]", _RELIEF["lamp"]))
+HIGHLIGHT: Final[float] = float(cast("float", _RELIEF["highlight"]))
+SHELF: Final[float] = float(cast("float", _RELIEF["shelf"]))
+_UPLAND: Final[list[float]] = cast("list[float]", _RELIEF["upland"])
+HIGH_FROM: Final[float] = _UPLAND[0]
+HIGH_TO: Final[float] = _UPLAND[1]
+HIGH_ROCK: Final[float] = _UPLAND[2]
+_SNOW: Final[dict[str, object]] = cast("dict[str, object]", _RELIEF["snow"])
+SNOW_WIDTH: Final[float] = float(cast("float", _SNOW["width"]))
+SNOW_SHARE: Final[float] = float(cast("float", _SNOW["share"]))
+SNOW_DEFAULT: Final[float] = float(cast("float", _SNOW["default"]))
+SNOW_LINES: Final[dict[str, float]] = cast("dict[str, float]", _SNOW["lines"])
+RIDGE: Final[float] = float(cast("float", _RELIEF["ridge"]))
+WARP: Final[float] = float(cast("float", _RELIEF["warp"]))
 # Land rougher than this gets ridges; land softened to less than this share is no land; a colour
 # less opaque than this does not cover the physical map.
 ROUGH: Final[float] = 0.01
@@ -151,8 +180,9 @@ def profile(layer: str) -> Profile:
 
 @dataclass(frozen=True, slots=True, eq=False)
 class Relief:
-    """The physical map at half the atlas's resolution: the land's colour (0..255), its shade
-    (1 is level ground) and the water's distance from the land, in field pixels."""
+    """The physical map at half the atlas's resolution: the land's colour (0..255, the height
+    already in it), its shade (0 is level ground, -1 full shadow, 1 full light) and the water's
+    distance from the land, in field pixels."""
 
     land: NDArray[np.float32]
     shade: NDArray[np.float32]
@@ -236,11 +266,17 @@ def _noise(x: NDArray[np.float32], y: NDArray[np.float32]) -> NDArray[np.float32
 
 
 def _ridges(x: NDArray[np.float32], y: NDArray[np.float32]) -> NDArray[np.float32]:
+    """Ridge lines: folded noise over three octaves, 0 to 1, the field bent by a slow noise so
+    the crests wander instead of following the lattice."""
+    slow_x = (x / 11).astype(np.float32)
+    slow_y = (y / 11).astype(np.float32)
+    bent_x = (x + WARP * _noise((slow_x + 7.1).astype(np.float32), slow_y)).astype(np.float32)
+    bent_y = (y + WARP * _noise(slow_x, (slow_y + 3.7).astype(np.float32))).astype(np.float32)
     total = np.zeros(x.shape, dtype=np.float32)
     amplitude = 0.5
     frequency = 1 / 9
     for _ in range(3):
-        total += amplitude * (1 - np.abs(_noise(x * frequency, y * frequency)))
+        total += amplitude * (1 - np.abs(_noise(bent_x * frequency, bent_y * frequency)))
         amplitude *= 0.5
         frequency *= 2.1
     return total / 0.875
@@ -275,6 +311,62 @@ def _lake_heights(
     return mean[np.maximum(sample, 0)]
 
 
+def _spread(
+    values: NDArray[np.float32], weight: NDArray[np.float32], radius: int, passes: int = 2
+) -> NDArray[np.float32]:
+    """``values`` smoothed over where ``weight`` is, each pixel the mean of the weighted pixels
+    around it (so where there is no weight, nothing pulls the mean down)."""
+    share = blur(weight, radius, passes)
+    total = blur(values * weight, radius, passes)
+    return np.where(share > SOME_LAND, total / np.maximum(share, SOME_LAND), 0).astype(np.float32)
+
+
+def _shade(lift: NDArray[np.float32]) -> NDArray[np.float32]:
+    """The light on a height field: 0 on level ground, towards -1 in shadow and 1 in light.
+
+    The slope is a Sobel difference of the field; every light of ``LIGHTS`` lights the surface
+    as a matt one, and their mean, squeezed by a tanh, is the shade.
+    """
+    padded = np.pad(lift, 1, mode="edge")
+    slope_x = (
+        (padded[:-2, 2:] + 2 * padded[1:-1, 2:] + padded[2:, 2:])
+        - (padded[:-2, :-2] + 2 * padded[1:-1, :-2] + padded[2:, :-2])
+    ) / 8
+    slope_y = (
+        (padded[2:, :-2] + 2 * padded[2:, 1:-1] + padded[2:, 2:])
+        - (padded[:-2, :-2] + 2 * padded[:-2, 1:-1] + padded[:-2, 2:])
+    ) / 8
+    nx = -slope_x * RELIEF_Z
+    ny = -slope_y * RELIEF_Z
+    length = np.sqrt(nx * nx + ny * ny + 1)
+    sun = math.sin(math.radians(LIGHT_HEIGHT))
+    flat = math.cos(math.radians(LIGHT_HEIGHT))
+    total = np.zeros(lift.shape, dtype=np.float32)
+    for azimuth, share in LIGHTS:
+        dx = math.sin(math.radians(azimuth)) * flat
+        dy = -math.cos(math.radians(azimuth)) * flat
+        total += share * ((nx * dx + ny * dy + 1 * sun) / length / sun - 1)
+    return np.tanh(total * SHADE_GAIN).astype(np.float32)
+
+
+def _upland(
+    land: NDArray[np.float32],
+    base: NDArray[np.float32],
+    lift: NDArray[np.float32],
+    line: NDArray[np.float32],
+) -> NDArray[np.float32]:
+    """``land`` where it is high turned towards bare, warm grey rock, and on the crests above
+    ``line`` (the snow line of the climate there) towards snow: the colour itself says where the
+    mountains are, not only the shade."""
+    rise = _smooth(HIGH_FROM, HIGH_TO, base)[..., None]
+    grey = (land @ np.array([0.299, 0.587, 0.114], np.float32))[..., None]
+    rock = grey * np.array([1.06, 1.0, 0.9], np.float32) * 0.96 + 8
+    land = (land + (rock - land) * rise * HIGH_ROCK).astype(np.float32)
+    cap = np.clip((lift - line) / SNOW_WIDTH, 0, 1).astype(np.float32)
+    cap = (cap * cap * (3 - 2 * cap))[..., None] * SNOW_SHARE
+    return (land + (np.array(COLOURS["snow"], np.float32) - land) * cap).astype(np.float32)
+
+
 _RELIEFS: dict[int, tuple[Atlas, Relief]] = {}
 
 
@@ -296,7 +388,9 @@ def relief(atlas: Atlas) -> Relief:
     cell = np.maximum(sample, 0)
     high = np.zeros(atlas.cells, dtype=np.float32)
     rough = np.zeros(atlas.cells, dtype=np.float32)
+    snow = np.full(atlas.cells, SNOW_DEFAULT, dtype=np.float32)
     for index in range(atlas.cells):
+        snow[index] = SNOW_LINES.get(atlas.word("climate", int(atlas.climate[index])), SNOW_DEFAULT)
         topography = atlas.word("topography", int(atlas.topography[index]))
         # A wasteland has the relief of its own topography (a flat wild, a dune, a plateau); one
         # the style does not know stands as a mountain, a land as a plain.
@@ -308,33 +402,33 @@ def relief(atlas: Atlas) -> Relief:
         blur(np.where(solid, colours[cell, channel], 0).astype(np.float32), 2)
         for channel in range(3)
     ]
+    snow_line = blur(np.where(solid, snow[cell], 0).astype(np.float32), 2)
     heights = np.where(solid, high[cell], 0).astype(np.float32)
     # A lake lies in the land: its surface is as high as the land that meets it, not a pit
     # whose walls the shade would draw as a crater, and only the sea is a shore.
     heights = np.where(lake, _lake_heights(sample, solid, lake, high), heights)
-    base = blur(heights, 6, 3)
-    grain = blur(np.where(solid, rough[cell], 0).astype(np.float32), 3)
-    shore = euclidean_distance(water & ~lake, 8 * 64).astype(np.float32) / 8
-    coast = np.minimum(1, shore / 6)
+    surface = (solid | lake).astype(np.float32)
+    # The height is smoothed over the land only, so no sea pulls it down: the ground does not
+    # fall away into a cliff at the shore, and its shade runs on smoothly into the water.
+    base = _spread(heights, surface, 6, 3)
+    grain = _spread(np.where(solid, rough[cell], 0).astype(np.float32), surface, 3)
     rows, columns = np.mgrid[0:height, 0:width].astype(np.float32)
-    ridged = np.where(grain > ROUGH, grain * 0.2 * _ridges(columns, rows), 0)
-    lift = np.where(solid | lake, (base + ridged) * coast, 0).astype(np.float32)
-    left = np.concatenate([lift[:, :1], lift[:, :-1]], axis=1)
-    right = np.concatenate([lift[:, 1:], lift[:, -1:]], axis=1)
-    up = np.concatenate([lift[:1], lift[:-1]], axis=0)
-    down = np.concatenate([lift[1:], lift[-1:]], axis=0)
-    nx = (left - right) * RELIEF_Z
-    ny = (up - down) * RELIEF_Z
-    lit = (nx * LIGHT[0] + ny * LIGHT[1] + LIGHT[2]) / np.sqrt(nx * nx + ny * ny + 1)
-    shade = (np.clip(np.floor(lit / LIGHT[2] * 128 + 0.5), 0, 255) / 128).astype(np.float32)
+    ridged = np.where(grain > ROUGH, grain * RIDGE * _ridges(columns, rows), 0)
+    lift = (base + ridged).astype(np.float32)
+    shade = _shade(lift)
     variation = 1 + 0.035 * _noise(columns / 3.1, rows / 3.1)
     weight = np.maximum(share, 1e-6)
-    land = np.stack(
-        [np.clip(np.floor(s / weight * variation + 0.5), 0, 255) for s in soft], axis=-1
-    )
-    land = np.where((share > SOME_LAND)[..., None], land, 0).astype(np.float32)
+    land = np.stack([s / weight * variation for s in soft], axis=-1).astype(np.float32)
+    land = _upland(land, base, lift, (snow_line / weight).astype(np.float32))
+    land = np.where(
+        (share > SOME_LAND)[..., None], np.clip(np.floor(land + 0.5), 0, 255), 0
+    ).astype(np.float32)
     depth = np.minimum(255, euclidean_distance(solid, 8 * 255).astype(np.float32) / 8)
-    found = Relief(land=land, shade=shade, depth=np.where(water, depth, 0).astype(np.float32))
+    found = Relief(
+        land=land,
+        shade=np.where(solid, shade, 0).astype(np.float32),
+        depth=np.where(water, depth, 0).astype(np.float32),
+    )
     while len(_RELIEFS) >= KEPT_RELIEFS:
         del _RELIEFS[next(iter(_RELIEFS))]
     _RELIEFS[id(atlas)] = (atlas, found)
@@ -676,7 +770,8 @@ BAND: Final[int] = 128
 @dataclass(frozen=True, slots=True, eq=False)
 class Ground:
     """The physical map at the atlas's resolution, the same under every lens: the water's
-    colour, the land's colour and its shade (128 is level ground)."""
+    colour, the land's colour and its shade (128 is level ground, 1 to 255 from full shadow to
+    full light)."""
 
     water: NDArray[np.uint8]
     land: NDArray[np.uint8]
@@ -695,7 +790,7 @@ def ground(atlas: Atlas) -> Ground:
     field = relief(atlas)
     height, width = atlas.size
     labels = atlas.labels
-    t = _smooth(0, COAST_DEPTH, field.depth)[..., None]
+    t = (1 - np.exp(-field.depth * SHELF / COAST_DEPTH)).astype(np.float32)[..., None]
     far = _smooth(COAST_DEPTH, COAST_DEPTH * 3, field.depth)[..., None]
     colour = {name: np.array(COLOURS[name], np.float32) for name in COLOURS}
     sea = colour["shallow"] + (colour["deep"] - colour["shallow"]) * t
@@ -714,12 +809,26 @@ def ground(atlas: Atlas) -> Ground:
             np.where(is_lake, _band(lake, rows, width), _band(sea, rows, width)) + 0.5, 0, 255
         ).astype(np.uint8)
         land[rows] = np.clip(_band(field.land, rows, width) + 0.5, 0, 255).astype(np.uint8)
-        shade[rows] = np.clip(_band(field.shade, rows, width) * 128 + 0.5, 0, 255).astype(np.uint8)
+        shade[rows] = np.clip(_band(field.shade, rows, width) * 127 + 128.5, 1, 255).astype(
+            np.uint8
+        )
     found = Ground(water=water, land=land, shade=shade)
     while len(_GROUNDS) >= KEPT_GROUNDS:
         del _GROUNDS[next(iter(_GROUNDS))]
     _GROUNDS[id(atlas)] = (atlas, found)
     return found
+
+
+def lit(soil: NDArray[np.float32], shade: NDArray[np.float32]) -> NDArray[np.float32]:
+    """``soil`` (colours, 0..255) under ``shade`` (-1 to 1): in shadow each channel darkens by
+    its share of ``SHADOW``, in light the colour moves towards the warm white of ``LAMP``, by at
+    most ``HIGHLIGHT``. Level ground is unchanged, and nothing goes black or burns out."""
+    dark = np.minimum(shade, 0)[..., None]
+    light = np.maximum(shade, 0)[..., None]
+    darkened = soil * (1 + dark * np.array(SHADOW, np.float32))
+    return (darkened + (np.array(LAMP, np.float32) - darkened) * light * HIGHLIGHT).astype(
+        np.float32
+    )
 
 
 def picture(  # noqa: PLR0913 - the lens and what is laid on it
@@ -762,8 +871,10 @@ def picture(  # noqa: PLR0913 - the lens and what is laid on it
                 soil + (grey * np.array([1.02, 1.0, 0.94], np.float32) - soil) * 0.62
             ) * 0.93 + 10
             soil = np.where(cover > SOME_COVER, soil + (own_colours[cell] - soil) * cover, faded)
-        lit = 1 + (physical.shade[rows].astype(np.float32) / 128 - 1) * look.shade
-        rgb = np.where(solid, soil * lit[..., None], physical.water[rows].astype(np.float32))
+        shade = ((physical.shade[rows].astype(np.float32) - 128) / 127 * look.shade).astype(
+            np.float32
+        )
+        rgb = np.where(solid, lit(soil, shade), physical.water[rows].astype(np.float32))
         if kept is not None:
             share = np.where(band < 0, kept[rows], 0)[..., None]
             rgb = rgb + (kept_colour - rgb) * share

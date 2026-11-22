@@ -6,12 +6,17 @@
 // kilobytes; borders, coasts, outlines and the dimming of what is not selected are worked out per
 // screen pixel, sharp at every zoom. Without WebGL 2 a canvas draws the same colours at the
 // atlas's own resolution.
+//
+// The map is a sheet: beyond its edge lies the window's own ground (the theme's ``--map-bg``),
+// ruled with a faint graticule that moves with the map, the sheet's soft shadow and a hairline
+// along its edge, so a land the box cuts reads as cut by the sheet rather than as an island in
+// an endless sea.
 
 import type { Camera } from "./camera";
 import { LAKE, LAND, SEA, type WorldAtlas } from "./atlas";
 import { profile, type StyledLens } from "./lenses";
-import { relief, STEP, type Relief } from "./relief";
-import { COAST_DEPTH, COLOURS, unit } from "./style";
+import { DEPTH_SCALE, relief, STEP, type Relief } from "./relief";
+import { COAST_DEPTH, COLOURS, RELIEF, unit } from "./style";
 
 const TEX_W = 1024;
 export const HOVER = 1;
@@ -28,6 +33,9 @@ export interface Overlays {
 export interface Theme {
   ink: [number, number, number];
   accent: [number, number, number];
+  /** The ground beyond the map's edge, and the ink of its rules and of the sheet's edge. */
+  ground: [number, number, number];
+  rule: [number, number, number];
 }
 
 export interface Renderer {
@@ -86,6 +94,8 @@ uniform int uLocations;
 uniform int uCoast;
 uniform vec3 uInk;
 uniform vec3 uAccent;
+uniform vec3 uGround;
+uniform vec3 uRule;
 out vec4 outColour;
 
 const int TEX_W = ${TEX_W};
@@ -95,6 +105,18 @@ const vec3 LAKE_SHALLOW = vec3(${LAKE_SHALLOW.join(", ")});
 const vec3 LAKE_DEEP = vec3(${LAKE_DEEP.join(", ")});
 const vec3 OCEAN = vec3(${OCEAN.join(", ")});
 const vec3 KEPT = vec3(${KEPT.join(", ")});
+const vec3 SHADOW = vec3(${RELIEF.shadow.join(", ")});
+const vec3 LAMP = vec3(${RELIEF.lamp.map((v) => v / 255).join(", ")});
+const float HIGHLIGHT = ${RELIEF.highlight.toFixed(4)};
+const float SHELF = ${RELIEF.shelf.toFixed(4)};
+
+// soil (0..1) under shade (-1 to 1): in shadow each channel darkens by its share of
+// SHADOW, in light the colour moves towards the warm white of LAMP, by at most HIGHLIGHT. Level
+// ground is unchanged, and nothing goes black or burns out.
+vec3 lit(vec3 soil, float shade) {
+  vec3 darkened = soil * (1.0 + min(shade, 0.0) * SHADOW);
+  return darkened + (LAMP - darkened) * (max(shade, 0.0) * HIGHLIGHT);
+}
 
 int cellAt(vec2 p) {
   ivec2 q = ivec2(floor(p));
@@ -105,17 +127,20 @@ ivec2 slot(int c) { return ivec2(c % TEX_W, c / TEX_W); }
 ivec4 info(int c) { return c < 0 ? ivec4(-2147483647, -2147483647, 0, 4) : texelFetch(uInfo, slot(c), 0); }
 bool solid(ivec4 i) { return i.a <= 1; }
 
-// The colour of the map at atlas point p; alpha 0 outside the New World.
+// The colour of the map at atlas point p; alpha 0 beyond the box.
 vec4 surface(vec2 p) {
-  if (p.x < 0.0 || p.y < 0.0 || p.x >= uSize.x || p.y >= uSize.y) return vec4(uMatch == 1 ? OCEAN * 0.6 : OCEAN, 1.0);
+  if (p.x < 0.0 || p.y < 0.0 || p.x >= uSize.x || p.y >= uSize.y) return vec4(0.0);
   int c = cellAt(p);
   ivec4 me = info(c);
   int kind = c < 0 ? ${SEA} : me.a;
   vec2 uv = p / (float(${STEP}) * uField);
   vec3 rgb;
   if (kind == ${SEA} || kind == ${LAKE}) {
-    float t = smoothstep(0.0, float(${COAST_DEPTH}), texture(uDepth, uv).r * 255.0);
-    rgb = kind == ${LAKE} ? mix(LAKE_SHALLOW, LAKE_DEEP, t) : mix(mix(SHALLOW, DEEP, t), OCEAN, smoothstep(float(${COAST_DEPTH}), float(${COAST_DEPTH * 3}), texture(uDepth, uv).r * 255.0));
+    // The water darkens from the shore in a fall that has no edge to show as a ring.
+    float depth = texture(uDepth, uv).r * (255.0 / ${DEPTH_SCALE}.0);
+    float t = 1.0 - exp(-depth * SHELF / float(${COAST_DEPTH}));
+    float open = smoothstep(float(${COAST_DEPTH}), float(${COAST_DEPTH * 3}), depth);
+    rgb = kind == ${LAKE} ? mix(LAKE_SHALLOW, LAKE_DEEP, t) : mix(mix(SHALLOW, DEEP, t), OCEAN, open);
   } else {
     vec4 relief = texture(uRelief, uv);
     vec3 land = relief.rgb;
@@ -128,7 +153,7 @@ vec4 surface(vec2 p) {
         land = mix(land, theme.rgb, theme.a);
       }
     }
-    rgb = land * mix(1.0, relief.a * (255.0 / 128.0), uShade);
+    rgb = lit(land, (relief.a * 255.0 - 128.0) / 127.0 * uShade);
   }
   // Land the world keeps from the game, under the open sea around the New World.
   if (c < 0) rgb = mix(rgb, KEPT, smoothstep(0.35, 0.65, texture(uKept, p / uSize).r));
@@ -139,6 +164,26 @@ vec4 surface(vec2 p) {
   return vec4(rgb, 1.0);
 }
 
+// What lies beyond the map's edge at atlas point p: the window's ground with a graticule that
+// moves with the map (its spacing doubles as the map is brought farther away, so the rules stay
+// about as far apart on the screen), the sheet's soft shadow falling to the lower right, and a
+// hairline along its edge.
+vec3 surround(vec2 p) {
+  float px = uScale / uDpr;
+  vec2 outside = max(-p, p - uSize);
+  float edge = length(max(outside, 0.0)) * px;
+  float spacing = exp2(ceil(log2(84.0 / px)));
+  vec2 gap = abs(fract(p / spacing + 0.5) - 0.5) * spacing * px;
+  float rule = 1.0 - smoothstep(0.0, 1.0, min(gap.x, gap.y));
+  vec3 rgb = mix(uGround, uRule, 0.16 * rule);
+  vec2 lee = p - vec2(3.0, 5.0) / px;
+  vec2 under = max(-lee, lee - uSize);
+  float fall = length(max(under, 0.0)) * px;
+  float strength = dot(uGround, vec3(0.299, 0.587, 0.114)) > 0.5 ? 0.2 : 0.5;
+  rgb *= 1.0 - strength * exp(-fall * fall / 160.0);
+  return mix(rgb, uRule, 0.9 * (1.0 - smoothstep(0.0, 1.3, edge)));
+}
+
 void main() {
   vec2 frag = vec2(gl_FragCoord.x, uCanvas.y - gl_FragCoord.y);
   vec2 p = uOrigin + frag / uScale;
@@ -146,9 +191,15 @@ void main() {
   ivec4 me = info(c);
   vec4 colour;
   if (uScale < 0.95) {
-    // Zoomed out: average a few points of the screen pixel, so coasts and borders do not step.
+    // Zoomed out: average a few points of the screen pixel, so coasts and borders do not step;
+    // at the sheet's edge the share of the points on it says how much of the pixel is map.
     float s = 0.25 / uScale;
-    colour = (surface(p + vec2(-s, -s)) + surface(p + vec2(s, -s)) + surface(p + vec2(-s, s)) + surface(p + vec2(s, s))) * 0.25;
+    vec4 a = surface(p + vec2(-s, -s));
+    vec4 b = surface(p + vec2(s, -s));
+    vec4 d = surface(p + vec2(-s, s));
+    vec4 e = surface(p + vec2(s, s));
+    float cover = (a.a + b.a + d.a + e.a) * 0.25;
+    colour = vec4(cover > 0.0 ? (a.rgb * a.a + b.rgb * b.a + d.rgb * d.a + e.rgb * e.a) / (cover * 4.0) : vec3(0.0), cover);
   } else {
     colour = surface(p);
   }
@@ -197,6 +248,7 @@ void main() {
   if (match > 0.0) { rgb = mix(rgb, uAccent, 0.95); alpha = 1.0; }
   if (hover > 0.0 && (me.b & ${HOVER}) != 0) { rgb = vec3(1.0); }
   if (pinned > 0.0) { rgb = mix(rgb, uAccent, pinned); alpha = max(alpha, pinned); }
+  if (colour.a < 1.0) rgb = mix(surround(p), rgb, colour.a);
   outColour = vec4(rgb * alpha, alpha);
 }`;
 
@@ -396,6 +448,8 @@ class GLRenderer implements Renderer {
       this.uniform("uAccent"),
       ...(theme.accent.map((v) => v / 255) as [number, number, number]),
     );
+    gl.uniform3f(this.uniform("uGround"), ...(theme.ground.map((v) => v / 255) as [number, number, number]));
+    gl.uniform3f(this.uniform("uRule"), ...(theme.rule.map((v) => v / 255) as [number, number, number]));
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
@@ -424,14 +478,15 @@ export function paintPixel(
   let g: number;
   let b: number;
   if (kind === SEA || kind === LAKE) {
-    const t = Math.min(1, field.depth[f] / COAST_DEPTH);
-    const smooth = t * t * (3 - 2 * t);
+    const depth = field.depth[f] / DEPTH_SCALE;
+    const smooth = 1 - Math.exp((-depth * RELIEF.shelf) / COAST_DEPTH);
     const [a, z] = kind === LAKE ? [LAKE_SHALLOW, LAKE_DEEP] : [SHALLOW, DEEP];
-    const far = kind === LAKE ? 0 : Math.min(1, Math.max(0, (field.depth[f] - COAST_DEPTH) / (2 * COAST_DEPTH)));
+    const far = kind === LAKE ? 0 : Math.min(1, Math.max(0, (depth - COAST_DEPTH) / (2 * COAST_DEPTH)));
     const open = far * far * (3 - 2 * far);
-    r = (a[0] + (z[0] - a[0]) * smooth + (OCEAN[0] - z[0]) * open) * 255;
-    g = (a[1] + (z[1] - a[1]) * smooth + (OCEAN[1] - z[1]) * open) * 255;
-    b = (a[2] + (z[2] - a[2]) * smooth + (OCEAN[2] - z[2]) * open) * 255;
+    const mixed = [0, 1, 2].map((k) => a[k] + (z[k] - a[k]) * smooth);
+    r = (mixed[0] + (OCEAN[0] - mixed[0]) * open) * 255;
+    g = (mixed[1] + (OCEAN[1] - mixed[1]) * open) * 255;
+    b = (mixed[2] + (OCEAN[2] - mixed[2]) * open) * 255;
   } else {
     const look = profile(lens.layer);
     r = field.land[f * 4];
@@ -450,10 +505,17 @@ export function paintPixel(
         b += (lens.colours[cell * 3 + 2] - b) * opacity;
       }
     }
-    const shade = 1 + ((field.land[f * 4 + 3] * 2) / 255 - 1) * look.shade;
-    r *= shade;
-    g *= shade;
-    b *= shade;
+    // The light on the land, as the shader lays it: shadow darkens each channel, light moves the
+    // colour towards the lamp.
+    const shade = ((field.land[f * 4 + 3] - 128) / 127) * look.shade;
+    const dark = Math.min(shade, 0);
+    const light = Math.max(shade, 0) * RELIEF.highlight;
+    r = r * (1 + dark * RELIEF.shadow[0]);
+    g = g * (1 + dark * RELIEF.shadow[1]);
+    b = b * (1 + dark * RELIEF.shadow[2]);
+    r += (RELIEF.lamp[0] - r) * light;
+    g += (RELIEF.lamp[1] - g) * light;
+    b += (RELIEF.lamp[2] - b) * light;
   }
   out[o] = r;
   out[o + 1] = g;
@@ -560,17 +622,34 @@ class CanvasRenderer implements Renderer {
     this.stale = false;
   }
 
-  draw(camera: Camera, _overlays: Overlays, _theme: Theme, ratio?: number): void {
+  draw(camera: Camera, _overlays: Overlays, theme: Theme, ratio?: number): void {
     if (this.stale) this.paint();
     const context = this.context;
     const dpr = ratio ?? (window.devicePixelRatio || 1);
+    const css = (rgb: [number, number, number]): string => `rgb(${rgb.join(",")})`;
     context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    context.fillStyle = css(theme.ground);
+    context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     context.imageSmoothingEnabled = camera.scale < 1;
     context.setTransform(
       camera.scale * dpr, 0, 0, camera.scale * dpr, -camera.x * camera.scale * dpr,
       -camera.y * camera.scale * dpr,
     );
+    const atlas = this.atlas;
+    if (atlas) {
+      // The sheet's soft shadow to the lower right and a hairline along its edge, then the map.
+      context.save();
+      context.shadowColor = "rgba(0, 0, 0, 0.5)";
+      context.shadowBlur = 18 * dpr;
+      context.shadowOffsetX = 3 * dpr;
+      context.shadowOffsetY = 5 * dpr;
+      context.fillStyle = css(theme.ground);
+      context.fillRect(0, 0, atlas.width, atlas.height);
+      context.restore();
+      context.strokeStyle = css(theme.rule);
+      context.lineWidth = 1 / camera.scale;
+      context.strokeRect(-0.5 / camera.scale, -0.5 / camera.scale, atlas.width + 1 / camera.scale, atlas.height + 1 / camera.scale);
+    }
     context.drawImage(this.image, 0, 0);
   }
 

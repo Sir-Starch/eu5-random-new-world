@@ -16,7 +16,7 @@
     type Camera,
   } from "../lib/camera";
   import { profile, PRECIOUS_MARKS } from "../lib/lenses";
-  import { createRenderer, OCEAN_CSS, paintBox, type Renderer, type Theme } from "../lib/mapgl";
+  import { createRenderer, paintBox, type Renderer, type Theme } from "../lib/mapgl";
   import type { MapSession } from "../lib/mapSession.svelte";
   import { copyImage, saveFile } from "../lib/native";
   import Chronicle from "./history/Chronicle.svelte";
@@ -64,7 +64,7 @@
   let animation = 0;
   let drag = $state<{ x: number; y: number; cam: Camera; moved: boolean } | null>(null);
   let observer: ResizeObserver | null = null;
-  let theme: Theme = { ink: [10, 12, 16], accent: [220, 174, 90] };
+  let theme: Theme = { ink: [10, 12, 16], accent: [220, 174, 90], ground: [20, 23, 27], rule: [85, 88, 94] };
 
   const atlas = $derived(session.atlas);
   const facts = $derived<Facts | null>(atlas ? atlas.facts(session.pinned >= 0 ? session.pinned : hover) : null);
@@ -172,6 +172,9 @@
     theme = {
       ink: light ? [44, 32, 18] : [8, 10, 14],
       accent: parse("--map-accent", [255, 213, 74]),
+      // Beyond the map's edge lies the window's own ground, ruled in the colour of its lines.
+      ground: parse("--map-bg", light ? [211, 215, 220] : [20, 23, 27]),
+      rule: parse("--line-3", light ? [161, 163, 167] : [85, 88, 94]),
     };
   }
 
@@ -669,8 +672,6 @@
     out.height = height;
     const context = out.getContext("2d");
     if (context) {
-      context.fillStyle = OCEAN_CSS;
-      context.fillRect(0, 0, width, height);
       context.drawImage(target, 0, 0);
       const names = document.createElement("canvas");
       names.width = width;
@@ -702,8 +703,6 @@
     out.height = renderer.canvas.height;
     const context = out.getContext("2d");
     if (!context) return;
-    context.fillStyle = OCEAN_CSS;
-    context.fillRect(0, 0, out.width, out.height);
     context.drawImage(renderer.canvas, 0, 0);
     context.drawImage(labelCanvas, 0, 0);
     try {
@@ -776,7 +775,7 @@
 
 </script>
 
-<div class="viewer" class:compact data-renderer={rendererKind} style:--ocean={OCEAN_CSS}>
+<div class="viewer" class:compact data-renderer={rendererKind}>
   {#if !compact}
     <div class="pane-head toolbar">
       {@render head?.()}
@@ -991,7 +990,7 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    background: var(--ocean);
+    background: var(--map-bg);
     container-type: size;
   }
   .canvas-host {

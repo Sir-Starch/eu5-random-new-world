@@ -196,8 +196,15 @@ are toasts; questions are in-window dialogs.
 2026-10-30: the physical map had become less beautiful, tribes were mixed with countries and
 resource names hung anywhere). It is drawn from the atlas, which holds no heightmap: vegetation
 and climate colours softened across locations, relief shaded from each location's topography
-and roughened where it is mountainous, wetlands and snow, water darkening from the coast into
-the open ocean around the New World, region and sea names, cities and towns. Around what it
+and roughened where it is mountainous (lit from four sides with a bounded, hue-keeping grade, so
+no coast goes black or burns out; rock and snow by height and by each climate's snow line; the
+numbers are `relief` in `lenses.json`, read by both windows), wetlands, water darkening from the
+coast into the open ocean around the New World, region and sea names, cities and towns. The map
+is a sheet on the window's own ground, not a piece of an endless sea (2026-11-22, owner report: a
+land cut by the picture's edge read as an island): beyond the edge lie the theme's ground (`--map-bg`)
+with a faint graticule that moves with the map, a soft shadow and a hairline along the edge in the
+colour of the window's rules (`--line-3`), drawn by the map's shader, by the canvas fallback and,
+from the window's palette, by the Qt view. Around what it
 generated the map shows the lands the world keeps from the game in one grey, read on this machine
 from the world's own picture and placed by the atlas's recorded origin (a world made before it was
 recorded is placed by matching its atlas to that picture, exactly or not at all); a world of

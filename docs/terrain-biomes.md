@@ -778,6 +778,34 @@ shades like the mountains around it: mean deviation from level 0.69–0.70 befor
 in game and found the lake depth acceptable though not ideal; the game's own heightmap, where
 a lake is a coast-height depression, is unchanged.
 
+*Lit as a chart, not as a model* (2026-11-22, owner report: coasts almost black beside others so
+burned that the biome vanished). The cause was the light, not the colours: the height was dragged
+to nothing at every shore, so each coast was a cliff, and one lamp lit that cliff hard on one side
+and not at all on the other. The relief is now built in one place for both windows
+(`lenses.json`, `relief`; every number of the light is there):
+
+* The height is smoothed over the land alone (a normalised blur, so a coastal pixel averages the
+  land around it and not the sea), warped ridge noise rides on it, and a Sobel slope is lit from
+  four azimuths at once (the north-west most), squeezed by `tanh` into −1…1. A slope is never
+  wholly black or wholly white and level ground reads 0.
+* `lit()` grades a colour by that shade within bounds: in shadow it loses at most 42 / 38 / 30 %
+  per channel (the blue least, so shadows are cool), in light it moves a fifth of the way to a warm
+  lamp colour and never past it. The hue of the biome stays readable at both ends.
+* High ground turns to rock between two heights and to snow above the snow line of its climate
+  (0.30 arctic to 0.95 arid, blurred across locations like the colours), so a hot range is not
+  white and a polar one is.
+* Water darkens from the shore as an exponential shelf (three e-folds of the coast depth), and its
+  depth is an exact Euclidean distance (Felzenszwalb, stored in quarter field pixels), where the
+  chamfer distance had drawn octagonal blocks.
+
+Measured on the real atlas of one three-continent world, the shade at the coast (61 406 pixels)
+has percentiles 1 / 5 / 50 / 95 / 99 of −0.97 / −0.87 / −0.04 / 0.54 / 0.63 and inland (163 101
+pixels) −0.98 / −0.87 / −0.03 / 0.50 / 0.63 in the TypeScript port, with the Python one within a
+hundredth [V-EXEC 2026-11-22]: the coast is lit as the inland is. The relief of a full-size
+synthetic atlas (4 096 × 1 880, 600 locations) takes 1.2 s in the Tauri window where it took
+0.86 s [V-EXEC 2026-11-22]. The game's own heightmap is not in the atlas; reading it would change
+the atlas format and is not part of this.
+
 [UNKNOWN] How the engine draws a generated lake of tens of thousands of pixels: vanilla lists
 mesh transforms for its own lakes and the exporter drops those in the canvas, so generated lakes
 (as in 1.0.0) are the water colour map under the sea plane; only small ones have been seen. The

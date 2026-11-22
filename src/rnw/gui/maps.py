@@ -48,6 +48,7 @@ from PySide6.QtGui import (
     QLinearGradient,
     QPainter,
     QPainterPath,
+    QPalette,
     QPen,
     QPixmap,
     QPolygonF,
@@ -166,6 +167,15 @@ MOST_NAMES: Final[int] = 260
 SMALLEST_NAME: Final[float] = 10.0
 SMALLEST_COUNTRY: Final[float] = 9.0
 SPOT_ROOM: Final[float] = 46.0
+# The ground beyond the map's edge: a window lighter than this reads as light; the graticule's
+# spacing (screen pixels), its strength; the shadow's steps, how far each reaches (screen
+# pixels) and its strength.
+DARK_WINDOW: Final[float] = 0.5
+GRID_GAP: Final[float] = 84.0
+GRID_STRENGTH: Final[float] = 0.16
+SHADOW_STEPS: Final[int] = 8
+SHADOW_REACH: Final[float] = 2.5
+SHADOW_STRENGTH: Final[float] = 0.5
 # A click moves the pointer at most this far (in screen pixels).
 CLICK_SLACK: Final[int] = 3
 MINUS: Final[str] = "\N{MINUS SIGN}"
@@ -184,6 +194,15 @@ def _rgb(colour: tuple[int, int, int]) -> QColor:
     return QColor(*colour)
 
 
+def _blended(source: QColor, target: QColor, amount: float) -> QColor:
+    """``source`` moved ``amount`` of the way to ``target``."""
+    return QColor.fromRgbF(
+        source.redF() + (target.redF() - source.redF()) * amount,
+        source.greenF() + (target.greenF() - source.greenF()) * amount,
+        source.blueF() + (target.blueF() - source.blueF()) * amount,
+    )
+
+
 class MapView(PreviewView):
     """A map: the picture of a lens, and what its owner writes over it at the view's zoom.
 
@@ -200,7 +219,6 @@ class MapView(PreviewView):
         super().__init__()
         self.setMouseTracking(True)
         self.viewport().setMouseTracking(True)
-        self.setBackgroundBrush(_rgb(mapstyle.COLOURS["ocean"]))
         self.setFrameShape(QFrame.Shape.NoFrame)
         self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
         # The map moves by dragging, as the Tauri window's does.
@@ -309,6 +327,57 @@ class MapView(PreviewView):
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self.changed.emit()
+
+    def _ground(self) -> tuple[QColor, QColor]:
+        """The ground beyond the map's edge and the ink of its rules, from the window's own
+        palette (the Tauri window takes them from its theme)."""
+        palette = self.palette()
+        window = palette.color(QPalette.ColorRole.Window)
+        ink = palette.color(QPalette.ColorRole.WindowText)
+        dark = window.lightnessF() < DARK_WINDOW
+        ground = _blended(window, QColor(0, 0, 0) if dark else ink, 0.4 if dark else 0.07)
+        return ground, _blended(ground, ink, 0.45)
+
+    @override
+    def drawBackground(self, painter: QPainter, rect: QRectF | QRect) -> None:
+        """The map is a sheet: beyond its edge lies the window's own ground, ruled with a faint
+        graticule that moves with the map, the sheet's soft shadow and a hairline along its
+        edge, so a land the box cuts reads as cut by the sheet and not as an island in a sea."""
+        ground, rule = self._ground()
+        painter.fillRect(rect, ground)
+        sheet = self.sceneRect()
+        if sheet.isEmpty():
+            return
+        zoom = max(self.zoom(), 1e-6)
+        pixel = 1 / zoom
+        spacing = 2 ** math.ceil(math.log2(GRID_GAP * pixel))
+        faint = QColor(rule)
+        faint.setAlphaF(GRID_STRENGTH)
+        painter.setPen(QPen(faint, 0))
+        left, top, right, bottom = rect.left(), rect.top(), rect.right(), rect.bottom()
+        x = math.floor(left / spacing) * spacing
+        while x <= right:
+            painter.drawLine(QPointF(x, top), QPointF(x, bottom))
+            x += spacing
+        y = math.floor(top / spacing) * spacing
+        while y <= bottom:
+            painter.drawLine(QPointF(left, y), QPointF(right, y))
+            y += spacing
+        # The shadow falls to the lower right, from the sheet outwards in fading steps.
+        painter.setPen(Qt.PenStyle.NoPen)
+        for step in range(SHADOW_STEPS, 0, -1):
+            spread = step * SHADOW_REACH * pixel
+            shade = QColor(0, 0, 0)
+            shade.setAlphaF(
+                SHADOW_STRENGTH * (1 - step / (SHADOW_STEPS + 1)) ** 2 / SHADOW_STEPS * 2
+            )
+            painter.setBrush(shade)
+            painter.drawRect(
+                sheet.translated(3 * pixel, 5 * pixel).adjusted(-spread, -spread, spread, spread)
+            )
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(rule, 0))
+        painter.drawRect(sheet.adjusted(-0.5 * pixel, -0.5 * pixel, 0.5 * pixel, 0.5 * pixel))
 
     @override
     def drawForeground(self, painter: QPainter, rect: QRectF | QRect) -> None:

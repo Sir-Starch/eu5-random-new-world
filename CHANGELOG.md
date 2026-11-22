@@ -5,6 +5,16 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Redraw the **physical map** of the window (Tauri and classic) and stop it floating in an endless
+  sea. The map is now a sheet on the window's own ground, with a faint graticule that moves with
+  it, a soft shadow and a hairline along its edge, in the colours of the chosen appearance, so land
+  cut by the picture's edge is no longer an island in open water. The relief is lit from four
+  sides with a bounded grade that keeps the hue of the biome, and the height is smoothed over the
+  land alone, so coasts are neither almost black nor burned out; rock and snow follow height and
+  each climate's snow line (a hot range is no longer white); the water darkens from the shore in
+  an even fall with exact, not blocky, distances. All the numbers of the light are in the shared
+  style file, read by both windows. No world changes.
+
 - Generate Africa and Oceania independently or alongside America in a single
   world. Both added continents have their own presets, detailed settings and
   local cultures, faiths and societies. Africa offers four outcomes for
