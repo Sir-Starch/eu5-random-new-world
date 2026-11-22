@@ -116,12 +116,15 @@ def _canvas(game_map: Eu5Map, mask: NDArray[np.bool_]) -> Canvas:
 
 def relocated_canvas(game_map: Eu5Map, canvas: Canvas) -> Canvas:
     """Count retained and replaced locations at their final installed coordinates."""
+    counted = _canvas(game_map, canvas.mask)
     return replace(
-        _canvas(game_map, canvas.mask),
+        counted,
+        removed=counted.removed if canvas.drowned is None else counted.removed | canvas.drowned,
         groups=canvas.groups,
         footprints=canvas.footprints,
         moves=canvas.moves,
         enclosed_ocean=canvas.enclosed_ocean,
+        drowned=canvas.drowned,
     )
 
 
@@ -221,13 +224,14 @@ def _piece_runs(rows: NDArray[np.int64], columns: NDArray[np.int64]) -> NDArray[
 def absorb_land_fragments(
     game_map: Eu5Map, canvas: Canvas, generated: Collection[str]
 ) -> tuple[Eu5Map, Canvas]:
-    """Give the small fragments of replaced land that lie among retained water to that water.
+    """Give the small pieces of replaced land that lie among retained water to that water.
 
-    The plan leaves out of every canvas a small piece of a replaced location that no canvas
-    reaches (``continent_domains._rejoin_fragments``): an islet's stray pixels in a retained
-    sea zone. The location is removed whole, so the piece takes the colour of the retained
-    location that surrounds it the most, and the recolouring is recorded among the ocean
-    identities' patches, the only changes allowed outside the canvas.
+    The plan leaves out of every canvas a small piece of replaced land that no canvas reaches
+    (``continent_domains._rejoin_fragments``, ``_without_islets``): an islet's stray pixels, or a
+    small island, in a retained sea zone. The location is removed whole, so the piece takes the
+    colour of the retained location that surrounds it the most, and the recolouring is recorded
+    among the ocean identities' patches, the only changes allowed outside the canvas. A location
+    that has no pixel left is recorded as drowned: removed from the map without a canvas.
     """
     labels = game_map.labels
     height, width = labels.shape
@@ -259,6 +263,11 @@ def absorb_land_fragments(
         ),
         dtype=bool,
     )
+    count = len(game_map.keys)
+    lost = np.bincount(labels[flat // width, flat % width], minlength=count)
+    total = np.zeros(count, dtype=np.int64)
+    for first in range(0, height, BAND_ROWS):
+        total += np.bincount(labels[first : first + BAND_ROWS].ravel(), minlength=count)
     labels, rgb = labels.copy(), game_map.rgb.copy()
     edits: list[tuple[OceanRemainder, int]] = []
     for piece in _pieces(flat, width, height, limit):
@@ -270,7 +279,11 @@ def absorb_land_fragments(
         edits.append((OceanRemainder(bank, _piece_runs(rows, columns), len(piece)), colour))
     return (
         replace(game_map, labels=labels, rgb=rgb),
-        replace(canvas, enclosed_ocean=(*canvas.enclosed_ocean, *edits)),
+        replace(
+            canvas,
+            enclosed_ocean=(*canvas.enclosed_ocean, *edits),
+            drowned=(lost > 0) & (lost == total),
+        ),
     )
 
 

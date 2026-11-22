@@ -17,6 +17,7 @@ from rnw.continent_world import (
     absorb_land_fragments,
     absorb_ocean_specks,
     compose_regions,
+    relocated_canvas,
 )
 from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_canvas import Canvas, CanvasError, OceanRemainder
@@ -232,6 +233,19 @@ def test_a_stray_piece_of_replaced_land_takes_the_colour_of_the_retained_water_r
     assert part.source == 2
     assert part.pixels == 4
     assert sorted(part.runs.tolist()) == [[3, 500, 503], [4, 500, 501]]
+
+
+def test_an_islet_left_out_of_every_canvas_whole_is_drowned_and_counted_as_removed() -> None:
+    game, canvas = _islet_map()
+    nothing = Canvas(0, 0, game.labels == 9, game.labels.shape, canvas.removed, canvas.trimmed)
+    result, fixed = absorb_land_fragments(game, nothing, {"africa"})
+    assert (result.labels == 1).sum() == 0
+    assert fixed.drowned is not None
+    assert fixed.drowned.tolist() == [False, True, False]
+    # A location with no pixel left is removed from the map, with no canvas of its own.
+    counted = relocated_canvas(result, fixed)
+    assert counted.removed.tolist() == [False, True, False]
+    assert not counted.trimmed.any()
 
 
 def test_a_canvas_that_leaves_no_replaced_land_out_is_not_changed() -> None:

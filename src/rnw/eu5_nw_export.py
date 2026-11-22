@@ -3931,12 +3931,11 @@ def _prepare_vanilla(  # noqa: PLR0913, PLR0917 - original inputs and their fixe
     complete_ocean: bool = False,
     generated: Collection[str] = (),
 ) -> _PreparedVanilla:
-    if composed and (clean.groups or complete_ocean):
+    if composed:
         source, fixed = (
             absorb_ocean_specks(original, clean) if complete_ocean else (original, clean)
         )
-        if complete_ocean:
-            source, fixed = absorb_land_fragments(source, fixed, generated)
+        source, fixed = absorb_land_fragments(source, fixed, generated)
         game_map = relocate_map(source, fixed)
         canvas = relocated_canvas(game_map, fixed)
     else:
@@ -4900,13 +4899,13 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
         checks["circumnavigation_sea_locations"] = int(np.unique(final[-1]).size)
     if complete_ocean:
         checks.update(_shared_ocean_boundaries(shared, shapes))
-        enclaves = _enclosed_sea_cells(
-            world, min(knobs.min_sea_cell_px for knobs in geography.values())
-        )
-        if enclaves:
-            message = f"{enclaves} generated sea locations are enclosed by retained locations"
-            raise NewWorldExportError(message)
-        checks["enclosed_small_sea_locations"] = enclaves
+    enclaves = _enclosed_sea_cells(
+        world, min(knobs.min_sea_cell_px for knobs in geography.values())
+    )
+    if enclaves:
+        message = f"{enclaves} generated sea locations are enclosed by retained locations"
+        raise NewWorldExportError(message)
+    checks["enclosed_small_sea_locations"] = enclaves
     return _ExportGeography(
         game_map,
         canvas,

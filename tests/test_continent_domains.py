@@ -22,6 +22,7 @@ from rnw.continent_domains import (
     _rejoin_fragments,  # pyright: ignore[reportPrivateUsage]
     _released_coasts,  # pyright: ignore[reportPrivateUsage]
     _sighted,  # pyright: ignore[reportPrivateUsage]
+    _without_islets,  # pyright: ignore[reportPrivateUsage]
     plan_domains,
 )
 from rnw.eu5_biomes import EQUATOR_ROW, block_features, climate_grid, land_features, latitude_tenths
@@ -445,15 +446,152 @@ def test_a_kept_coast_that_washes_only_replaced_land_goes_to_the_canvas_that_rep
     game = _coasts()
     kept = np.array([False, False, True, True, False, True])
     released = _released_coasts(game, kept, {"africa"}, ())
-    # `bay` touches africa and `strait`; `strait` touches `bay` and asia: only `bay` is released.
-    assert released.tolist() == [False, False, True, False, False, True]
+    # `bay` touches africa and `strait`; `strait` touches `bay` and asia: only `bay` is released,
+    # and to africa, the second of the continents.
+    assert released.tolist() == [-1, -1, 1, -1, -1, 1]
 
 
 def test_a_coast_kept_for_its_ships_stays() -> None:
     game = _coasts()
     kept = np.array([False, False, True, True, False, True])
     released = _released_coasts(game, kept, {"africa"}, {"ships"})
-    assert released.tolist() == [False, False, True, False, False, False]
+    assert released.tolist() == [-1, -1, 1, -1, -1, -1]
+
+
+def test_a_coast_between_two_replaced_continents_goes_to_the_one_it_touches_most() -> None:
+    # africa 1 | bay 3 | oceania 2, and a second africa location beyond the bay; then the same
+    # without it, where each continent touches the bay once and the lower number wins.
+    labels = np.zeros((2, 12), dtype=np.int32)
+    labels[:, 1] = 1
+    labels[:, 2] = 3
+    labels[:, 3] = 2
+    labels[0, 2] = 4
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("deep", "africa", "oceania", "bay", "more"),
+                labels=labels,
+                continents=("pacific_ocean_continent", "africa", "oceania", "asia", "africa"),
+                classes=(
+                    CellClass.SEA,
+                    CellClass.LAND,
+                    CellClass.LAND,
+                    CellClass.SEA,
+                    CellClass.LAND,
+                ),
+            ),
+        ),
+    )
+    kept = np.array([False, False, False, True, False])
+    both = {"africa", "oceania"}
+    assert _released_coasts(game, kept, both, ())[3] == 1
+    labels[0, 2] = 3
+    assert _released_coasts(game, kept, both, ())[3] == 1
+    labels[:, 1] = 0
+    assert _released_coasts(game, kept, both, ())[3] == 2
+
+
+def _released_map() -> Eu5Map:
+    """The synthetic map with two coastal zones filed under asia beside africa's coast."""
+    base = _map()
+    labels = base.labels.copy()
+    labels[100:140, 724:790] = 6  # washes only africa, and reaches far beyond its water band
+    labels[250:285, 724:745] = 7  # washes africa and a retained shore
+    labels[250:285, 745:760] = 3
+    return cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=(*base.keys, "bay", "gulf"),
+                labels=labels,
+                continents=(*base.continents, "asia", "asia"),
+                classes=(*base.classes, CellClass.SEA, CellClass.SEA),
+                ambiguous=np.array([*base.ambiguous.tolist(), False, False]),
+            ),
+        ),
+    )
+
+
+def test_africa_takes_the_whole_coastal_zone_that_washes_only_its_land() -> None:
+    game = _released_map()
+    (africa,) = plan_domains(game, _settings(("africa",)))
+    mask = _in_world(africa, africa.mask, game.labels.shape)
+    assert mask[game.labels == 6].all()
+    assert not mask[game.labels == 7].any()
+    assert not mask[game.labels == 3].any()
+
+
+def _islets(*, site: bool = False, neighbour: bool = False) -> tuple[Eu5Map, tuple[Domain, ...]]:
+    labels = np.zeros((6, 16384), dtype=np.int32)
+    labels[1:5, 100:400] = 1  # the body of location 1, with a wide shelf of water
+    labels[2, 9000:9004] = 1  # its stray piece among retained water
+    labels[2, 12000:12020] = 2  # location 2, a small island that lies wholly there
+    mask = np.zeros(labels.shape, dtype=bool)
+    mask[:, 50:2000] = True
+    mask[2, 9000:9004] = True
+    mask[2, 12000:12020] = True
+    footprint = (labels > 0) & mask
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("deep", "one", "two"),
+                labels=labels,
+                continents=("pacific_ocean_continent", "africa", "africa"),
+                classes=(CellClass.SEA, CellClass.LAND, CellClass.LAND),
+            ),
+        ),
+    )
+    domain = Domain(
+        CONTINENTS["africa"],
+        0,
+        16384,
+        mask,
+        footprint,
+        island_sites=((2, 9001, 1),) if site else (),
+    )
+    domains = [domain]
+    if neighbour:
+        # Another canvas touches the small island: together they are no small piece.
+        other = np.zeros(labels.shape, dtype=bool)
+        other[:, 12020:15000] = True
+        domains.append(Domain(CONTINENTS["oceania"], 0, 16384, other, np.zeros_like(other)))
+    return game, tuple(domains)
+
+
+def test_a_small_piece_of_replaced_land_among_retained_water_is_left_out_of_the_canvases() -> None:
+    game, domains = _islets()
+    (result,) = _without_islets(game, domains)
+    assert not result.mask[2, 9000:9004].any()
+    assert not result.footprint[2, 9000:9004].any()
+    # The small island that lies wholly there goes too, and the main piece stays.
+    assert not result.mask[2, 12000:12020].any()
+    assert result.mask[:, 50:2000].all()
+
+
+def test_a_small_piece_with_an_island_site_stays_in_the_canvas() -> None:
+    game, domains = _islets(site=True)
+    (result,) = _without_islets(game, domains)
+    assert result.mask[2, 9000:9004].all()
+    assert not result.mask[2, 12000:12020].any()
+
+
+def test_a_piece_that_another_canvas_touches_is_not_a_small_piece() -> None:
+    game, domains = _islets(neighbour=True)
+    africa, oceania = _without_islets(game, domains)
+    assert africa.mask[2, 12000:12020].all()
+    assert oceania.mask[:, 12020:15000].all()
+
+
+def test_canvases_without_small_pieces_are_not_changed() -> None:
+    game, (domain,) = _islets()
+    domain.mask[2, 9000:9004] = False
+    domain.mask[2, 12000:12020] = False
+    assert _without_islets(game, (domain,)) == (domain,)
 
 
 def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -> None:

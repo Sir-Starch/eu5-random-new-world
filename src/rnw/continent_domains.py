@@ -30,7 +30,7 @@ from rnw.topology import (
 from rnw.watersheds import DENSITY_STEP
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping
+    from collections.abc import Collection, Mapping, Sequence
 
     from numpy.typing import NDArray
 
@@ -458,13 +458,21 @@ def _eurasian_waters(
     return reached
 
 
+def _coastal_zones(game_map: Eu5Map, sea: NDArray[np.bool_]) -> NDArray[np.bool_]:
+    """The sea zones the game files under a continent, not under an ocean."""
+    return sea & np.fromiter(
+        (bool(name) and not name.endswith("_ocean_continent") for name in game_map.continents),
+        dtype=bool,
+    )
+
+
 def _released_coasts(
     game_map: Eu5Map,
     kept: NDArray[np.bool_],
     selected: Collection[str],
     spared: Collection[str],
-) -> NDArray[np.bool_]:
-    """The kept coastal zones whose only shore is replaced land.
+) -> NDArray[np.int8]:
+    """The continent that takes each kept coastal zone whose only shore is replaced land.
 
     The game files some coastal zones under a continent that stays (the Red Sea and the
     Gulf of Aden under Asia, the delta mouths under Asia, Morocco's under Europe) although
@@ -472,26 +480,32 @@ def _released_coasts(
     face the generated water along the replaced coast, whose outline is then the border of
     a vanilla location in open water, and the islets of the replaced land inside it would
     stand as tiny generated enclaves. A zone that touches replaced land and no retained
-    land goes to the canvas that replaces the land; a zone that also touches a retained
-    shore stays. ``spared`` names the zones the plan keeps for their ships.
+    land goes to the canvas of the continent whose land it touches most (the lower number
+    on a tie), whole; a zone that also touches a retained shore stays. ``spared`` names the
+    zones the plan keeps for their ships. The result is that continent's number in
+    ``CONTINENTS`` for each such zone and -1 for every other location.
     """
     classes = game_map.classes
+    numbers = {key: number for number, key in enumerate(CONTINENTS)}
     named = np.fromiter((bool(name) for name in game_map.continents), dtype=bool)
     chosen = np.fromiter((name in selected for name in game_map.continents), dtype=bool)
     solid = np.fromiter(
         (kind not in {CellClass.SEA, CellClass.LAKE} for kind in classes), dtype=bool
     )
+    owner = np.fromiter((numbers.get(name, -1) for name in game_map.continents), dtype=np.int8)
     replaced = solid & chosen
     retained = solid & named & ~chosen
-    replaced_front = np.zeros(len(kept), dtype=bool)
+    touching = np.zeros((len(kept), len(CONTINENTS)), dtype=np.int64)
     retained_front = np.zeros(len(kept), dtype=bool)
     for first, second in unpack_pairs(adjacency_pairs(game_map.labels, wrap_x=True)):
         for zone, other in ((first, second), (second, first)):
             if kept[zone]:
-                replaced_front[zone] |= replaced[other]
+                if replaced[other]:
+                    touching[zone, owner[other]] += 1
                 retained_front[zone] |= retained[other]
     held = np.fromiter((key in spared for key in game_map.keys), dtype=bool)
-    return kept & replaced_front & ~retained_front & ~held
+    released = kept & touching.any(axis=1) & ~retained_front & ~held
+    return np.where(released, touching.argmax(axis=1), -1).astype(np.int8)
 
 
 def _shared_water(
@@ -531,7 +545,7 @@ def _shared_water(
         result[whole] = chosen
         kept[whole] = False
         found.append((chosen, group))
-    kept &= ~_released_coasts(game_map, kept, selected, {*retained_tolls, *NAVAL_ANCHORS})
+    kept &= _released_coasts(game_map, kept, selected, {*retained_tolls, *NAVAL_ANCHORS}) < 0
     # The installed open-ocean colours include a few disconnected specks
     # inside retained land. Keep their ownership, and let the identity pass
     # handle each original remainder rather than generating isolated ports.
@@ -938,6 +952,49 @@ def _coastal_waters(
     return marine & claim
 
 
+@dataclass(frozen=True, slots=True, eq=False)
+class _Spread:
+    """The columns and rows of the map that some zones reach, and how many pixels they have."""
+
+    columns: NDArray[np.bool_]
+    rows: NDArray[np.bool_]
+    pixels: int
+
+
+def _spread(labels: NDArray[np.int32], zones: NDArray[np.bool_] | None) -> _Spread:
+    """Where the zones lie on the map; nowhere for ``None``."""
+    columns = np.zeros(labels.shape[1], dtype=bool)
+    rows = np.zeros(len(labels), dtype=bool)
+    pixels = 0
+    if zones is None:
+        return _Spread(columns, rows, pixels)
+    for first in range(0, len(labels), BAND_ROWS):
+        checkpoint()
+        stop = first + BAND_ROWS
+        block = zones[labels[first:stop]]
+        columns |= block.any(axis=0)
+        rows[first:stop] = block.any(axis=1)
+        pixels += int(np.count_nonzero(block))
+    return _Spread(columns, rows, pixels)
+
+
+def _with_released(
+    mask: NDArray[np.bool_],
+    released: NDArray[np.bool_] | None,
+    local: NDArray[np.int32],
+    taken: _Spread,
+    key: str,
+) -> NDArray[np.bool_]:
+    """The mask with every zone released to the continent, all of it inside the window."""
+    if released is None:
+        return mask
+    zones = released[local]
+    if int(np.count_nonzero(zones)) != taken.pixels:
+        message = f"A coastal zone released to {key} lies outside its window"
+        raise CanvasError(message)
+    return mask | zones
+
+
 def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast contacts.
     game_map: Eu5Map,
     continent: Continent,
@@ -949,11 +1006,13 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     join_asia: bool | None,
     europe_strait: bool,
     shared: SharedWater | None = None,
+    released: NDArray[np.bool_] | None = None,
 ) -> Domain:
     labels = game_map.labels
     map_height, map_width = labels.shape
     reach = continent.island_band_px * map_width // REFERENCE_WIDTH
     identity = _membership(game_map, continent.key)
+    taken = _spread(labels, released)
     member = identity & ~sea
     # The American hierarchy includes coastal seas that must be replaced in
     # full to keep American and retained continental identities separated.
@@ -964,7 +1023,8 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     owner = (claims.owners == number) & (shared is None)
     owner_cols = owner.any(axis=0)[claims.columns(np.arange(map_width, dtype=np.int64))]
     owner_rows = owner.any(axis=1)[claims.rows(np.arange(map_height, dtype=np.int64))]
-    first, width = _extent(source.any(axis=0) | owner_cols, reach + 1)
+    owner_rows |= taken.rows
+    first, width = _extent(source.any(axis=0) | owner_cols | taken.columns, reach + 1)
     active_rows = np.flatnonzero(source.any(axis=1))
     del source
     # Keep the regional density grid aligned to map rows, and leave a halo past
@@ -1098,6 +1158,7 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     for row, col, _ in sites:
         anchors[row, col] = claim[row, col]
     mask = _attached_ocean(anchors, claim) | original_seas[local]
+    mask = _with_released(mask, released, local, taken, continent.key)
     if interface is not None:
         interface &= mask
     if strait is not None:
@@ -1276,6 +1337,54 @@ def _keep_coastal_waters(game_map: Eu5Map, domain: Domain, protected: NDArray[np
     )
 
 
+def _without_islets(game_map: Eu5Map, domains: Sequence[Domain]) -> tuple[Domain, ...]:
+    """Leave out of every canvas the small pieces of replaced land that no canvas water joins up.
+
+    An islet of a replaced location that lies among retained waters, with none of its own
+    water claimed round it (the retained shores keep a guard of open water), stands in a canvas
+    as a piece of a few pixels and becomes a generated location with no neighbour. A piece of
+    the canvases below ``ocean_speck_limit`` that holds replaced land is left out of them, and
+    the export gives its land to the water round it
+    (``continent_world.absorb_land_fragments``). A piece that holds an island site stays.
+    """
+    labels = game_map.labels
+    width = labels.shape[1]
+    occupied = np.zeros(labels.shape, dtype=bool)
+    for domain in domains:
+        for crop, original in domain.spans():
+            occupied[domain.rows, original] |= domain.mask[:, crop]
+    parts = label_components(occupied.astype(np.int32), wrap_x=True)
+    count = int(parts.max()) + 1
+    sizes = np.bincount(parts[occupied], minlength=count)
+    goes = (sizes > 0) & (sizes < ocean_speck_limit(width))
+    del occupied
+    holds_land = np.zeros(count, dtype=bool)
+    for domain in domains:
+        for crop, original in domain.spans():
+            holds_land[parts[domain.rows, original][domain.footprint[:, crop]]] = True
+        for row, column, _ in domain.island_sites:
+            goes[parts[row + domain.first_row, (column + domain.first_column) % width]] = False
+    goes &= holds_land
+    if not goes.any():
+        return tuple(domains)
+    result: list[Domain] = []
+    for domain in domains:
+        mask = domain.mask.copy()
+        for crop, original in domain.spans():
+            mask[:, crop] &= ~goes[parts[domain.rows, original]]
+        interface, strait = domain.land_interface, domain.strait
+        result.append(
+            replace(
+                domain,
+                mask=mask,
+                footprint=domain.footprint & mask,
+                land_interface=None if interface is None else interface & mask,
+                strait=None if strait is None else np.where(mask, strait, 0).astype(np.uint8),
+            )
+        )
+    return tuple(result)
+
+
 def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained facts it plans around.
     game_map: Eu5Map,
     selected: Mapping[str, NewWorldSettings],
@@ -1312,6 +1421,16 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
         else _ocean_claims(game_map, selected, sea, solid, seed, closed_waters)
     )
     shared = _shared_water(game_map, claims, sea, selected, retained_tolls) if complete else None
+    released = (
+        None
+        if complete
+        else _released_coasts(
+            game_map,
+            _coastal_zones(game_map, sea),
+            selected,
+            {*retained_tolls, *NAVAL_ANCHORS},
+        )
+    )
     connect = (
         None
         if seed is None
@@ -1335,6 +1454,7 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
                 join_asia=connect if key == "africa" else None,
                 europe_strait=strait and key == "africa",
                 shared=shared,
+                released=None if released is None else released == number,
             )
             for columns, original in domain.spans():
                 domain.mask[:, columns] &= ~occupied[domain.rows, original]
@@ -1352,6 +1472,7 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
                 join_asia=None,
                 europe_strait=False,
                 shared=shared,
+                released=None if released is None else released == 0,
             )
             if complete or (seed is not None and _expanded_america(selected[NEW_WORLD]))
             else _claim_america(game_map, selected, occupied, sea, claims)
@@ -1375,8 +1496,11 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
         ),
         dtype=bool,
     )
-    return tuple(
-        _keep_coastal_waters(game_map, planned[key], protected)
-        for key in CONTINENTS
-        if key in planned
+    return _without_islets(
+        game_map,
+        [
+            _keep_coastal_waters(game_map, planned[key], protected)
+            for key in CONTINENTS
+            if key in planned
+        ],
     )

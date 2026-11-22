@@ -92,6 +92,9 @@ class Canvas:
     template: NDArray[np.bool_] | None = None
     # Original isolated sea pixels assigned to the enclosing retained land colour.
     enclosed_ocean: tuple[tuple[OceanRemainder, int], ...] = ()
+    # Replaced locations whose every pixel went to the retained water round them: removed from
+    # the map without a canvas of their own.
+    drowned: NDArray[np.bool_] | None = None
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""

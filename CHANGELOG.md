@@ -44,10 +44,10 @@ worlds and saves are not rewritten or migrated.
   so they used to stay whole although only African shores lay beside them: the border of
   those sea locations followed the vanished African coast, and the islets of that coast stood as
   sea locations of a few pixels in the retained water (the three small circles at Sinai's tip, one
-  at Bab-el-Mandeb). In a world of America, Africa and Oceania, a coastal sea that washes only
-  replaced land now belongs to the generated continent, and a stray piece of a replaced islet takes
-  the colour of the sea round it. The export fails if a generated sea location below the least
-  size has no generated neighbour.
+  at Bab-el-Mandeb). In every world with Africa or Oceania, a coastal sea that washes only replaced
+  land now belongs to the generated continent, and a stray piece of a replaced islet or a small
+  island among retained waters takes the colour of the sea round it. The export fails if a
+  generated sea location below the least size has no generated neighbour.
 
 - Make Africa's **land connection to Asia** a natural land bridge. It used to be a right-angled
   path with a thin straight apron, which left walls with straight edges on the generated coast.
