@@ -120,13 +120,15 @@ screenshots of the report). Three construction rules, no repair:
   land (and is no Sound toll or naval anchor) whole to the canvas of the continent whose land it touches
   most, so its border with the zones that stay is a border of vanilla zones. All three continents do it
   in `_shared_water`; a selection of fewer continents does it in `_claim` (`_coastal_zones` are the zones
-  filed under a continent, not an ocean; America's legacy canvas, `_claim_america`, is left alone).
+  filed under a continent, not an ocean; America's legacy canvas, `_claim_america`, takes no released
+  zone, as in an America-only world).
 - A small piece of replaced land that no canvas water joins up stays out of every canvas.
   `_rejoin_fragments` (all three continents) leaves out a fragment of a location that has a body in the
   canvas; `_without_islets` (fewer) leaves out every piece of the union of the canvases below
-  `ocean_speck_limit` that holds replaced land and no island site, a small island lying wholly among
-  retained waters included (the retained shores keep a guard of open water, so such an island has no
-  shelf: Raja Ampat's Maden in an Oceania-only world).
+  `ocean_speck_limit` that holds replaced land and no island site: American pockets of America with
+  Africa or Oceania among them, and a small island lying wholly among retained waters (the retained
+  shores keep a guard of open water, so such an island has no shelf: Raja Ampat's Maden in an
+  Oceania-only world).
 - `continent_world.absorb_land_fragments`, now run for every composed world, gives the pixels of those
   pieces the colour of the retained location round them (recorded among the ocean identities' patches, the
   only changes allowed outside the canvas), the inverse of `absorb_ocean_specks`. A location with no
