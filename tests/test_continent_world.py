@@ -4,15 +4,22 @@
 # pyright: reportAny=false
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
+import pytest
 
 from rnw.continent_domains import CONTINENTS, Domain
-from rnw.continent_world import WorldRegion, absorb_ocean_specks, compose_regions
+from rnw.continent_world import (
+    WorldRegion,
+    absorb_land_fragments,
+    absorb_ocean_specks,
+    compose_regions,
+)
 from rnw.eu5_biomes import CellBiomes
-from rnw.eu5_canvas import Canvas, OceanRemainder
+from rnw.eu5_canvas import Canvas, CanvasError, OceanRemainder
 from rnw.eu5_map import Eu5Map
 from rnw.eu5_newworld import outside_contacts, regional_geometry
 from rnw.eu5_nw_export import (
@@ -180,6 +187,71 @@ def test_an_enclosed_closed_ocean_speck_follows_its_actual_land_location() -> No
     assert np.all(result.labels[2, 200:220] == 1)
     assert game.labels[2, 100] == 1
     assert fixed.enclosed_ocean == ((canvas.ocean_parts[0], 0x123456),)
+
+
+def _islet_map() -> tuple[Eu5Map, Canvas]:
+    # Replaced land (location 1) with a stray piece inside a retained sea zone (location 2).
+    labels = np.full((8, 16384), 2, dtype=np.int32)
+    labels[:, :100] = 0
+    labels[2:6, 100:140] = 1
+    labels[3, 500:503] = 1
+    labels[4, 500] = 1
+    rgb = np.zeros((*labels.shape, 3), dtype=np.uint8)
+    game = Eu5Map(
+        ("shore", "islet", "bay"),
+        np.array([0x111111, 0x222222, 0x336699], dtype=np.int64),
+        (CellClass.LAND, CellClass.LAND, CellClass.SEA),
+        np.array([False, False, False]),
+        ("asia", "africa", "asia"),
+        rgb,
+        labels,
+        rgb,
+        (),
+        (),
+        (),
+        (),
+    )
+    mask = labels == 1
+    mask[3, 500:503] = False
+    mask[4, 500] = False
+    canvas = Canvas(0, 0, mask, labels.shape, np.zeros(3, dtype=bool), np.zeros(3, dtype=bool))
+    return game, canvas
+
+
+def test_a_stray_piece_of_replaced_land_takes_the_colour_of_the_retained_water_round_it() -> None:
+    game, canvas = _islet_map()
+    result, fixed = absorb_land_fragments(game, canvas, {"africa"})
+    assert (result.labels[3, 500:503] == 2).all()
+    assert result.labels[4, 500] == 2
+    assert result.rgb[3, 501].tolist() == [0x33, 0x66, 0x99]
+    # The islet's body is untouched, the original map is not edited in place.
+    assert (result.labels[2:6, 100:140] == 1).all()
+    assert game.labels[3, 500] == 1
+    ((part, colour),) = fixed.enclosed_ocean
+    assert colour == 0x336699
+    assert part.source == 2
+    assert part.pixels == 4
+    assert sorted(part.runs.tolist()) == [[3, 500, 503], [4, 500, 501]]
+
+
+def test_a_canvas_that_leaves_no_replaced_land_out_is_not_changed() -> None:
+    game, canvas = _islet_map()
+    whole = Canvas(0, 0, game.labels == 1, game.labels.shape, canvas.removed, canvas.trimmed)
+    result, fixed = absorb_land_fragments(game, whole, {"africa"})
+    assert result is game
+    assert fixed is whole
+
+
+def test_a_large_piece_of_replaced_land_left_out_of_every_canvas_is_an_error() -> None:
+    game, canvas = _islet_map()
+    labels = game.labels.copy()
+    labels[:, 1000:3000] = 1
+    with pytest.raises(CanvasError, match="too large"):
+        _ = absorb_land_fragments(
+            replace(game, labels=labels),
+            Canvas(0, 0, labels == 0, labels.shape, canvas.removed, canvas.trimmed),
+            {"africa"},
+        )
 
 
 def test_cut_coastal_route_needs_a_new_navigable_connection() -> None:

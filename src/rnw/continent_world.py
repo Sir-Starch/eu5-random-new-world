@@ -24,7 +24,7 @@ from rnw.synth import renumber
 from rnw.topology import adjacency_pairs, label_components, unpack_pairs
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Sequence
 
     from numpy.typing import NDArray
 
@@ -157,6 +157,121 @@ def absorb_ocean_specks(game_map: Eu5Map, canvas: Canvas) -> tuple[Eu5Map, Canva
             rgb[row, left:right] = (color >> 16, (color >> 8) & 255, color & 255)
     edits = tuple((part, int(game_map.colors[bank])) for part, bank in paints)
     return replace(game_map, labels=labels, rgb=rgb), replace(canvas, enclosed_ocean=edits)
+
+
+def _around(cell: int, width: int, height: int) -> tuple[int, ...]:
+    """The flat positions of a pixel's four neighbours, round the seam and not past the poles."""
+    row, column = divmod(cell, width)
+    return (
+        *((cell - width,) if row else ()),
+        *((cell + width,) if row + 1 < height else ()),
+        row * width + (column + 1) % width,
+        row * width + (column - 1) % width,
+    )
+
+
+def _pieces(flat: NDArray[np.int64], width: int, height: int, limit: int) -> list[list[int]]:
+    """The connected pieces of the flat pixel positions; ``limit`` pixels in one are too many."""
+    pending = set(flat.tolist())
+    pieces: list[list[int]] = []
+    while pending:
+        stack = [pending.pop()]
+        piece: list[int] = []
+        while stack:
+            cell = stack.pop()
+            piece.append(cell)
+            for other in _around(cell, width, height):
+                if other in pending:
+                    pending.discard(other)
+                    stack.append(other)
+        if len(piece) >= limit:
+            message = "A fragment of replaced land is too large to give to the water round it"
+            raise CanvasError(message)
+        pieces.append(sorted(piece))
+    return pieces
+
+
+def _bank(piece: list[int], labels: NDArray[np.int32], retained: NDArray[np.bool_]) -> int:
+    """The retained location that touches a piece along most of its edge."""
+    height, width = labels.shape
+    inside = set(piece)
+    touching: dict[int, int] = {}
+    for cell in piece:
+        for other in _around(cell, width, height):
+            if other not in inside:
+                bank = int(labels[other // width, other % width])
+                if retained[bank]:
+                    touching[bank] = touching.get(bank, 0) + 1
+    if not touching:
+        message = "A fragment of replaced land touches no retained location"
+        raise CanvasError(message)
+    return max(touching, key=lambda index: (touching[index], -index))
+
+
+def _piece_runs(rows: NDArray[np.int64], columns: NDArray[np.int64]) -> NDArray[np.int64]:
+    """A piece as (row, left, right) runs; its positions are sorted by row, then column."""
+    runs: list[tuple[int, int, int]] = []
+    for row in np.unique(rows).tolist():
+        here = columns[rows == row]
+        edges = np.flatnonzero(np.diff(here) != 1) + 1
+        runs.extend((row, int(run[0]), int(run[-1]) + 1) for run in np.split(here, edges))
+    return np.asarray(runs, dtype=np.int64).reshape(-1, 3)
+
+
+def absorb_land_fragments(
+    game_map: Eu5Map, canvas: Canvas, generated: Collection[str]
+) -> tuple[Eu5Map, Canvas]:
+    """Give the small fragments of replaced land that lie among retained water to that water.
+
+    The plan leaves out of every canvas a small piece of a replaced location that no canvas
+    reaches (``continent_domains._rejoin_fragments``): an islet's stray pixels in a retained
+    sea zone. The location is removed whole, so the piece takes the colour of the retained
+    location that surrounds it the most, and the recolouring is recorded among the ocean
+    identities' patches, the only changes allowed outside the canvas.
+    """
+    labels = game_map.labels
+    height, width = labels.shape
+    if canvas.mask.shape != labels.shape:
+        message = "The composed canvas must cover the whole map"
+        raise CanvasError(message)
+    kinds = zip(game_map.continents, game_map.classes, strict=True)
+    replaced = np.fromiter(
+        (name in generated and kind not in {CellClass.SEA, CellClass.LAKE} for name, kind in kinds),
+        dtype=bool,
+    )
+    found: list[NDArray[np.int64]] = []
+    for first in range(0, height, BAND_ROWS):
+        checkpoint()
+        rows = slice(first, first + BAND_ROWS)
+        row, column = np.nonzero(replaced[labels[rows]] & ~canvas.mask[rows])
+        found.append((row + first) * width + column)
+    flat = np.concatenate(found) if found else np.zeros(0, dtype=np.int64)
+    if not flat.size:
+        return game_map, canvas
+    limit = ocean_speck_limit(width)
+    if flat.size > limit * 64:
+        message = "Replaced land lies outside the generated canvases"
+        raise CanvasError(message)
+    retained = np.fromiter(
+        (
+            name not in generated and kind is not CellClass.LAKE
+            for name, kind in zip(game_map.continents, game_map.classes, strict=True)
+        ),
+        dtype=bool,
+    )
+    labels, rgb = labels.copy(), game_map.rgb.copy()
+    edits: list[tuple[OceanRemainder, int]] = []
+    for piece in _pieces(flat, width, height, limit):
+        bank = _bank(piece, labels, retained)
+        colour = int(game_map.colors[bank])
+        rows, columns = np.divmod(np.asarray(piece, dtype=np.int64), width)
+        labels[rows, columns] = bank
+        rgb[rows, columns] = (colour >> 16, (colour >> 8) & 255, colour & 255)
+        edits.append((OceanRemainder(bank, _piece_runs(rows, columns), len(piece)), colour))
+    return (
+        replace(game_map, labels=labels, rgb=rgb),
+        replace(canvas, enclosed_ocean=(*canvas.enclosed_ocean, *edits)),
+    )
 
 
 def _island_placements(canvas: Canvas, regions: Sequence[WorldRegion]) -> Canvas:

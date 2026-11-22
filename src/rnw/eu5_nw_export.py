@@ -55,7 +55,13 @@ from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
 from rnw.continent_domains import SHARED_OCEAN_DIVISOR, plan_domains
-from rnw.continent_world import WorldRegion, absorb_ocean_specks, compose_regions, relocated_canvas
+from rnw.continent_world import (
+    WorldRegion,
+    absorb_land_fragments,
+    absorb_ocean_specks,
+    compose_regions,
+    relocated_canvas,
+)
 from rnw.eu5_africa_start import (
     CAIRO,
     MAMLUKS,
@@ -3923,11 +3929,14 @@ def _prepare_vanilla(  # noqa: PLR0913, PLR0917 - original inputs and their fixe
     *,
     composed: bool = False,
     complete_ocean: bool = False,
+    generated: Collection[str] = (),
 ) -> _PreparedVanilla:
     if composed and (clean.groups or complete_ocean):
         source, fixed = (
             absorb_ocean_specks(original, clean) if complete_ocean else (original, clean)
         )
+        if complete_ocean:
+            source, fixed = absorb_land_fragments(source, fixed, generated)
         game_map = relocate_map(source, fixed)
         canvas = relocated_canvas(game_map, fixed)
     else:
@@ -4371,6 +4380,22 @@ def _composed_identities(  # noqa: PLR0913 - country-independent location geogra
     return plan
 
 
+def _enclosed_sea_cells(world: NewWorld, minimum: int) -> int:
+    """The generated sea locations below the least size that have no generated neighbour.
+
+    Such a location lies among retained water or land only: a generated enclave of a few pixels,
+    which the sea cells' merging cannot reach. The plan hands such pieces of replaced land to the
+    water round them (``continent_world.absorb_land_fragments``), so none may remain.
+    """
+    linked = np.zeros(len(world.classes), dtype=bool)
+    for first, second in world.edges:
+        linked[first] = linked[second] = True
+    small = (world.pixels < minimum) & ~linked
+    return sum(
+        1 for index, kind in enumerate(world.classes) if kind is CellClass.SEA and small[index]
+    )
+
+
 def _shared_ocean_boundaries(shared: ComposedWorld, water: Water) -> dict[str, int]:
     """Verify that each common boundary has deep water and no merged land."""
     owner = [-1] * len(shared.world.classes)
@@ -4737,6 +4762,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
         composed.canvas.moves,
         composed=True,
         complete_ocean=complete_ocean,
+        generated=frozenset(region.domain.continent.key for region in regions),
     )
     game_map, canvas = vanilla.game_map, vanilla.canvas
     composed = replace(composed, canvas=canvas)
@@ -4874,6 +4900,13 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
         checks["circumnavigation_sea_locations"] = int(np.unique(final[-1]).size)
     if complete_ocean:
         checks.update(_shared_ocean_boundaries(shared, shapes))
+        enclaves = _enclosed_sea_cells(
+            world, min(knobs.min_sea_cell_px for knobs in geography.values())
+        )
+        if enclaves:
+            message = f"{enclaves} generated sea locations are enclosed by retained locations"
+            raise NewWorldExportError(message)
+        checks["enclosed_small_sea_locations"] = enclaves
     return _ExportGeography(
         game_map,
         canvas,

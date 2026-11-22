@@ -351,15 +351,22 @@ def _own_enclosed_specks(
 
 
 def _rejoin_fragments(
-    labels: NDArray[np.int32], claimed: NDArray[np.int8], connected: NDArray[np.int8]
+    labels: NDArray[np.int32],
+    claimed: NDArray[np.int8],
+    connected: NDArray[np.int8],
+    solid: NDArray[np.bool_],
 ) -> NDArray[np.int8]:
     """Settle the fragments that touch no canvas through retained water.
 
-    Replaced land is removed whole, so a fragment stays with the canvas that claimed
-    it, as a small enclave among retained waters. A larger location stranded wholly
-    there is a planning error rather than a hole to leave quietly.
+    Replaced land is removed whole. A small fragment of a location whose body lies in a canvas
+    stays out of it, among the retained waters round it, and the export gives it to them
+    (``continent_world.absorb_land_fragments``): left with the canvas it would stand as a
+    generated location of a few pixels with no neighbour. Any other fragment stays with the
+    canvas that claimed it, and a larger location stranded wholly there is a planning error
+    rather than a hole to leave quietly.
     """
     count = int(labels.max()) + 1
+    limit = ocean_speck_limit(labels.shape[1])
     owned = np.zeros(count, dtype=np.int64)
     stranded = np.zeros(count, dtype=np.int64)
     for first in range(0, len(labels), BAND_ROWS):
@@ -370,12 +377,23 @@ def _rejoin_fragments(
             block[(claimed[rows] >= 0) & (connected[rows] < 0)], minlength=count
         )
     whole = (stranded > 0) & (owned == 0)
-    if np.any(stranded[whole] >= ocean_speck_limit(labels.shape[1])):
+    if np.any(stranded[whole] >= limit):
         message = "A generated location is stranded among retained waters"
         raise CanvasError(message)
+    # The land of a location that has a body in a canvas; its stranded pieces are the fragments.
+    bodied = solid & (owned > 0)
+    land = np.zeros(labels.shape, dtype=bool)
     for first in range(0, len(labels), BAND_ROWS):
         rows = slice(first, first + BAND_ROWS)
-        back = (claimed[rows] >= 0) & (connected[rows] < 0)
+        land[rows] = (claimed[rows] >= 0) & (connected[rows] < 0) & bodied[labels[rows]]
+    if land.any():
+        parts = label_components(land.astype(np.int32), wrap_x=True)
+        sizes = np.bincount(parts[land])
+        land &= (sizes < limit)[parts]
+        del parts
+    for first in range(0, len(labels), BAND_ROWS):
+        rows = slice(first, first + BAND_ROWS)
+        back = (claimed[rows] >= 0) & (connected[rows] < 0) & ~land[rows]
         connected[rows] = np.where(back, claimed[rows], connected[rows])
     return connected
 
@@ -440,6 +458,42 @@ def _eurasian_waters(
     return reached
 
 
+def _released_coasts(
+    game_map: Eu5Map,
+    kept: NDArray[np.bool_],
+    selected: Collection[str],
+    spared: Collection[str],
+) -> NDArray[np.bool_]:
+    """The kept coastal zones whose only shore is replaced land.
+
+    The game files some coastal zones under a continent that stays (the Red Sea and the
+    Gulf of Aden under Asia, the delta mouths under Asia, Morocco's under Europe) although
+    they wash the shores of a continent that is replaced. Kept whole, such a zone would
+    face the generated water along the replaced coast, whose outline is then the border of
+    a vanilla location in open water, and the islets of the replaced land inside it would
+    stand as tiny generated enclaves. A zone that touches replaced land and no retained
+    land goes to the canvas that replaces the land; a zone that also touches a retained
+    shore stays. ``spared`` names the zones the plan keeps for their ships.
+    """
+    classes = game_map.classes
+    named = np.fromiter((bool(name) for name in game_map.continents), dtype=bool)
+    chosen = np.fromiter((name in selected for name in game_map.continents), dtype=bool)
+    solid = np.fromiter(
+        (kind not in {CellClass.SEA, CellClass.LAKE} for kind in classes), dtype=bool
+    )
+    replaced = solid & chosen
+    retained = solid & named & ~chosen
+    replaced_front = np.zeros(len(kept), dtype=bool)
+    retained_front = np.zeros(len(kept), dtype=bool)
+    for first, second in unpack_pairs(adjacency_pairs(game_map.labels, wrap_x=True)):
+        for zone, other in ((first, second), (second, first)):
+            if kept[zone]:
+                replaced_front[zone] |= replaced[other]
+                retained_front[zone] |= retained[other]
+    held = np.fromiter((key in spared for key in game_map.keys), dtype=bool)
+    return kept & replaced_front & ~retained_front & ~held
+
+
 def _shared_water(
     game_map: Eu5Map,
     claims: OceanClaims,
@@ -477,6 +531,7 @@ def _shared_water(
         result[whole] = chosen
         kept[whole] = False
         found.append((chosen, group))
+    kept &= ~_released_coasts(game_map, kept, selected, {*retained_tolls, *NAVAL_ANCHORS})
     # The installed open-ocean colours include a few disconnected specks
     # inside retained land. Keep their ownership, and let the identity pass
     # handle each original remainder rather than generating isolated ports.
@@ -498,7 +553,14 @@ def _shared_water(
             result[block] >= 0, result[block], np.where(water_or_land, belongs, -1)
         )
     owners = _own_enclosed_specks(owners, specks, parts)
-    owners = _rejoin_fragments(labels, owners, _connect_owners(owners))
+    owners = _rejoin_fragments(
+        labels,
+        owners,
+        _connect_owners(owners),
+        np.fromiter(
+            (kind not in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes), dtype=bool
+        ),
+    )
     resolved: list[tuple[int, IslandGroup]] = []
     for _, group in found:
         picked = np.isin(values, group.locations)

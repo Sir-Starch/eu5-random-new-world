@@ -107,6 +107,30 @@ a continent's land footprint and the waters filed under its hierarchy by the
 game. The common ocean planner assigns the latter according to the final coasts
 and connections. Pacific location identities remain continuous across the wrap.
 
+**Coasts the game files under another continent (2026-11-22, owner's report on `qpktias5fw`, 1.3.0 /
+epoch 64).** With all three continents, 27 of 34 retained sea zones that touched replaced land touched no
+retained land at all: the game files the Red Sea, the Gulf of Aden, the delta mouths and Morocco's
+Atlantic coast under `asia` or `europe`, so `_shared_water` kept them whole although the claim grid gave
+every pixel of them to Africa. The border between such a zone and the generated water was the replaced
+coast itself (3,963 px of it), and the islets of the replaced land inside them stood as generated sea
+locations of 1 to 151 px with no neighbour (11 of them, all in the Red Sea; the two screenshots of the
+report). Two construction rules, no repair: `continent_domains._released_coasts` gives a kept zone that
+touches replaced land and no retained land (and is no Sound toll or naval anchor) to the canvas that
+replaces the land, so its border with the zones that stay is a border of vanilla zones; and
+`_rejoin_fragments` leaves a small fragment of replaced land (under `ocean_speck_limit`) of a location
+that has a body in a canvas out of every canvas, and `continent_world.absorb_land_fragments` gives its
+pixels the colour of the retained location round it (recorded among the ocean identities' patches, the
+only changes allowed outside the canvas), the inverse of `absorb_ocean_specks`. A location lying wholly
+among retained waters still stays with its canvas. Measured on that world's plan: retained zones touching
+replaced land 34 → 7, border 3,963 → 641 px (the zones that also touch a retained shore stay and still
+show the old coast along part of their edge), generated sea locations of under 1,500 px 11 → 0; the same
+0 on seeds 101 and 202 of the sweep and on the owner's two other worlds. The export fails
+(`enclosed_small_sea_locations`) on a generated sea location under the least size with no generated
+neighbour. Selections of fewer continents plan their water by another route (`_ocean_claims`,
+`_protected_sea`) and are not changed: their plans still show 50 to 70 shoreless retained zones and 16
+to 29 fragments (Africa alone, Africa with Oceania, America with Africa at seed 101). [V-EXEC; in-game
+appearance not seen]
+
 The game still has distinct `america`, `africa` and `oceania` hierarchies. Reuse
 regional and area keys where their script meaning can be matched to the new
 geography. Ports, straits, sea lanes, currents, trade paths and the rivers at the

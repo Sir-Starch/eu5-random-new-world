@@ -29,6 +29,16 @@ worlds and saves are not rewritten or migrated.
   water, where its sea would be cut off, and a leftover piece of an old ocean stays
   open ocean instead of joining a neighbouring continent.
 
+- Stop the generated Africa from leaving its old coast behind in Asia's seas. The game files the
+  Red Sea, the Gulf of Aden, the Nile's mouths and Morocco's Atlantic coast under Asia or Europe,
+  so they used to stay whole although only African shores lay beside them: the border of
+  those sea locations followed the vanished African coast, and the islets of that coast stood as
+  sea locations of a few pixels in the retained water (the three small circles at Sinai's tip, one
+  at Bab-el-Mandeb). In a world of America, Africa and Oceania, a coastal sea that washes only
+  replaced land now belongs to the generated continent, and a stray piece of a replaced islet takes
+  the colour of the sea round it. The export fails if a generated sea location below the least
+  size has no generated neighbour.
+
 - Make Africa's **land connection to Asia** a natural land bridge. It used to be a right-angled
   path with a thin straight apron, which left walls with straight edges on the generated coast.
   The connection is now a body of land along a winding, smoothed route (a long route is routed

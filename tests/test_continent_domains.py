@@ -20,6 +20,7 @@ from rnw.continent_domains import (
     _pacific_islands,  # pyright: ignore[reportPrivateUsage]
     _protected_sea,  # pyright: ignore[reportPrivateUsage]
     _rejoin_fragments,  # pyright: ignore[reportPrivateUsage]
+    _released_coasts,  # pyright: ignore[reportPrivateUsage]
     _sighted,  # pyright: ignore[reportPrivateUsage]
     plan_domains,
 )
@@ -370,7 +371,9 @@ def test_a_water_speck_inside_replaced_land_belongs_to_its_canvas() -> None:
     assert _in_world(america, america.mask, game.labels.shape)[100, 210]
 
 
-def test_a_fragment_cut_off_by_retained_water_stays_with_its_location() -> None:
+def _stranded(
+    *, solid: tuple[bool, bool, bool]
+) -> tuple[NDArray[np.int32], NDArray[np.int8], NDArray[np.int8], NDArray[np.bool_]]:
     labels = np.zeros((2, 16384), dtype=np.int32)
     labels[:, :100] = 1
     labels[1, 200:205] = 2
@@ -378,7 +381,22 @@ def test_a_fragment_cut_off_by_retained_water_stays_with_its_location() -> None:
     connected = claimed.copy()
     connected[0, 50] = -1
     connected[1, 200:205] = -1
-    joined = _rejoin_fragments(labels, claimed, connected)
+    return labels, claimed, connected, np.array(solid, dtype=bool)
+
+
+def test_a_small_piece_of_replaced_land_cut_off_by_retained_water_stays_out_of_the_canvas() -> None:
+    labels, claimed, connected, solid = _stranded(solid=(False, True, True))
+    joined = _rejoin_fragments(labels, claimed, connected, solid)
+    # The piece of location 1, whose body is in the canvas, is left to the water round it.
+    assert joined[0, 50] == -1
+    # Location 2 lies wholly there: it is removed whole, so it stays with its canvas.
+    assert (joined[1, 200:205] == 0).all()
+    assert np.array_equal(joined >= 0, claimed >= 0) is False
+
+
+def test_a_cut_off_piece_of_water_stays_with_its_canvas() -> None:
+    labels, claimed, connected, solid = _stranded(solid=(False, False, False))
+    joined = _rejoin_fragments(labels, claimed, connected, solid)
     assert joined[0, 50] == 0
     assert np.array_equal(joined >= 0, claimed >= 0)
 
@@ -388,7 +406,54 @@ def test_a_large_location_stranded_among_retained_waters_is_an_error() -> None:
     labels[:, 100:2000] = 2
     claimed = np.where(labels > 0, 1, -1).astype(np.int8)
     with pytest.raises(CanvasError, match="stranded"):
-        _ = _rejoin_fragments(labels, claimed, np.full_like(claimed, -1))
+        _ = _rejoin_fragments(
+            labels, claimed, np.full_like(claimed, -1), np.array([False, False, True])
+        )
+
+
+def _coasts() -> Eu5Map:
+    # Replaced land (africa) in the middle; retained land (asia) at the right edge; sea zones
+    # filed under the retained continent wash one or both.
+    labels = np.zeros((4, 12), dtype=np.int32)
+    labels[:, 4:6] = 1  # africa
+    labels[:, 6:8] = 2  # sea that washes only africa
+    labels[:, 8:10] = 3  # sea that washes africa through 2 and asia
+    labels[:, 10:11] = 4  # asia, with open sea beyond it across the seam
+    labels[:, 2:4] = 5  # a sea that washes only africa but is kept for its ships
+    return cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("deep", "africa", "bay", "strait", "asia", "ships"),
+                labels=labels,
+                continents=("pacific_ocean_continent", "africa", "asia", "asia", "asia", "asia"),
+                classes=(
+                    CellClass.SEA,
+                    CellClass.LAND,
+                    CellClass.SEA,
+                    CellClass.SEA,
+                    CellClass.LAND,
+                    CellClass.SEA,
+                ),
+            ),
+        ),
+    )
+
+
+def test_a_kept_coast_that_washes_only_replaced_land_goes_to_the_canvas_that_replaces_it() -> None:
+    game = _coasts()
+    kept = np.array([False, False, True, True, False, True])
+    released = _released_coasts(game, kept, {"africa"}, ())
+    # `bay` touches africa and `strait`; `strait` touches `bay` and asia: only `bay` is released.
+    assert released.tolist() == [False, False, True, False, False, True]
+
+
+def test_a_coast_kept_for_its_ships_stays() -> None:
+    game = _coasts()
+    kept = np.array([False, False, True, True, False, True])
+    released = _released_coasts(game, kept, {"africa"}, {"ships"})
+    assert released.tolist() == [False, False, True, False, False, False]
 
 
 def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -> None:
