@@ -2,11 +2,25 @@
 
 ## Released baseline
 
-**RNW 1.2.0 / epoch 61** is the current released baseline (GitHub, 2026-11-09), targeting
-**EU5 1.4.7 / Steam build 26377361**. See the [release notes](releases/1.2.0.md)
-and [known limitations](known-limitations.md). **RNW 1.1.0 / epoch 60** (EU5 1.4.6, build
-26300913; [notes](releases/1.1.0.md)) and the 1.0.0 record below preserve earlier releases'
-acceptance and distribution history.
+**RNW 1.2.2 / epoch 63** is the current released baseline (GitHub, 2026-11-11), targeting
+**EU5 1.4.7 / Steam build 26377361**. See the [release notes](releases/1.2.2.md)
+and [known limitations](known-limitations.md). It follows **1.2.1 / epoch 62**
+([notes](releases/1.2.1.md), 2026-11-10, a hotfix for markets), **1.2.0 / epoch 61**
+([notes](releases/1.2.0.md), 2026-11-09, history and geopolitics), **1.1.0 / epoch 60**
+(EU5 1.4.6, build 26300913; [notes](releases/1.1.0.md)) and the 1.0.0 record below, which
+preserve earlier releases' acceptance and distribution history.
+
+**In development: 1.3.0 / pending epoch 64**, for **EU5 1.4.9 / Steam build 26655995**
+(also 1.4.7), listed in full in the [changelog](../CHANGELOG.md). Its output changes are the
+New World's natural wastelands, a land that follows its rivers and climate, graded location
+sizes and pooled resources (epoch 64, [terrain](terrain-biomes.md)); its new capabilities are
+**optional generation of Africa and Oceania** beside or instead of America, in one world, each
+with its own presets and drawable land ([plan](continent-generation-plan.md), delivered),
+Mamluk and Damascus starts, and a window rework for several continents (phases of progress,
+sketches and a land editor for each continent, the classic window level with the new one, the
+physical map as a lit sheet, the Terra Incognita appearance); the exact-output speed-ups follow the
+[performance plan](performance-plan.md). The hub also opens the classic window under Valve's
+Proton Experimental.
 
 **RNW 1.0.0 / epoch 59**, released on 2026-10-29, targets **EU5 1.4.5 /
 Steam build 26211608**, including optional Across the Pillars adaptation.
@@ -106,7 +120,10 @@ An unobserved detail alone does not reopen acceptance or require another game se
   - Responsive background world selection and worker-computed map relief.
   - Workshop Gameplay/Utilities tags and updated descriptions.
 
-## Next major update — 1.2.0: history and geopolitics
+## Released in 1.2.0: history and geopolitics
+
+*Released 2026-11-09 as RNW 1.2.0 / epoch 61. The text below is the direction and the owner
+decisions that guided it, kept as the record in the tense they were written.*
 
 **Owner direction, 2026-11-02.** The next major update will focus on history and
 geopolitics, with three connected goals:
@@ -224,10 +241,10 @@ scope when chosen.
 
 ## Other future work requested by the owner
 
-- **Optional continent generation.** America, Africa and Oceania can be selected
-  independently and combined in one world. Each has its own generation settings.
-  See the [continent generation plan](continent-generation-plan.md) for scope,
-  architecture and prototype measurements to collect.
+- **Optional continent generation** (America, Africa and Oceania, selected independently and
+  combined in one world) is delivered in the unreleased 1.3.0; see the
+  [continent generation plan](continent-generation-plan.md) and the [changelog](../CHANGELOG.md).
+  Further continents or presets would need a scope of their own.
 
 These are directions, not promises for 1.0.0 or automatic tasks for every agent.
 Choose a concrete scope when work is requested; use the next release target and

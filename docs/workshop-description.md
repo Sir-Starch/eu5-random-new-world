@@ -10,6 +10,11 @@ The Steam Workshop text for the current release ([ADR 0009](adr/0009-hub-mod-wit
 
 **Compatibility text update 2026-11-11 [V-EXEC]:** Published all eleven localized generator descriptions and the two ready-made world descriptions with official EU5 1.4.7 as the latest compatible game version and the 1.4.8 test branch with hourly ticks explicitly unsupported. Steam returned `EResult=1` for each submission; uncached queries matched the outgoing text exactly and title, preview URL and visibility stayed unchanged. Before snapshots and verification records are local in `local_data/workshop-compat-2026-11-11/`. The live *Seas & Islands* description already contained a newer 1.2.1 title and World Code than the committed source; its source file was brought into line with that live text before changing only the compatibility sentence.
 
+## 1.2.1 and 1.2.2 publication texts
+
+- **GitHub release bodies:** [1.2.1](releases/1.2.1.md) and [1.2.2](releases/1.2.2.md), English Markdown with absolute links, published with each release together with its checksums and scan results.
+- **Workshop change notes:** English BBCode, [1.2.1](releases/1.2.1-workshop.bbcode) and [1.2.2](releases/1.2.2-workshop.bbcode), to paste into the update's change notes. Updating the Workshop item is the owner's step.
+
 ## 1.2.0 publication texts
 
 - **GitHub release body:** [detailed release notes](releases/1.2.0.md), English Markdown with absolute links, published with the release together with its checksums and scan results.

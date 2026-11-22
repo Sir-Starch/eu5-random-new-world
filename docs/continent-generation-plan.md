@@ -49,8 +49,16 @@ a union of discs along the axis whose radius swells and narrows, flares at both
 ends, narrows to the room beside the coast margin and has the same irregular
 edge as every other coast; a one-location spine is always kept. A site whose
 bridge does not touch the interface, join the continent and cover the site is
-dropped for the next candidate, and none at all fails explicitly. All of it is
-integer arithmetic, so a seed gives the same bridge on every platform. The
+dropped for the next candidate, and none at all fails explicitly. So is a site whose
+bridge would shut a bay of water off round a retained islet or leave a pocket of the
+Levant's coast with no sea of its own to lead out of it (`newworld.py`): of seven seeds of
+the all-continents selection five stopped at export with "Sea cutout at cell N has no coast
+or retained sea" or a sea-reach error before this guard, and all seven generate with it.
+Two export checks that failed sound worlds were corrected with it: the removed-locations
+check read a native people's culture Pende or Teke as the location of that name, and a land
+location whose only way to a port lay through the retained land beside it was rejected
+(`eu5_nw_export.py`). The bridge's
+construction is all integer arithmetic, so a seed gives the same bridge on every platform. The
 generated shore and land cells follow the resulting terrain.
 The final adjacency check requires a direct border between passable locations.
 Nearby European shores can admit a separate approach with a short navigable

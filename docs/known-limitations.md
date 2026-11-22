@@ -89,6 +89,12 @@ These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday us
   **Use the classic window** in Settings or launch with `--classic`.
   See [window troubleshooting](generator-guide.md#the-window-is-blank-or-does-not-draw-properly).
   Supported play routes are Windows and Linux/Proton; macOS is not supported.
+- **Valve's own Proton builds need Proton Experimental and 1.3.0, or GE-Proton.** Valve's
+  Proton lacks the `icuuc.dll` that the classic window's Qt loads, so 1.2.2 and earlier stop
+  with "DLL load failed while importing QtWidgets" on a Steam Deck; 1.3.0 carries a
+  replacement. Valve's Proton 10.0 cannot run the generator at all, because its Wine lacks a
+  math function that NumPy calls. See
+  [window troubleshooting](generator-guide.md#the-window-is-blank-or-does-not-draw-properly).
 
 ## Visible map issues
 

@@ -19,6 +19,7 @@ guidance from the historical record; an old unchecked box is not a current task.
 | [Capability overview](feasibility.md) | Implemented T3 route and boundaries of the product |
 | [Roadmap](roadmap.md) | Released scope and owner-requested future directions |
 | [1.2.0 plan](history-plan.md) | Accepted design, decisions, phases and acceptance criteria for history and geopolitics |
+| [Continent generation plan](continent-generation-plan.md) | Optional America, Africa and Oceania worlds in 1.3.0: player choices, architecture, measurements and acceptance order |
 | [Generation performance plan](performance-plan.md) | Faster full generation with unchanged world bytes: profiling, Rust kernels, exact reuse and acceptance targets |
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |

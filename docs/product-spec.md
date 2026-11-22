@@ -1,15 +1,18 @@
 # Product specification
 
 Random New World generates New World geography and societies for EU5 while
-preserving the vanilla Old World. The released 1.1.0 product is accepted by the
-owner (C437, C475); the [roadmap](roadmap.md) separates its shipping scope from future work.
-RNW 1.2.0 is the active candidate.
+preserving the vanilla Old World, except for the continents the player chooses to generate
+(1.3.0). The 1.1.0 product was accepted by the owner (C437, C475); the
+[roadmap](roadmap.md) separates its shipping scope from future work. RNW 1.2.2 is the
+current release and RNW 1.3.0 is in development.
 
 ## Player journey
 
 1. Get the standalone application or subscribe to the Workshop hub. In EU5 use
    **Open in folder** on Random New World and launch **Random New World Generator**.
-2. Choose a landmass type and settings, or paste a World Code. Previews start
+2. Choose the continents to generate (America by default; Africa and Oceania in 1.3.0),
+   a landmass type and settings for each, or paste a World Code. Sketch the land, draw it in
+   the land editor if wanted, and watch the world's progress in phases. Previews start
    covered; reveal the world only when wanted. The atlas supports geography,
    societies, resources and comparison.
 3. Generate one local world mod. The application validates it and can install it
@@ -25,7 +28,9 @@ See the [guide](generator-guide.md) for operations and
 ## Shipping scope
 
 - Six landmass archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), Random/Total Chaos choices, adjustable geography,
-  continent sketches, optional drawn land and optional larger ocean canvas.
+  continent sketches, optional drawn land and optional larger ocean canvas. From 1.3.0 America,
+  Africa and Oceania each have a switch, their own presets and settings, and make one world
+  and one mod together ([plan](continent-generation-plan.md)).
 - Coherent relief, climate, biomes, rivers and sea geography from shared models.
 - New location hierarchy, native countries and tribes, cultures, religions,
   demographics, economy and technology; optional extraordinary societies have
@@ -42,11 +47,11 @@ are indexed by the [catalogue](content-catalog.md).
 
 ## Major update: history and geopolitics (1.2.0)
 
-RNW 1.2.0 introduces three centuries of simulated causal prehistory (1037–1337)
+RNW 1.2.0 introduced three centuries of simulated causal prehistory (1037–1337)
 to shape complex starting relationships between countries, starting laws and diplomatic
 budgets, narrative *Our History* storytelling, regional formable goals with missions and cores,
 substantial enclosed inland seas, and responsive generator workbench features.
-The [1.2.0 candidate notes](releases/1.2.0.md), the [roadmap](roadmap.md#next-major-update--120-history-and-geopolitics)
+The [1.2.0 notes](releases/1.2.0.md), the [roadmap](roadmap.md#released-in-120-history-and-geopolitics)
 and the accepted [1.2.0 plan](history-plan.md) hold the design, implementation phases and acceptance criteria.
 
 ## Engineering requirements

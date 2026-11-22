@@ -2,8 +2,8 @@
 
 The project implements the external **T3** route: new New World geography,
 location identities, hierarchy, physical fields, societies and content are
-written as a complete local EU5 mod. This is the released RNW 1.0.0 product,
-accepted by the owner (C437), rather than an unproven geography proposal.
+written as a complete local EU5 mod. This is the released RNW product (accepted by the
+owner at 1.0.0, C437), rather than an unproven geography proposal.
 [Architecture](architecture.md) maps its implementation.
 
 | Route | Current role |
