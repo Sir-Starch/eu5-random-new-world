@@ -561,6 +561,70 @@ def test_a_quick_answer_sets_the_controls_and_travels_in_the_code(
     assert controller.quick_level("empires") is None
 
 
+def test_a_continents_quick_answer_sets_its_own_controls_and_travels_in_the_code(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Africa and Oceania answer the same questions as America, from their own values: the
+    answer is read back, leaves America alone, travels in the code and is no change once the
+    continent holds its own values again (the code is the plain switch's)."""
+    controller = _controller(tmp_path, fake_export)
+    controller.set_continent("africa", enabled=True)
+    controller.set_continent("oceania", enabled=True)
+    plain = controller.code
+    # Oceania's own state share (24) is "normal", not America's floor.
+    for region in ("africa", "oceania"):
+        for name in ("land", "peoples", "states", "wealth"):
+            assert controller.region_quick_level(region, name) == "normal", (region, name)
+    controller.set_region_quick("africa", "turbulence", "calm")
+    controller.set_region_quick("africa", "land", "much")
+    controller.set_region_quick("oceania", "states", "many")
+    controller.set_region_quick("oceania", "wealth", "rich")
+    africa, oceania = controller.region_settings("africa"), controller.region_settings("oceania")
+    defaults = controller.region_settings("africa", defaults=True)
+    assert africa.natives.turbulence_permille == 200
+    assert africa.new_world.land_permille > defaults.new_world.land_permille
+    assert africa.new_world.location_px > defaults.new_world.location_px
+    assert oceania.natives.state_share_permille == 96
+    assert oceania.new_world.precious_permille == 2000
+    assert controller.region_quick_level("africa", "turbulence") == "calm"
+    assert controller.region_quick_level("oceania", "states") == "many"
+    assert controller.region_quick_level("oceania", "turbulence") == "varied"
+    # America keeps its own answers.
+    assert controller.changes == {}
+    assert controller.quick_level("land") == "normal"
+    code = controller.code
+    controller.set_continent("oceania", enabled=False)
+    controller.set_continent("africa", enabled=False)
+    assert controller.use_code(code) is None
+    assert controller.region_quick_level("africa", "land") == "much"
+    assert controller.region_quick_level("oceania", "wealth") == "rich"
+    for region, name, level in (
+        ("africa", "turbulence", "varied"),
+        ("africa", "land", "normal"),
+        ("oceania", "states", "normal"),
+        ("oceania", "wealth", "normal"),
+    ):
+        controller.set_region_quick(region, name, level)
+    assert controller.code == plain
+    controller.set_region_value("africa", "natives.empire_permille", 333)
+    assert controller.region_quick_level("africa", "empires") is None
+    before = controller.code
+    controller.set_region_quick("africa", "nothing", "few")
+    controller.set_region_quick("africa", "peoples", "enormous")
+    controller.set_region_quick("america", "peoples", "few")
+    assert controller.code == before
+
+
+def test_a_quick_answer_of_a_continent_that_is_off_changes_nothing(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    before = controller.code
+    controller.set_region_quick("africa", "land", "much")
+    assert controller.code == before
+    assert not controller.continent_selection()["africa"]
+
+
 def test_generate_is_refused_beyond_the_location_budget(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

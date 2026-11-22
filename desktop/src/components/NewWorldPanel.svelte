@@ -85,6 +85,35 @@
   }
 </script>
 
+{#snippet quickRows(
+  owner: string,
+  levels: Record<string, string | null>,
+  choose: (name: string, level: string) => void,
+  hideGeography: boolean,
+)}
+  <!-- The same questions for every continent; a world that keeps the real Americas hides the
+       ones about land it does not make (America's only). -->
+  <div class="props">
+    {#each (app.info?.quick ?? []).filter((item) => !(hideGeography && item.geography)) as item (item.name)}
+      <label class="key" for={`quick-${owner}-${item.name}`} title={t(`quick.${item.name}.about`)}>{t(`quick.${item.name}`)}</label>
+      <select
+        id={`quick-${owner}-${item.name}`}
+        class="input val"
+        class:custom={levels[item.name] === null}
+        title={t(`quick.${item.name}.about`)}
+        value={levels[item.name] ?? ""}
+        disabled={locked}
+        onchange={(event) => choose(item.name, event.currentTarget.value)}
+      >
+        {#if levels[item.name] === null}<option value="" disabled>{t("quick.custom")}</option>{/if}
+        {#each item.levels as level (level)}
+          <option value={level}>{t(`quick.${item.name}.${level}`)}</option>
+        {/each}
+      </select>
+    {/each}
+  </div>
+{/snippet}
+
 <div class="pane-head">
   <Tabs label={t("new_world")} options={tabs} value={app.newTab} onchange={(tab) => (app.newTab = tab)} />
 </div>
@@ -131,25 +160,12 @@
                     onclick={() => app.call("randomize_settings")}>{t("randomize_settings")}</button>
                 </div>
               {/if}
-              <div class="props">
-                {#each (app.info?.quick ?? []).filter((item) => !(n?.keeps_geography && item.geography)) as item (item.name)}
-                  <label class="key" for={`quick-${item.name}`} title={t(`quick.${item.name}.about`)}>{t(`quick.${item.name}`)}</label>
-                  <select
-                    id={`quick-${item.name}`}
-                    class="input val"
-                    class:custom={n.quick[item.name] === null}
-                    title={t(`quick.${item.name}.about`)}
-                    value={n.quick[item.name] ?? ""}
-                    disabled={locked}
-                    onchange={(event) => app.call("set_quick", { name: item.name, level: event.currentTarget.value })}
-                  >
-                    {#if n.quick[item.name] === null}<option value="" disabled>{t("quick.custom")}</option>{/if}
-                    {#each item.levels as level (level)}
-                      <option value={level}>{t(`quick.${item.name}.${level}`)}</option>
-                    {/each}
-                  </select>
-                {/each}
-              </div>
+              {@render quickRows(
+                "america",
+                n.quick,
+                (name, level) => app.call("set_quick", { name, level }),
+                !!n.keeps_geography,
+              )}
               {#if n.values["new_world.keep_geography"]}
                 <Check
                   checked={(n.values["new_world.keep_geography"].shown ?? 0) > 0}
@@ -182,6 +198,12 @@
           {:else if enabled && region}
             <div class="continent-body">
               <p class="hint">{t(`type.${region.preset}.about`)}</p>
+              {@render quickRows(
+                key,
+                region.quick,
+                (name, level) => app.call("set_region_quick", { region: key, name, level }),
+                false,
+              )}
               {#if region.morocco}
                 <label class="field">
                   <span class="key">{t("continent.morocco")}</span>

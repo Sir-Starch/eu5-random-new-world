@@ -618,6 +618,32 @@ def test_quick_buttons_set_the_controls_and_follow_the_sliders(
 
 
 @pytest.mark.usefixtures("application")
+def test_each_continent_has_its_own_quick_buttons(tmp_path: Path, fake_export: Exporter) -> None:
+    """Africa and Oceania ask the questions of America: their buttons appear with the continent,
+    set that continent's controls and leave America's alone."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    assert set(window.regional_quick) == {"africa", "oceania"}
+    for box, _rows in window.regional_quick.values():
+        assert not box.isVisibleTo(window)
+    controller.set_continent("africa", enabled=True)
+    pump(lambda: window.regional_quick["africa"][0].isVisibleTo(window))
+    assert not window.regional_quick["oceania"][0].isVisibleTo(window)
+    rows = {row.quick.name: row for row in window.regional_quick["africa"][1]}
+    assert set(rows) == {"land", "peoples", "states", "empires", "turbulence", "wealth"}
+    assert rows["turbulence"].buttons["varied"].isChecked()
+    assert rows["states"].buttons["normal"].isChecked()
+    rows["turbulence"].buttons["turbulent"].click()
+    pump(lambda: controller.region_quick_level("africa", "turbulence") == "turbulent")
+    assert rows["turbulence"].buttons["turbulent"].isChecked()
+    assert not rows["turbulence"].buttons["varied"].isChecked()
+    assert controller.region_settings("africa").natives.turbulence_permille == 800
+    assert controller.quick_level("turbulence") == "varied"
+    assert controller.changes == {}
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_chaos_custom_labels_keep_quick_buttons_aligned(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

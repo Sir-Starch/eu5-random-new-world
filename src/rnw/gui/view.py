@@ -426,6 +426,7 @@ def _regions(
                 if control.field not in controls.PAGE_OPTIONS
             ],
             "values": values,
+            "quick": {item.name: c.region_quick_level(name, item.name) for item in quick.QUICK},
             "changed": changed.get(name, 0),
             "reveal": bool(settings.new_world.reveal_at_start),
         }

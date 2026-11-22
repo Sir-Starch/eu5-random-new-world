@@ -135,6 +135,9 @@ class Bridge:
             "set_continent": lambda p: c.set_continent(_str(p, "key"), enabled=_bool(p, "value")),
             "set_region_preset": lambda p: c.set_region_preset(_str(p, "key"), _str(p, "preset")),
             "set_region_value": self.set_region_value,
+            "set_region_quick": lambda p: c.set_region_quick(
+                _str(p, "region"), _str(p, "name"), _str(p, "level")
+            ),
             "set_region_position": self.set_region_position,
             "reset_region_value": lambda p: c.set_region_value(
                 _str(p, "region"), _str(p, "key"), None

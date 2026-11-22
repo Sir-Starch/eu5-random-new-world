@@ -77,8 +77,10 @@ generation and library features are available. See
 On the **World** tab, use **Continents** to select America, Africa, Oceania, or any
 combination. America starts enabled. Africa starts with **Supercontinent** and
 Oceania starts with **Archipelago** when you enable them. Pick a different preset
-for either continent and open its section in **Advanced** to adjust the land,
-mapping, societies, resources and start visibility. The Wall and Omerika are
+for either continent. Each enabled continent's block on the **World** tab has the same
+quick choices as America's (land, native peoples, native states, extraordinary peoples,
+historical turbulence, gold and silver), counted from that continent's own preset; open its
+section in **Advanced** to adjust the land, mapping, societies, resources and start visibility. The Wall and Omerika are
 American presets. Omerika's option to keep the real Americas can run alongside
 generated Africa and Oceania.
 
@@ -131,9 +133,10 @@ adjust the broad choices on the World tab or individual values in Advanced.
 | **Random** | Picks one of the world types for you. |
 | **Total Chaos** | Picks a world type and randomizes its detailed settings within the allowed ranges. |
 
-The quick choices for land, native peoples, native states, extraordinary peoples and
-precious resources adjust the same settings you can change individually in **Advanced**
-(**Customize** in the classic window).
+The quick choices for land, native peoples, native states, extraordinary peoples,
+historical turbulence and precious resources adjust the same settings you can change
+individually in **Advanced** (**Customize** in the classic window), for each continent
+separately.
 
 In **Total Chaos**, **Randomize settings again** draws another world type and another set
 of Advanced values, keeping the seed. **Random** beside the seed changes only the seed.

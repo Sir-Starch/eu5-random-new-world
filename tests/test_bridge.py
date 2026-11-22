@@ -902,6 +902,33 @@ def test_a_world_that_keeps_the_real_americas_shows_only_what_applies_to_it(
     _ = json.dumps(new)
 
 
+def test_every_enabled_continent_shows_and_sets_its_quick_answers(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The window asks the same questions of each continent, from the continent's own values,
+    and a world that keeps the real Americas still asks them of the continents it generates."""
+    bridge = _bridge(tmp_path, fake_export)
+    assert bridge.call("set_continent", {"key": "africa", "value": True}) is None
+    assert bridge.call("set_continent", {"key": "oceania", "value": True}) is None
+
+    def regions() -> dict[str, dict[str, object]]:
+        new = cast("dict[str, object]", bridge.state()["new"])
+        return cast("dict[str, dict[str, object]]", new["regions"])
+
+    names = {"land", "peoples", "states", "empires", "turbulence", "wealth"}
+    for found in regions().values():
+        assert set(cast("dict[str, object]", found["quick"])) == names
+    assert cast("dict[str, object]", regions()["oceania"]["quick"])["states"] == "normal"
+    params: dict[str, object] = {"region": "africa", "name": "turbulence", "level": "turbulent"}
+    assert bridge.call("set_region_quick", params) is None
+    africa = cast("dict[str, object]", regions()["africa"]["quick"])
+    assert africa["turbulence"] == "turbulent"
+    assert cast("dict[str, object]", regions()["oceania"]["quick"])["turbulence"] == "varied"
+    assert bridge.call("set_value", {"key": "new_world.keep_geography", "value": 1}) is None
+    assert "turbulence" in cast("dict[str, object]", regions()["africa"]["quick"])
+    _ = json.dumps(regions())
+
+
 def test_the_resources_of_a_world_that_keeps_the_real_americas_cannot_be_made_again(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

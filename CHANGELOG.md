@@ -5,6 +5,14 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Ask the **quick questions of every generated continent**, not of America alone. Land, Native
+  peoples, Native states, Extraordinary peoples, Historical turbulence and Gold and silver now
+  stand in the block of Africa and of Oceania as in America's, in both windows, and each answer
+  is counted from that continent's own type (Africa and Oceania start with their own share of
+  land under states, so "Normal" is theirs). They set the same controls that Advanced already
+  held for each continent, so settings, world codes and worlds are unchanged. The help texts of
+  Land and Native peoples say "the continent" instead of "America" in every language.
+
 - Add a **Terra Incognita** appearance to the new (Tauri) window (Settings, Appearance): an aged
   chart under lamplight, with paper grain and foxing over leather-dark panels, double gilt frames
   with engraved corners, brass-plate buttons, a gilded primary action and serif small-cap

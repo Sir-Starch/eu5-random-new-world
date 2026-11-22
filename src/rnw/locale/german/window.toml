@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Land'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''Wie viel von Amerikas Fläche Land ist. Mehr Land macht die Orte etwas größer, damit die Welt innerhalb der 32.000 Orte bleibt, die EU5 annimmt.'''
+source = "52a229d1736ab6eb"
+text = '''Wie viel von der Fläche des Kontinents Land ist. Mehr Land macht die Orte etwas größer, damit die Welt innerhalb der 32.000 Orte bleibt, die EU5 annimmt.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Ureinwohner'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''Wie viele Völker in Amerika leben und wie viele kulturelle Zentren es gibt.'''
+source = "03c7422d54e23eec"
+text = '''Wie viele Völker auf dem Kontinent leben und wie viele kulturelle Zentren es gibt.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Terres'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''La part de la surface de l'Amérique qui est terre. Plus de terres rendent les lieux un peu plus grands, pour que le monde reste dans les 32 000 lieux qu'accepte EU5.'''
+source = "52a229d1736ab6eb"
+text = '''La part de la surface du continent qui est terre. Plus de terres rendent les lieux un peu plus grands, pour que le monde reste dans les 32 000 lieux qu'accepte EU5.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Peuples autochtones'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''Combien de peuples vivent en Amérique, et combien de foyers culturels elle compte.'''
+source = "03c7422d54e23eec"
+text = '''Combien de peuples vivent sur le continent, et combien de foyers culturels il compte.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

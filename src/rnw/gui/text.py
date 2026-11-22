@@ -296,14 +296,16 @@ STRINGS: Final[dict[str, str]] = {
     "quick.custom": "custom",
     "quick.land": "Land",
     "quick.land.about": (
-        "How much of America's area is land. More land makes the locations a little larger, "
-        "so the world stays within the 32,000 locations EU5 takes."
+        "How much of the continent's area is land. More land makes the locations a little "
+        "larger, so the world stays within the 32,000 locations EU5 takes."
     ),
     "quick.land.little": "Little",
     "quick.land.normal": "Normal",
     "quick.land.much": "Much",
     "quick.peoples": "Native peoples",
-    "quick.peoples.about": ("How many peoples live in America, and how many centres of culture."),
+    "quick.peoples.about": (
+        "How many peoples live on the continent, and how many centres of culture."
+    ),
     "quick.peoples.few": "Few",
     "quick.peoples.normal": "Normal",
     "quick.peoples.many": "Many",

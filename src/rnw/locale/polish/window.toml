@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Ląd'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''Jaka część obszaru Ameryki to ląd. Więcej lądu czyni lokacje nieco większymi, by świat zmieścił się w 32 000 lokacji, które przyjmuje EU5.'''
+source = "52a229d1736ab6eb"
+text = '''Jaka część obszaru kontynentu to ląd. Więcej lądu czyni lokacje nieco większymi, by świat zmieścił się w 32 000 lokacji, które przyjmuje EU5.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Ludy tubylcze'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''Ile ludów żyje w Ameryce i ile jest ośrodków kultury.'''
+source = "03c7422d54e23eec"
+text = '''Ile ludów żyje na kontynencie i ile jest ośrodków kultury.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

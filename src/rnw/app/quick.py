@@ -8,14 +8,21 @@ factor (the land of a supercontinent is not the land of an archipelago) or a fix
 A level adds nothing to the settings or to the world code: choosing one sets the controls,
 and the quick setting shows the level whose values the controls hold now, or none when the
 player moved a slider in between (custom).
+
+Every continent has the same questions. America's levels start from its world type; another
+continent's start from its own resolved defaults (``RegionalSettings`` of its type, whose
+state share is the continent's own) and keep to the ranges its controls play in.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from rnw.app import controls
+
+if TYPE_CHECKING:
+    from rnw.settings import RegionalSettings
 
 PERMILLE: Final[int] = 1000
 
@@ -28,14 +35,16 @@ class Part:
     scale: int = PERMILLE
     fixed: int | None = None
 
-    def value(self, preset: str) -> int:
-        """The control's value for ``preset``, kept in the control's playable range."""
-        control = controls.BY_KEY[self.key]
-        number = (
-            self.fixed
-            if self.fixed is not None
-            else control.default(preset) * self.scale // PERMILLE
-        )
+    def value(self, preset: str, defaults: RegionalSettings | None = None) -> int:
+        """The control's value for ``preset``, kept in the control's playable range; for another
+        continent than America, ``defaults`` are the values of its own type."""
+        if defaults is None:
+            control = controls.BY_KEY[self.key]
+            base = control.default(preset)
+        else:
+            control = controls.REGION_BY_KEY[self.key]
+            base = controls.region_value(control, defaults)
+        number = self.fixed if self.fixed is not None else base * self.scale // PERMILLE
         return min(control.high, max(control.low, number))
 
 
@@ -46,9 +55,9 @@ class Level:
     name: str
     parts: tuple[Part, ...]
 
-    def values(self, preset: str) -> dict[str, int]:
-        """Control key -> value of this level for ``preset``."""
-        return {part.key: part.value(preset) for part in self.parts}
+    def values(self, preset: str, defaults: RegionalSettings | None = None) -> dict[str, int]:
+        """Control key -> value of this level for ``preset`` (a continent's ``defaults``)."""
+        return {part.key: part.value(preset, defaults) for part in self.parts}
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,10 +71,18 @@ class Quick:
         """The level called ``name``."""
         return next(level for level in self.levels if level.name == name)
 
-    def current(self, preset: str, values: dict[str, int]) -> str | None:
+    def touched(self) -> frozenset[str]:
+        """The controls any level of this question sets."""
+        return frozenset(part.key for level in self.levels for part in level.parts)
+
+    def current(
+        self, preset: str, values: dict[str, int], defaults: RegionalSettings | None = None
+    ) -> str | None:
         """The level whose values every touched control holds in ``values``; None: custom."""
         for level in self.levels:
-            if all(values.get(key) == number for key, number in level.values(preset).items()):
+            if all(
+                values.get(key) == number for key, number in level.values(preset, defaults).items()
+            ):
                 return level.name
         return None
 

@@ -209,8 +209,11 @@ progress, stages, ETA and Cancel, with the queue under them; afterwards the outc
 the world or a retry. The queue (its worlds, Run queue, Clear queue, a remove button for each)
 sits below the sketches at rest, so that the grid does not move with each world added. The inspector's tabs are World
 (Continents: a row for each continent with its switch and, while on, its type and its own choices:
-America's basics as lists, the real Americas, the oceans; Africa's Morocco, Mamluks and connection
-to Asia; and each continent's reveal at the start; then The whole world: the sea route around it
+the basics as lists (land, native peoples, native states, extraordinary peoples, historical
+turbulence, gold and silver), asked of every continent in its own block and answered from that
+continent's own type (`quick.py`, `set_quick` for America, `set_region_quick` for the others; the Qt
+window has a group of them for each continent that is on); America's real Americas and oceans;
+Africa's Morocco, Mamluks and connection to Asia; and each continent's reveal at the start; then The whole world: the sea route around it
 and the lobby cover, shown while any land is generated; then seed and code), Advanced (a switch
 between the continents that are on, each with its count of changed values; the exact values of
 the chosen continent by group; Reset all gives back every continent's exact values and keeps the

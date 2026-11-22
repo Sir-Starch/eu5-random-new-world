@@ -15,7 +15,9 @@ regional resource trial, and the installed 1337 data audit.
 - An enabled continent uses its own default preset immediately. The
   starting defaults are Continents for America, Supercontinent for Africa and
   Archipelago for Oceania. Each continent has its own preset and applicable
-  land, society and resource controls. The Wall is exclusive to America.
+  land, society and resource controls, and the same six quick questions that America's
+  block asks (land, peoples, states, extraordinary peoples, turbulence, gold and silver),
+  answered from the continent's own type. The Wall is exclusive to America.
   Omerika, the land editor and the option to keep the real Americas retain
   their American scope. With the latter option, American geography is fixed
   and its societies are generated alongside any other selected continent.

@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''육지'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''아메리카 영역 중 육지의 비율입니다. 육지가 많을수록 EU5가 받아들이는 32,000개 지역 안에 들도록 지역이 조금 커집니다.'''
+source = "52a229d1736ab6eb"
+text = '''대륙 영역 중 육지의 비율입니다. 육지가 많을수록 EU5가 받아들이는 32,000개 지역 안에 들도록 지역이 조금 커집니다.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''원주민'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''아메리카에 사는 민족의 수와 문화 중심지의 수입니다.'''
+source = "03c7422d54e23eec"
+text = '''대륙에 사는 민족의 수와 문화 중심지의 수입니다.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

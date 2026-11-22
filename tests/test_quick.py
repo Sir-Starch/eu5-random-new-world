@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from rnw.app import controls, quick
 from rnw.gui.text import STRINGS
-from rnw.settings import WORLD_TYPES, build_settings
+from rnw.settings import REGIONAL_PRESETS, WORLD_TYPES, RegionalSettings, build_settings
 
 
 def _defaults(preset: str) -> dict[str, int]:
@@ -97,3 +97,95 @@ def test_many_states_requests_a_substantially_higher_land_share() -> None:
         many = states.level("many").values(preset)["natives.state_share_permille"]
         assert many == 440
         assert controls.BY_KEY["natives.state_share_permille"].allows(many)
+
+
+def _region(key: str, preset: str, overrides: dict[str, object] | None = None) -> RegionalSettings:
+    """One continent's resolved settings of type ``preset``, as the window resolves them."""
+    document: dict[str, object] = {"preset": preset, **(overrides or {})}
+    return build_settings("continents", {"continents": {key: document}}).continents.regions[0]
+
+
+def _held(region: RegionalSettings, setting: quick.Quick) -> dict[str, int]:
+    return {
+        key: controls.region_value(controls.REGION_BY_KEY[key], region) for key in setting.touched()
+    }
+
+
+def test_every_continent_starts_on_an_answer_of_each_question() -> None:
+    """A continent's own defaults (Oceania's state share is 24, Africa's 443) are a level: the
+    questions are not America's numbers, and a default continent never reads as custom. The
+    questions that scale a value start on "normal"; the fixed ones (empires, turbulence) on
+    whichever level holds the type's own value."""
+    scaled = {"land", "peoples", "states", "wealth"}
+    for key in REGIONAL_PRESETS:
+        for preset in controls.REGION_TYPES:
+            defaults = _region(key, preset)
+            for setting in quick.QUICK:
+                level = setting.current(preset, _held(defaults, setting), defaults)
+                assert level is not None, (key, preset, setting.name)
+                if setting.name in scaled:
+                    assert level == "normal", (key, preset, setting.name)
+
+
+def test_every_answer_of_every_continent_is_distinct_and_playable() -> None:
+    """After the clamping to the continent's ranges no two levels coincide, each is read back
+    and every value is one the continent's sliders allow (the state share goes down to 1)."""
+    for key in REGIONAL_PRESETS:
+        for preset in controls.REGION_TYPES:
+            defaults = _region(key, preset)
+            for setting in quick.QUICK:
+                mixes = [
+                    tuple(sorted(level.values(preset, defaults).items()))
+                    for level in setting.levels
+                ]
+                assert len(set(mixes)) == len(mixes), (key, preset, setting.name)
+                for level in setting.levels:
+                    values = level.values(preset, defaults)
+                    assert all(
+                        controls.REGION_BY_KEY[name].allows(number)
+                        for name, number in values.items()
+                    )
+                    held = {**_held(defaults, setting), **values}
+                    assert setting.current(preset, held, defaults) == level.name
+
+
+def test_a_continents_states_start_from_its_own_share() -> None:
+    """Oceania keeps 24 for "normal" (not America's 30 floor), Africa's levels grow from 443."""
+    oceania = _region("oceania", "archipelago")
+    states = quick.BY_NAME["states"]
+    shares = {
+        level.name: level.values("archipelago", oceania)["natives.state_share_permille"]
+        for level in states.levels
+    }
+    assert shares == {"few": 12, "normal": 24, "many": 96}
+    africa = _region("africa", "supercontinent")
+    shares = {
+        level.name: level.values("supercontinent", africa)["natives.state_share_permille"]
+        for level in states.levels
+    }
+    assert shares["few"] < 443 == shares["normal"] < shares["many"]
+    assert shares["many"] == controls.REGION_BY_KEY["natives.state_share_permille"].high
+
+
+def test_no_answer_of_a_continent_makes_a_world_the_engine_cannot_take() -> None:
+    """Each answer on each continent, with America and the other continent left alone, stays
+    under the location budget."""
+    for key in REGIONAL_PRESETS:
+        for preset in controls.REGION_TYPES:
+            defaults = _region(key, preset)
+            for setting in quick.QUICK:
+                for level in setting.levels:
+                    sections: dict[str, dict[str, int]] = {"new_world": {}, "natives": {}}
+                    for name, number in level.values(preset, defaults).items():
+                        control = controls.REGION_BY_KEY[name]
+                        sections[control.section][control.field] = number
+                    settings = build_settings(
+                        "continents",
+                        {"continents": {"america": False, key: {"preset": preset, **sections}}},
+                    )
+                    assert controls.estimated_locations(settings) < controls.LOCATION_BUDGET, (
+                        key,
+                        preset,
+                        setting.name,
+                        level.name,
+                    )

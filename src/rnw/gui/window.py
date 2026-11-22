@@ -81,7 +81,7 @@ from rnw.gui.text import LANGUAGE_NAMES, TITLE, grouped, text
 from rnw.gui.theme import install as install_theme
 from rnw.gui.view import control_name
 from rnw.languages import SOURCE
-from rnw.settings import AMERICA, MamlukPolicy, MoroccoPolicy
+from rnw.settings import AMERICA, REGIONAL_PRESETS, MamlukPolicy, MoroccoPolicy
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -537,9 +537,13 @@ class _ControlRow:
 class _QuickRow:
     """One quick setting: its name and a button for each level; none is down when custom."""
 
-    def __init__(self, quick: quick_settings.Quick, window: MainWindow) -> None:
+    def __init__(
+        self, quick: quick_settings.Quick, window: MainWindow, *, region: str = ""
+    ) -> None:
         self.quick: quick_settings.Quick = quick
         self.window: MainWindow = window
+        # The continent the row answers for; none: America, whose questions are the page's.
+        self.region: str = region
         about = text(f"quick.{quick.name}.about")
         self.label: QLabel = QLabel(text(f"quick.{quick.name}"))
         self.label.setToolTip(about)
@@ -583,7 +587,10 @@ class _QuickRow:
         self.custom.setVisible(level is None and self.shown)
 
     def _pick(self, level: str) -> None:
-        self.window.controller.set_quick(self.quick.name, level)
+        if self.region:
+            self.window.controller.set_region_quick(self.region, self.quick.name, level)
+        else:
+            self.window.controller.set_quick(self.quick.name, level)
 
 
 class MainWindow(QMainWindow):
@@ -674,6 +681,8 @@ class MainWindow(QMainWindow):
         self.candidates_dialog: CandidatesDialog | None = None
         self.rows: list[_ControlRow] = []
         self.quick_rows: list[_QuickRow] = []
+        # Each other continent's questions: the group, shown while the continent is on, and rows.
+        self.regional_quick: dict[str, tuple[QGroupBox, list[_QuickRow]]] = {}
         self.setWindowTitle(TITLE)
         self.setAcceptDrops(True)
         self._build()
@@ -913,6 +922,12 @@ class MainWindow(QMainWindow):
         self.american_reveal: QWidget = QWidget()
         self.american_reveal.setLayout(self._reveal_row())
         layout.addWidget(self.american_reveal)
+        for region in REGIONAL_PRESETS:
+            box, rows = self._quick_group(
+                f"{text(f'continent.{region}')} — {text('quick')}", region
+            )
+            self.regional_quick[region] = box, rows
+            layout.addWidget(box)
         layout.addStretch(1)
         return world
 
@@ -1214,18 +1229,24 @@ class MainWindow(QMainWindow):
         return types
 
     def _quick(self) -> QGroupBox:
-        box = QGroupBox(text("quick"))
+        box, rows = self._quick_group(text("quick"), "")
+        self.quick_rows.extend(rows)
+        return box
+
+    def _quick_group(self, title: str, region: str) -> tuple[QGroupBox, list[_QuickRow]]:
+        box = QGroupBox(title)
         grid = QGridLayout(box)
         hint = QLabel(text("quick_hint"))
         hint.setWordWrap(True)
         hint.setStyleSheet(MUTED)
         grid.addWidget(hint, 0, 0, 1, 2)
+        rows: list[_QuickRow] = []
         for row, setting in enumerate(quick_settings.QUICK, start=1):
-            line = _QuickRow(setting, self)
+            line = _QuickRow(setting, self, region=region)
             line.place(grid, row)
-            self.quick_rows.append(line)
+            rows.append(line)
         grid.setColumnStretch(1, 1)
-        return box
+        return box, rows
 
     def _progress(self) -> QGroupBox:
         progress = QGroupBox(text("progress"))
@@ -2025,6 +2046,13 @@ class MainWindow(QMainWindow):
             preset.setCurrentIndex(controls.REGION_TYPES.index(settings.preset))
             _ = preset.blockSignals(False)  # noqa: FBT003 - Qt synchronization
             preset.setEnabled(enabled and not busy)
+            box, quick_rows = self.regional_quick[name]
+            box.setVisible(enabled)
+            for quick_row in quick_rows:
+                quick_row.refresh(
+                    self.controller.region_quick_level(name, quick_row.quick.name),
+                    enabled=not busy,
+                )
             page = self.regional_pages[name]
             if enabled and name not in self.regional_controls:
                 section, rows = self._regional_advanced(name)

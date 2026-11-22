@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''陸地'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''アメリカの領域のうち陸地が占める割合。陸地が多いほど、EU5 が受け付ける 32,000 ロケーションに収まるよう、ロケーションが少し大きくなります。'''
+source = "52a229d1736ab6eb"
+text = '''大陸の領域のうち陸地が占める割合。陸地が多いほど、EU5 が受け付ける 32,000 ロケーションに収まるよう、ロケーションが少し大きくなります。'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''先住民'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''アメリカに住む民族の数と、文化の中心地の数。'''
+source = "03c7422d54e23eec"
+text = '''大陸に住む民族の数と、文化の中心地の数。'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''陆地'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''美洲区域中陆地所占的比例。陆地越多，地点会稍大一些，使世界保持在 EU5 可接受的 32,000 个地点以内。'''
+source = "52a229d1736ab6eb"
+text = '''该大洲区域中陆地所占的比例。陆地越多，地点会稍大一些，使世界保持在 EU5 可接受的 32,000 个地点以内。'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''原住民族'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''美洲生活着多少民族，以及有多少个文化中心。'''
+source = "03c7422d54e23eec"
+text = '''该大洲上生活着多少民族，以及有多少个文化中心。'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

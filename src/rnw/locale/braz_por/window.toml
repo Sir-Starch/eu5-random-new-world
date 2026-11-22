@@ -471,8 +471,8 @@ source = "b6baff9358ddd8f7"
 text = '''Terra'''
 
 ["quick.land.about"]
-source = "202abef6c8a261d1"
-text = '''Quanto da área da América é terra. Mais terra deixa as localizações um pouco maiores, para que o mundo fique dentro das 32.000 localizações que o EU5 aceita.'''
+source = "52a229d1736ab6eb"
+text = '''Quanto da área do continente é terra. Mais terra deixa as localizações um pouco maiores, para que o mundo fique dentro das 32.000 localizações que o EU5 aceita.'''
 
 ["quick.land.little"]
 source = "117361268a0facb6"
@@ -491,8 +491,8 @@ source = "1e0a8378b7a75bd9"
 text = '''Povos nativos'''
 
 ["quick.peoples.about"]
-source = "69c8b047930d7896"
-text = '''Quantos povos vivem na América e quantos centros culturais existem.'''
+source = "03c7422d54e23eec"
+text = '''Quantos povos vivem no continente e quantos centros culturais existem.'''
 
 ["quick.peoples.few"]
 source = "9a4303881564a221"

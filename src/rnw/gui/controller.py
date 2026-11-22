@@ -466,9 +466,14 @@ class Controller:
         if configured is False:
             return
         region = dict(cast("dict[str, object]", configured)) if isinstance(configured, dict) else {}
-        region.update(changes)
+        for name, value in changes.items():
+            if value is None:
+                _ = region.pop(name, None)
+            else:
+                region[name] = value
         _ = build_settings(self.preset, {"continents": {key: region}})
-        raw[key] = region
+        # A continent with nothing of its own left is the plain switch, as when it was turned on.
+        raw[key] = region or True
         self.other_changes["continents"] = raw
         self._changed()
 
@@ -550,6 +555,45 @@ class Controller:
         else:
             section[control.field] = min(control.high, max(control.low, number))
         self._edit_region(region, {control.section: section})
+
+    def region_quick_level(self, region: str, name: str) -> str | None:
+        """The level of a quick setting that a continent's controls hold now; None: a custom mix."""
+        settings = self.region_settings(region)
+        held = {
+            key: controls.region_value(controls.REGION_BY_KEY[key], settings)
+            for key in quick.BY_NAME[name].touched()
+        }
+        return quick.BY_NAME[name].current(
+            settings.preset, held, self.region_settings(region, defaults=True)
+        )
+
+    def set_region_quick(self, region: str, name: str, level: str) -> None:
+        """Set the controls of one answer of a quick setting for a continent, from its own type's
+        values; a control that comes back to them is no longer a change of the continent."""
+        setting = quick.BY_NAME.get(name)
+        configured = self._continent_document().get(region, False)
+        if (
+            setting is None
+            or region not in REGIONAL_PRESETS
+            or configured is False
+            or level not in {answer.name for answer in setting.levels}
+        ):
+            return
+        defaults = self.region_settings(region, defaults=True)
+        own = cast("dict[str, object]", configured) if isinstance(configured, dict) else {}
+        sections: dict[str, dict[str, object]] = {}
+        for key, number in setting.level(level).values(defaults.preset, defaults).items():
+            control = controls.REGION_BY_KEY[key]
+            if control.section not in sections:
+                previous = own.get(control.section)
+                sections[control.section] = (
+                    dict(cast("dict[str, object]", previous)) if isinstance(previous, dict) else {}
+                )
+            if number == controls.region_value(control, defaults):
+                _ = sections[control.section].pop(control.field, None)
+            else:
+                sections[control.section][control.field] = number
+        self._edit_region(region, {section: found or None for section, found in sections.items()})
 
     def set_preset(self, name: str) -> None:
         """Choose a world type; the changed values go back to the type's own."""
