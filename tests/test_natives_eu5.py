@@ -300,6 +300,13 @@ def test_named_colour_values_are_not_location_references() -> None:
     assert "dabaca" in referenced_words("in_game/common/x.txt", "a = dabaca\n")
 
 
+def test_a_country_names_a_culture_never_a_location() -> None:
+    """The culture ``pende`` is also the key of a location of the Congo: only the tags count."""
+    text = "ABC = {\n\tculture_definition = pende\n\treligion_definition = bantu_religion\n}\n"
+    assert referenced_words("in_game/setup/countries/rnw_natives.txt", text) == {"ABC"}
+    assert "pende" in referenced_words("in_game/common/x.txt", text)
+
+
 def test_population_identity_names_do_not_count_as_locations() -> None:
     template = "new_home = { culture = retired_place religion = local_faith }"
     pops = "locations = { new_home = { define_pop = { culture = retired_place } } }"

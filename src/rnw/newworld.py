@@ -67,7 +67,7 @@ from rnw.watersheds import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Collection, Sequence
 
     from numpy.typing import NDArray
 
@@ -927,10 +927,16 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
     settings: NewWorldSettings,
     seed: int,
     scale: int = PERMILLE,
+    whole: NDArray[np.bool_] | None = None,
+    keep_seas: bool = False,
 ) -> Approach | None:
     """Raise a land bridge from a seeded shore to the continent: a bent, swelling ridge of land.
 
-    ``scale`` is the permille of the usual width of its body.
+    ``scale`` is the permille of the usual width of its body. A bridge never cuts a sea off from
+    the open sea (``whole`` is the domain with the water reserved for a strait): a ridge that
+    closes round the water of a protected islet is not made. With ``keep_seas`` it does not
+    divide the open water into pieces that hold a sea cell either, as a bridge to a strait's
+    landing would across the Mediterranean and leave a bay no generated sea leads out of.
 
     The sites of ``interface`` are tried in the order of their distance from the continent
     (the largest land) and a seeded jitter; the first whose bridge joins both is made. None when
@@ -962,6 +968,10 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
         ),
     )
     ground = _BridgeGround(land, domain, shore, interface, continent, outside_land, settings, scale)
+    if whole is not None:
+        open_water = _touching_open_sea(whole, outside_land)
+        seas = _sea_state(whole, land, shore, open_water, settings.min_sea_cell_px)
+        ground = replace(ground, whole=whole, open_water=open_water, seas=seas, keep_seas=keep_seas)
     for index in candidates[:BRIDGE_TRIES]:
         checkpoint()
         approach = _bridge(
@@ -987,6 +997,13 @@ class _BridgeGround:
     outside_land: NDArray[np.bool_] | None
     settings: NewWorldSettings
     scale: int
+    # The whole domain and the pixels open to the sea outside it, when a bridge must not cut a
+    # sea off from them (``seas`` is how many seas land has cut off and, with ``keep_seas``,
+    # how many large ones reach open water before the bridge, which it may not change).
+    whole: NDArray[np.bool_] | None = None
+    open_water: NDArray[np.bool_] | None = None
+    seas: tuple[int, int] = (0, 0)
+    keep_seas: bool = False
 
     def width(self, value: int) -> int:
         """``value`` thousandths of a location, at the bridge's scale, in pixels."""
@@ -1149,7 +1166,16 @@ def _bridge(
         or not ridge[here[0] - origin[0], here[1] - origin[1]]
     ):
         return None
+    fresh = ridge & ~ground.land[box]
     ground.land[box] |= ridge
+    if ground.whole is not None and ground.open_water is not None:
+        floor = ground.settings.min_sea_cell_px
+        shut, reaching = _sea_state(
+            ground.whole, ground.land, ground.shore, ground.open_water, floor
+        )
+        if shut > ground.seas[0] or (ground.keep_seas and reaching > ground.seas[1]):
+            ground.land[box] &= ~fresh
+            return None
     ground.shore[box] &= ~ridge
     path = np.zeros(ridge.shape, dtype=bool)
     path[axis[:, 0] - origin[0], axis[:, 1] - origin[1]] = True
@@ -1217,7 +1243,14 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
     links: list[Approach] = []
     if interface is not None:
         approach = _land_approach(
-            land, domain, shore, interface, outside_land=outside_land, settings=settings, seed=seed
+            land,
+            domain,
+            shore,
+            interface,
+            outside_land=outside_land,
+            settings=settings,
+            seed=seed,
+            whole=domain,
         )
         if approach is None:
             message = "The African canvas has no continuous approach to a passable Asian location"
@@ -1236,6 +1269,8 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
             settings=settings,
             seed=derive_seed(seed, "mediterranean_approach"),
             scale=BRIDGE_LANDING_SCALE,
+            whole=domain,
+            keep_seas=True,
         )
         if approach is not None:
             links.append(approach)
@@ -1258,15 +1293,54 @@ def stray_strait(
     zone and no protected coast may be cut off. None when every sea that touches ``shore``
     reaches ``open_shore``, or when no path through the domain exists.
     """
-    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
-    parts = label_components(coded)
-    water = domain & ~land
-    open_parts = np.unique(parts[water & open_shore])
-    stray = np.setdiff1d(np.unique(parts[water & shore]), open_parts)
+    water, parts, open_parts, stray = _strays(domain, land, shore, open_shore)
     if not stray.size:
         return None
     path = _path(water & (parts == stray[0]), water & np.isin(parts, open_parts), domain)
     return path if np.any(path) else None
+
+
+def _strays(
+    domain: NDArray[np.bool_],
+    land: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    open_shore: NDArray[np.bool_],
+) -> tuple[NDArray[np.bool_], NDArray[np.int32], NDArray[np.int32], NDArray[np.int32]]:
+    """The water, its parts, the parts that reach ``open_shore`` and those that touch ``shore``
+    without reaching it: the seas that land has cut off from open water."""
+    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
+    parts = label_components(coded)
+    water = domain & ~land
+    open_parts = np.unique(parts[water & open_shore])
+    return water, parts, open_parts, np.setdiff1d(np.unique(parts[water & shore]), open_parts)
+
+
+def _sea_state(
+    whole: NDArray[np.bool_],
+    land: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    open_water: NDArray[np.bool_],
+    floor: int,
+) -> tuple[int, int]:
+    """How many seas land has cut off from open water, and how many pieces of at least ``floor``
+    pixels touch it."""
+    water, parts, open_parts, stray = _strays(whole, land, shore, open_water)
+    del water
+    sizes = np.bincount(parts.ravel(), minlength=int(parts.max()) + 1)
+    return len(stray), int(np.count_nonzero(sizes[open_parts] >= floor))
+
+
+def _touching_open_sea(
+    domain: NDArray[np.bool_], outside_land: NDArray[np.bool_] | None
+) -> NDArray[np.bool_]:
+    """The pixels that touch the open sea beyond ``domain`` (:func:`open_sea`), and its own."""
+    sea = open_sea(domain, outside_land=outside_land)
+    touching = sea.copy()
+    touching[1:] |= sea[:-1]
+    touching[:-1] |= sea[1:]
+    touching[:, 1:] |= sea[:, :-1]
+    touching[:, :-1] |= sea[:, 1:]
+    return touching
 
 
 def _interior_points(
@@ -2119,12 +2193,14 @@ def _wrap_centres(
     centroids[keys, 1] = (sums[keys] // pixels[keys] - half) % width
 
 
-def unported_cells(world: NewWorld) -> list[int]:
+def unported_cells(world: NewWorld, anchored: Collection[int] = ()) -> list[int]:
     """Land cells that reach no coast without crossing wasteland, lakes or the sea.
 
     EU5 logs a location as "isolated from all ports by impassable terrain" when walling
     wasteland leaves it no way to a port [V-GAME 1.4.2, C95]; every coastal land cell has
-    a port, so the cells to find are the land components that touch no sea cell.
+    a port, so the cells to find are the land components that touch no sea cell. A cell of
+    ``anchored``, one that touches the passable land of a retained location, reaches that
+    land's ports (the wasteland plan counts a land link the same way).
     """
     parent = list(range(len(world.classes)))
 
@@ -2143,6 +2219,7 @@ def unported_cells(world: NewWorld) -> list[int]:
             coastal.add(find(first))
         elif kinds == (CellClass.SEA, CellClass.LAND):
             coastal.add(find(second))
+    coastal.update(find(item) for item in anchored if world.classes[item] is CellClass.LAND)
     reached = {find(item) for item in coastal}
     return [
         index

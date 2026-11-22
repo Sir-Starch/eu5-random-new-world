@@ -5,6 +5,17 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Stop **generation errors in worlds with Africa**. A land bridge from Africa to the European
+  coast could shut a bay of water off round a retained islet, or leave a pocket of the Levant's
+  coast with no sea of its own to lead out of it, and the export ended with "Sea cutout at cell
+  N has no coast or retained sea", "sea cells cannot be reached by sea" or "Old World sea
+  boundary cannot reach an open ocean area". Such a bridge is now refused and another site is
+  tried. Two checks no longer fail a sound world either: a native people of the culture Pende
+  or Teke (the check for removed locations read the culture as the location of that name) and
+  a land location that reaches a port only through the retained land beside it. Of seven seeds
+  of the all-continents selection five stopped before and all seven generate now; the output
+  of a world changes only where a bridge is refused.
+
 - Redraw the **physical map** of the window (Tauri and classic) and stop it floating in an endless
   sea. The map is now a sheet on the window's own ground, with a faint graticule that moves with
   it, a soft shadow and a hairline along its edge, in the colours of the chosen appearance, so land

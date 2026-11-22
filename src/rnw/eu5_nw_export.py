@@ -1573,7 +1573,15 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
     vanilla locations that touch a generated one, which the selection cover reads.
     """
     count = len(world.classes)
-    unported = unported_cells(world)
+    vanilla_count = len(game_map.keys)
+    after = set(unpack_pairs(adjacency_pairs(final, wrap_x=True)))
+    land_ports = {
+        generated - vanilla_count
+        for low, high in after
+        for generated, vanilla in ((high, low), (low, high))
+        if generated >= vanilla_count > vanilla and game_map.classes[vanilla] is CellClass.LAND
+    }
+    unported = unported_cells(world, land_ports)
     if unported:
         message = f"{len(unported)} land cells reach no port, e.g. cell {unported[0]}"
         raise NewWorldExportError(message)
@@ -1584,9 +1592,7 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
     if np.any(per_cell != 1):
         message = f"{int(np.count_nonzero(per_cell != 1))} generated cells are split or empty"
         raise NewWorldExportError(message)
-    vanilla_count = len(game_map.keys)
     before = set(unpack_pairs(adjacency_pairs(game_map.labels, wrap_x=True)))
-    after = set(unpack_pairs(adjacency_pairs(final, wrap_x=True)))
     continents = game_map.continents
     oceans = (
         frozenset(key for key in continents if key.endswith("_ocean_continent"))
@@ -2861,7 +2867,9 @@ def referenced_words(path: str, text: str) -> set[str]:
 
     Named colours count only their keys: a colour such as ``dabaca`` can spell a
     location key (vanilla has one) without referring to it. Location templates
-    and population records name locations only in their respective record keys.
+    and population records name locations only in their respective record keys. The countries
+    of the natives name a culture and a religion, never a location, so only their tags count:
+    the cultures ``pende`` and ``teke`` spell location keys of the Congo too.
     """
     if path in {_mod_path(TEMPLATES), _mod_path(f"{SETUP_DIR}/06_pops.txt")}:
         root = parse(text)
@@ -2870,6 +2878,8 @@ def referenced_words(path: str, text: str) -> set[str]:
             message = f"{path} has no location records"
             raise NewWorldExportError(message)
         return {entry.key for entry in holder.entries if entry.key is not None}
+    if path == DEFINITION_FILE:
+        return {entry.key for entry in parse(text).entries if entry.key is not None}
     text = re.sub(r"#[^\n]*", "", text)
     if path == _mod_path(NAMED_COLORS):
         text = "\n".join(line.split("=", 1)[0] for line in text.splitlines())

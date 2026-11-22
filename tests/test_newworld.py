@@ -441,6 +441,69 @@ def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:
     assert sealed.classes[1:3] == (CellClass.LAND, CellClass.LAND)
     assert unported_cells(sealed) == []
     assert seal_pockets(sealed) is sealed
+    # A cell that touches the passable land of a retained location reaches that land's ports.
+    assert unported_cells(world, anchored=[5]) == [7]
+    assert unported_cells(world, anchored=[3, 6]) == [4, 5, 7]
+
+
+def test_the_sea_state_counts_closed_bays_and_pieces_of_open_water() -> None:
+    """Land that shuts a bay's mouth cuts a sea off; walls across the sea split its open water."""
+    domain = np.zeros((80, 140), dtype=bool)
+    domain[1:-1, 1:-1] = True
+    land = np.zeros_like(domain)
+    land[20:60, 20:100] = True
+    land[30:50, 30:90] = False
+    land[38:42, 90:100] = False
+    bay = np.zeros_like(domain)
+    bay[30:50, 30:90] = True
+    bay[38:42, 90:100] = True
+    open_water = newworld._touching_open_sea(domain, None)  # pyright: ignore[reportPrivateUsage]
+    state = newworld._sea_state  # pyright: ignore[reportPrivateUsage]
+    assert state(domain, land, bay, open_water, 10) == (0, 1)
+    land[38:42, 90:100] = True
+    assert state(domain, land, bay, open_water, 10) == (1, 1)
+    land[1:20, 60:64] = True
+    land[60:79, 60:64] = True
+    assert state(domain, land, bay, open_water, 10) == (1, 2)
+    # Pieces smaller than the floor do not count.
+    assert state(domain, land, bay, open_water, 100_000) == (1, 0)
+
+
+def test_a_guarded_bridge_leaves_the_seas_as_it_found_them() -> None:
+    """With ``whole`` the bridge never cuts a sea off, and never divides the open water."""
+    domain = np.ones((300, 400), dtype=bool)
+    domain[140:160, 190:210] = False
+    rows, columns = np.mgrid[:300, :400]
+    shore = distance_from(~domain, 4, octagonal=True) < 4
+    land = (((rows - 150) ** 2 + (columns - 40) ** 2) < 70**2) & domain & ~shore
+    interface = np.zeros_like(domain)
+    interface[138:162, 188:192] = True
+    open_water = newworld._touching_open_sea(domain, None)  # pyright: ignore[reportPrivateUsage]
+    settings = replace(SMALL, location_px=14)
+    before = newworld._sea_state(  # pyright: ignore[reportPrivateUsage]
+        domain, land, shore, open_water, settings.min_sea_cell_px
+    )
+    for seed in (3, 8, 13):
+        guarded = land.copy()
+        approach = newworld._land_approach(  # pyright: ignore[reportPrivateUsage]
+            guarded,
+            domain,
+            shore,
+            interface,
+            outside_land=None,
+            settings=settings,
+            seed=seed,
+            whole=domain,
+            keep_seas=True,
+        )
+        assert approach is not None
+        assert before[0] == 0
+        assert (
+            newworld._sea_state(  # pyright: ignore[reportPrivateUsage]
+                domain, guarded, shore, open_water, settings.min_sea_cell_px
+            )
+            == before
+        )
 
 
 def _block(rows: slice, columns: slice, shape: tuple[int, int]) -> Footprint:
