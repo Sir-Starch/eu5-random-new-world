@@ -106,10 +106,20 @@ African and Oceanian claims: water that retained shores enclose and water
 beyond Africa's limit stays vanilla.
 The three generated regions share borders across the Pacific, Atlantic and
 Indian oceans. Their coasts and intervening deep water form during generation.
-The sea plan checks the common borders for deep water, keeps small residual
-pieces with adjacent navigable water and gives regular sea cells to the
-southern passage when **Keep a sea route around the world** is enabled.
-This option defaults on for regional worlds and is omitted for The Wall.
+The sea plan checks the common borders for deep water and keeps small residual
+pieces with adjacent navigable water. **Keep a sea route around the world**
+(default on for regional worlds, omitted for The Wall) is a step of the
+generation (`rnw.circuit`, `eu5_nw_export._open_sea_route`): once the continents
+are composed it looks for a route of passable water that winds round the map's
+wrap, with the locations that straddle the wrap counted as two pieces. If there
+is one nothing changes. If not, the cheapest generated location that closes a
+route is turned into sea (a wasteland costs its pixels, land four times as
+much; the land link to Asia and the Wall's barrier stay) and the drainage plan
+of its continent lets the rivers that ran into it end there. After the sea
+zones are planned the route is checked again on the finished water and the
+export fails without one. An earlier version reserved a southern strip of the
+map for it (1.3.0 development, 2026-11-20); the owner rejected that on
+2026-11-23 as a crutch.
 
 Oceania covers the game's `oceania` continent, including Australia, New Zealand,
 New Guinea and Hawaii. Indonesia stays vanilla. Preserve the distinction between

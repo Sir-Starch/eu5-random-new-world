@@ -95,7 +95,6 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
     docks: Collection[int],
     *,
     preferred: Collection[int] = (),
-    passage: Collection[int] = (),
 ) -> Lanes:
     """Choose the lanes of ``world`` and cut the deep water between them into zones.
 
@@ -109,8 +108,6 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         for cell in range(len(world.classes))
         if waters.topography[cell] is Topography.DEEP_OCEAN
     }
-    open_passage = deep.intersection(passage)
-    deep.difference_update(open_passage)
     # Old current footprints describe the former geography, not mandatory routes
     # on this world's coasts. Only live boundary currents must be continued.
     lanes = deep.intersection(anchors)
@@ -143,7 +140,7 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         for cell in stretch
     }
     terminals = (set(links) - deep) | set(docks)
-    ordinary: set[int] = open_passage
+    ordinary: set[int] = set()
     for zone in _stretches(links, deep - lanes):
         inside = set(zone)
         has_interior = any(sum(other in inside for other in links[cell]) >= 2 for cell in zone)  # noqa: PLR2004 - two sides form an interior.

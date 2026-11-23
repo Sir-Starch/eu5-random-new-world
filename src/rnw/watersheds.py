@@ -51,6 +51,7 @@ from rnw.rivers import (
     outlet_problems,
     planned_rivers,
     route,
+    withdrawn,
 )
 from rnw.rng import derive_seed, hash_grid
 from rnw.synth import first_pixels, grow_regions, grow_weighted, merge_small
@@ -157,6 +158,23 @@ def plan_drainage(  # noqa: PLR0913 - the drainage plan reads the domain and its
         for left, right in plan_spans(columns, seam)
     )
     return DrainagePlan(seam=seam, parents=parents)
+
+
+def withdrawn_drainage(
+    plan: DrainagePlan, land: NDArray[np.bool_], lakes: NDArray[np.bool_]
+) -> DrainagePlan:
+    """``plan`` after land turned to water (``rivers.withdrawn``, span by span): what the
+    drainage of the rest of the domain was stays as it was."""
+    columns = int(land.shape[1])
+    return DrainagePlan(
+        seam=plan.seam,
+        parents=tuple(
+            withdrawn(parent, land[:, left:right], lakes[:, left:right])
+            for parent, (left, right) in zip(
+                plan.parents, plan_spans(columns, plan.seam), strict=True
+            )
+        ),
+    )
 
 
 @measured

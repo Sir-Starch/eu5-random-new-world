@@ -70,20 +70,6 @@ def _course(row: int, first: int, last: int, permille: int = 800) -> dict[int, C
     return {cell(COAST, row, column): Course(permille, CURRENT) for column in range(first, last)}
 
 
-def test_reserved_sea_passage_stays_open_without_a_current() -> None:
-    world, waters, docks = _setup()
-    passage = {
-        cell(COAST, 10, x)
-        for x in range(4, 20)
-        if waters.topography[cell(COAST, 10, x)] is Topography.DEEP_OCEAN
-    }
-    assert passage
-    planned = plan_lanes(world, waters, {}, set(), docks, passage=passage)
-    assert passage <= planned.ordinary
-    assert not passage & planned.lanes
-    assert not passage.intersection(cell for zone in planned.zones for cell in zone)
-
-
 def test_old_course_footprints_do_not_make_compulsory_lanes() -> None:
     world = block_world(COAST)
     waters = analyse(world)

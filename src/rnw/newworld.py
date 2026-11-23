@@ -64,6 +64,7 @@ from rnw.watersheds import (
     plan_drainage,
     river_cells,
     spacing_grid,
+    withdrawn_drainage,
 )
 
 if TYPE_CHECKING:
@@ -1794,7 +1795,6 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     land_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
-    reserve_south: int = 0,
     reserve_north: int = 0,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> FinishedLand:
@@ -1804,10 +1804,9 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     this, so it shows the coasts the world will have, but for the few pixels the cells' borders
     move them."""
     land_domain = domain
-    if reserve_south or reserve_north:
+    if reserve_north:
         land_domain = domain.copy()
         land_domain[:reserve_north] = False
-        land_domain[len(domain) - reserve_south :] = False
     land, ocean, lakes = _first_land(
         land_domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
     )
@@ -1817,8 +1816,6 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     placement_ocean = (
         _ocean(domain, land | lakes, _off_limits(domain, settings))[1] if groups else ocean
     )
-    if groups and reserve_south:
-        placement_ocean[-reserve_south:] = False
     moves = place(whole, land, placement_ocean, groups, margin=settings.coast_margin_px)
     del placement_ocean
     if on_placed is not None:
@@ -1829,7 +1826,6 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     lakes &= domain
     shore = _off_limits(domain, settings, outside_land)
     shore[:reserve_north] = True
-    shore[len(domain) - reserve_south :] = True
     _ocean_islands(land, domain, shore, island_sites, seed)
     if island_sites:
         ocean &= ~land
@@ -1876,7 +1872,6 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
-    reserve_south: int = 0,
     reserve_north: int = 0,
     on_placed: Callable[[tuple[tuple[int, int], ...]], None] | None = None,
 ) -> NewWorld:
@@ -1936,7 +1931,6 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
         land_interface=land_interface,
         strait=strait,
         island_sites=island_sites,
-        reserve_south=reserve_south,
         reserve_north=reserve_north,
         on_placed=on_placed,
     )
@@ -2168,6 +2162,32 @@ def derive_world(
         spread=spread,
         edges=edges,
         wrap_x=wrap_x,
+    )
+
+
+def turned_to_sea(world: NewWorld, cells: Collection[int]) -> NewWorld:
+    """``world`` with ``cells`` turned into sea: their relief is level, and their sizes, centres
+    and interior points are those of water. Nothing else of the world changes."""
+    kinds = list(world.classes)
+    for cell in cells:
+        kinds[cell] = CellClass.SEA
+    elevation = world.elevation.copy()
+    elevation[np.isin(world.labels, np.fromiter(cells, dtype=np.int32))] = 0
+    drainage = world.drainage
+    if drainage is not None:
+        # The rivers keep their plan: what ran into the cells ends in them as at a mouth.
+        dry = np.array([kind in {CellClass.LAND, CellClass.WASTELAND} for kind in kinds] + [False])[
+            world.labels
+        ]
+        lakes = np.array([kind is CellClass.LAKE for kind in kinds] + [False])[world.labels]
+        drainage = withdrawn_drainage(drainage, dry, lakes)
+    return replace(
+        derive_world(world.labels, tuple(kinds), elevation, wrap_x=world.wrap_x),
+        moves=world.moves,
+        barrier=world.barrier,
+        land_link=world.land_link,
+        strait_landing=world.strait_landing,
+        drainage=drainage,
     )
 
 

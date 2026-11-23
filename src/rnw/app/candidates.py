@@ -185,7 +185,7 @@ def sketch_composed(
         message = say("candidates.drawn")
         raise CandidateError(message)
     game_map = run_stage("load map", lambda: load_map(game_dir))
-    composition = composition_inputs(game_dir, game_map, settings)
+    composition = composition_inputs(game_dir, settings)
     base = _kept_world(game_map)
     with running("candidates"):
 
@@ -202,7 +202,6 @@ def sketch_composed(
                     seed=seed,
                     algorithm=settings.algorithm,
                     drawings=drawings,
-                    southern_passage=composition.southern_passage,
                 )
                 coasts = regional_coasts(domain, inputs)
                 _paint(picture, domain, coasts)

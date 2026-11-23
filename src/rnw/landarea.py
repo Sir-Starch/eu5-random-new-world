@@ -279,7 +279,7 @@ def planned_domains(game_dir: Path, game_map: Eu5Map, plan: DomainPlan) -> tuple
         for key, band, expanded, landform, template in plan.shapes
     }
     tolls, closed = retained_facts(game_dir)
-    composition = CompositionInputs(geography, plan.join_asia, tolls, closed, 0)
+    composition = CompositionInputs(geography, plan.join_asia, tolls, closed, sea_circuit=False)
     return composition.plan(game_map, plan.seed)
 
 

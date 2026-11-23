@@ -5,6 +5,16 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Make **the sea route round the world** a part of the generation instead of a band of water along
+  the southern edge. *Keep a sea route around the world* used to hand the last rows of the map to
+  ordinary ocean locations, a solid strip of open sea behind the closed southern ocean, whatever
+  the continents looked like. Now the generator looks at the finished continents: when the passable
+  water holds a route that winds round the map (the map's wrap included) nothing is added; when it
+  does not, for example because a tail of land reaches the polar edge, the cheapest generated
+  location that completes one is turned into sea, a wasteland before land and the smallest first,
+  and the rivers that ran into it end there as at a mouth. The choice depends on the shapes alone,
+  and the finished water is checked again for the route.
+
 - Stop leaving **a river without a source** at the edge of a replaced continent. Where a vanilla
   river's headwaters lay on land that a generated continent replaces, its remainder stayed with
   no source and the game logged "River source not found" at the start (10 pixels in the east of
@@ -78,14 +88,12 @@ worlds and saves are not rewritten or migrated.
   Europe. A checkbox makes the Asian connection required.
   Land contacts continue the retained relief and biome. Expanded American
   coasts and Pacific island groups use the shared ocean. Regional worlds
-  keep a navigable southern route by default, with an option to disable it.
+  keep a sea route round the world by default, with an option to disable it (below).
   Eurasia and Greenland keep a canvas of their own with the bays and passages
   their shores enclose, and the water Africa would have claimed north of its own
   generation limit stays Eurasian, so a generated continent cannot enter them or
   lie beside northern Europe. Worlds with fewer continents follow the same rules.
-  Every selection of Africa and Oceania, alone or with America, generates again with
-  the southern route on: a retained wasteland islet in that strip no longer counts as
-  a lost contact, an Oceanian island group is never placed beside impassable retained
+  Every selection of Africa and Oceania, alone or with America, generates again: an Oceanian island group is never placed beside impassable retained
   water, where its sea would be cut off, and a leftover piece of an old ocean stays
   open ocean instead of joining a neighbouring continent.
 

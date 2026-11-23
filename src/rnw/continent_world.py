@@ -15,12 +15,8 @@ from rnw.islands import Footprint, carve
 from rnw.model import CellClass
 from rnw.newworld import (
     NewWorld,
-    _sea_cells,  # pyright: ignore[reportPrivateUsage]
-    derive_world,
 )
 from rnw.progress import checkpoint
-from rnw.rng import derive_seed
-from rnw.synth import renumber
 from rnw.topology import adjacency_pairs, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -338,9 +334,6 @@ def _remainders(
 def compose_regions(
     game_map: Eu5Map,
     regions: Sequence[WorldRegion],
-    *,
-    southern_passage: int = 0,
-    seed: int = 0,
 ) -> ComposedWorld:
     """Assemble the final physical footprints, preserving wrap and local cell measurements."""
     names = [r.domain.continent.key for r in regions]
@@ -377,15 +370,6 @@ def compose_regions(
     points = np.concatenate(interior)[order]
     mean = np.concatenate([r.world.mean_elevation for r in regions])[order]
     spread = np.concatenate([r.world.spread for r in regions])[order]
-    if southern_passage:
-        south = _southern_water(game_map, labels, southern_passage, seed=seed)
-        ordered += south.classes
-        pixels = np.concatenate((pixels, south.pixels))
-        shift = (rows - southern_passage, 0)
-        centres = np.concatenate((centres, south.centroids + shift))
-        points = np.concatenate((points, south.interior + shift))
-        mean = np.concatenate((mean, south.mean_elevation))
-        spread = np.concatenate((spread, south.spread))
     return ComposedWorld(
         _island_placements(_canvas(game_map, labels >= 0), regions),
         NewWorld(
@@ -407,30 +391,3 @@ def compose_regions(
         ),
         cell_ids,
     )
-
-
-def _southern_water(game: Eu5Map, labels: NDArray[np.int32], reach: int, *, seed: int) -> NewWorld:
-    """Partition the southern link through retained closed ocean at normal sea-cell scale."""
-    known = np.array([kind is CellClass.SEA for kind in game.classes], dtype=bool)
-    target = labels[-reach:]
-    closed = (known & game.ambiguous)[game.labels[-reach:]] & (target < 0)
-    spacing = max(3, 120 * labels.shape[1] // 16_384)
-    generated = (
-        _sea_cells(
-            closed,
-            key=derive_seed(seed, "southern_passage"),
-            spacing=spacing,
-            smallest=max(1, spacing**2 // 7),
-            domain=closed,
-            bands=None,
-        )
-        if closed.any()
-        else np.full(closed.shape, -1, dtype=np.int32)
-    )
-    generated = renumber(generated)
-    south = derive_world(
-        generated, (CellClass.SEA,) * (int(generated.max()) + 1), np.zeros_like(generated)
-    )
-    if closed.any():
-        target[closed] = generated[closed] + int(labels.max()) + 1
-    return south

@@ -50,12 +50,14 @@ from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
+from rnw.circuit import CircuitError, cheapest_opening, has_route
 from rnw.content import OCEANS as OPEN_OCEANS
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
 from rnw.continent_domains import SHARED_OCEAN_DIVISOR, plan_domains
 from rnw.continent_world import (
+    ComposedWorld,
     WorldRegion,
     absorb_land_fragments,
     absorb_ocean_specks,
@@ -358,6 +360,7 @@ from rnw.newworld import (
     NewWorld,
     finished_land,
     inland_sea_min_area,
+    turned_to_sea,
     unported_cells,
 )
 from rnw.parallel import (
@@ -4459,13 +4462,13 @@ def _shared_ocean_boundaries(shared: ComposedWorld, water: Water) -> dict[str, i
 class CompositionInputs:
     """What the plan of a world of several continents reads besides the map and the seed: each
     generated continent's geography, the retained Sound tolls and closed waters it plans
-    around, and the rows kept free for the sea route around the world."""
+    around, and whether a ship must be able to sail round the world."""
 
     geography: dict[str, NewWorldSettings]
     require_asia_connection: bool
     retained_tolls: frozenset[str]
     closed_waters: tuple[str, ...]
-    southern_passage: int
+    sea_circuit: bool
 
     def plan(self, game_map: Eu5Map, seed: int) -> tuple[Domain, ...]:
         """The continents' domains, as the export plans them for ``seed``."""
@@ -4496,38 +4499,31 @@ def retained_facts(game_dir: Path) -> tuple[frozenset[str], tuple[str, ...]]:
     )
 
 
-def composition_inputs(game_dir: Path, game_map: Eu5Map, settings: Settings) -> CompositionInputs:
+def composition_inputs(game_dir: Path, settings: Settings) -> CompositionInputs:
     """The inputs of the plan of the composed world of ``settings`` on the installed game."""
     geography = {region.key: region.new_world for region in settings.continents.regions}
     if settings.continents.america and not settings.new_world.keep_geography:
         geography[NEW_WORLD] = settings.new_world
-    southern_passage = (
-        max(4, 160 * game_map.labels.shape[1] // 16_384)
-        if settings.continents.sea_circumnavigation
-        and not (settings.continents.america and settings.new_world.landform)
-        else 0
-    )
     tolls, closed = retained_facts(game_dir)
     return CompositionInputs(
         geography,
         any(region.require_asia_connection for region in settings.continents.regions),
         tolls,
         closed,
-        southern_passage,
+        sea_circuit=settings.continents.sea_circumnavigation
+        and not (settings.continents.america and settings.new_world.landform),
     )
 
 
 @dataclass(frozen=True, slots=True)
 class ContinentLand:
     """What one continent's land is made of besides its domain: its seed and settings (land
-    scaled to its share of a shared ocean), the drawing (America's), the connection to Asia
-    and the rows kept free for the southern sea route."""
+    scaled to its share of a shared ocean), the drawing (America's) and the connection to Asia."""
 
     seed: int
     settings: NewWorldSettings
     drawing: Fitted | None
     land_interface: NDArray[np.bool_] | None
-    reserve_south: int
 
 
 def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes its land.
@@ -4538,16 +4534,14 @@ def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes
     seed: int,
     algorithm: int,
     drawings: Mapping[str, LandMask],
-    southern_passage: int,
 ) -> ContinentLand:
     """The land inputs of ``domain`` in a world of several continents; ``drawings`` are the
     images the continents' lands are drawn from, by the continent's key."""
     name = domain.continent.key
     mask = domain.mask
     knobs = geography[name]
-    south = max(0, domain.rows.stop - (game_map.labels.shape[0] - southern_passage))
     if domain.shared_ocean and not knobs.landform:
-        area = int(np.count_nonzero(mask[domain.north_water_rows : len(mask) - south]))
+        area = int(np.count_nonzero(mask[domain.north_water_rows :]))
         land = int(np.count_nonzero(domain.footprint))
         nominal = min(area, land + game_map.labels.size // SHARED_OCEAN_DIVISOR)
         knobs = replace(knobs, land_permille=knobs.land_permille * nominal // area)
@@ -4559,7 +4553,6 @@ def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes
         knobs,
         drawing,
         domain.land_interface if domain.join_asia else None,
-        south,
     )
 
 
@@ -4615,9 +4608,63 @@ def regional_coasts(domain: Domain, inputs: ContinentLand) -> FinishedLand:
         land_interface=inputs.land_interface,
         strait=domain.strait,
         island_sites=domain.island_sites,
-        reserve_south=inputs.reserve_south,
         reserve_north=domain.north_water_rows,
     )
+
+
+def _open_sea_route(
+    game_map: Eu5Map,
+    canvas: Canvas,
+    regions: tuple[WorldRegion, ...],
+    composed: ComposedWorld,
+) -> tuple[tuple[WorldRegion, ...], ComposedWorld]:
+    """Make the water of the composed world hold a route round it, if it holds none.
+
+    Ships can sail round the world when the passable water has a route that winds once about
+    the map's wrap. When the generated continents leave none (a tail of land that reaches a
+    polar edge, say), the cheapest generated location that completes one is turned into sea:
+    a wasteland first, land at four times the price, a location in the size of its pixels, so
+    the smallest cut is made. The land that joins a continent to Asia and the Wall's barrier
+    stay. The choice depends on the finished shapes alone.
+    """
+    world = composed.world
+    vanilla_count = len(game_map.keys)
+    costs: list[int | None] = [
+        0 if kind is CellClass.SEA and not closed else None
+        for kind, closed in zip(game_map.classes, game_map.ambiguous, strict=True)
+    ]
+    kept: set[int] = set()
+    for region in regions:
+        ids = composed.cell_ids[region.domain.continent.key]
+        kept.update(int(ids[cell]) for cell in (*region.world.land_link, *region.world.barrier))
+    for cell, kind in enumerate(world.classes):
+        pixels = int(world.pixels[cell])
+        if kind is CellClass.SEA:
+            costs.append(0)
+        elif cell in kept:
+            costs.append(None)
+        elif kind is CellClass.WASTELAND:
+            costs.append(pixels)
+        elif kind is CellClass.LAND:
+            costs.append(4 * pixels)
+        else:
+            costs.append(None)
+    try:
+        opening = cheapest_opening(_final_labels(game_map, canvas, world), costs)
+    except CircuitError as error:
+        message = f"The generated continents leave no way to a sea route round the world: {error}"
+        raise NewWorldExportError(message) from error
+    if not opening:
+        return regions, composed
+    opened = {label - vanilla_count for label in opening}
+    turned: list[WorldRegion] = []
+    for region in regions:
+        ids = composed.cell_ids[region.domain.continent.key]
+        local = [cell for cell, number in enumerate(ids.tolist()) if number in opened]
+        turned.append(
+            replace(region, world=turned_to_sea(region.world, local)) if local else region
+        )
+    return tuple(turned), replace(compose_regions(game_map, tuple(turned)), canvas=canvas)
 
 
 def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each physical window.
@@ -4633,7 +4680,7 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
     store: DecalStore,
 ) -> tuple[WorldRegion, ...]:
     domains = composition.plan(game_map, seed)
-    geography, southern_passage = composition.geography, composition.southern_passage
+    geography = composition.geography
 
     def build(domain: Domain) -> WorldRegion:
         checkpoint()
@@ -4644,7 +4691,6 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             seed=seed,
             algorithm=algorithm,
             drawings=drawings,
-            southern_passage=southern_passage,
         )
         mask, drawing = domain.mask, land_inputs.drawing
         terrain = None
@@ -4678,7 +4724,6 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             strait=domain.strait,
             contact_terrain=terrain,
             island_sites=domain.island_sites,
-            reserve_south=land_inputs.reserve_south,
             reserve_north=domain.north_water_rows,
         )
         if terrain is None or world_box is None or domain.contact_land is None:
@@ -4748,8 +4793,8 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     cache_dir: Path | None,
 ) -> _ExportGeography:
     """Compose regional surfaces before running the common geography and texture stages."""
-    composition = composition_inputs(game_dir, game_map, settings)
-    geography, southern_passage = composition.geography, composition.southern_passage
+    composition = composition_inputs(game_dir, settings)
+    geography = composition.geography
     resources = {region.key: dict(region.resources) for region in settings.continents.regions}
     if settings.continents.america and not settings.new_world.keep_geography:
         resources[NEW_WORLD] = cast("dict[str, int]", asdict(settings.resources))
@@ -4760,7 +4805,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
         "vanilla localization keys", lambda: key_hashes(vanilla_localization_keys(game_dir))
     )
     terrain_store = DecalStore(game_dir, game_map.labels.shape)
-    regions = run_stage(
+    regions: tuple[WorldRegion, ...] = run_stage(
         "generate world",
         lambda: _regional_worlds(
             stages,
@@ -4776,7 +4821,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     )
     composed = run_stage(
         "select canvas",
-        lambda: compose_regions(game_map, regions, southern_passage=southern_passage, seed=seed),
+        lambda: compose_regions(game_map, regions),
     )
     complete_ocean = all(region.domain.shared_ocean for region in regions)
     vanilla = _prepare_vanilla(
@@ -4793,6 +4838,8 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     )
     game_map, canvas = vanilla.game_map, vanilla.canvas
     composed = replace(composed, canvas=canvas)
+    if composition.sea_circuit:
+        regions, composed = _open_sea_route(game_map, canvas, regions, composed)
     # The river rasters depend on regional drainage, not on the later sea
     # identities. Let them share the existing worker budget with the biome pass.
     rivers = stages.submit(
@@ -4834,7 +4881,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     )
     shapes = run_stage(
         "water shapes",
-        lambda: shape_water(coast, regular_grid=True, southern_passage=southern_passage),
+        lambda: shape_water(coast, regular_grid=True),
     )
     world = shapes.coast.world
     water_textures = stages.submit(
@@ -4888,20 +4935,17 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     plan.dropped_areas = missing_area_keys(hierarchy, removed, plan)
     _check_identity_budget(game_map, removed, plan)
     final = _final_labels(game_map, canvas, world)
-    if southern_passage:
-        passable = np.array(
-            [
-                kind is CellClass.SEA and not closed
-                for kind, closed in zip(game_map.classes, game_map.ambiguous, strict=True)
-            ]
-            + [
-                kind is CellClass.SEA and i not in shapes.zones
-                for i, kind in enumerate(world.classes)
-            ],
-            dtype=bool,
+    if composition.sea_circuit:
+        passable = [
+            kind is CellClass.SEA and not closed
+            for kind, closed in zip(game_map.classes, game_map.ambiguous, strict=True)
+        ]
+        passable.extend(
+            kind is CellClass.SEA and index not in shapes.zones
+            for index, kind in enumerate(world.classes)
         )
-        if not passable[final[-1]].all():
-            message = "The southern sea route has a break before it returns around the map"
+        if not has_route(final, passable):
+            message = "The water of the world has no route round it"
             raise NewWorldExportError(message)
     checks, neighbours = run_stage(
         "world checks",
@@ -4923,8 +4967,6 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
     ):
         message = "The African land approach does not join a passable Asian location"
         raise NewWorldExportError(message)
-    if southern_passage:
-        checks["circumnavigation_sea_locations"] = int(np.unique(final[-1]).size)
     if complete_ocean:
         checks.update(_shared_ocean_boundaries(shared, shapes))
     enclaves = _enclosed_sea_cells(

@@ -391,6 +391,11 @@ seconds at 24 threads. All 1,455 canonical files verify in the installed
 copy. In-game rendering and expedition completion remain unobserved for
 this candidate. [Installation details](../INSTALLED.md).
 
+[V-GAME 2026-11-23] The owner rejected the southern row: a band of open sea along the map's
+edge, behind the closed southern ocean, is a crutch. The option stays; the row is replaced by a
+step of the generation that opens the smallest location a route round the world needs (see the
+CHANGELOG and the continent plan).
+
 ## Four canvases on M55D
 
 [V-EXEC 2026-11-20] The four-canvas raster assigns all 90,805,365 installed

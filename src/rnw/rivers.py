@@ -727,6 +727,21 @@ def generate_rivers(  # noqa: PLR0913 - the raster, its fields, the lakes and th
     return _drawn(land, tree, coarse_lake, columns=routing.shape[1], seed=seed, output=output)
 
 
+def withdrawn(
+    parent: NDArray[np.integer],
+    land: NDArray[np.bool_],
+    lakes: NDArray[np.bool_] | None = None,
+) -> NDArray[np.int32]:
+    """A drainage tree (``route``) after some of its land turned to water: every coarse block
+    that the water now covers more than the land drains no longer (-1, a sink), so the rivers
+    that ran into it end there as at a mouth. The rest of the tree stays as it was."""
+    count = _coarse_share(land, STRIP_ROWS)
+    _, _, flows_over = _coarse_water(lakes, count)
+    links = parent.astype(np.int32).ravel().copy()
+    links[(links >= 0) & ~flows_over.ravel()] = -1
+    return links.reshape(parent.shape)
+
+
 def planned_rivers(  # noqa: PLR0913 - the raster, its tree, rain, lakes and the output buffers.
     land: NDArray[np.bool_],
     parent: NDArray[np.integer],
