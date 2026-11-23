@@ -351,6 +351,25 @@ SHORE_DENSITY_BLOCKS: Final[int] = 4
 # Corrected all the way, every cell evened the land (38 permille of the pairs over an octave);
 # within the band the growth keeps its variety [V-EXEC 2026-11-16, eight worlds as above].
 SIZE_BAND: Final[int] = 750
+# The most pixels a passable land location may have (epoch 64, ``epoch.BOUNDED_CELLS``). EU5 lays a
+# town or a city out on a grid of primitives whose scratch array it keeps on the stack of a worker
+# thread of 4 MiB; a location of 28,154 pixels (Sara of a generated world) asked for 16,719 of 264
+# bytes each (4.4 MB), and the game died on opening its details, twice, at the same instruction
+# with the same count [V-EXEC 2026-11-23]. The count against the pixels was read at that one
+# location (0.594 a pixel), which puts the limit near 26,000 pixels [INFERRED]. A location becomes
+# a town or a city by its people alone (``common/location_ranks``: 5 and 30 people, no area), so
+# every passable location must keep under it, whoever lives there. Vanilla draws its largest town
+# or city on 4,882 pixels; of its 21,114 passable lands 20 are above 15,000 pixels, 12 above 26,000
+# (arctic and desert, nobody lives there), and the largest with the people of a city has 16,931
+# [V-LOCAL 1.4.9, 1337 start]. A cell the last growth leaves above this is given a second seed
+# (``_divided_seeds``) and the cells are grown again. The cells on a map's polar edge become its
+# wastelands, which nobody settles, and stay as large as grown.
+MAX_LAND_PX: Final[int] = 15_000
+# The export fails on a passable location above this (``eu5_nw_export._size_problems``): the limit
+# above, less a fifth, for the last pixels the growth does not count (the border rivers' pixels,
+# merged slivers, the wobble of the borders) and for the one reading it rests on.
+LAND_PX_CEILING: Final[int] = 20_000
+SPLIT_ROUNDS: Final[int] = 8
 CENTRE_STRIP: Final[int] = 512  # rows of the grown cells read at a time
 SPACING_PARTS: Final[int] = 64  # spacing exponents are 64ths of an octave
 SHIFT_OCTAVES: Final[int] = 6  # the whole spacing is scaled by at most this many octaves
@@ -708,9 +727,15 @@ def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and 
     grid: NDArray[np.int64],
     smallest: int,
     coast: Callable[[NDArray[np.int32], int], NDArray[np.int64]] | None = None,
+    limit: int | None = None,
+    edges: tuple[bool, bool] = (False, False),
 ) -> NDArray[np.int32]:
     """Land cells grown from ``spaced_sites`` that do not cross ``walls`` (the border rivers),
     whose pixels then join the cell beside them; cells under ``smallest`` pixels are merged.
+    With a ``limit`` (``MAX_LAND_PX``) a cell the last growth leaves above it is given a second
+    seed and the cells are grown again, at most ``SPLIT_ROUNDS`` times (``_divided_seeds``); the
+    cells on the first or last row of the land are left whole when ``edges`` says it lies on the
+    map's north or south edge.
 
     Each seed grows as fast as its spacing (``synth.grow_weighted``): grown at one pace, a seed
     of the sparse land gives half of the way to each seed of the dense land beside it, and the
@@ -757,8 +782,84 @@ def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and 
             sites.ravel()[flat] = np.arange(flat.size, dtype=np.int32)
         del grown
     grown = grow_weighted(passable, sites, _seed_spacing(flat, grid, columns) * gain // PERMILLE)
+    for _ in range(0 if limit is None else SPLIT_ROUNDS):
+        divided = _divided_seeds(grown, flat, gain, limit or 0, columns=columns, edges=edges)
+        if divided is None:
+            break
+        flat, gain = divided
+        sites = np.full(land.shape, -1, dtype=np.int32)
+        sites.ravel()[flat] = np.arange(flat.size, dtype=np.int32)
+        grown = grow_weighted(
+            passable, sites, _seed_spacing(flat, grid, columns) * gain // PERMILLE
+        )
     del sites, passable
     return merge_small(grow_regions(land, grown), smallest)
+
+
+def _divided_seeds(  # noqa: PLR0913 - the cells, their seeds and speeds, the limit and the edges.
+    grown: NDArray[np.int32],
+    flat: NDArray[np.int64],
+    gain: NDArray[np.int64],
+    limit: int,
+    *,
+    columns: int,
+    edges: tuple[bool, bool],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]] | None:
+    """The seeds (raster positions ``flat``) and speed factors (``gain``) of the cells of
+    ``grown`` with every cell above ``limit`` pixels given a second seed, or None if none is.
+
+    A cell's two seeds lie a quarter and three quarters of the way along its longest extent: the
+    pixel of the cell farthest from its centre, and the pixel farthest from that one, are its two
+    ends, and each seed is the cell's pixel nearest to its point. Grown at the cell's own speed
+    they share the cell between them by the bisector of the two, about in halves, and the cells
+    round it, which keep their seeds, give way as they would to any cell grown beside them. The
+    first seed keeps the cell's number; the others are numbered after the last. Integers. The
+    cells touching the north row of ``grown`` if ``edges[0]``, the south row if ``edges[1]``, are
+    left whole."""
+    count = int(flat.size)
+    area = _grown_areas(grown, count)
+    big = area > limit
+    for row, on_edge in ((0, edges[0]), (-1, edges[1])):
+        if on_edge:
+            touching = np.unique(grown[row][grown[row] >= 0])
+            big[touching[touching < count]] = False
+    chosen = np.flatnonzero(big)
+    if chosen.size == 0:
+        return None
+    rows: list[NDArray[np.int64]] = []
+    cols: list[NDArray[np.int64]] = []
+    owners: list[NDArray[np.int32]] = []
+    for first in range(0, int(grown.shape[0]), CENTRE_STRIP):
+        cell = grown[first : first + CENTRE_STRIP]
+        y, x = np.nonzero((cell >= 0) & big[np.clip(cell, 0, count - 1)])
+        rows.append(y.astype(np.int64) + first)
+        cols.append(x.astype(np.int64))
+        owners.append(cell[y, x])
+    ys, xs, who = (np.concatenate(part) for part in (rows, cols, owners))
+    order = np.argsort(who, kind="stable")
+    ys, xs, who = ys[order], xs[order], who[order]
+    starts = np.searchsorted(who, chosen, side="left")
+    stops = np.searchsorted(who, chosen, side="right")
+    moved = flat.copy()
+    added: list[int] = []
+    for number, start, stop in zip(chosen.tolist(), starts.tolist(), stops.tolist(), strict=True):
+        y, x = ys[start:stop], xs[start:stop]
+        centre_y, centre_x = int(y.sum()) // y.size, int(x.sum()) // x.size
+        one = int(np.argmax((y - centre_y) ** 2 + (x - centre_x) ** 2))
+        other = int(np.argmax((y - y[one]) ** 2 + (x - x[one]) ** 2))
+        points: list[int] = []
+        for share in (1, 3):
+            point_y = int(y[one]) + (int(y[other]) - int(y[one])) * share // 4
+            point_x = int(x[one]) + (int(x[other]) - int(x[one])) * share // 4
+            points.append(int(np.argmin((y - point_y) ** 2 + (x - point_x) ** 2)))
+        if points[0] == points[1]:
+            points[1] = other
+        moved[number] = int(y[points[0]]) * columns + int(x[points[0]])
+        added.append(int(y[points[1]]) * columns + int(x[points[1]]))
+    return (
+        np.concatenate([moved, np.array(added, dtype=np.int64)]),
+        np.concatenate([gain, gain[chosen]]),
+    )
 
 
 def _seed_spacing(

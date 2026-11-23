@@ -56,6 +56,7 @@ from rnw.topology import (
 )
 from rnw.watersheds import (
     DENSITY_STEP,
+    MAX_LAND_PX,
     DrainagePlan,
     border_rivers,
     cell_spacing_grid,
@@ -1641,6 +1642,8 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         grid=grid,
         smallest=settings.min_cell_px,
         coast=partial(coastal_offsets, sizes, height=surface, grid=climate, sea=sea, ground=ground),
+        limit=MAX_LAND_PX if algorithm >= epoch.BOUNDED_CELLS else None,
+        edges=(row0 == 0, row0 + land.shape[0] == map_height),
     )
     del climate, surface, sea, ground
     return cells, walls, plan, grid

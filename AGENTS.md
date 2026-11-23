@@ -17,7 +17,8 @@ cells, open climate, rough hills, C534; pooled raw materials, C535; cells sized 
 become and graded, C536; coastal cells sized like inland ones, C537; grounds sized against their
 neighbours, the shore corrected and the climate smoothed once, C538; coastal cells sized at the
 inland density, inland cells banded, two gradations, gentler polar approach, C539; dry climates
-calibrated from the area of vanilla land, C550). The 1.3.0 headline is optional generation of
+calibrated from the area of vanilla land, C550; no passable location above what the game can
+draw a city on, C555). The 1.3.0 headline is optional generation of
 Africa and Oceania beside or instead of America ([plan](docs/continent-generation-plan.md),
 C545–C551), with a window reworked for several continents, the Terra Incognita appearance and
 the hub's ICU forwarder for Valve's Proton (C553); the [changelog](CHANGELOG.md) lists all of it.

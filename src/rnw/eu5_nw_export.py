@@ -441,7 +441,7 @@ from rnw.topology import (
     unpack_pairs,
 )
 from rnw.vanilla_world import with_real_americas
-from rnw.watersheds import domain_climate, domain_rivers
+from rnw.watersheds import LAND_PX_CEILING, domain_climate, domain_rivers
 from rnw.wording import reference, render
 
 if TYPE_CHECKING:
@@ -3327,6 +3327,40 @@ def _relations(natives: FinalStartPlan, plan: Plan, world: NewWorld) -> _Relatio
     )
 
 
+SIZE_PROBLEM: Final[str] = (
+    "{key} has {pixels} pixels, above the {limit} the game can draw a city on"
+)
+
+
+def _size_problems(plan: Plan, world: NewWorld) -> list[str]:
+    """The passable generated locations larger than the game can draw a town or a city on.
+
+    A location becomes one by its people alone (``common/location_ranks``), so none may exceed
+    ``watersheds.LAND_PX_CEILING`` whoever lives there now; the wastelands, which nobody settles,
+    are not counted. The check only reads: the cells' growth keeps them under it
+    (``watersheds.MAX_LAND_PX``), and a world that breaks it is not written."""
+    return [
+        SIZE_PROBLEM.format(key=cell.key, pixels=int(pixels), limit=LAND_PX_CEILING)
+        for cell, pixels in zip(plan.cells, world.pixels, strict=False)
+        if cell.kind is CellClass.LAND and int(pixels) > LAND_PX_CEILING
+    ]
+
+
+def verify_sizes(plan: Plan, world: NewWorld) -> dict[str, object]:
+    """Every passable generated location keeps under the size the game can draw a city on."""
+    problems = _size_problems(plan, world)
+    if problems:
+        extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        message = f"Location size: {problems[0]}{extra}"
+        raise NewWorldExportError(message)
+    land = [
+        int(pixels)
+        for cell, pixels in zip(plan.cells, world.pixels, strict=False)
+        if cell.kind is CellClass.LAND
+    ]
+    return {"largest_land_location_px": max(land, default=0)}
+
+
 def _rank_problems(
     countries_text: str, natives: FinalStartPlan, calibration: EmpireCalibration
 ) -> list[str]:
@@ -5760,6 +5794,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         checkpoint()
         text_checks = verify_map_texts(texts, plan, canvas, shapes, removed)
         text_checks.update(_verify_natives(natives, society_plan))
+        if settings.algorithm >= epoch.BOUNDED_CELLS:
+            text_checks.update(verify_sizes(plan, world))
         text_checks.update(
             verify_technology(texts, natives, vanilla_start.result(), composed=composed_start)
         )

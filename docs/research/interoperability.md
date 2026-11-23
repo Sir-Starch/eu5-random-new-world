@@ -1014,6 +1014,38 @@ N9 adds `in_game/events/rnw_memory.txt`: country events started by vanilla's
 `add_opinion`, `add_prestige` and `add_stability` and vanilla values; the export
 checks the biases and values.
 
+## R-009 — The stack use of the game's city-grid code (crash triage, C555)
+
+**2026-11-23, generator 1.3.0 development; EU5 1.4.9 executable (build 26655995), C555.** This records a
+disassembly of one function of the executable, read-only, to explain a crash that two of the owner's
+sessions reproduced.
+
+**Necessity.** Opening the details of a generated city (one of 28,154 pixels) stopped EU5 with
+`EXCEPTION_STACK_OVERFLOW`; the generator has to know which locations the game can draw and why, or
+a world could again stop the game of a player who did nothing unusual (a crash is the failure of
+interoperability itself).
+
+**Available documented mechanisms.** The game writes `crashes/<name>/exception.txt`, `meta.yml` and a
+`minidump.dmp` and logs; no symbols, no documentation of the city view and no mod interface that
+sets its limits ship with the installation [V-LOCAL]. The location-rank rules (`common/location_ranks`)
+and the city shader (`city_grid.fxh`) are readable text and were read first; they state the
+thresholds and that buildings are squeezed into the cell, not what a location's size costs.
+
+**What is studied or changed.** The player's own minidump (the exception record's registers and the
+stack pages it holds), the `.pdata` function table of the installed `eu5.exe` to name the function
+that owns each return address, the run-time type names of the vtables that function uses, and an
+`objdump -d` listing of that one function's prologue and its stack allocation (264 bytes times a count
+from the location's geometry, on a worker thread's 4 MiB stack). Nothing is stored in the repository
+but the numbers, the 264 and the 4 MiB, the count read at one location and the arithmetic of
+`docs/terrain-biomes.md`; the dump, the listing and the logs stay in `local_data/` (gitignored). No
+code is copied, translated or reproduced and the installation is not changed.
+
+**Compatibility and distribution.** The result is a limit on what the generator writes
+(`watersheds.MAX_LAND_PX`, `LAND_PX_CEILING`), checked at export, not a use of the engine's code. The
+count's dependence on the area is read at one location [INFERRED]; the bound keeps a margin for any
+dependence above an eighth power. Whether the game raises its stack in a later build is [UNKNOWN];
+the bound remains within what vanilla draws.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

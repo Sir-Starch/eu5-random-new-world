@@ -693,6 +693,39 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   wetlands from 29 to 37 ‰ (88 ‰ of its coastal locations, from 77), its hills from 205 to 229 ‰
   and its mountains from 139 to 118 ‰.
 
+* **Locations the game can draw** (`BOUNDED_CELLS`, `watersheds.MAX_LAND_PX`, C555). EU5 lays a
+  town or a city out on a grid of primitives (`SPrimitiveData`, 264 bytes each) whose scratch array
+  it keeps on the stack of a worker thread of 4 MiB. Sara, the largest city of a generated world
+  (28,154 pixels), asked for 16,719 of them (4.4 MB) and the game died on opening its details, twice,
+  at the same instruction with the same count [V-EXEC 2026-11-23, minidump registers]. The count
+  against the area is read at that one location (0.594 a pixel, a limit near 26,000 pixels
+  [INFERRED]); a count growing with the area to any power above an eighth stays under the stack at
+  15,000 pixels. A location becomes a town or a city by its people alone (`common/location_ranks`:
+  5 and 30, no area), so a rank refused at the start would not bind a city founded in play, and the
+  bound has to hold for every passable location, whoever lives there. Vanilla keeps to it by
+  accident of its sizes: of its 21,114 passable lands 20 are above 15,000 pixels, 12 above 26,000
+  (arctic and desert, with nobody in them), the largest with the people of a city has 16,931 and its
+  largest town or city 4,882 [V-LOCAL 1.4.9, 1337 start]. The generator's worlds are about three
+  times the size of vanilla's in every class (the median tropical flatland has 2,414 pixels, vanilla
+  826) and had 9 ‰ of their land locations above 15,000 pixels, vanilla 0.9: of four worlds' 8,100
+  to 8,300 each, 50 to 92 above 15,000 and 4 to 20 above 26,000, up to 56,436 pixels [V-EXEC
+  2026-11-23, `vh3m2efqeq`, `x5aphoaqwu`, `jyfr3ww7yo`, `2prnfya2fq`]. They are born in the plan,
+  not in the growth: of the grown cells above 15,000 pixels (VH3M's three continents: 22, 36, 0)
+  the plan was already above it in half, and between 7,500 and 15,000 in the rest, grown by
+  1.1 to 2.4 over it, never below 7,500, so a cap on the plan could not hold them. A last growth
+  therefore gives every cell above the bound (`river_cells(limit=)`) a second seed and grows the
+  cells again, at most eight times (`_divided_seeds`): the cell's two ends (the pixel farthest from
+  its centre and the one farthest from that) are found, and the cell's own pixels nearest to a
+  quarter and to three quarters of the way between them are the two seeds, each at the cell's speed,
+  so the cells round it give way as to any cell grown beside them and no border is cut across
+  finished cells. The cells touching a polar map edge, which become impassable wastelands, stay as
+  large as they grew. The export checks the finished locations (`verify_sizes`): a passable
+  location above 20,000 pixels (`LAND_PX_CEILING`, the bound less a fifth for the border rivers'
+  pixels, merged slivers and the one reading it rests on) stops the export. By trace to the cells'
+  export [V-EXEC 2026-11-23, the four worlds above]: the largest passable location 14,959 to 15,745
+  pixels (28,583 to 56,436 before), none above 20,000 (16 to 41 before), 65 to 164 more cells in
+  8,300 (1 to 2 %), the median 2,105 to 2,634 as before within 2 %.
+
 ## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 
 The roadmap's hydrology and continental-variety directions are taken up together: coasts,

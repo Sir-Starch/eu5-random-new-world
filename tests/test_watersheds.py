@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from rnw.eu5_biomes import ClimateGrid
     from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
+    from rnw.eu5_newworld import Plan
 
 SMALL = NewWorldSettings(
     land_permille=450,
@@ -889,3 +890,115 @@ def test_blurred_readings_are_those_of_the_whole_map_in_any_strip(
         cell_ruggedness(labels, height, count, blur=8),
     )
     assert all(np.array_equal(a, b) for a, b in zip(found, expected, strict=True))
+
+
+def _count(cells: np.ndarray) -> int:
+    return len(np.unique(cells[cells >= 0]))
+
+
+def _pieces(cells: np.ndarray, number: int) -> int:
+    """The 4-connected pieces of one cell (the numbering also covers the background)."""
+    inside = cells == number
+    return len(np.unique(label_components(inside.astype(np.int32))[inside]))
+
+
+def test_the_bound_lies_under_the_estimate_and_over_what_vanilla_draws() -> None:
+    # Sara: 28,154 pixels asked for 16,719 primitives of 264 bytes; a 4 MiB stack holds 15.9k, so
+    # the limit is near 26,000 pixels; vanilla's largest town or city has 4,882 pixels and its
+    # largest location with the people of a city 16,931 [V-EXEC, V-LOCAL 2026-11-23].
+    assert 16_931 // 2 < watersheds.MAX_LAND_PX < watersheds.LAND_PX_CEILING < 26_000
+    assert epoch.SWITCHES["BOUNDED_CELLS"] == epoch.BOUNDED_CELLS == epoch.RIVERS_FIRST
+
+
+def test_cells_above_the_limit_get_a_second_seed_and_nothing_else_changes() -> None:
+    land = np.ones((200, 300), dtype=bool)
+    walls = np.zeros_like(land)
+    grid = np.full((7, 10), 3000, dtype=np.int64)  # seeds ~90 px apart: cells of ~8,000 px
+    spacing = 30
+    free = watersheds.river_cells(land, walls, key=4, spacing=spacing, grid=grid, smallest=10)
+    sizes = np.bincount(free.ravel())
+    limit = int(np.percentile(sizes, 50))
+    assert sizes.max() > limit
+    bounded = watersheds.river_cells(
+        land, walls, key=4, spacing=spacing, grid=grid, smallest=10, limit=limit
+    )
+    after = np.bincount(bounded.ravel())
+    assert int(after.max()) <= limit * 11 // 10  # the pixels a wall or a merge adds are few
+    assert _count(bounded) > _count(free)
+    assert all(_pieces(bounded, number) == 1 for number in range(len(after)))
+    # A limit nothing exceeds changes no pixel.
+    unbounded = watersheds.river_cells(
+        land, walls, key=4, spacing=spacing, grid=grid, smallest=10, limit=int(sizes.max())
+    )
+    assert np.array_equal(unbounded, free)
+
+
+def test_the_two_halves_of_a_divided_cell_are_near_equal() -> None:
+    grown = np.full((120, 120), -1, dtype=np.int32)
+    grown[10:110, 10:110] = 0
+    flat = np.array([60 * 120 + 60], dtype=np.int64)
+    gain = np.array([1000], dtype=np.int64)
+    result = watersheds._divided_seeds(  # pyright: ignore[reportPrivateUsage]
+        grown, flat, gain, 5000, columns=120, edges=(False, False)
+    )
+    assert result is not None
+    seeds, gains = result
+    assert seeds.shape == (2,)
+    assert gains.tolist() == [1000, 1000]
+    assert seeds[0] != seeds[1]
+    land = grown >= 0
+    sites = np.full(grown.shape, -1, dtype=np.int32)
+    sites.ravel()[seeds] = np.arange(2, dtype=np.int32)
+    halves = np.bincount(
+        grow_weighted(land, sites, np.array([1000, 1000], dtype=np.int64)).ravel()[land.ravel()]
+    )
+    # Four-neighbour growth measures distance in steps along the rows and columns, so the two
+    # halves of a square are 44 and 56 per cent, not half each.
+    assert int(halves.min()) * 10 >= int(halves.max()) * 7
+
+
+def test_cells_on_the_map_edge_stay_whole_and_the_rest_are_divided() -> None:
+    grown = np.full((100, 200), -1, dtype=np.int32)
+    grown[:, :100] = 0  # touches the north row
+    grown[:, 100:] = 1  # touches it too
+    grown[50:, 100:] = 2  # below the first: touches only the south row
+    flat = np.array([20 * 200 + 50, 20 * 200 + 150, 80 * 200 + 150], dtype=np.int64)
+    gain = np.full(3, 1000, dtype=np.int64)
+    both = watersheds._divided_seeds(  # pyright: ignore[reportPrivateUsage]
+        grown, flat, gain, 4000, columns=200, edges=(True, True)
+    )
+    assert both is None
+    north = watersheds._divided_seeds(  # pyright: ignore[reportPrivateUsage]
+        grown, flat, gain, 4000, columns=200, edges=(True, False)
+    )
+    assert north is not None
+    assert north[0].size == 4  # only the cell that never touches the north row gains a seed
+    assert (
+        watersheds._divided_seeds(  # pyright: ignore[reportPrivateUsage]
+            grown, flat, gain, 20_000, columns=200, edges=(False, False)
+        )
+        is None
+    )
+
+
+def _sizes(kinds: list[CellClass], pixels: list[int]) -> tuple[object, object]:
+    cells = [SimpleNamespace(key=f"rnw_loc_{i}", kind=kind) for i, kind in enumerate(kinds)]
+    return SimpleNamespace(cells=cells), SimpleNamespace(pixels=np.array(pixels, dtype=np.int64))
+
+
+def test_the_export_refuses_a_passable_location_the_game_cannot_draw_a_city_on() -> None:
+    plan, world = _sizes([CellClass.LAND] * 3, [900, watersheds.LAND_PX_CEILING, 28_154])
+    assert eu5_nw_export._size_problems(cast("Plan", plan), cast("NewWorld", world)) == [  # pyright: ignore[reportPrivateUsage]
+        "rnw_loc_2 has 28154 pixels, above the 20000 the game can draw a city on"
+    ]
+    with pytest.raises(NewWorldExportError, match="Location size: rnw_loc_2 has 28154 pixels"):
+        _ = eu5_nw_export.verify_sizes(cast("Plan", plan), cast("NewWorld", world))
+
+
+def test_a_wasteland_may_be_as_large_as_it_grew_and_a_small_world_passes() -> None:
+    plan, world = _sizes(
+        [CellClass.WASTELAND, CellClass.LAND, CellClass.SEA], [90_000, 14_000, 400_000]
+    )
+    assert eu5_nw_export.verify_sizes(cast("Plan", plan), cast("NewWorld", world)) == {
+        "largest_land_location_px": 14_000
+    }

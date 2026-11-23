@@ -5,6 +5,18 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Keep **every passable location small enough for the game to draw a city on**. Opening the
+  details of a generated city of 28,154 pixels ("City of Sara") crashed EU5 on the spot, twice:
+  the game lays a town or a city out on a grid whose scratch space lives on a worker thread's
+  4 MiB stack, and this one needed 4.4 MB. A location becomes a city by its people alone, so the
+  size of every land location has to stay under the limit, not only of those that start with a
+  rank. Worlds had 50 to 92 locations above 15,000 pixels (up to 56,000; vanilla has 20 in 21,000,
+  with nobody living in them). The cells now grow as before, and a cell that grows above 15,000
+  pixels is given a second seed and the cells are grown again, so none is cut across; the cells at
+  a polar edge, which are wastelands, stay as large as they grew. The largest location of the four
+  worlds measured is 15,745 pixels, with 1 to 2 % more locations and the median size unchanged. The
+  export now stops if a passable location is above 20,000 pixels.
+
 - Give **Morocco and the Mamluks the society they had in Africa** when they keep their tags in
   a generated Africa. Their new African holdings were tribal ground, with no peasants, slaves,
   burghers, towns, market or institutions, so both countries began with a tiny, nearly equal
