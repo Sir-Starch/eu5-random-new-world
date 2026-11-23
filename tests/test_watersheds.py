@@ -43,7 +43,7 @@ from rnw.eu5_biomes import (
 )
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_nw_export import NewWorldExportError
-from rnw.fields import upsample
+from rnw.fields import PERMILLE, upsample
 from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world
 from rnw.relief import HILL_STEP, cell_roughness
@@ -1002,3 +1002,30 @@ def test_a_wasteland_may_be_as_large_as_it_grew_and_a_small_world_passes() -> No
     assert eu5_nw_export.verify_sizes(cast("Plan", plan), cast("NewWorld", world)) == {
         "largest_land_location_px": 14_000
     }
+
+
+def test_cells_keep_the_area_planned_for_them() -> None:
+    """Every cell's planned area is the mean over its pixels, 0 for a cell without one."""
+    assert epoch.SWITCHES["SETTLED_PEOPLE"] == epoch.SETTLED_PEOPLE == epoch.RIVERS_FIRST
+    labels = np.full((64, 96), -1, dtype=np.int32)
+    labels[:, :32] = 0
+    labels[:, 32:64] = 1
+    labels[:32, 64:] = 1
+    grid = np.array([[1000, 2000, 3000], [1000, 2000, 3000]], dtype=np.int64)
+    kept = watersheds.cell_plans(labels, grid, location_px=10, count=3)
+    # Cell 0 lies on two blocks of the first column (spacing 10 px: 100 px); cell 1 on a 32 by 32
+    # block of each of the others: 400 px twice and 900 px once, of three blocks' worth.
+    assert kept.tolist() == [100, (400 + 400 + 900) // 3, 0]
+
+
+def test_octaves_in_64ths_undo_the_spacing_power() -> None:
+    reference = np.array([1600, 1600, 1600, 1600, 1600, 900], dtype=np.int64)
+    value = np.array([1600, 3200, 800, 1600 * 3 // 2, 400, 900 * 7], dtype=np.int64)
+    exponent = watersheds.octaves_64ths(value, reference)
+    assert exponent[:3].tolist() == [0, 64, -64]
+    assert exponent[4] == -128
+    # 1.5 is 0.585 octaves: 37 64ths; the 64ths floor.
+    assert exponent[3] == 37
+    back = reference * watersheds.spacing_permille(exponent) // PERMILLE
+    assert (back <= value).all()
+    assert (back * 100 >= value * 98).all()

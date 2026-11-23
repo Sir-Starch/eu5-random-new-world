@@ -154,3 +154,13 @@ def test_folding_sea_cells_renumbers_the_barrier_with_the_land() -> None:
     assert cell_of == (0, 0, 1, 2)
     assert folded.barrier.tolist() == [1, 2]
     assert [folded.classes[cell] for cell in folded.barrier.tolist()] == [CellClass.LAND] * 2
+
+
+def test_folding_sea_cells_keeps_the_area_planned_for_each_cell() -> None:
+    labels = np.arange(4, dtype=np.int32).reshape(1, 4)
+    kinds = (CellClass.SEA, CellClass.SEA, CellClass.LAND, CellClass.LAND)
+    world = derive_world(labels, kinds, np.zeros(labels.shape, dtype=np.int32))
+    world = replace(world, planned=np.array([0, 0, 70, 90], dtype=np.int64))
+    folded, _ = relabel(world, {0: 1})
+    assert folded.planned is not None
+    assert folded.planned.tolist() == [0, 70, 90]

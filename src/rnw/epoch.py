@@ -140,6 +140,9 @@ ORPHAN_RIVERS: Final[int] = 64  # 1.3.0: a retained river cut from its source is
 BOUNDED_CELLS: Final[int] = (
     64  # 1.3.0: no land location is larger than the game can draw a city on.
 )
+SETTLED_PEOPLE: Final[int] = (
+    64  # 1.3.0: a location's people follow the settlement that sized it, not its pixels.
+)
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
@@ -156,6 +159,7 @@ SWITCHES: Final[dict[str, int]] = {
     "LAW_NEGATIONS": LAW_NEGATIONS,
     "ORPHAN_RIVERS": ORPHAN_RIVERS,
     "BOUNDED_CELLS": BOUNDED_CELLS,
+    "SETTLED_PEOPLE": SETTLED_PEOPLE,
 }
 
 

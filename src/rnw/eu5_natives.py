@@ -104,6 +104,7 @@ from rnw.societies import (
     regional_markets,
     travel_from,
 )
+from rnw.watersheds import octaves_64ths, spacing_permille
 from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
@@ -187,6 +188,30 @@ TOPOGRAPHY_DENSITY: Final[dict[str, int]] = {
     "flatland": 1000, "hills": 900, "plateau": 800, "wetlands": 800, "mountains": 600,
 }  # fmt: skip
 WATER_DENSITY: Final[int] = 1200
+# How the people of a location follow the area the planner gave it (epoch 64,
+# ``epoch.SETTLED_PEOPLE``, ``NewWorld.planned``): within its class, climate and topography, they
+# go as that area, relative to the class's median, to the power of ``SETTLEMENT_EXPONENT``
+# (``settled_land``) instead of as the pixels it grew to. Vanilla's locations hold alike or fewer
+# people the larger they are: the slope of log population on log area within climate and topography
+# is -0.39 in its Americas (4,404 locations, r -0.21), +0.18 in Africa (2,418, r +0.10), -0.05 in
+# Oceania (710, r -0.03), -0.25 in Asia and in Europe, -0.22 pooled within continents and -0.55
+# pooled across them, where the Old World's small dense locations meet the Americas' large sparse
+# ones; the Americas' smallest fifth stands out (+0.8 octaves of population), the rest runs level
+# or falls (-0.5 in the largest fifth) [V-LOCAL 1.4.9, 1337 start; passable land with people].
+# Before, people went as the pixels (+0.7 to +1.2 within class in six worlds, r +0.5 to +0.8
+# [V-EXEC 2026-11-23]). The planned area is 0.7 to 0.8 of the variance of a finished location's log
+# within a class, the growth of the cells the rest [V-EXEC], so the people follow the plan and not
+# the luck of the growth. The exponents were chosen offline, on the captured inputs of two worlds
+# (the societies' complexity and noise run as they do), so that the finished slope falls where
+# vanilla's does: -0.6 for the Americas, -0.1 for Africa, -0.2 for Oceania, which are exponents,
+# not the slopes [INFERRED]. Six exported worlds then gave, within climate and topography, the
+# Americas -0.43 to -0.23 (mean -0.32; vanilla -0.39), Africa -0.27 to +0.16 (three worlds, mean
+# -0.01; vanilla +0.18) and Oceania -0.24 to -0.01 (three worlds; vanilla -0.05) [V-EXEC
+# 2026-11-23]. The worlds differed before as well (Africa +0.72 to +1.20), and a continent can
+# stand outside its counterpart's slope. Any other continent takes the Americas'.
+SETTLEMENT_EXPONENT: Final[dict[str, int]] = {"america": -600, "africa": -100, "oceania": -200}
+# A class of fewer cells than this takes the median of its climate, or of all, as its reference.
+SETTLEMENT_CLASS: Final[int] = 30
 # Cost of entering a location, in steps of 1000.
 TOPOGRAPHY_COST: Final[dict[str, int]] = {
     "flatland": 1000, "hills": 1300, "plateau": 1300, "wetlands": 1800, "mountains": 2500,
@@ -1266,15 +1291,52 @@ class _Cells:
     family: list[str] = field(default_factory=list)
 
 
-def land_graph(
+def settlement_exponent(continent: str) -> int:
+    """The power, permille, of its planned area relative to its class by which the people of a
+    location of a generated ``continent`` grow (``SETTLEMENT_EXPONENT``)."""
+    return SETTLEMENT_EXPONENT.get(continent, SETTLEMENT_EXPONENT[NEW_WORLD])
+
+
+def settled_land(
+    planned: NDArray[np.int64], classes: Sequence[tuple[str, str]], exponent: int
+) -> NDArray[np.int64]:
+    """The pixels the people of every cell are counted on (epoch 64, ``epoch.SETTLED_PEOPLE``): its
+    class's median planned area (``classes``: climate and topography of every cell, as many as
+    ``planned``; a class of fewer than ``SETTLEMENT_CLASS`` cells has the median of its climate, or
+    of all) times its own planned area over that median to the power ``exponent`` (permille). At 0
+    every cell of a class holds the people of the median one, at 1000 the people follow the
+    planned area. Integers."""
+    ids = {key: number for number, key in enumerate(dict.fromkeys(classes))}
+    by_class = np.array([ids[key] for key in classes], dtype=np.int64)
+    climates = {name: number for number, name in enumerate(dict.fromkeys(c for c, _ in classes))}
+    by_climate = np.array([climates[c] for c, _ in classes], dtype=np.int64)
+    everything = np.sort(planned)[len(planned) // 2] if len(planned) else 0
+    median_of_class = np.zeros(len(ids), dtype=np.int64)
+    for key, number in ids.items():
+        members = planned[by_class == number]
+        if len(members) < SETTLEMENT_CLASS:
+            members = planned[by_climate == climates[key[0]]]
+        if len(members) < SETTLEMENT_CLASS:
+            median_of_class[number] = everything
+        else:
+            median_of_class[number] = np.sort(members)[len(members) // 2]
+    reference = np.maximum(1, median_of_class[by_class])
+    octaves = octaves_64ths(np.maximum(1, planned), reference)
+    return reference * spacing_permille(np.floor_divide(octaves * exponent, PERMILLE)) // PERMILLE
+
+
+def land_graph(  # noqa: PLR0913 - the world, its biomes and rivers, the calibration, the slice.
     world: NewWorld,
     biomes: CellBiomes,
     river_pixels: NDArray[np.int64],
     vanilla: VanillaNatives | RegionalPopulation,
     *,
     selection: Collection[int] | None = None,
+    continent: str = NEW_WORLD,
 ) -> tuple[LandGraph, _Cells]:
-    """Capacity, farming potential, travel cost and contacts of generated land."""
+    """Capacity, farming potential, travel cost and contacts of generated land. From epoch 64 a
+    location's people are counted on the area the planner gave it (``settled_land``, with the
+    exponent of the vanilla ``continent`` it stands for), not on the pixels it grew to."""
     land = [
         i
         for i, kind in enumerate(world.classes)
@@ -1316,7 +1378,16 @@ def land_graph(
     capacity: list[int] = []
     potential: list[int] = []
     cost: list[int] = []
-    for n, cell in enumerate(land):
+    counted = (
+        world.pixels[land]
+        if world.planned is None
+        else settled_land(
+            world.planned[land],
+            list(zip(climate, topography, strict=True)),
+            settlement_exponent(continent),
+        )
+    )
+    for n in range(len(land)):
         highland = climate[n] in HIGHLAND_CLIMATES
         farm_topography = HIGHLAND_FARMING.get(topography[n]) if highland else None
         farm = (
@@ -1339,7 +1410,7 @@ def land_graph(
         )
         wet = WATER_DENSITY if river[n] or is_coastal[n] else PERMILLE
         capacity.append(
-            int(world.pixels[cell]) * vanilla.density.get(climate[n], 0) // PERMILLE
+            int(counted[n]) * vanilla.density.get(climate[n], 0) // PERMILLE
             * dense // PERMILLE * wet // PERMILLE
         )  # fmt: skip
         cost.append(land_travel_cost(topography[n], vegetation[n]))
@@ -1423,7 +1494,9 @@ def regional_societies(  # noqa: PLR0913 - physical cells, local calibration and
         message = f"No regional agrarian baseline for {continent}"
         raise NativesError(message)
     selection = {i for i, cell in enumerate(plan.cells) if cell.continent == continent}
-    graph, cells = land_graph(world, biomes, river_pixels, vanilla, selection=selection)
+    graph, cells = land_graph(
+        world, biomes, river_pixels, vanilla, selection=selection, continent=continent
+    )
     keys = [plan.cells[cell].key for cell in cells.cells]
     if routes is not None:
         places = set(keys)

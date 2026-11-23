@@ -329,3 +329,21 @@ def test_mediterranean_crossing_uses_the_retained_and_generated_shores() -> None
     assert result.row(100).startswith("european;new_coast;sea;new_sea;")
     assert result.start[1] == 73
     assert result.stop[1] == 81
+
+
+def test_composed_continents_keep_the_area_planned_for_each_cell() -> None:
+    game = _game()
+    africa = _region("africa", 2, [0, 0])
+    oceania = _region("oceania", 7, [0, 0, 1])
+    counted = (
+        replace(africa.world, planned=np.array([40], dtype=np.int64)),
+        replace(oceania.world, planned=np.array([55, 0], dtype=np.int64)),
+    )
+    out = compose_regions(
+        game, (replace(africa, world=counted[0]), replace(oceania, world=counted[1]))
+    )
+    assert out.world.planned is not None
+    # The land cells come first, then the sea, as the composed world numbers its cells.
+    assert out.world.planned.tolist() == [40, 55, 0]
+    with pytest.raises(CanvasError, match="area planned for their cells"):
+        _ = compose_regions(game, (replace(africa, world=counted[0]), oceania))

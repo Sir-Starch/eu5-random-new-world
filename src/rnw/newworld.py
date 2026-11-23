@@ -59,6 +59,7 @@ from rnw.watersheds import (
     MAX_LAND_PX,
     DrainagePlan,
     border_rivers,
+    cell_plans,
     cell_spacing_grid,
     domain_climate,
     domain_rivers,
@@ -174,6 +175,10 @@ class NewWorld:
     # How the land drains (epoch 64, ``epoch.RIVERS_FIRST``): the plan its rivers were drawn along
     # when the cells were grown, which the export draws them along again; None before.
     drainage: DrainagePlan | None = None
+    # The area the planner gave each cell, in pixels (epoch 64, ``epoch.SETTLED_PEOPLE``,
+    # ``watersheds.cell_plans``), 0 for water; None before. Its people follow this, not the pixels
+    # the cell grew to. In step with the cells.
+    planned: NDArray[np.int64] | None = None
     # A composed raster uses the game's full longitude, with adjacency across its cut.
     wrap_x: bool = False
 
@@ -1619,7 +1624,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     )
     # The first cells are voted as the final ones will be; each sizes the land it lies on by its
     # own class, ground and coast (``watersheds.cell_spacing_grid``).
-    grid = cell_spacing_grid(
+    sized = cell_spacing_grid(
         first,
         surface,
         climate,
@@ -1639,14 +1644,14 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         walls,
         key=derive_seed(seed, "nw_land_sites"),
         spacing=spacing,
-        grid=grid,
+        grid=sized,
         smallest=settings.min_cell_px,
         coast=partial(coastal_offsets, sizes, height=surface, grid=climate, sea=sea, ground=ground),
         limit=MAX_LAND_PX if algorithm >= epoch.BOUNDED_CELLS else None,
         edges=(row0 == 0, row0 + land.shape[0] == map_height),
     )
     del climate, surface, sea, ground
-    return cells, walls, plan, grid
+    return cells, walls, plan, sized
 
 
 # Pixels this near a border river (within the wobble's reach and its diagonal) keep their cell.
@@ -1949,7 +1954,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     rivers_first = algorithm >= epoch.RIVERS_FIRST
     walls: NDArray[np.bool_] | None = None
     drainage: DrainagePlan | None = None
-    cell_spacing: NDArray[np.int64] | None = None
+    sized: NDArray[np.int64] | None = None
     with Stages(stage_workers()) as stages:
         land_job = (
             None
@@ -2004,7 +2009,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
         if land_job is None:
             if settings.landform:
                 wall.add_relief(relief, land, whole, seed, settings)
-            land_cells, walls, drainage, cell_spacing = stages.submit(
+            land_cells, walls, drainage, sized = stages.submit(
                 "land cells",
                 partial(
                     _river_cells,
@@ -2048,9 +2053,13 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
         fixed = euclidean_distance(walls, RIVER_HOLD + 1) <= RIVER_HOLD * 8
         del walls
     labels = wobble_borders(
-        labels, kinds, seed, fixed_sea=sea_bands is not None, fixed=fixed, scale=cell_spacing
+        labels,
+        kinds,
+        seed,
+        fixed_sea=sea_bands is not None,
+        fixed=fixed,
+        scale=sized,
     )
-    del cell_spacing
     del fixed
     count = len(kinds)
     pixels, _, _, total, _ = _cell_sums(labels, relief, count)
@@ -2078,10 +2087,18 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
             kinds[index] = CellClass.WASTELAND
     barrier = _wall_cells(labels, kinds, whole, seed, settings) if settings.landform else None
     world = derive_world(labels, tuple(kinds), relief)
+    planned = None
+    if sized is not None and algorithm >= epoch.SETTLED_PEOPLE:
+        planned = cell_plans(labels, sized, location_px=settings.location_px, count=count)
+        # The wastelands of this stage are not the world's (``rnw.barrens`` plans them again), so
+        # only the water, which no one settles, is left without a plan.
+        planned[np.array([kind in {CellClass.SEA, CellClass.LAKE} for kind in world.classes])] = 0
+    del sized
     return replace(
         world,
         moves=np.array(moves, dtype=np.int64).reshape(-1, 2),
         drainage=drainage,
+        planned=planned,
         land_link=linked,
         strait_landing=landing,
         **({} if barrier is None else {"barrier": barrier}),
@@ -2184,6 +2201,10 @@ def turned_to_sea(world: NewWorld, cells: Collection[int]) -> NewWorld:
         ]
         lakes = np.array([kind is CellClass.LAKE for kind in kinds] + [False])[world.labels]
         drainage = withdrawn_drainage(drainage, dry, lakes)
+    planned = None
+    if world.planned is not None:
+        planned = world.planned.copy()
+        planned[list(cells)] = 0
     return replace(
         derive_world(world.labels, tuple(kinds), elevation, wrap_x=world.wrap_x),
         moves=world.moves,
@@ -2191,6 +2212,7 @@ def turned_to_sea(world: NewWorld, cells: Collection[int]) -> NewWorld:
         land_link=world.land_link,
         strait_landing=world.strait_landing,
         drainage=drainage,
+        planned=planned,
     )
 
 

@@ -60,12 +60,32 @@ def test_a_cached_continent_equals_the_uncached_one_and_skips_generation(
     assert found.classes == expected.classes
     assert found.edges == expected.edges
     assert np.array_equal(found.barrier, expected.barrier)
+    # The area planned for each cell (epoch 64) is kept with the world, or its absence.
+    assert (found.planned is None) == (expected.planned is None)
+    if expected.planned is not None and found.planned is not None:
+        assert np.array_equal(found.planned, expected.planned)
     assert found.drainage is not None
     assert expected.drainage is not None
     assert found.drainage.seam == expected.drainage.seam
     assert len(found.drainage.parents) == len(expected.drainage.parents)
     for kept, made in zip(found.drainage.parents, expected.drainage.parents, strict=True):
         assert np.array_equal(kept, made)
+
+
+def test_a_world_keeps_the_area_planned_for_its_cells_from_epoch_64_only() -> None:
+    domain = np.ones((160, 192), dtype=np.bool_)
+    world = landcache.get_world(None, domain, seed=42, settings=SMALL, drawn=None, sizes=SIZES)
+    assert world.planned is not None
+    assert world.planned.shape == (len(world.classes),)
+    water = np.array([kind in {CellClass.SEA, CellClass.LAKE} for kind in world.classes])
+    assert not np.count_nonzero(world.planned[water])
+    # Every cell that is not water has a planned area, whatever this stage made of it: the
+    # wastelands are planned again afterwards.
+    assert np.count_nonzero(world.planned[~water]) == len(world.classes) - np.count_nonzero(water)
+    before = landcache.get_world(
+        None, domain, seed=42, settings=SMALL, drawn=None, sizes=SIZES, algorithm=63
+    )
+    assert before.planned is None
 
 
 def test_the_cache_keeps_the_barrier_of_a_wall_world(tmp_path: Path) -> None:

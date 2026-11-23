@@ -408,6 +408,17 @@ def spacing_permille(exponent: NDArray[np.int64]) -> NDArray[np.int64]:
     return (value << up) >> (_FIXED + down)
 
 
+def octaves_64ths(value: NDArray[np.int64], reference: NDArray[np.int64]) -> NDArray[np.int64]:
+    """64 times the base-2 logarithm of ``value / reference``, floored; positive integers. The
+    inverse of ``spacing_permille``: the whole octaves from the exponent of the ratio, the 64ths
+    from where its significand falls among the table's powers."""
+    ratio = np.maximum(1, (value << _FIXED) // np.maximum(1, reference))
+    whole = np.frexp(ratio.astype(np.float64))[1].astype(np.int64) - 1
+    significand = (ratio << _FIXED) >> whole
+    part = np.searchsorted(np.array(_POWERS, dtype=np.int64), significand, side="right") - 1
+    return (whole - _FIXED) * SPACING_PARTS + part
+
+
 @measured
 def grade_spacing(
     spacing: NDArray[np.int64], land: NDArray[np.bool_], step_permille: int
@@ -509,6 +520,34 @@ def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea
     polar = _polar(shape, polar_rows)
     density = _density(key, shape, (share > 0) & ~polar)
     return _graded_grid(size, share, polar, spacing, density, gradation=GRADATION)
+
+
+@measured
+def cell_plans(
+    labels: NDArray[np.int32], grid: NDArray[np.int64], *, location_px: int, count: int
+) -> NDArray[np.int64]:
+    """The area the planner gave every one of the ``count`` cells (epoch 64,
+    ``epoch.SETTLED_PEOPLE``): the mean over its pixels of the square of the spacing of their
+    ``grid`` block (``location_px`` times its permille), in pixels, 0 for a cell without a pixel.
+    This is the size its class and its settlement noise asked of it; the pixels it grew to add
+    the luck of the growth, which its people do not follow (``eu5_natives.settled_land``). Read a
+    strip of rows at a time; integers."""
+    step = DENSITY_STEP
+    rows, columns = (int(size) for size in labels.shape)
+    plan = (grid * location_px // PERMILLE) ** 2
+    total = np.zeros(count, dtype=np.int64)
+    pixels = np.zeros(count, dtype=np.int64)
+    strip = step * 32
+    for first in range(0, rows, strip):
+        checkpoint()
+        held = labels[first : first + strip]
+        found = held >= 0
+        part = plan[first // step : -(-(first + held.shape[0]) // step)]
+        wide = np.repeat(np.repeat(part, step, axis=0), step, axis=1)[: held.shape[0], :columns]
+        by_cell = np.bincount(held[found], weights=wide[found].astype(np.float64), minlength=count)
+        total += np.rint(by_cell).astype(np.int64)
+        pixels += np.bincount(held[found], minlength=count)
+    return total // np.maximum(1, pixels)
 
 
 def _blocks_holding(mask: NDArray[np.bool_], shape: tuple[int, ...]) -> NDArray[np.bool_]:

@@ -346,6 +346,7 @@ def relabel(world: NewWorld, merged: Mapping[int, int]) -> tuple[NewWorld, tuple
             derive_world(labels, kinds, world.elevation, wrap_x=world.wrap_x),
             barrier=barrier,
             drainage=world.drainage,
+            planned=None if world.planned is None else world.planned[kept],
         ),
         cell_of,
     )

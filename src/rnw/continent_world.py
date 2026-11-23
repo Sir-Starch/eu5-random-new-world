@@ -370,6 +370,15 @@ def compose_regions(
     points = np.concatenate(interior)[order]
     mean = np.concatenate([r.world.mean_elevation for r in regions])[order]
     spread = np.concatenate([r.world.spread for r in regions])[order]
+    plans = [r.world.planned for r in regions]
+    if any(part is None for part in plans) and not all(part is None for part in plans):
+        message = "Some continents keep the area planned for their cells and some do not"
+        raise CanvasError(message)
+    planned = (
+        None
+        if any(part is None for part in plans)
+        else np.concatenate([part for part in plans if part is not None])[order]
+    )
     return ComposedWorld(
         _island_placements(_canvas(game_map, labels >= 0), regions),
         NewWorld(
@@ -381,6 +390,7 @@ def compose_regions(
             interior=points,
             mean_elevation=mean,
             spread=spread,
+            planned=planned,
             barrier=np.concatenate(
                 [cell_ids[r.domain.continent.key][r.world.barrier] for r in regions]
             ).astype(np.int64),

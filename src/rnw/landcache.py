@@ -74,6 +74,7 @@ ARRAYS: Final[tuple[str, ...]] = (
     "edges",
     "drainage",
     "drainage_seam",
+    "planned",
 )
 
 
@@ -626,6 +627,8 @@ def _write(target: Path, world: NewWorld) -> None:
         "barrier": world.barrier,
         "land_link": world.land_link,
         "strait_landing": np.array(world.strait_landing or (-1, -1), dtype=np.int64),
+        # One area for every cell, or nothing before epoch 64 (``epoch.SETTLED_PEOPLE``).
+        "planned": np.zeros(0, dtype=np.int64) if world.planned is None else world.planned,
     }
     with TemporaryDirectory(prefix=".land-", dir=target.parent) as temporary:
         stage = Path(temporary)
@@ -660,6 +663,13 @@ def _i64(target: Path, name: str, shape: tuple[int, ...]) -> NDArray[np.int64]:
     if path.stat().st_size != prod(shape) * np.dtype(np.int64).itemsize:
         raise CacheError(path)
     return np.fromfile(path, dtype=np.int64).reshape(shape)
+
+
+def _planned(target: Path, count: int) -> NDArray[np.int64] | None:
+    """The area planned for every cell (``NewWorld.planned``), or None."""
+    if not (target / "planned").stat().st_size:
+        return None
+    return _i64(target, "planned", (count,))
 
 
 def _drainage(target: Path, shape: tuple[int, ...]) -> DrainagePlan | None:
@@ -719,6 +729,7 @@ def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
             land_link=_i64(target, "land_link", ((target / "land_link").stat().st_size // 8,)),
             strait_landing=None if landing_y < 0 else (landing_y, landing_x),
             drainage=_drainage(target, shape),
+            planned=_planned(target, count),
         )
     except (OSError, ValueError, TypeError, KeyError, IndexError) as error:
         message = f"Land cache {target} is damaged; remove this entry and retry: {error}"

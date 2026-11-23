@@ -3361,6 +3361,37 @@ def verify_sizes(plan: Plan, world: NewWorld) -> dict[str, object]:
     return {"largest_land_location_px": max(land, default=0)}
 
 
+def verify_settlement(plan: Plan, world: NewWorld) -> dict[str, object]:
+    """Every passable generated location has the area the planner gave it (epoch 64,
+    ``epoch.SETTLED_PEOPLE``), in step with the cells. A world that lost it on the way from the
+    planner to the natives would give its people by the pixels the cells grew to, silently, and
+    is not written."""
+    planned = world.planned
+    if planned is None or planned.shape != (len(world.classes),):
+        message = "Settlement: the world does not keep the area planned for its cells, cell by cell"
+        raise NewWorldExportError(message)
+    empty = [
+        cell.key
+        for cell, area in zip(plan.cells, planned, strict=False)
+        if cell.kind is CellClass.LAND and int(area) <= 0
+    ]
+    if empty:
+        extra = f" (and {len(empty) - 1} more)" if len(empty) > 1 else ""
+        message = f"Settlement: {empty[0]} has no planned area{extra}"
+        raise NewWorldExportError(message)
+    return {}
+
+
+def verify_cells(plan: Plan, world: NewWorld, algorithm: int) -> dict[str, object]:
+    """The checks of the cells the epoch ``algorithm`` promises: their size and their settlement."""
+    checks: dict[str, object] = {}
+    if algorithm >= epoch.BOUNDED_CELLS:
+        checks.update(verify_sizes(plan, world))
+    if algorithm >= epoch.SETTLED_PEOPLE:
+        checks.update(verify_settlement(plan, world))
+    return checks
+
+
 def _rank_problems(
     countries_text: str, natives: FinalStartPlan, calibration: EmpireCalibration
 ) -> list[str]:
@@ -5794,8 +5825,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         checkpoint()
         text_checks = verify_map_texts(texts, plan, canvas, shapes, removed)
         text_checks.update(_verify_natives(natives, society_plan))
-        if settings.algorithm >= epoch.BOUNDED_CELLS:
-            text_checks.update(verify_sizes(plan, world))
+        text_checks.update(verify_cells(plan, world, settings.algorithm))
         text_checks.update(
             verify_technology(texts, natives, vanilla_start.result(), composed=composed_start)
         )

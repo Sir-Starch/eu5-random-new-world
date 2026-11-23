@@ -34,6 +34,8 @@ from rnw.eu5_natives import (
     pop_lines,
     reformed_templates,
     regional_state_baseline,
+    settled_land,
+    settlement_exponent,
     state_population_floor,
     template_governments,
     template_levels,
@@ -357,6 +359,59 @@ def test_land_graph_links_shores_and_scores_farming() -> None:
     assert graph.potential[2] == 0  # far beyond 65 degrees
     assert graph.capacity[0] == 5000  # 1000 px at 5 per 1000 px
     assert graph.cost[1] > graph.cost[0]
+    # From epoch 64 the people are counted on the area planned for each cell, not on its pixels:
+    # the land cells 0, 1 and 3 hold three classes of one cell each, which take the median of all.
+    counted = replace(world, planned=np.array([2000, 500, 0, 250, 0], dtype=np.int64))
+    settled, _ = land_graph(counted, biomes, small, vanilla)
+    people = settled_land(
+        np.array([2000, 500, 250], dtype=np.int64),
+        [("tropical", "flatland"), ("tropical", "mountains"), ("arctic", "flatland")],
+        settlement_exponent("america"),
+    )
+    assert settled.capacity[0] == people[0] * 5
+    assert settled.capacity[2] == people[2] * 300 // 1000 * 1200 // 1000  # on the sea shore
+    assert people[0] < people[1] < people[2]
+
+
+def test_people_follow_the_planned_area_to_the_power_of_the_exponent_within_a_class() -> None:
+    classes = [("temperate", "hills")] * 31
+    planned = np.array([1000] * 29 + [2000, 500], dtype=np.int64)
+    assert settled_land(planned, classes, 0).tolist() == [1000] * 31
+    assert settled_land(planned, classes, 1000).tolist() == planned.tolist()
+    kept = settled_land(planned, classes, -600)
+    assert kept.dtype == np.int64
+    # 2 to the power of -0.6 of the median for a cell twice as large (0.66), 1.5 for one half as
+    # large: the larger cell holds fewer people than the smaller one.
+    assert 640 < kept[29] < 670
+    assert 1480 < kept[30] < 1530
+    assert kept[:29].tolist() == [1000] * 29
+
+
+def test_a_small_class_takes_the_median_of_its_climate_or_of_all_the_cells() -> None:
+    classes = (
+        [("temperate", "hills")] * 31
+        + [("arctic", "mountains")] * 31
+        + [("tropical", "plains")]
+        + [("temperate", "plains")]
+    )
+    planned = np.array([1000] * 31 + [3000] * 31 + [5000, 7000], dtype=np.int64)
+    kept = settled_land(planned, classes, 0)
+    assert kept[:31].tolist() == [1000] * 31
+    assert kept[31:62].tolist() == [3000] * 31
+    # A class and a climate of one cell: the median of all the cells; the climate of 32 cells the
+    # temperate cell shares: that median (1,000).
+    assert kept[62] == 3000
+    assert kept[63] == 1000
+
+
+def test_a_generated_continent_takes_the_exponent_of_its_vanilla_counterpart() -> None:
+    """Vanilla's Africa holds more people the larger its locations are, a little; the Americas
+    fewer: their exponents keep that order, and an unknown continent takes the Americas'."""
+    america, africa, oceania = (
+        settlement_exponent(name) for name in ("america", "africa", "oceania")
+    )
+    assert america < oceania < africa < 0
+    assert settlement_exponent("asia") == america
 
 
 def test_markov_names_are_new_unique_and_seeded() -> None:
