@@ -369,7 +369,7 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   **Sized by what each location becomes** (2026-11-15). Sized block by block, a location's class
   was another than the block's for 43 % of the cells, and its ground for 58 % of the wetlands:
   generated deserts and cold dry land came out near the median and wetlands small. The land is now
-  cut twice (`watersheds.cell_spacing_grid`): first cells, grown on the block sizes, are voted as
+  cut twice (`watersheds.cell_spacing`): first cells, grown on the block sizes, are voted as
   the export will vote the final ones, each on its own centre and pixels (`eu5_biomes.cell_sizes`:
   the pair with matched weights, the ground with `vote_grounds`), and each sizes the land it lies on
   by the mean of the 32 vanilla locations of that pair nearest in latitude and rain, moved by the
@@ -740,13 +740,76 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
 
   The other four worlds (JYFR, a `wall`, an `archipelago` and a `continents` world) export with the
   largest passable location 15,761, 14,985, 13,285 and 15,163 pixels; none stopped the validator.
-  The bound does not touch how settled the land is: the cities and towns of the three worlds still
-  lie at the 0.81 to 0.88 percentile of populated locations by area (0.80 to 0.89 before), vanilla's
-  at 0.29, because the generated population is proportional to the area of a cell (within a class
-  the slope of log population on log area is +1.4 to +1.6, vanilla's −0.55) [V-LOCAL 2026-11-23].
-  A population that falls with the size of a cell within its class would need roughly the inverse
-  of its area to match vanilla's slope (a proxy that rescales the exported populations), which is a
-  design question of its own and is not part of this bound.
+  The bound alone does not touch how many people stand in a cell: their cities and towns still lay
+  at the 0.81 to 0.88 percentile of populated locations by area (vanilla America's 0.15, Africa's
+  0.33) because the people went as the pixels. That is the next section.
+
+### People follow the plan (1.3.0 / epoch 64, `SETTLED_PEOPLE`)
+
+A location's people were `pixels × density of its climate`, so within a class (climate and
+topography) population grew with the area of the cell: slope of log2 population on log2 area
++0.7 to +1.2 in six exported worlds, r +0.5 to +0.8 [V-EXEC 2026-11-23]. Vanilla 1.4.9 holds
+alike or fewer people in the larger location [V-LOCAL, 1337 start, passable land with people]:
+
+| Vanilla continent | Locations | Slope within class | r | sd of log2 pop within class | Cities/towns at area percentile |
+|---|---|---|---|---|---|
+| America | 4,434 | −0.39 | −0.21 | 1.97 | 0.15 |
+| Africa | 2,432 | +0.18 | +0.10 | 1.71 | 0.33 |
+| Oceania | 713 | −0.05 | −0.03 | 1.63 | (no city) |
+| Asia / Europe | 7,934 / 5,259 | −0.25 / −0.25 | −0.13 / −0.15 | 1.83 / 1.21 | 0.40 / 0.34 |
+
+(−0.55, the slope of all of vanilla pooled by class alone, is an artefact: the Old World's small
+dense locations meet the Americas' large sparse ones. Within every continent the slope is mild.)
+
+From epoch 64 the planner records, for every cell, the area it asked of it (`NewWorld.planned`:
+the mean over its pixels of the squared spacing of their block, `watersheds.cell_plans`, 0 for
+water; carried through the land cache, `turned_to_sea`, `ports.relabel` and
+`continent_world.compose_regions`), and `eu5_natives.land_graph` counts the people of a location on
+
+`planned = class median × (own plan / class median) ^ e`
+
+instead of on its pixels (`settled_land`; a class of fewer than 30 cells takes the median of its
+climate, then of all). The exponent `e` is per generated continent, after the vanilla one it stands
+for: America −0.6, Africa −0.1, Oceania −0.2 (`SETTLEMENT_EXPONENT`; another continent takes
+America's). The plan is 0.7 to 0.8 of the within-class variance of a finished cell's log area, the
+growth of the cells the rest, so the people follow the plan and not the luck of the growth; the
+societies' complexity gain and noise still run on top. The export stops without it
+(`verify_settlement`: no `planned`, or a passable cell without a planned area). The total
+population is the fixed target as before. The exponents were chosen offline on the captured inputs
+of two worlds [INFERRED] and checked on six exported worlds [V-EXEC 2026-11-23, against exports of the code before]:
+
+| World, continent | Slope before → after | r after | City/town area percentile before → after | People in cells above 10,000 px before → after | Median area of locations with 30+ people before → after |
+|---|---|---|---|---|---|
+| VH3M America | +1.18 → −0.28 | −0.22 | 0.88 → 0.58 | 10.7 % → 3.1 % | 6,026 → 4,471 |
+| X5AP America | +1.20 → −0.28 | −0.22 | 0.91 → 0.56 | 16.7 % → 5.2 % | 6,490 → 4,424 |
+| PRNF America | +1.24 → −0.24 | −0.22 | 0.92 → 0.62 | 14.5 % → 4.2 % | 5,847 → 2,924 |
+| `continents` | +1.05 → −0.43 | −0.35 | 0.76 → 0.41 | 3.3 % → 0.4 % | 4,383 → 2,165 |
+| `archipelago` | +0.98 → −0.43 | −0.31 | 0.73 → 0.49 | 1.6 % → 0.1 % | 3,052 → 912 |
+| `wall` | +0.97 → −0.23 | −0.25 | 0.74 → 0.28 | 5.2 % → 0.6 % | 3,300 → 1,962 |
+| VH3M Africa | +1.20 → +0.16 | +0.13 | 0.68 → 0.54 | 13.4 % → 5.3 % | 4,347 → 3,608 |
+| X5AP Africa | +1.13 → +0.08 | +0.07 | 0.80 → 0.55 | 20.8 % → 8.3 % | 5,788 → 3,930 |
+| PRNF Africa | +0.72 → −0.27 | −0.21 | 0.67 → 0.50 | 18.6 % → 8.5 % | 6,216 → 3,722 |
+| VH3M Oceania | +1.09 → −0.01 | −0.01 | 0.30 → 0.31 | 0 % → 0 % | 4,171 → 1,526 |
+| X5AP Oceania | +0.97 → −0.18 | −0.17 | 0.82 → 0.55 | 15.2 % → 3.7 % | 4,300 → 2,113 |
+| PRNF Oceania | +0.89 → −0.24 | −0.20 | 0.48 → 0.29 | 0.1 % → 0 % | 2,508 → 1,273 |
+| Vanilla America / Africa / Oceania | −0.39 / +0.18 / −0.05 | −0.21 / +0.10 / −0.03 | 0.15 / 0.33 / – | 0 / 0.5 / 0 % | 675 / 1,558 / 693 |
+
+The slope now falls in the bands set before the exports (America −0.39 ± 0.15, Africa +0.18 ± 0.15,
+Oceania −0.05 ± 0.2) in five of the six America worlds (`wall` −0.23 misses by 0.01), two of the
+three Africa worlds (PRNF −0.27 does not; the world differed before, +0.72 against +1.13 and
++1.20) and all three Oceania worlds; the mean is −0.32, −0.01 and −0.14. The population, the
+uninhabited share of Oceania (0.15 to 0.30, unchanged: another matter) and the number of cities
+and towns stay as they were (74 → 72, 121 → 120, 104 → 109 in the three composed worlds; the
+total population within 1 %).
+
+What is not met, and is not meant to be: the people of a world are less spread within a class
+(sd of log2 population 0.9 to 1.2 against 1.1 to 1.5 before; vanilla's 1.2 to 2.0), the cities
+and towns of the Americas still lie above vanilla's percentile (0.28 to 0.62 against 0.15; the
+rest is between classes, not within them [INFERRED]), up to 8.5 % of the people still live in cells
+above 10,000 px (vanilla 0 to 0.5 %) and the largest city is as large as before (13,991 px in
+VH3M; the safety margin is the bound above, not this). The African megalopolis stands in a cell of
+1,559 to 6,766 px (vanilla's: 202 to 421). A world made before epoch 64 keeps what it has, as does
+the existing VH3M world, with its 28,154 px "City of Sara".
 
 ## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 

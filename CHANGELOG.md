@@ -18,6 +18,22 @@ worlds and saves are not rewritten or migrated.
   the median size and the contrast between neighbours as before. The export now stops if a passable
   location is above 20,000 pixels.
 
+- Make **a location's people follow the plan, not the pixels**. A generated location held people
+  at least in proportion to its area (within its climate and topography, population grew as the
+  area to the power of 0.7 to 1.2 in six worlds), so the cities and towns lay among
+  the largest locations of the world (the 0.67 to 0.92 percentile by area, vanilla America's
+  0.15) and up to a fifth of all people stood in cells above 10,000 pixels. Vanilla's larger
+  locations hold alike or fewer people (America −0.39, Africa +0.18, Oceania −0.05). The planner
+  now records the area it asked of every cell, and the people are counted on that area, relative
+  to the median of the cell's class, to a power taken from the continent it stands for, instead of
+  on the pixels the cell grew to. In six exported worlds the slope is −0.43 to −0.23 in the
+  Americas, −0.27 to +0.16 in Africa and −0.24 to −0.01 in Oceania; the cities and towns lie at
+  the 0.28 to 0.62 percentile, and the share of people in cells above 10,000 pixels fell from up
+  to 21 % to up to 8.5 %. The population as a whole, the number of cities and the uninhabited
+  share are as before; the spread of the people within a class is a little narrower (standard
+  deviation of log2 population 0.9 to 1.2 against 1.1 to 1.5). Existing worlds are not changed,
+  including the generated cities that are very large.
+
 - Give **Morocco and the Mamluks the society they had in Africa** when they keep their tags in
   a generated Africa. Their new African holdings were tribal ground, with no peasants, slaves,
   burghers, towns, market or institutions, so both countries began with a tiny, nearly equal
