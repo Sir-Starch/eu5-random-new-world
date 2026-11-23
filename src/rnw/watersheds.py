@@ -370,6 +370,10 @@ MAX_LAND_PX: Final[int] = 15_000
 # merged slivers, the wobble of the borders) and for the one reading it rests on.
 LAND_PX_CEILING: Final[int] = 20_000
 SPLIT_ROUNDS: Final[int] = 8
+# A divided cell's two seeds grow at this share (permille) of its speed, the square root of a half:
+# each is planned half the area. At the cell's own speed the new seed, a quarter of the cell's
+# length from its far end, took the land of the small cells beside that end.
+SPLIT_GAIN: Final[int] = 707
 CENTRE_STRIP: Final[int] = 512  # rows of the grown cells read at a time
 SPACING_PARTS: Final[int] = 64  # spacing exponents are 64ths of an octave
 SHIFT_OCTAVES: Final[int] = 6  # the whole spacing is scaled by at most this many octaves
@@ -812,7 +816,8 @@ def _divided_seeds(  # noqa: PLR0913 - the cells, their seeds and speeds, the li
     pixel of the cell farthest from its centre, and the pixel farthest from that one, are its two
     ends, and each seed is the cell's pixel nearest to its point. Grown at the cell's own speed
     they share the cell between them by the bisector of the two, about in halves, and the cells
-    round it, which keep their seeds, give way as they would to any cell grown beside them. The
+    round it, which keep their seeds, give way as they would to any cell grown beside them; both
+    grow at ``SPLIT_GAIN`` of the cell's speed, each planned half its area. The
     first seed keeps the cell's number; the others are numbered after the last. Integers. The
     cells touching the north row of ``grown`` if ``edges[0]``, the south row if ``edges[1]``, are
     left whole."""
@@ -856,9 +861,11 @@ def _divided_seeds(  # noqa: PLR0913 - the cells, their seeds and speeds, the li
             points[1] = other
         moved[number] = int(y[points[0]]) * columns + int(x[points[0]])
         added.append(int(y[points[1]]) * columns + int(x[points[1]]))
+    slowed = gain.copy()
+    slowed[chosen] = gain[chosen] * SPLIT_GAIN // PERMILLE
     return (
         np.concatenate([moved, np.array(added, dtype=np.int64)]),
-        np.concatenate([gain, gain[chosen]]),
+        np.concatenate([slowed, slowed[chosen]]),
     )
 
 

@@ -944,7 +944,7 @@ def test_the_two_halves_of_a_divided_cell_are_near_equal() -> None:
     assert result is not None
     seeds, gains = result
     assert seeds.shape == (2,)
-    assert gains.tolist() == [1000, 1000]
+    assert gains.tolist() == [watersheds.SPLIT_GAIN, watersheds.SPLIT_GAIN]
     assert seeds[0] != seeds[1]
     land = grown >= 0
     sites = np.full(grown.shape, -1, dtype=np.int32)

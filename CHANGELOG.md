@@ -13,9 +13,10 @@ worlds and saves are not rewritten or migrated.
   rank. Worlds had 50 to 92 locations above 15,000 pixels (up to 56,000; vanilla has 20 in 21,000,
   with nobody living in them). The cells now grow as before, and a cell that grows above 15,000
   pixels is given a second seed and the cells are grown again, so none is cut across; the cells at
-  a polar edge, which are wastelands, stay as large as they grew. The largest location of the four
-  worlds measured is 15,745 pixels, with 1 to 2 % more locations and the median size unchanged. The
-  export now stops if a passable location is above 20,000 pixels.
+  a polar edge, which are wastelands, stay as large as they grew. Of seven worlds measured the
+  largest location is 13,285 to 16,246 pixels (up to 56,000 before), with 1 to 2 % more locations,
+  the median size and the contrast between neighbours as before. The export now stops if a passable
+  location is above 20,000 pixels.
 
 - Give **Morocco and the Mamluks the society they had in Africa** when they keep their tags in
   a generated Africa. Their new African holdings were tribal ground, with no peasants, slaves,

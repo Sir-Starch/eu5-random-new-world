@@ -1043,8 +1043,9 @@ code is copied, translated or reproduced and the installation is not changed.
 **Compatibility and distribution.** The result is a limit on what the generator writes
 (`watersheds.MAX_LAND_PX`, `LAND_PX_CEILING`), checked at export, not a use of the engine's code. The
 count's dependence on the area is read at one location [INFERRED]; the bound keeps a margin for any
-dependence above an eighth power. Whether the game raises its stack in a later build is [UNKNOWN];
-the bound remains within what vanilla draws.
+dependence above an eighth power. Whether the game raises its stack in a later build is [UNKNOWN].
+Vanilla's largest town or city has 4,882 pixels and its largest location with the people of a
+city 16,931 [V-LOCAL]; the bound of 15,000 lies between them.
 
 ## Earlier cases still outside this phase
 
