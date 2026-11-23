@@ -860,6 +860,29 @@ def test_a_game_change_during_preparation_does_not_poison_the_old_cache_key(
         worker.thread.join(5)
 
 
+def test_the_tauri_bridge_sets_the_iberian_land_connection_and_shows_it_in_the_state(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    assert bridge.call("set_continent", {"key": "africa", "value": True}) is None
+
+    def mode() -> object:
+        new = cast("dict[str, object]", bridge.state()["new"])
+        regions = cast("dict[str, dict[str, object]]", new["regions"])
+        return regions["africa"]["iberia_connection"]
+
+    assert mode() == "off"
+    assert bridge.call("set_iberia_connection", {"mode": "allowed"}) is None
+    assert mode() == "allowed"
+    assert bridge.call("set_iberia_connection", {"mode": "required"}) is None
+    assert mode() == "required"
+    assert bridge.controller.region_settings("africa").iberia_connection == "required"
+    assert bridge.call("set_iberia_connection", {"mode": "off"}) is None
+    assert mode() == "off"
+    with pytest.raises(BridgeError):
+        _ = bridge.call("set_iberia_connection", {})
+
+
 def test_a_world_that_keeps_the_real_americas_shows_only_what_applies_to_it(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
