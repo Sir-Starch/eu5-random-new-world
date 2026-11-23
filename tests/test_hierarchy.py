@@ -583,6 +583,20 @@ def test_passable_old_world_sea_gets_connected_ocean_hierarchy() -> None:
     assert 7 in crossing[0]
 
 
+def test_water_that_no_open_ocean_reaches_needs_no_path_to_one() -> None:
+    # Cells 3, 4, 8 and 9 lie beyond the gap, in a sea the land has shut in (the Mediterranean
+    # behind a land connection to Iberia and to Asia); 0, 1, 5 and 6 are joined to the ocean.
+    graph = _grid(5, 2, gap_column=2)
+    sources = [[0]]
+    assert _protect_ocean_boundary(graph, sources, set(), {6, 9}) == {0}
+    assert 6 in sources[0]
+    assert 9 not in sources[0]
+    assert _protect_ocean_boundary(graph, [[0]], set(), {9}) == set()
+    # With no open ocean at all there is nothing the boundary could be shut away from.
+    with pytest.raises(IdentityError, match="open ocean"):
+        _ = _protect_ocean_boundary(graph, [[]], set(), {9})
+
+
 def test_coastal_seas_cannot_take_the_old_world_boundary() -> None:
     graph = _grid(8, 2)
     seas = [

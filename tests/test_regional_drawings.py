@@ -200,6 +200,22 @@ def test_the_area_of_a_continent_in_several_follows_the_seed_and_its_own_shore()
         },
     )
     assert landarea.area_inputs(game, asia, "africa", 1) != first
+    banded = build_settings(
+        "continents",
+        {"continents": {"africa": {"new_world": {"ocean_band_px": 300}}, "oceania": True}},
+    )
+    iberia = build_settings(
+        "continents",
+        {
+            "continents": {
+                "africa": {"new_world": {"ocean_band_px": 300}, "iberia_connection": "required"},
+                "oceania": True,
+            }
+        },
+    )
+    assert landarea.area_inputs(game, iberia, "africa", 1) != landarea.area_inputs(
+        game, banded, "africa", 1
+    )
     # America alone has one area for every seed.
     alone = build_settings("continents", None)
     assert landarea.area_inputs(game, alone, "america", 1) == landarea.area_inputs(

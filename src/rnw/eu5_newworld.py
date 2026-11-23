@@ -693,9 +693,13 @@ def _protect_ocean_boundary(
                     frontier,
                     (distance + length + (100_000 if other in shore else 0), number, other),
                 )
-    if not boundary.issubset(routes):
+    if not boundary.issubset(routes) and not any(ocean_sources):
         message = "Old World sea boundary cannot reach an open ocean area"
         raise IdentityError(message)
+    # Water that no open ocean can reach, because land has shut it in (the Mediterranean behind
+    # Africa's land connections to Iberia and to Asia), has no ocean area to join: the search has
+    # reached every zone joined to an ocean, so its zones need no path.
+    boundary = boundary & routes.keys()
     protected: set[int] = set()
 
     def order(other: int) -> tuple[int, int]:

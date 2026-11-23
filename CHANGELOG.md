@@ -11,8 +11,11 @@ worlds and saves are not rewritten or migrated.
   where the strait is, and the Mediterranean then has no way out to the Atlantic (an inland sea).
   Allowed, a world draws the link with a chance of 35 in 100 and then has no strait; required,
   every world has it. The bridge is built like the Asian one, a winding body of land that touches
-  passable Iberian land, and the export stops if it does not join one. Off (the default) changes
-  no world: a fixed seed writes the same files as before.
+  passable land of the peninsula (not the Balearic Islands), and the export stops if it does not
+  join one. With the Asian link as well, the Mediterranean is shut at both ends, and the export
+  now accepts water that no open ocean reaches. Where the world keeps a sea route round it and
+  has no other, that step can still cut a narrow channel beside the link. Off (the default)
+  changes no world: a fixed seed writes the same files as before.
 
 - Fix **the sea route round the world cutting a location of land into sea** stopping the export
   with "The generated land cells do not come before its water cells". A location turned into sea

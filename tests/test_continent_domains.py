@@ -746,22 +746,27 @@ def test_window_climate_and_cell_size_votes_use_global_latitude() -> None:
 
 
 def _iberian_map() -> Eu5Map:
-    """The test map with a European peninsula, region ``iberia_region``, a strait west of Africa."""
+    """The test map with a European peninsula (area ``andalusia_area``) of the region
+    ``iberia_region``, a strait west of Africa, an island of that region nearer to Africa than
+    the peninsula is, and another European location."""
     base = cast("SimpleNamespace", cast("object", _map()))
     labels = base.labels.copy()
     labels[130:200, 590:604] = 6
     labels[100:130, 560:604] = 7
+    labels[140:160, 608:613] = 8
     return cast(
         "Eu5Map",
         cast(
             "object",
             SimpleNamespace(
-                keys=(*base.keys, "iberia", "france"),
+                keys=(*base.keys, "iberia", "france", "balearic"),
                 labels=labels,
-                continents=(*base.continents, "europe", "europe"),
-                classes=(*base.classes, CellClass.LAND, CellClass.LAND),
-                ambiguous=np.array([*base.ambiguous, False, False]),
-                regions=("",) * len(base.keys) + ("iberia_region", "france_region"),
+                continents=(*base.continents, "europe", "europe", "europe"),
+                classes=(*base.classes, CellClass.LAND, CellClass.LAND, CellClass.LAND),
+                ambiguous=np.array([*base.ambiguous, False, False, False]),
+                regions=("",) * len(base.keys)
+                + ("iberia_region", "france_region", "iberia_region"),
+                areas=("",) * len(base.keys) + ("andalusia_area", "paris_area", "balearics_area"),
             ),
         ),
     )
@@ -797,11 +802,21 @@ def test_a_required_iberian_link_meets_only_iberian_land_and_leaves_no_strait() 
     touched[:, 1:] |= game.labels[:, :-1] == 6
     touched[:, :-1] |= game.labels[:, 1:] == 6
     assert np.all(touched[interface])
-    # The other European location (the Seine side) is no contact of the link.
+    # Neither the other European location (the Seine side) nor the island of the region, which
+    # lies nearer to Africa and would leave the Mediterranean open, is a contact of the link.
     assert domain.contact_land is not None
     contact = _in_world(domain, domain.contact_land, game.labels.shape)
     assert contact[game.labels == 6].all()
     assert not contact[game.labels == 7].any()
+    assert not contact[game.labels == 8].any()
+    islet = np.zeros(game.labels.shape, dtype=bool)
+    islet[game.labels == 8] = True
+    near = np.zeros_like(islet)
+    near[1:] |= islet[:-1]
+    near[:-1] |= islet[1:]
+    near[:, 1:] |= islet[:, :-1]
+    near[:, :-1] |= islet[:, 1:]
+    assert not np.any(interface & near)
 
 
 def test_an_allowed_iberian_link_is_drawn_per_seed_and_rules_out_the_strait() -> None:

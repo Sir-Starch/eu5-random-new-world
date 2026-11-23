@@ -517,6 +517,39 @@ def test_every_language_fits_the_smallest_supported_window(
 
 
 @pytest.mark.usefixtures("application")
+@pytest.mark.parametrize("language", sorted(LANGUAGE_NAMES))
+def test_the_iberian_options_fit_the_smallest_supported_window_in_every_language(
+    tmp_path: Path, fake_export: Exporter, language: str
+) -> None:
+    set_language(language)
+    try:
+        window = _window(tmp_path, fake_export)
+        window.controller.set_continent("africa", enabled=True)
+        window.resize(1080, 760)
+        window.show()
+        QApplication.processEvents()
+        assert not window.iberia_required.isVisibleTo(window)
+        assert window.iberia_connection.isVisibleTo(window)
+        window.iberia_connection.setChecked(True)
+        QApplication.processEvents()
+        assert window.controller.region_settings("africa").iberia_connection == "allowed"
+        assert window.iberia_required.isVisibleTo(window)
+        window.iberia_required.setChecked(True)
+        QApplication.processEvents()
+        assert window.controller.region_settings("africa").iberia_connection == "required"
+        assert (window.width(), window.height()) == (1080, 760)
+        for box in (window.iberia_connection, window.iberia_required):
+            assert box.width() >= box.minimumSizeHint().width(), box.text()
+        window.iberia_connection.setChecked(False)
+        QApplication.processEvents()
+        assert window.controller.region_settings("africa").iberia_connection == "off"
+        assert not window.iberia_required.isVisibleTo(window)
+        _ = window.close()
+    finally:
+        set_language("english")
+
+
+@pytest.mark.usefixtures("application")
 def test_the_library_panel_leaves_its_width_to_the_splitter(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

@@ -3331,8 +3331,8 @@ source = "bc27270c6e759856"
 text = '''Das Mittelmeer kann zum Binnenmeer werden'''
 
 ["continent.africa.iberia_connection.info"]
-source = "0019c0443d53d8cb"
-text = '''Manche Welten verbinden Afrika dort, wo die Straße von Gibraltar liegt, über Land mit Iberien. Das Mittelmeer hat dann keinen Ausgang zum Atlantik, und seine Häfen erreichen die Neue Welt nicht über See. Ohne diese Option behält Iberien stets die Meerenge.'''
+source = "2258f68535e89fa8"
+text = '''Manche Welten verbinden Afrika dort, wo die Straße von Gibraltar liegt, über Land mit Iberien. Das Mittelmeer hat dann keinen Ausgang zum Atlantik, und seine Häfen erreichen die Neue Welt nicht über See. Ohne diese Option behält Iberien stets die Meerenge. Ist „Eine Seeroute um die Welt erhalten“ aktiv und gibt es keine andere Route, kann neben der Verbindung dennoch ein schmaler Kanal geschnitten werden.'''
 
 ["continent.africa.iberia_connection.required"]
 source = "ec15b629f5350160"

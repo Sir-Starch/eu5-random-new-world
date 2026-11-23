@@ -3331,8 +3331,8 @@ source = "bc27270c6e759856"
 text = '''O Mediterrâneo pode tornar-se um mar interior'''
 
 ["continent.africa.iberia_connection.info"]
-source = "0019c0443d53d8cb"
-text = '''Alguns mundos ligam a África à Ibéria por terra, onde fica o Estreito de Gibraltar. O Mediterrâneo fica então sem saída para o Atlântico, e os seus portos não chegam ao Novo Mundo por mar. Sem esta opção, a Ibéria mantém sempre o estreito.'''
+source = "2258f68535e89fa8"
+text = '''Alguns mundos ligam a África à Ibéria por terra, onde fica o Estreito de Gibraltar. O Mediterrâneo fica então sem saída para o Atlântico, e os seus portos não chegam ao Novo Mundo por mar. Sem esta opção, a Ibéria mantém sempre o estreito. Se «Manter uma rota marítima ao redor do mundo» estiver ativada e o mundo não tiver outra rota, ainda pode ser aberto um canal estreito junto à ligação.'''
 
 ["continent.africa.iberia_connection.required"]
 source = "ec15b629f5350160"

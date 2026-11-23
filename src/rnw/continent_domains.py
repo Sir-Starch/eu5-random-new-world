@@ -55,6 +55,8 @@ EUROPE_STRAIT_GAP: Final[int] = 7
 # a seed does; it rules out the strait of that seed.
 IBERIA_LAND_CHANCE: Final[int] = 35
 IBERIA_REGION: Final[str] = "iberia_region"
+# The Balearic Islands lie in the region, but joining Africa to them leaves the Mediterranean open.
+IBERIA_ISLANDS: Final[frozenset[str]] = frozenset({"balearics_area"})
 OCEAN_SPECK_PX: Final[int] = 1024
 AFRICAN_NORTH_REACH_PX: Final[int] = 512
 # Open water nearer to retained Eurasian land than to any generated continent stays
@@ -184,11 +186,19 @@ def _membership(game_map: Eu5Map, continent: str) -> NDArray[np.bool_]:
     return np.fromiter((name == continent for name in game_map.continents), dtype=bool)
 
 
-def _region_members(game_map: Eu5Map, region: str) -> NDArray[np.bool_]:
-    """The locations of one of the game's regions (none where the map has not read them)."""
+def iberian_mainland(game_map: Eu5Map) -> NDArray[np.bool_]:
+    """The locations of the Iberian peninsula (the game's ``iberia_region`` but for its islands);
+    none where the map has not read its regions."""
     if not game_map.regions:
         return np.zeros(len(game_map.keys), dtype=bool)
-    return np.fromiter((name == region for name in game_map.regions), dtype=bool)
+    return np.fromiter(
+        (
+            region == IBERIA_REGION and area not in IBERIA_ISLANDS
+            for region, area in zip(game_map.regions, game_map.areas, strict=True)
+        ),
+        dtype=bool,
+        count=len(game_map.regions),
+    )
 
 
 def _coastal_claim(
@@ -1145,7 +1155,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
         interface = _interface(contact, neighbor & passable[local])
     iberia = None
     if join_iberia and near_africa is not None:
-        iberian = (_region_members(game_map, IBERIA_REGION) & solid)[local]
+        iberian = (iberian_mainland(game_map) & solid)[local]
         claim, close, iberia = _iberian_approach(
             iberian, passable[local], near_africa, inland, candidate, claim, close, guard
         )

@@ -3331,8 +3331,8 @@ source = "bc27270c6e759856"
 text = '''La Méditerranée peut devenir une mer intérieure'''
 
 ["continent.africa.iberia_connection.info"]
-source = "0019c0443d53d8cb"
-text = '''Certains mondes relient l’Afrique à l’Ibérie par la terre, à l’emplacement du détroit de Gibraltar. La Méditerranée n’a alors plus de sortie vers l’Atlantique, et ses ports n’atteignent pas le Nouveau Monde par la mer. Sans cette option, l’Ibérie garde toujours le détroit.'''
+source = "2258f68535e89fa8"
+text = '''Certains mondes relient l’Afrique à l’Ibérie par la terre, à l’emplacement du détroit de Gibraltar. La Méditerranée n’a alors plus de sortie vers l’Atlantique, et ses ports n’atteignent pas le Nouveau Monde par la mer. Sans cette option, l’Ibérie garde toujours le détroit. Si « Préserver une route maritime autour du monde » est activé et que le monde n’a pas d’autre route, un étroit canal peut tout de même être creusé à côté de la liaison.'''
 
 ["continent.africa.iberia_connection.required"]
 source = "ec15b629f5350160"
