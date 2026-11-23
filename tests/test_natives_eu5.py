@@ -32,6 +32,7 @@ from rnw.eu5_natives import (
     new_tags,
     overlord_level,
     pop_lines,
+    reformed_templates,
     regional_state_baseline,
     state_population_floor,
     template_governments,
@@ -682,3 +683,14 @@ def test_a_region_is_named_in_the_language_most_of_its_land_speaks() -> None:
     assert other["region"] != region
     plan.display_overrides.clear()
     assert "region" not in _place_names(world, plan, cells, culture, PlaceNamer(vanilla, seed=3))
+
+
+def test_a_template_with_a_reform_belongs_to_the_nations_that_used_it() -> None:
+    """``wayfinders_reform`` needs a Polynesian culture: no other may be given its template."""
+    templates = {
+        "polynesian_monarchy": "government = { type = monarchy reforms = { wayfinders_reform } }\n",
+        "polynesian_tribe": "government = { type = tribe reforms = {\n\t#wayfinders_reform\n} }\n",
+        "plain": "government = { type = monarchy }\n",
+        "island": 'include = "polynesian_monarchy"\n',
+    }
+    assert reformed_templates(templates) == {"polynesian_monarchy", "island"}

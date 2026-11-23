@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, final
 
 import numpy as np
 
-from rnw.epoch import CURRENT, NO_EXCHANGE_MARKETS
+from rnw.epoch import CURRENT, LAW_NEGATIONS, NO_EXCHANGE_MARKETS
 from rnw.eu5_archetypes import government_fields
 from rnw.eu5_empires import empire_roads, extraordinary_report, road_targets
 from rnw.eu5_history_values import profile_positions
@@ -265,6 +265,7 @@ class _Projection:
                     level=level,
                     religion=religion,
                     culture=culture,
+                    exact=self.inputs.algorithm >= LAW_NEGATIONS,
                 )
         standing = (
             positions(vanilla.law_book, include=include, fields=written)

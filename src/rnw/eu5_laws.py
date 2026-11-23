@@ -141,6 +141,11 @@ class Facts:
     culture: str
     values: Mapping[str, int]
     laws: Mapping[str, str]
+    # Whether the reading is exact (epoch 64, ``rnw.epoch.LAW_NEGATIONS``): ``!=`` holds when the
+    # values differ, the lowercase ``or``/``not`` count like their capitals, a country that is
+    # being written does not exist yet, and only a theocracy's succession has no heir religion
+    # law. Before, the operator was ignored and those triggers were undecided.
+    exact: bool = True
 
 
 def _blocks(texts: Sequence[str]) -> list[tuple[str, Block]]:
@@ -334,11 +339,13 @@ def _entry(entry: Entry, facts: Facts) -> bool | None:  # noqa: C901, PLR0911, P
     key, value = entry.key or "", entry.value
     if isinstance(value, Block):
         inner = [_entry(item, facts) for item in value.entries if item.key != "text"]
-        if key in {"AND", "custom_tooltip", "trigger_if"}:
+        if key in {"AND", "custom_tooltip", "trigger_if"} or (
+            facts.exact and key == "succession_law"
+        ):
             return _all(inner)
-        if key == "OR":
+        if key == "OR" or (facts.exact and key == "or"):
             return _any(inner)
-        if key == "NOT":
+        if key == "NOT" or (facts.exact and key == "not"):
             return _none(inner)
         if key == "NOR":
             together = _any(inner)
@@ -353,6 +360,13 @@ def _entry(entry: Entry, facts: Facts) -> bool | None:  # noqa: C901, PLR0911, P
             return True
         return None
     word = str(value)
+    if key in {"government_type", "religion", "culture"} and facts.exact:
+        actual = {
+            "government_type": facts.government,
+            "religion": facts.religion,
+            "culture": facts.culture,
+        }[key]
+        return (_value(word) == actual) != (entry.op == "!=")
     if key == "government_type":
         return _value(word) == facts.government
     if key == "has_tribal_government":
@@ -365,6 +379,11 @@ def _entry(entry: Entry, facts: Facts) -> bool | None:  # noqa: C901, PLR0911, P
         return False
     if key == "current_age":
         return _value(word) == FIRST_AGE
+    if facts.exact and key == "has_tag" and word == "empty_heir_religion_law":
+        # Only a theocracy's heir selections carry the tag (``common/heir_selections``).
+        return facts.government == "theocracy"
+    if facts.exact and key == "country_exists":
+        return False if word == "this" else None
     if key == "has_law":
         return word in facts.laws
     if key == "has_policy":
@@ -505,6 +524,7 @@ def complete(  # noqa: PLR0913 - a country's template, own fields and identity.
     level: int,
     religion: str,
     culture: str,
+    exact: bool = True,
 ) -> tuple[tuple[str, str], ...]:
     """The country's own laws with a policy for every law it sees that its template leaves
     empty and that vanilla's countries of its government and level hold, in the order of the
@@ -522,7 +542,7 @@ def complete(  # noqa: PLR0913 - a country's template, own fields and identity.
     standing = positions(book, include=include, fields=fields)
     current = {**inherited, **dict(laws)}
     written = list(laws)
-    facts = Facts(government, level, religion, culture, standing, current)
+    facts = Facts(government, level, religion, culture, standing, current, exact)
     for law in shown(book, facts):
         if law in current:
             continue
@@ -533,5 +553,5 @@ def complete(  # noqa: PLR0913 - a country's template, own fields and identity.
         if policy:
             written.append((law, policy))
             current[law] = policy
-            facts = Facts(government, level, religion, culture, standing, current)
+            facts = Facts(government, level, religion, culture, standing, current, exact)
     return tuple(written)

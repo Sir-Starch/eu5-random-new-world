@@ -5,6 +5,16 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Give **every generated country its marriage and heir religion laws**, and keep the Aboriginal
+  peoples of Oceania off the Polynesian monarchy. The game logged "has no marriage_law" and "has
+  no heir_religion_law" for each state written without a template (17 in a world of three
+  continents), because the law reader ignored `!=` in vanilla's marriage law and could not read
+  its heir religion law's succession and `or`/`not` conditions; it reads them now. A state of an
+  Australian culture took the first template of its level, `polynesian_monarchy`, whose
+  `wayfinders_reform` needs a Micronesian or Polynesian culture, and the game removed it at the
+  start ("Removing invalid reform", 15 states). A template with a reform now goes only to the
+  cultures vanilla gave it to. Worlds of America alone are byte for byte as before.
+
 - Ask the **quick questions of every generated continent**, not of America alone. Land, Native
   peoples, Native states, Extraordinary peoples, Historical turbulence and Gold and silver now
   stand in the block of Africa and of Oceania as in America's, in both windows, and each answer

@@ -323,6 +323,7 @@ class VanillaNatives:
     state_floor: StateFloor = MINIMUM_STATE_SUPPORT
     history_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
     history_governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    reformed: frozenset[str] = frozenset()
     law_book: LawBook | None = None
     regional_templates: RegionalTemplates | None = None
 
@@ -526,6 +527,33 @@ def _most_common(values: list[str]) -> str:
         return ""
     counts = Counter(values)
     return min(counts, key=lambda value: (-counts[value], value))
+
+
+def reformed_templates(templates: dict[str, str]) -> frozenset[str]:
+    """Templates that give their countries a government reform, directly or by inclusion.
+
+    Vanilla reforms of a template are country-specific: each one's potential names the
+    culture, religion or region of the nations that use it (``wayfinders_reform`` needs a
+    Micronesian or Polynesian culture). The game removes a reform from a country that does
+    not qualify, so only a culture that vanilla itself gave the template may take it.
+    """
+    roots = {name: parse(text) for name, text in templates.items()}
+
+    def reformed(name: str, seen: frozenset[str]) -> bool:
+        root = roots.get(name)
+        if root is None or name in seen:
+            return False
+        government = root.block("government")
+        block = government.block("reforms") if government is not None else None
+        if block is not None and any(True for _ in block.words()):
+            return True
+        return any(
+            reformed(include.value.strip('"'), seen | {name})
+            for include in root.find("include")
+            if isinstance(include.value, str)
+        )
+
+    return frozenset(name for name in roots if reformed(name, frozenset()))
 
 
 def effective_governments(
@@ -888,6 +916,7 @@ def vanilla_natives(
         ),
         governments=governments,
         history_governments=effective_governments(template_texts, governments),
+        reformed=reformed_templates(template_texts),
         colors=vanilla_colors(game_dir),
         levels=levels,
         overlord_level=overlord_level(
@@ -1546,7 +1575,10 @@ def _include(
                 and (not empire or vanilla.levels.get(candidate, -1) >= vanilla.overlord_level)
             ]
             own = info.state_include if info else ""
-            name = own if own in candidates else next(iter(candidates), "")
+            # A template with a reform belongs to the nations that used it: the reform's
+            # potential names their culture, and the game removes it from anyone else.
+            open_candidates = [name for name in candidates if name not in vanilla.reformed]
+            name = own if own in candidates else next(iter(open_candidates), "")
     elif level is None:
         name = (info.tribe_include if info else "") or DEFAULT_TRIBE
     else:
@@ -1591,7 +1623,7 @@ def regional_projection_inputs(
         )
 
     monarchies = candidates(landed, "monarchy")
-    tribes = candidates(tribal, "tribe")
+    tribes = [name for name in candidates(tribal, "tribe") if name not in base.reformed]
     if not monarchies or not tribes:
         message = f"No installed local monarchy or tribal template for {continent}"
         raise NativesError(message)

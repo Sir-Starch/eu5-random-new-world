@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from rnw.eu5_laws import Facts as LawFacts
-from rnw.eu5_laws import LawError, complete, read_book, shown
+from rnw.eu5_laws import LawError, choose, complete, read_book, shown
 from rnw.history_values import SHOWN
 
 LAWS = """
@@ -309,3 +309,75 @@ def test_a_level_without_vanilla_evidence_is_left_to_the_advances() -> None:
     assert "divine_cause_law" in laws
     assert "cultural_traditions_law" in laws
     assert LAW_BOOK.held_levels["theocracy", "divine_cause_law"] == frozenset({3})
+
+
+MARRIAGE = """
+marriage_law = {
+\tmonogamous_marriage = { allow = { OR = {
+\t\tgovernment_type != government_type:theocracy
+\t\treligion != religion:catholic
+\t} } }
+\tmuslim_marriage = { potential = { religion.group = religion_group:muslim } }
+}
+heir_religion_law = {
+\their_special_succession = { potential = {
+\t\tsuccession_law = { has_tag = empty_heir_religion_law }
+\t} }
+\their_same_religion = {
+\t\tpotential = {
+\t\t\tsuccession_law = { NOT = { has_tag = empty_heir_religion_law } }
+\t\t\tor = {
+\t\t\t\tnot = { country_exists = this }
+\t\t\t\tnot = { exists = ruler_or_heir_if_regent }
+\t\t\t}
+\t\t}
+\t}
+}
+"""
+CATHOLIC_TEMPLATES = {
+    **TEMPLATES,
+    "catholic": (
+        "government = { type = monarchy laws = {"
+        " marriage_law = monogamous_marriage heir_religion_law = heir_same_religion } }\n"
+    ),
+}
+CATHOLIC_BOOK = read_book(
+    law_texts=[MARRIAGE],
+    advance_texts=[ADVANCES],
+    templates=CATHOLIC_TEMPLATES,
+    setup_text='countries = {\n\tcountries = {\n\t\tC = { include = "catholic" }\n\t}\n}\n',
+    value_texts=[VALUES],
+)
+
+
+def _married(*, exact: bool, government: str = "monarchy") -> dict[str, str]:
+    return dict(
+        complete(
+            CATHOLIC_BOOK,
+            include="",
+            fields=(("type", government),),
+            laws=(),
+            level=1,
+            religion="dreamtime",
+            culture="people",
+            exact=exact,
+        )
+    )
+
+
+def test_a_condition_of_difference_holds_when_the_values_differ() -> None:
+    """Vanilla's marriage law allows a country that is no Catholic theocracy; ``!=`` was ignored."""
+    assert _married(exact=True) == {
+        "marriage_law": "monogamous_marriage",
+        "heir_religion_law": "heir_same_religion",
+    }
+    assert _married(exact=False) == {}
+
+
+def test_only_a_theocracy_has_a_succession_without_an_heir_religion_law() -> None:
+    def chosen(government: str, *, exact: bool) -> str:
+        facts = LawFacts(government, 1, "dreamtime", "people", {}, {}, exact=exact)
+        return choose(CATHOLIC_BOOK, "heir_religion_law", facts)
+
+    assert chosen("monarchy", exact=True) == "heir_same_religion"
+    assert chosen("monarchy", exact=False) == ""
