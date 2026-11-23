@@ -5,6 +5,16 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Give **Morocco and the Mamluks the society they had in Africa** when they keep their tags in
+  a generated Africa. Their new African holdings were tribal ground, with no peasants, slaves,
+  burghers, towns, market or institutions, so both countries began with a tiny, nearly equal
+  income and a handful of levies, and collapsed (in vanilla they are among the strongest). Each
+  holding now takes over one location the country owned there in the 1337 start: its pops, its
+  town and its market, its institutions and the buildings the country owned in it travel
+  together, the capital takes Cairo's or Fez's, and the rest pair by size to the best ground. A
+  town setup that copies another (Cairo's, Fez's) is read with its base. Worlds without a
+  restored country are byte for byte as before.
+
 - Make **the sea route round the world** a part of the generation instead of a band of water along
   the southern edge. *Keep a sea route around the world* used to hand the last rows of the map to
   ordinary ocean locations, a solid strip of open sea behind the closed southern ocean, whatever

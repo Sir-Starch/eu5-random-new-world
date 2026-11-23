@@ -197,24 +197,45 @@ class TownPlan:
         return {TOWNS: text.encode("utf-8-sig")}
 
 
+def _flatten(
+    name: str, templates: Mapping[str, Block], trail: tuple[str, ...] = ()
+) -> dict[str, str | Block]:
+    """A setup's buildings with those of the setup it copies, its own levels over them."""
+    buildings: dict[str, str | Block] = {}
+    template = templates[name]
+    parent = template.first("copy_from")
+    if parent is not None:
+        if not isinstance(parent.value, str) or parent.value in {name, *trail}:
+            message = f"Town setup {name} copies itself or something that is not a setup"
+            raise TownError(message)
+        if parent.value not in templates:
+            message = f"Town setup {name} copies the unknown setup {parent.value}"
+            raise TownError(message)
+        buildings.update(_flatten(parent.value, templates, (*trail, name)))
+    for entry in template.entries:
+        if entry.key != "copy_from":
+            buildings[entry.key or ""] = entry.value
+    return buildings
+
+
 def _levels(
-    template: Block, caps: Mapping[str, str | Block], values: Block, limit: int
+    template: Mapping[str, str | Block], caps: Mapping[str, str | Block], values: Block, limit: int
 ) -> tuple[dict[str, int], dict[str, int]]:
     original: dict[str, int] = {}
     levels: dict[str, int] = {}
-    for entry in template.entries:
-        if entry.key is None or entry.key not in caps or not isinstance(entry.value, str):
+    for building, value in template.items():
+        if building not in caps or not isinstance(value, str):
             message = "Unsupported native town building"
             raise TownError(message)
-        amount = int(entry.value)
+        amount = int(value)
         if amount < 1:
             message = "Nonpositive native town building"
             raise TownError(message)
-        cap = caps[entry.key]
+        cap = caps[building]
         if not isinstance(cap, str):
-            message = f"Unsupported native starting-building capacity: {entry.key}"
+            message = f"Unsupported native starting-building capacity: {building}"
             raise TownError(message)
-        original[entry.key] = amount
+        original[building] = amount
         if cap.replace(".", "", 1).isdigit():
             amount = min(amount, int(Fraction(cap)))
         elif _guild_alias(values, cap):
@@ -227,7 +248,7 @@ def _levels(
         if amount < 1:
             message = "A native town building has no guaranteed starting capacity"
             raise TownError(message)
-        levels[entry.key] = amount
+        levels[building] = amount
     return original, levels
 
 
@@ -266,7 +287,7 @@ def plan_towns(
             message = f"Unknown native urban setup {rank}/{name}"
             raise TownError(message)
         limit = capacity.guaranteed(rank, development[location], population[location])
-        original, levels = _levels(templates[name], caps, value_root, limit)
+        original, levels = _levels(_flatten(name, templates), caps, value_root, limit)
         if levels != original:
             digest = hashlib.sha256(repr(sorted(levels.items())).encode()).hexdigest()[:12]
             key = f"rnw_{name}_{digest}"

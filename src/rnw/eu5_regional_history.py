@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
     from rnw.eu5_biomes import CellBiomes
+    from rnw.eu5_held_society import HeldSociety
     from rnw.eu5_history import HistoryBootstrap
     from rnw.eu5_natives import RegionalPopulation, RegionalSocieties, VanillaNatives
     from rnw.eu5_newworld import Plan
@@ -222,8 +223,13 @@ def project_regional_start(  # noqa: PLR0913 - historical roots, map, naming and
     settings: NativeSettings,
     holy_sites: Mapping[str, str],
     loc_keys: KeySpace,
+    retained: HeldSociety | None = None,
 ) -> FinalStartPlan:
-    """Project a completed local history through the normal game-start adapter."""
+    """Project a completed local history through the normal game-start adapter.
+
+    ``retained`` is the society a restored country brings to the holdings reserved for it.
+    Without it those holdings keep the bootstrap's pops.
+    """
     history = simulation.history
     region = simulation.region
     cells = boot.cells
@@ -260,7 +266,17 @@ def project_regional_start(  # noqa: PLR0913 - historical roots, map, naming and
         )
     if not region.retained:
         return start
-    pops = {key: tuple(boot.pops.get(key, ())) for key in region.retained}
+    if retained is None:
+        pops = {key: tuple(boot.pops.get(key, ())) for key in region.retained}
+        ranks, markets, complexity = start.ranks, start.markets, start.complexity
+    else:
+        if set(retained.pops) != set(region.retained):
+            message = "The retained society does not cover the retained holdings"
+            raise HistoryError(message)
+        pops = dict(retained.pops)
+        ranks = start.ranks | retained.ranks
+        markets = start.markets + retained.markets
+        complexity = start.complexity | retained.complexity
     population = {key: sum(pop.amount for pop in rows) for key, rows in pops.items()}
     if min(population.values()) <= 0:
         message = "A retained holding has no regional population"
@@ -269,6 +285,9 @@ def project_regional_start(  # noqa: PLR0913 - historical roots, map, naming and
         start,
         pops=start.pops | pops,
         population=start.population | population,
+        ranks=ranks,
+        markets=markets,
+        complexity=complexity,
         stats=start.stats
         | {
             "land_locations": len(start.population) + len(pops),

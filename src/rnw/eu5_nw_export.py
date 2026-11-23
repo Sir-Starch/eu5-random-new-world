@@ -67,9 +67,11 @@ from rnw.continent_world import (
 from rnw.eu5_africa_start import (
     CAIRO,
     MAMLUKS,
+    MOROCCO,
     algeciras,
     apply_morocco_start,
     damascus_sultanate,
+    morocco_donors,
     prepare_mamluk_start,
     reserve_mamluks,
     reserve_morocco,
@@ -169,6 +171,21 @@ from rnw.eu5_empires import (
     written_ranks,
 )
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
+from rnw.eu5_held_society import (
+    EMPTY as NO_HELD_SOCIETY,
+)
+from rnw.eu5_held_society import (
+    HeldSociety,
+    carry_society,
+    pair_holdings,
+    read_donors,
+)
+from rnw.eu5_held_society import (
+    building_lines as held_building_lines,
+)
+from rnw.eu5_held_society import (
+    institution_lines as held_institution_lines,
+)
 from rnw.eu5_history import installed_rules
 from rnw.eu5_history_build import build_history_start as build_start_plan
 from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
@@ -439,6 +456,7 @@ if TYPE_CHECKING:
     from rnw.continent_world import ComposedWorld
     from rnw.eu5_africa_start import MamlukStart, MoroccoStart
     from rnw.eu5_islands import Moved
+    from rnw.eu5_natives import RegionalSocieties
     from rnw.eu5_remap import GeographicRemap
     from rnw.eu5_rewrite import SetupResult
     from rnw.eu5_start import Country, FinalStartPlan, PopCohort
@@ -547,6 +565,7 @@ SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
     PERSONALITIES: (("countries", "countries"),),
     BUILDINGS_FILE: (("locations",), ("building_manager",)),
     "03_markets.txt": (("market_manager",),),
+    "08_institutions.txt": (("locations",),),
     "09_roads.txt": (("road_network",),),
     "12_diplomacy.txt": (("diplomacy_manager",), ("diplomacy_manager",)),
     "15_international_organizations.txt": (("international_organization_manager",),),
@@ -2072,6 +2091,7 @@ class ComposedStart:
     real_america: VanillaWorld | None = None
     mamluks: MamlukStart | None = None
     damascus: Country | None = None
+    held: HeldSociety = NO_HELD_SOCIETY
 
     @property
     def african_holdings(self) -> tuple[str, ...]:
@@ -2322,10 +2342,15 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     )
     ai_decisions = _ai_assignment_records(game_dir, natives, society_world, society_plan)
     ai_records = ai_assignments(ai_decisions)
+    held = NO_HELD_SOCIETY if composed is None else composed.held
     additions: dict[str, tuple[str, ...]] = {
         COUNTRIES_FILE: (country_records(natives.countries),),
         PERSONALITIES: (ai_personality_lines(ai_records),),
-        BUILDINGS_FILE: (city_lines(towns.ranks), building_lines(development.villages)),
+        BUILDINGS_FILE: (
+            city_lines(towns.ranks),
+            building_lines(development.villages) + held_building_lines(held),
+        ),
+        "08_institutions.txt": (held_institution_lines(held),),
         "03_markets.txt": (market_lines(natives.markets),),
         "09_roads.txt": (road_lines(natives.roads),),
         "12_diplomacy.txt": (
@@ -5018,13 +5043,15 @@ def reserve_african_countries(  # noqa: PLR0913, PLR0917 - installed and generat
     """Reserve the starting territory of both countries before regional history."""
     if settings is None or settings.morocco is None or settings.mamluks is None:
         return None, None, remap
-    morocco = reserve_morocco(plan, world, original, settings.morocco)
-    country_setup = _setup_paths(game_dir, regional=True)[COUNTRIES_FILE]
+    country_text = _setup_paths(game_dir, regional=True)[COUNTRIES_FILE].read_text(
+        encoding="utf-8-sig"
+    )
+    morocco = reserve_morocco(plan, world, original, settings.morocco, morocco_donors(country_text))
     mamluks = reserve_mamluks(
         plan,
         world,
         original,
-        country_setup.read_text(encoding="utf-8-sig"),
+        country_text,
         {key for key, place in hierarchy.items() if place.continent == "africa"},
         reserved=morocco.africa,
         policy=settings.mamluks,
@@ -5033,6 +5060,48 @@ def reserve_african_countries(  # noqa: PLR0913, PLR0917 - installed and generat
     if mamluks.policy is MamlukPolicy.RESTORE:
         capitals[CAIRO] = mamluks.capital
     return morocco, mamluks, remap.with_locations(capitals)
+
+
+def _held_society(
+    game_dir: Path,
+    plan: Plan,
+    boot: RegionalSocieties,
+    morocco: MoroccoStart | None,
+    mamluks: MamlukStart | None,
+) -> HeldSociety | None:
+    """The 1337 society of the African holdings Morocco and the Mamluks keep, on generated land."""
+    sides: list[tuple[str, str, tuple[str, ...], str, tuple[str, ...]]] = []
+    if morocco is not None and morocco.africa:
+        sides.append((MOROCCO, "fez", morocco.africa, morocco.capital, morocco.donors))
+    if mamluks is not None and mamluks.africa:
+        sides.append((MAMLUKS, CAIRO, mamluks.africa, mamluks.capital, mamluks.donors))
+    if not sides:
+        return None
+    paths = _setup_paths(game_dir, regional=True)
+    texts = {
+        name: paths[name].read_text(encoding="utf-8-sig")
+        for name in (
+            "03_markets.txt",
+            "06_pops.txt",
+            "07_cities_and_buildings.txt",
+            "08_institutions.txt",
+        )
+    }
+    potential = {
+        plan.cells[cell].key: int(boot.graph.potential[node])
+        for node, cell in enumerate(boot.cells.cells)
+    }
+    shore = {
+        plan.cells[cell].key
+        for cell, seas in zip(boot.cells.cells, boot.cells.seas, strict=True)
+        if seas
+    }
+    society = NO_HELD_SOCIETY
+    for tag, donor_capital, holdings, capital, keys in sides:
+        donors = read_donors(texts, keys, tag)
+        pairs = pair_holdings(donors, donor_capital, holdings, capital, potential, shore)
+        society = society.merge(carry_society(donors, pairs, tag))
+    return society
 
 
 def _build_composed_start(  # noqa: PLR0913 - regional settings and the completed physical world.
@@ -5074,6 +5143,7 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
     routes = shared_routes(world, plan, biomes, max_sea_steps=rules.max_sea_steps)
     starts: list[FinalStartPlan] = []
     calibrations: list[VanillaNatives] = []
+    held_society = NO_HELD_SOCIETY
 
     def add(start: FinalStartPlan, calibration: VanillaNatives) -> None:
         nonlocal base
@@ -5142,6 +5212,11 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
             reserved=reserved,
             sacred=sacred.values(),
         )
+        society = (
+            _held_society(game_dir, plan, boot, morocco, mamluks) if name == "africa" else None
+        )
+        if society is not None:
+            held_society = held_society.merge(society)
         add(
             project_regional_start(
                 world,
@@ -5152,6 +5227,7 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
                 settings=knobs,
                 holy_sites=sacred,
                 loc_keys=prepared.loc_keys,
+                retained=society,
             ),
             calibration,
         )
@@ -5166,7 +5242,15 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
         colors = base.colors if emirate is None else base.colors | {emirate.color}
         damascus = damascus_sultanate(mamluks, hierarchy, seed, tags, prepared.loc_keys, colors)
     return ComposedStart(
-        tuple(starts), remap, morocco, emirate, tuple(calibrations), real_america, mamluks, damascus
+        tuple(starts),
+        remap,
+        morocco,
+        emirate,
+        tuple(calibrations),
+        real_america,
+        mamluks,
+        damascus,
+        held_society,
     )
 
 

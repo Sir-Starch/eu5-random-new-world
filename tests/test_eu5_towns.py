@@ -102,3 +102,29 @@ def test_unrecognised_guild_alias_is_refused_instead_of_preserving_excess_levels
     _ = values.write_text(CAPACITY.replace("add={value=modifier:cloth_bonus}", "multiply=0.5"))
     with pytest.raises(TownError, match="alias changed"):
         _ = plan_towns(game, {"a": ("town", "highland_town")}, {"a": 0}, {"a": 0})
+
+
+def test_a_setup_that_copies_another_keeps_its_buildings_and_overrides_its_levels(
+    tmp_path: Path,
+) -> None:
+    game = _game(tmp_path)
+    highland = "highland_town={temple=1 granary=2 cloth=2 market=1}"
+    great = "great_town={copy_from=highland_town granary=4 temple=3}"
+    setups = f"{highland}\n{great}"
+    _ = (game / "game/in_game/common/town_setups/default.txt").write_text(setups)
+    planned = plan_towns(
+        game, {"capital": ("megalopolis", "great_town")}, {"capital": 55000}, {"capital": 100000}
+    )
+    # The copied cloth and market stay, the granary is its own level, the temple is capped.
+    assert planned.ranks["capital"][1].startswith("rnw_great_town_")
+    (levels,) = planned.definitions.values()
+    assert levels == {"temple": 1, "granary": 4, "cloth": 2, "market": 1}
+
+
+def test_a_setup_cannot_copy_itself_or_a_setup_that_does_not_exist(tmp_path: Path) -> None:
+    game = _game(tmp_path)
+    for text in ("loop={copy_from=loop temple=1}", "lost={copy_from=nowhere temple=1}"):
+        _ = (game / "game/in_game/common/town_setups/default.txt").write_text(text)
+        name = text.split("=")[0].removeprefix("{")
+        with pytest.raises(TownError, match="copies"):
+            _ = plan_towns(game, {"x": ("town", name)}, {"x": 8000}, {"x": 2000})

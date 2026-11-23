@@ -55,6 +55,7 @@ class MoroccoStart:
     africa: tuple[str, ...] = ()
     capital: str = ""
     capital_province: str = ""
+    donors: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +67,7 @@ class MamlukStart:
     integrated: tuple[str, ...]
     capital: str
     policy: MamlukPolicy
+    donors: tuple[str, ...] = ()
 
     @property
     def africa(self) -> tuple[str, ...]:
@@ -124,17 +126,31 @@ def plan_morocco(
     return MoroccoStart(policy, owned, capital)
 
 
+def morocco_donors(text: str) -> tuple[str, ...]:
+    """The African locations Morocco owns in the installed 1337 start."""
+    morocco = _countries(text).block(MOROCCO)
+    if morocco is None:
+        message = "The installed 1337 start is missing Morocco"
+        raise AfricanStartError(message)
+    donors = tuple(sorted(owned_locations(morocco) - set(IBERIAN_HOLDINGS)))
+    if len(donors) != AFRICAN_HOLDINGS:
+        message = f"Morocco should hold {AFRICAN_HOLDINGS} African locations, not {len(donors)}"
+        raise AfricanStartError(message)
+    return donors
+
+
 def reserve_morocco(
     plan: Plan,
     world: NewWorld,
     original: Mapping[str, Point],
     policy: MoroccoPolicy,
+    donors: tuple[str, ...] = (),
 ) -> MoroccoStart:
     """Reserve 1337 ownership against the finished passable African locations."""
     start = plan_morocco(_african_points(plan, world), original, int(world.labels.shape[1]), policy)
     if start.capital:
         province = next(cell.province for cell in plan.cells if cell.key == start.capital)
-        return replace(start, capital_province=province)
+        return replace(start, capital_province=province, donors=donors)
     return start
 
 
@@ -182,7 +198,12 @@ def plan_mamluks(  # noqa: PLR0913 - original ownership and both maps.
     holdings = _nearest_holdings(available, [original[key] for key in asia], width, len(replaced))
     ranked = sorted(holdings, key=lambda key: (_distance(africa[key], original[CAIRO], width), key))
     return MamlukStart(
-        frozenset(asia), tuple(ranked[:core_count]), tuple(ranked[core_count:]), ranked[0], policy
+        frozenset(asia),
+        tuple(ranked[:core_count]),
+        tuple(ranked[core_count:]),
+        ranked[0],
+        policy,
+        tuple(sorted(replaced)),
     )
 
 

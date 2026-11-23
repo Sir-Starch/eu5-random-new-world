@@ -24,6 +24,7 @@ from rnw.eu5_development import (
     development_lines,
     fit_full,
     fit_fulls,
+    generated_sites,
     harbour_values,
     hundredths_text,
     market_villages,
@@ -291,6 +292,22 @@ def test_build_development_plans_terms_harbours_and_villages() -> None:
     assert development.stats["coverage_permille"] == 1000
     assert all(full in FULL_CANDIDATES for full in fulls.values())
     assert development.stats["society_max"] == 12
+
+
+def test_a_restored_megalopolis_develops_with_the_cities_and_keeps_its_rank() -> None:
+    """Cairo's rank is not a settlement class of its own; it counts with the cities."""
+    cells = [
+        ("g1", "forest", "tropical", "flatland", 1),
+        ("g2", "forest", "tropical", "flatland", 0),
+        ("g3", "forest", "tropical", "flatland", 0),
+    ]
+    natives = replace(_natives(), ranks={"g2": ("megalopolis", "cairo_city")})
+    development = build_development(
+        calibration=_calibration(), natives=natives, cells=cells, scores={}
+    )
+    (site,) = (s for s in generated_sites(natives, cells, {}) if s.rank)
+    assert (site.kind, site.rank) == ("city", "megalopolis")
+    assert development.stats["society_full_permille"]
 
 
 def test_harbour_values_reproduce_the_vanilla_multiset() -> None:

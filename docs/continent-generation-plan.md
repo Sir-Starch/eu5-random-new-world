@@ -202,6 +202,10 @@ Algeciras, Gibraltar and Marbella.
 
 All four options use the existing population cohorts in Iberia. The choice
 belongs to Africa's settings and is available in both windows and the CLI.
+Under **Keep Morocco** each of the 86 new African holdings takes over one of the
+86 locations Morocco owned in Africa, and carries what that location had in the
+1337 start: its pops, its town, its institutions and the buildings Morocco owned
+there (see [what a restored country brings](#what-a-restored-country-brings)).
 The offline setup trial exercised all four choices on the same map.
 
 ### The Mamluks' Asian holdings
@@ -229,6 +233,36 @@ holding under a single owner and preserves the Asian population records.
 The restoration gives the Mamluks 68 populated passable African locations
 outside Morocco's reservation. The independent sultanate has a fresh tag and
 its name and adjective in all 11 official languages.
+
+### What a restored country brings
+
+Reserving land is not enough. The generated holdings reserved for Morocco and the
+Mamluks lie outside the regional history and received the bootstrap's pops, which
+are tribesmen on land without a hearth: the installed world of the owner's report
+had no peasants, slaves, burghers, towns, markets or institutions in Morocco's 86
+holdings (2,927 tribesmen) or the Mamluks' 68 (634 tribesmen against about 4,800
+pops in vanilla's Egypt). Both countries started with a tiny, nearly equal income
+and a few dozen levies, and fell at once. [V-LOCAL]
+
+Each reserved holding therefore takes over one **donor**, a location its country
+owned in Africa in the installed 1337 start (`rnw.eu5_held_society`). The donor's
+pops (types, sizes, cultures, religions), its rank and town setup, its market, its
+institutions and the buildings the country itself owned there (the Mamluk
+barracks, the royal court; unique monuments stay with their places, and other
+countries' trade offices are theirs) are written under the holding's own key. The
+capital takes the capital's (Cairo or Fez), a donor whose town is coastal goes to a
+holding with a sea if one is left, and the others pair by size to the best ground
+of the generated land (`societies` potential). Complexity, and so the development
+term, follows the donor's settled share. Town setups that copy another
+(`cairo_city`, `fez_city`) are resolved with their base, and a megalopolis develops
+with the cities. The other cells of the region keep the generated history.
+
+[V-EXEC] The owner's combined world exported again has, for Morocco, 86 holdings
+with 1,812.2 thousand pops, 9 towns, one market and 5 buildings, and for the
+Mamluks 68 holdings with 4,807.1 thousand pops, 6 towns (Cairo a megalopolis), one
+market and 7 buildings: the donors' totals exactly, where it had 2,927 and 634
+thousand pops of tribesmen only. The land, the other countries and America-only
+worlds are unchanged; the 884-file epoch-64 reference reproduces byte for byte.
 
 ## One generation pipeline
 

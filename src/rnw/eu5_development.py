@@ -37,6 +37,7 @@ PERMILLE: Final[int] = 1000
 HUNDREDTHS: Final[int] = 100
 VILLAGE: Final[str] = "market_village"
 CITY: Final[str] = "city"
+MEGALOPOLIS: Final[str] = "megalopolis"
 TOWN: Final[str] = "town"
 CAPITAL: Final[str] = "capital"
 MEMBER: Final[str] = "member"
@@ -644,5 +645,6 @@ def _generated_kinds(natives: FinalStartPlan) -> dict[str, str]:
         else:
             kinds.update(dict.fromkeys(country.members, TRIBE))
     for key, (rank, _) in natives.ranks.items():
-        kinds[key] = rank
+        # A restored country's megalopolis (Cairo) develops with the cities.
+        kinds[key] = CITY if rank == MEGALOPOLIS else rank
     return kinds
