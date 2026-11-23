@@ -2219,3 +2219,17 @@ world folder, save, playset or setting changed. This did not publish or update t
 | World | Folder | Manifest SHA-256 |
 |---|---|---|
 | America, Africa and Oceania, the Mediterranean bridge without a closed bay | `rnw_exp_world_jyz3oph7te` | `a363296962c709e0012aca4b894baef12f8a54a876cc6978289d978462b84245` |
+
+2026-11-23, **Morocco and the Mamluks keep the society of their African holdings** (source `7a152b1`, pending epoch 64 of 1.3.0, C554; the owner's report of Morocco and the Mamluks starting with a tiny, equal income and almost no levies, and collapsing at once). [V-EXEC] One world installed as a new folder, made by `rnw world` (EU5 1.4.9 / build 26655995, EU5 not running) from the code of the owner's `numhi4jlzg` (America, Africa and Oceania, Morocco and the Mamluks kept) with the resources rerolled, so that world stays as it was. The land, seas and peoples are the same; the written setup differs where the two countries' African holdings lie. Morocco's 86 holdings carry the pops, 9 towns, market and 5 buildings of the 86 locations it owned in vanilla (1,812.2 thousand pops, the donors' totals exactly, where `numhi4jlzg` has 2,927 thousand tribesmen and no town, market or institution); the Mamluks' 68 carry those of Egypt's (4,807.1 thousand pops, 6 towns with Cairo a megalopolis, one market, 7 buildings, where it has 634 thousand tribesmen).
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| America, Africa and Oceania, Morocco and the Mamluks with their African society | `rnw_exp_world_2prnfya2fq` | `16955efea5b222f4fa126f676e8d259bc009e7f4efffbafc96a55f71b69a2623` |
+
+The record is in both libraries, native and Proton, and loads and recovers there. The locked
+checks passed with 3,837 Python tests (22 skipped); the 884-file epoch-64 America-only
+reference reproduced byte for byte. The updated local `rnw_exp_hub` passed both Wine
+offscreen self-tests and installed-file verification; its previous copy is in
+`.rnw-hub-backups/1.3.0-1795443384467044698`. The Windows wheel SHA-256 is
+`13b19ed7db7496d33c30975428e8f874172ca7f35c2914051582a0ea9105d465`.
+No existing world folder, save, playset or setting changed. This did not publish or update the Workshop item.
