@@ -74,6 +74,7 @@ class DomainPlan:
     seed: int
     shapes: tuple[tuple[str, int, bool, bool, int], ...]
     join_asia: bool
+    iberia: str = "off"
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,8 +112,14 @@ def area_inputs(
         for one in settings.continents.regions
     )
     asia = any(one.require_asia_connection for one in settings.continents.regions)
+    iberia = next(
+        (one.iberia_connection for one in settings.continents.regions if one.key == "africa"), "off"
+    )
     return AreaInputs(
-        game_dir, shape.ocean_band_px, expanded, DomainPlan(continent, seed, tuple(shapes), asia)
+        game_dir,
+        shape.ocean_band_px,
+        expanded,
+        DomainPlan(continent, seed, tuple(shapes), asia, iberia),
     )
 
 
@@ -279,7 +286,9 @@ def planned_domains(game_dir: Path, game_map: Eu5Map, plan: DomainPlan) -> tuple
         for key, band, expanded, landform, template in plan.shapes
     }
     tolls, closed = retained_facts(game_dir)
-    composition = CompositionInputs(geography, plan.join_asia, tolls, closed, sea_circuit=False)
+    composition = CompositionInputs(
+        geography, plan.join_asia, tolls, closed, sea_circuit=False, iberia_connection=plan.iberia
+    )
     return composition.plan(game_map, plan.seed)
 
 

@@ -254,6 +254,14 @@ NATIVES: Final[NativeSettings] = NativeSettings(
 REGIONAL_STATE_SHARE: Final[dict[str, int]] = {"africa": 443, "oceania": 24}
 
 
+# Africa's land connection to Iberia, in place of the strait (Gibraltar): off keeps the strait, a
+# seed of "allowed" may join them by land, "required" always does (as the Asian link is required).
+IBERIA_OFF: Final[str] = "off"
+IBERIA_ALLOWED: Final[str] = "allowed"
+IBERIA_REQUIRED: Final[str] = "required"
+IBERIA_CONNECTIONS: Final[tuple[str, ...]] = (IBERIA_OFF, IBERIA_ALLOWED, IBERIA_REQUIRED)
+
+
 @dataclass(frozen=True, slots=True)
 class RegionalSettings:
     """One enabled continent's independent generation controls."""
@@ -266,6 +274,7 @@ class RegionalSettings:
     morocco: MoroccoPolicy | None = None
     require_asia_connection: bool = False
     mamluks: MamlukPolicy | None = None
+    iberia_connection: str = IBERIA_OFF
     # The land drawn in an image instead of by the generator, as America's ``Settings.mask``.
     mask: MaskSettings = MASK
 
@@ -285,6 +294,8 @@ class RegionalSettings:
             data["mamluks"] = self.mamluks.value
         if self.require_asia_connection:
             data["require_asia_connection"] = True
+        if self.iberia_connection != IBERIA_OFF:
+            data["iberia_connection"] = self.iberia_connection
         return data
 
 
@@ -686,7 +697,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     fallback, band = REGIONAL_PRESETS[key]
     allowed = {"preset", "new_world", "natives", "resources", "mask"}
     if key == "africa":
-        allowed.update(("morocco", "mamluks", "require_asia_connection"))
+        allowed.update(("morocco", "mamluks", "require_asia_connection", "iberia_connection"))
     if unknown := fields_.keys() - allowed:
         message = f"Unknown {key} settings: {', '.join(sorted(unknown))}"
         raise SettingsError(message)
@@ -718,6 +729,10 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     if type(connection) is not bool:
         message = "Africa's land connection requirement must be on or off"
         raise SettingsError(message)
+    iberia = fields_.get("iberia_connection", IBERIA_OFF)
+    if not isinstance(iberia, str) or iberia not in IBERIA_CONNECTIONS:
+        message = f"Iberia's land connection must be one of {', '.join(IBERIA_CONNECTIONS)}"
+        raise SettingsError(message)
     return RegionalSettings(
         key,
         preset,
@@ -731,6 +746,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
         morocco,
         connection,
         mamluks,
+        iberia,
         _merge(MASK, f"{key} drawing", fields_.get("mask", {})),
     )
 

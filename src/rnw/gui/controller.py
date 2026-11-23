@@ -78,6 +78,7 @@ from rnw.progress import Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
 from rnw.settings import (
     AMERICA,
+    IBERIA_CONNECTIONS,
     PRESETS,
     REGIONAL_PRESETS,
     WORLD_TYPES,
@@ -536,6 +537,11 @@ class Controller:
 
     def set_asia_connection(self, *, required: bool) -> None:
         self._edit_region("africa", {"require_asia_connection": required})
+
+    def set_iberia_connection(self, mode: str) -> None:
+        """Africa's land connection to Iberia: off (the strait), allowed or required."""
+        if mode in IBERIA_CONNECTIONS:
+            self._edit_region("africa", {"iberia_connection": None if mode == "off" else mode})
 
     def set_region_value(self, region: str, key: str, number: int | None) -> None:
         control = controls.REGION_BY_KEY.get(key)

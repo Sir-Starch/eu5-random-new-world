@@ -1242,6 +1242,7 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
     shore: NDArray[np.bool_],
     *,
     interface: NDArray[np.bool_] | None,
+    iberia: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None,
     outside_land: NDArray[np.bool_] | None,
     settings: NewWorldSettings,
@@ -1261,6 +1262,22 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
         )
         if approach is None:
             message = "The African canvas has no continuous approach to a passable Asian location"
+            raise ValueError(message)
+        links.append(approach)
+    if iberia is not None:
+        # The land joins Iberia where the strait would be, and may close the Mediterranean.
+        approach = _land_approach(
+            land,
+            domain,
+            shore,
+            iberia,
+            outside_land=outside_land,
+            settings=settings,
+            seed=derive_seed(seed, "iberia_approach"),
+            whole=domain,
+        )
+        if approach is None:
+            message = "The African canvas has no continuous approach to a passable Iberian location"
             raise ValueError(message)
         links.append(approach)
     landing = None
@@ -1801,6 +1818,7 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     lakes_drawn: NDArray[np.bool_] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
     reserve_north: int = 0,
@@ -1843,6 +1861,7 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
         domain,
         shore,
         interface=land_interface,
+        iberia=iberia_interface,
         strait=strait,
         outside_land=outside_land,
         settings=settings,
@@ -1877,6 +1896,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
@@ -1937,6 +1957,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
         lakes_drawn=lakes_drawn,
         outside_land=outside_land,
         land_interface=land_interface,
+        iberia_interface=iberia_interface,
         strait=strait,
         island_sites=island_sites,
         reserve_north=reserve_north,
@@ -2187,7 +2208,8 @@ def derive_world(
 
 def turned_to_sea(world: NewWorld, cells: Collection[int]) -> NewWorld:
     """``world`` with ``cells`` turned into sea: their relief is level, and their sizes, centres
-    and interior points are those of water. Nothing else of the world changes."""
+    and interior points are those of water. The cells are numbered again, the land and the
+    wastelands first, as the generator numbers a world; nothing else of the world changes."""
     kinds = list(world.classes)
     for cell in cells:
         kinds[cell] = CellClass.SEA
@@ -2205,14 +2227,47 @@ def turned_to_sea(world: NewWorld, cells: Collection[int]) -> NewWorld:
     if world.planned is not None:
         planned = world.planned.copy()
         planned[list(cells)] = 0
+    return _dry_first(
+        replace(
+            derive_world(world.labels, tuple(kinds), elevation, wrap_x=world.wrap_x),
+            moves=world.moves,
+            barrier=world.barrier,
+            land_link=world.land_link,
+            strait_landing=world.strait_landing,
+            drainage=drainage,
+            planned=planned,
+        )
+    )
+
+
+def _dry_first(world: NewWorld) -> NewWorld:
+    """``world`` with the land and wasteland cells numbered before the water cells, each group in
+    the order it had (what the plans of the wastelands and the peoples read the world by)."""
+    dry = [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes]
+    order = [*(cell for cell, flag in enumerate(dry) if flag)]
+    order += [cell for cell, flag in enumerate(dry) if not flag]
+    if order == sorted(order):
+        return world
+    number = np.empty(len(order) + 1, dtype=np.int32)
+    number[order] = np.arange(len(order), dtype=np.int32)
+    number[-1] = -1
+    labels = np.empty_like(world.labels)
+    for start in range(0, labels.shape[0], 256):
+        checkpoint()
+        labels[start : start + 256] = number[world.labels[start : start + 256]]
     return replace(
-        derive_world(world.labels, tuple(kinds), elevation, wrap_x=world.wrap_x),
+        derive_world(
+            labels,
+            tuple(world.classes[cell] for cell in order),
+            world.elevation,
+            wrap_x=world.wrap_x,
+        ),
         moves=world.moves,
-        barrier=world.barrier,
-        land_link=world.land_link,
+        barrier=np.sort(number[world.barrier]).astype(np.int64),
+        land_link=np.sort(number[world.land_link]).astype(np.int64),
         strait_landing=world.strait_landing,
-        drainage=drainage,
-        planned=planned,
+        drainage=world.drainage,
+        planned=None if world.planned is None else world.planned[order],
     )
 
 

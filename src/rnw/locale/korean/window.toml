@@ -3322,6 +3322,21 @@ text = '''대륙을 하나 이상 선택하세요.'''
 source = "a936e75dbefa2ad8"
 text = "아시아와의 육상 연결 필수"
 
+["continent.africa.iberia_connection"]
+source = "5ee2a669bea0356b"
+text = '''이베리아와의 육상 연결 허용(해협 없음)'''
+
+["continent.africa.iberia_connection.about"]
+source = "bc27270c6e759856"
+text = '''지중해가 내해가 될 수 있습니다'''
+
+["continent.africa.iberia_connection.info"]
+source = "0019c0443d53d8cb"
+text = '''일부 세계에서는 지브롤터 해협이 있던 자리에서 아프리카와 이베리아가 육지로 이어집니다. 그러면 지중해는 대서양으로 나가는 길이 없어지고, 그 항구들은 바닷길로 신대륙에 닿을 수 없습니다. 이 옵션이 꺼져 있으면 이베리아는 항상 해협을 유지합니다.'''
+
+["continent.africa.iberia_connection.required"]
+source = "ec15b629f5350160"
+text = '''이베리아와의 육상 연결 필수'''
 ["continent.sea_circumnavigation"]
 source = "53af14619d0e417c"
 text = "세계 일주 항로 유지"

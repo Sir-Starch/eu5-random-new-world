@@ -133,6 +133,7 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
@@ -183,6 +184,7 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
     for name, neighbor in (
         (b"outside_land", outside_land),
         (b"land_interface", land_interface),
+        (b"iberia_interface", iberia_interface),
         (b"strait", strait),
     ):
         if neighbor is None:
@@ -531,6 +533,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
@@ -563,6 +566,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             map_rows=map_rows,
             outside_land=outside_land,
             land_interface=land_interface,
+            iberia_interface=iberia_interface,
             strait=strait,
             contact_terrain=contact_terrain,
             island_sites=island_sites,
@@ -601,6 +605,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         map_rows=map_rows,
         outside_land=outside_land,
         land_interface=land_interface,
+        iberia_interface=iberia_interface,
         strait=strait,
         contact_terrain=contact_terrain,
         island_sites=island_sites,

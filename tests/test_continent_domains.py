@@ -743,3 +743,76 @@ def test_window_climate_and_cell_size_votes_use_global_latitude() -> None:
     legacy, base = block_features(land, heights, climate_grid(~land, heights, seasonal=True))
     assert np.array_equal(regional, legacy)
     assert np.all(local[:, 0] < base[:, 0])
+
+
+def _iberian_map() -> Eu5Map:
+    """The test map with a European peninsula, region ``iberia_region``, a strait west of Africa."""
+    base = cast("SimpleNamespace", cast("object", _map()))
+    labels = base.labels.copy()
+    labels[130:200, 590:604] = 6
+    labels[100:130, 560:604] = 7
+    return cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=(*base.keys, "iberia", "france"),
+                labels=labels,
+                continents=(*base.continents, "europe", "europe"),
+                classes=(*base.classes, CellClass.LAND, CellClass.LAND),
+                ambiguous=np.array([*base.ambiguous, False, False]),
+                regions=("",) * len(base.keys) + ("iberia_region", "france_region"),
+            ),
+        ),
+    )
+
+
+def _africa(game: Eu5Map, *, seed: int | None = 42, mode: str = "off") -> Domain:
+    selected = {"africa": CONTINENTS["africa"].geography()}
+    return plan_domains(game, selected, seed=seed, iberia_connection=mode)[0]
+
+
+def test_the_iberian_link_is_off_by_default_and_changes_nothing() -> None:
+    game = _iberian_map()
+    default, off = _africa(game), _africa(game, mode="off")
+    assert not default.join_iberia
+    assert default.iberia_interface is None
+    assert np.array_equal(default.mask, off.mask)
+    assert (default.contact_land is None) == (off.contact_land is None)
+    if default.contact_land is not None and off.contact_land is not None:
+        assert np.array_equal(default.contact_land, off.contact_land)
+
+
+def test_a_required_iberian_link_meets_only_iberian_land_and_leaves_no_strait() -> None:
+    game = _iberian_map()
+    domain = _africa(game, mode="required")
+    assert domain.join_iberia
+    assert domain.strait is None
+    assert domain.iberia_interface is not None
+    assert domain.iberia_interface.any()
+    interface = _in_world(domain, domain.iberia_interface, game.labels.shape)
+    touched = np.zeros(game.labels.shape, dtype=bool)
+    touched[1:] |= game.labels[:-1] == 6
+    touched[:-1] |= game.labels[1:] == 6
+    touched[:, 1:] |= game.labels[:, :-1] == 6
+    touched[:, :-1] |= game.labels[:, 1:] == 6
+    assert np.all(touched[interface])
+    # The other European location (the Seine side) is no contact of the link.
+    assert domain.contact_land is not None
+    contact = _in_world(domain, domain.contact_land, game.labels.shape)
+    assert contact[game.labels == 6].all()
+    assert not contact[game.labels == 7].any()
+
+
+def test_an_allowed_iberian_link_is_drawn_per_seed_and_rules_out_the_strait() -> None:
+    game = _iberian_map()
+    drawn = [_africa(game, seed=seed, mode="allowed") for seed in range(60)]
+    joined = [domain for domain in drawn if domain.join_iberia]
+    assert 0 < len(joined) < len(drawn)
+    assert all(domain.strait is None for domain in joined)
+    assert all(domain.iberia_interface is not None for domain in joined)
+    assert all(domain.iberia_interface is None for domain in drawn if not domain.join_iberia)
+    # A seed drawn without the link keeps what it had with the option off.
+    kept = next(domain for domain in drawn if not domain.join_iberia)
+    seed = drawn.index(kept)
+    assert np.array_equal(kept.mask, _africa(game, seed=seed, mode="off").mask)

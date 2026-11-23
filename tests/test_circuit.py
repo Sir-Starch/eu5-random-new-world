@@ -69,13 +69,13 @@ def test_the_opening_is_the_same_every_time() -> None:
 
 
 def _island_world() -> NewWorld:
-    """Sixteen by sixteen pixels: a sea cell (0) and a land cell (1) beside a wasteland cell (2)
-    that reaches the bottom edge, with a plan that drains the land into the sea."""
-    labels = np.zeros((16, 16), dtype=np.int32)
-    labels[:, 4:12] = 1
-    labels[8:, 12:] = 2
-    elevation = np.where(labels > 0, 100, 0).astype(np.int32)
-    world = derive_world(labels, (CellClass.SEA, CellClass.LAND, CellClass.WASTELAND), elevation)
+    """Sixteen by sixteen pixels: a land cell (0) beside a wasteland cell (1) that reaches the
+    bottom edge, and the sea (2), with a plan that drains the land into the sea."""
+    labels = np.full((16, 16), 2, dtype=np.int32)
+    labels[:, 4:12] = 0
+    labels[8:, 12:] = 1
+    elevation = np.where(labels < 2, 100, 0).astype(np.int32)
+    world = derive_world(labels, (CellClass.LAND, CellClass.WASTELAND, CellClass.SEA), elevation)
     # Coarse blocks are four pixels square: land drains west into the sea in column 0, and the
     # wasteland's blocks (rows 2 and 3 of column 3) drain through the land beside them.
     parent = np.full((4, 4), -1, dtype=np.int32)
@@ -87,10 +87,10 @@ def _island_world() -> NewWorld:
 
 def test_a_cell_turned_to_sea_is_level_water_and_its_rivers_end_in_it() -> None:
     world = _island_world()
-    turned = turned_to_sea(world, [2])
-    assert turned.classes[2] is CellClass.SEA
-    assert turned.classes[1] is CellClass.LAND
-    assert turned.mean_elevation.tolist() == [0, 100, 0]
+    turned = turned_to_sea(world, [1])
+    assert turned.classes[1] is CellClass.SEA
+    assert turned.classes[0] is CellClass.LAND
+    assert turned.mean_elevation.tolist() == [100, 0, 0]
     assert turned.drainage is not None
     assert world.drainage is not None
     before, after = world.drainage.parents[0], turned.drainage.parents[0]
@@ -98,3 +98,30 @@ def test_a_cell_turned_to_sea_is_level_water_and_its_rivers_end_in_it() -> None:
     assert after[2:, 3].tolist() == [-1, -1]
     assert np.array_equal(np.delete(after, [11, 15]), np.delete(before, [11, 15]))
     assert before[2:, 3].tolist() == [9, 13]
+
+
+def test_a_land_cell_turned_to_sea_leaves_the_land_numbered_before_the_water() -> None:
+    # Four cells in a row: land 0 and 1, a wasteland 2 and the sea 3.
+    labels = np.repeat(np.arange(4, dtype=np.int32), 2)[None, :].repeat(2, axis=0)
+    kinds = (CellClass.LAND, CellClass.LAND, CellClass.WASTELAND, CellClass.SEA)
+    world = derive_world(labels, kinds, np.where(labels < 3, 100, 0).astype(np.int32))
+    world = replace(
+        world,
+        barrier=np.array([1, 2], dtype=np.int64),
+        land_link=np.array([2], dtype=np.int64),
+        planned=np.array([10, 20, 30, 0], dtype=np.int64),
+    )
+    turned = turned_to_sea(world, [0])
+    assert turned.classes == (
+        CellClass.LAND,
+        CellClass.WASTELAND,
+        CellClass.SEA,
+        CellClass.SEA,
+    )
+    # The cells that stayed keep their order, the turned one leads the water.
+    assert turned.labels[0].astype(np.int64).tolist() == [2, 2, 0, 0, 1, 1, 3, 3]  # pyright: ignore[reportAny]
+    assert turned.barrier.tolist() == [0, 1]
+    assert turned.land_link.tolist() == [1]
+    assert turned.planned is not None
+    assert turned.planned.tolist() == [20, 30, 0, 0]
+    assert turned.mean_elevation.tolist() == [100, 100, 0, 0]

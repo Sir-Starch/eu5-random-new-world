@@ -5,6 +5,22 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Add the option **Allow a land connection to Iberia (no strait)** to Africa's block, with a
+  sub-option **Require the land connection to Iberia** that makes it certain, as the Asian link
+  is. Iberia always kept the Strait of Gibraltar; now a world can join Africa to Iberia by land
+  where the strait is, and the Mediterranean then has no way out to the Atlantic (an inland sea).
+  Allowed, a world draws the link with a chance of 35 in 100 and then has no strait; required,
+  every world has it. The bridge is built like the Asian one, a winding body of land that touches
+  passable Iberian land, and the export stops if it does not join one. Off (the default) changes
+  no world: a fixed seed writes the same files as before.
+
+- Fix **the sea route round the world cutting a location of land into sea** stopping the export
+  with "The generated land cells do not come before its water cells". A location turned into sea
+  kept its number among the land, which the plans of the wastelands and of the peoples read the
+  world by; the world is now numbered again, land first, as the generator numbers it. The step
+  turns locations into sea when a world leaves no route round it, which happens where the route
+  ran through the Mediterranean and the land connection to Iberia closes it.
+
 - Keep **every passable location small enough for the game to draw a city on**. Opening the
   details of a generated city of 28,154 pixels ("City of Sara") crashed EU5 on the spot, twice:
   the game lays a town or a city out on a grid whose scratch space lives on a worker thread's

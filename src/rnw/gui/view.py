@@ -414,6 +414,7 @@ def _regions(
             "morocco": settings.morocco.value if settings.morocco is not None else "",
             "mamluks": settings.mamluks.value if settings.mamluks is not None else "",
             "require_asia_connection": settings.require_asia_connection,
+            "iberia_connection": settings.iberia_connection,
             "controls": [
                 {
                     **_control_info(control, controls.region_value(control, defaults)),

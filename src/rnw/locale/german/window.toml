@@ -3322,6 +3322,21 @@ text = '''Wähle mindestens einen Kontinent.'''
 source = "a936e75dbefa2ad8"
 text = "Landverbindung nach Asien erzwingen"
 
+["continent.africa.iberia_connection"]
+source = "5ee2a669bea0356b"
+text = '''Landverbindung nach Iberien erlauben (ohne Meerenge)'''
+
+["continent.africa.iberia_connection.about"]
+source = "bc27270c6e759856"
+text = '''Das Mittelmeer kann zum Binnenmeer werden'''
+
+["continent.africa.iberia_connection.info"]
+source = "0019c0443d53d8cb"
+text = '''Manche Welten verbinden Afrika dort, wo die Straße von Gibraltar liegt, über Land mit Iberien. Das Mittelmeer hat dann keinen Ausgang zum Atlantik, und seine Häfen erreichen die Neue Welt nicht über See. Ohne diese Option behält Iberien stets die Meerenge.'''
+
+["continent.africa.iberia_connection.required"]
+source = "ec15b629f5350160"
+text = '''Landverbindung nach Iberien erzwingen'''
 ["continent.sea_circumnavigation"]
 source = "53af14619d0e417c"
 text = "Eine Seeroute um die Welt erhalten"

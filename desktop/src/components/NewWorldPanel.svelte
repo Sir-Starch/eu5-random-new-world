@@ -230,6 +230,18 @@
                 <Check checked={region.require_asia_connection} disabled={locked}
                   label={t("continent.africa.asia_connection")}
                   onchange={(required) => app.call("set_asia_connection", { required })} />
+                <Check checked={region.iberia_connection !== "off"} disabled={locked}
+                  label={t("continent.africa.iberia_connection")}
+                  hint={t("continent.africa.iberia_connection.about")}
+                  info={t("continent.africa.iberia_connection.info")}
+                  onchange={(allowed) => app.call("set_iberia_connection", { mode: allowed ? "allowed" : "off" })} />
+                {#if region.iberia_connection !== "off"}
+                  <div class="sub">
+                    <Check checked={region.iberia_connection === "required"} disabled={locked}
+                      label={t("continent.africa.iberia_connection.required")}
+                      onchange={(required) => app.call("set_iberia_connection", { mode: required ? "required" : "allowed" })} />
+                  </div>
+                {/if}
               {/if}
               <Check
                 checked={region.reveal}
@@ -443,6 +455,9 @@
 </div>
 
 <style>
+  .sub {
+    margin-left: 22px;
+  }
   .body {
     flex: 1;
     min-height: 0;

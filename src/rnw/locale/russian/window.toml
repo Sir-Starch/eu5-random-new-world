@@ -3322,6 +3322,21 @@ text = '''Выберите хотя бы один континент.'''
 source = "a936e75dbefa2ad8"
 text = "Обязательное сухопутное соединение с Азией"
 
+["continent.africa.iberia_connection"]
+source = "5ee2a669bea0356b"
+text = '''Разрешить сухопутное соединение с Иберией (без пролива)'''
+
+["continent.africa.iberia_connection.about"]
+source = "bc27270c6e759856"
+text = '''Средиземное море может стать внутренним'''
+
+["continent.africa.iberia_connection.info"]
+source = "0019c0443d53d8cb"
+text = '''Часть миров соединяет Африку с Иберией сушей на месте Гибралтарского пролива. Тогда у Средиземного моря нет выхода в Атлантику, и его порты не добираются до Нового Света морем. Без этой опции Иберия всегда сохраняет пролив.'''
+
+["continent.africa.iberia_connection.required"]
+source = "ec15b629f5350160"
+text = '''Обязательное сухопутное соединение с Иберией'''
 ["continent.sea_circumnavigation"]
 source = "53af14619d0e417c"
 text = "Сохранить морской путь для кругосветного плавания"

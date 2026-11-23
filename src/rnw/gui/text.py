@@ -40,6 +40,14 @@ STRINGS: Final[dict[str, str]] = {
     "continent.mamluks.restore": "Keep Mamluks",
     "continent.mamluks.damascus": "Independent Sultanate of Damascus",
     "continent.africa.asia_connection": "Require a land connection to Asia",
+    "continent.africa.iberia_connection": "Allow a land connection to Iberia (no strait)",
+    "continent.africa.iberia_connection.about": "The Mediterranean can become an inland sea",
+    "continent.africa.iberia_connection.info": (
+        "Some worlds join Africa to Iberia by land where the Strait of Gibraltar is. "
+        "The Mediterranean then has no way out to the Atlantic, and its ports cannot reach "
+        "the New World by sea. Without this option Iberia always keeps the strait."
+    ),
+    "continent.africa.iberia_connection.required": "Require the land connection to Iberia",
     "continent.sea_circumnavigation": "Keep a sea route around the world",
     "control.natives.turbulence_permille": "Historical turbulence",
     "control.natives.turbulence_permille.about": (

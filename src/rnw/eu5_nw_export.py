@@ -55,7 +55,7 @@ from rnw.content import OCEANS as OPEN_OCEANS
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
-from rnw.continent_domains import SHARED_OCEAN_DIVISOR, plan_domains
+from rnw.continent_domains import IBERIA_REGION, SHARED_OCEAN_DIVISOR, plan_domains
 from rnw.continent_world import (
     ComposedWorld,
     WorldRegion,
@@ -445,7 +445,7 @@ from rnw.watersheds import LAND_PX_CEILING, domain_climate, domain_rivers
 from rnw.wording import reference, render
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping, Sequence
+    from collections.abc import Callable, Collection, Mapping, Sequence
     from concurrent.futures import Future
     from pathlib import Path
 
@@ -1590,6 +1590,7 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
     *,
     generated_continents: frozenset[str] = AMERICAN_GENERATION,
     inland_sizes: Mapping[str, int] | None = None,
+    iberian_link: bool = False,
 ) -> tuple[dict[str, int], frozenset[int]]:
     """Connectivity, sea reachability and Old World contact preservation.
 
@@ -1697,15 +1698,56 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
         stats["selected_coastal_water_links_replaced"] = len(linked)
         stats["impassable_ocean_borders_changed"] = len(impassable_ocean_edges)
         if "africa" in generated_continents:
-            stats["africa_asia_land_contacts"] = sum(
-                low < vanilla_count <= high
-                and continents[low] == "asia"
-                and game_map.classes[low] is CellClass.LAND
-                and plan.cells[high - vanilla_count].continent == "africa"
-                and world.classes[high - vanilla_count] is CellClass.LAND
-                for low, high in after
-            )
+            stats.update(_african_contacts(game_map, plan, world, after, iberian_link=iberian_link))
     return stats, frozenset(low for low, high in after if low < vanilla_count <= high)
+
+
+def _check_land_links(regions: Sequence[WorldRegion], checks: Mapping[str, int]) -> None:
+    """Africa's land approaches, where the world has them, join a passable location they lead to."""
+    if (
+        any(region.domain.join_asia for region in regions)
+        and not checks["africa_asia_land_contacts"]
+    ):
+        message = "The African land approach does not join a passable Asian location"
+        raise NewWorldExportError(message)
+    if (
+        any(region.domain.join_iberia for region in regions)
+        and not checks["africa_iberia_land_contacts"]
+    ):
+        message = "The African land approach does not join a passable Iberian location"
+        raise NewWorldExportError(message)
+
+
+def _african_contacts(
+    game_map: Eu5Map,
+    plan: Plan,
+    world: NewWorld,
+    after: set[tuple[int, int]],
+    *,
+    iberian_link: bool,
+) -> dict[str, int]:
+    """The borders of the finished map between generated African land and the passable land of
+    Asia, and (where Africa joins Iberia by land) of Iberia."""
+    vanilla_count = len(game_map.keys)
+
+    def contacts(retained: Callable[[int], bool]) -> int:
+        return sum(
+            low < vanilla_count <= high
+            and retained(low)
+            and game_map.classes[low] is CellClass.LAND
+            and plan.cells[high - vanilla_count].continent == "africa"
+            and world.classes[high - vanilla_count] is CellClass.LAND
+            for low, high in after
+        )
+
+    found = {
+        "africa_asia_land_contacts": contacts(lambda cell: game_map.continents[cell] == "asia")
+    }
+    if iberian_link:
+        found["africa_iberia_land_contacts"] = contacts(
+            lambda cell: game_map.regions[cell] == IBERIA_REGION
+        )
+    return found
 
 
 def _removed_provinces(hierarchy: dict[str, Location], removed: set[str]) -> dict[str, list[str]]:
@@ -4559,6 +4601,7 @@ class CompositionInputs:
     retained_tolls: frozenset[str]
     closed_waters: tuple[str, ...]
     sea_circuit: bool
+    iberia_connection: str = "off"
 
     def plan(self, game_map: Eu5Map, seed: int) -> tuple[Domain, ...]:
         """The continents' domains, as the export plans them for ``seed``."""
@@ -4568,6 +4611,7 @@ class CompositionInputs:
                 self.geography,
                 seed=seed,
                 require_asia_connection=self.require_asia_connection,
+                iberia_connection=self.iberia_connection,
                 retained_tolls=self.retained_tolls,
                 closed_waters=self.closed_waters,
             )
@@ -4602,6 +4646,9 @@ def composition_inputs(game_dir: Path, settings: Settings) -> CompositionInputs:
         closed,
         sea_circuit=settings.continents.sea_circumnavigation
         and not (settings.continents.america and settings.new_world.landform),
+        iberia_connection=next(
+            (r.iberia_connection for r in settings.continents.regions if r.key == "africa"), "off"
+        ),
     )
 
 
@@ -4614,6 +4661,7 @@ class ContinentLand:
     settings: NewWorldSettings
     drawing: Fitted | None
     land_interface: NDArray[np.bool_] | None
+    iberia_interface: NDArray[np.bool_] | None = None
 
 
 def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes its land.
@@ -4643,6 +4691,7 @@ def regional_land_inputs(  # noqa: PLR0913 - the map, the domain and what shapes
         knobs,
         drawing,
         domain.land_interface if domain.join_asia else None,
+        domain.iberia_interface if domain.join_iberia else None,
     )
 
 
@@ -4696,6 +4745,7 @@ def regional_coasts(domain: Domain, inputs: ContinentLand) -> FinishedLand:
         lakes_drawn=None if drawing is None else drawing.lakes,
         outside_land=domain.contact_land,
         land_interface=inputs.land_interface,
+        iberia_interface=inputs.iberia_interface,
         strait=domain.strait,
         island_sites=domain.island_sites,
         reserve_north=domain.north_water_rows,
@@ -4785,8 +4835,16 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
         mask, drawing = domain.mask, land_inputs.drawing
         terrain = None
         world_box: tuple[slice, slice] | None = None
-        box = contact_box(domain.land_interface) if domain.land_interface is not None else None
-        if domain.join_asia and box is not None:
+        links = [
+            link
+            for link, joined in (
+                (domain.land_interface, domain.join_asia),
+                (domain.iberia_interface, domain.join_iberia),
+            )
+            if link is not None and joined
+        ]
+        box = contact_box(np.logical_or.reduce(links)) if links else None
+        if box is not None:
             rows, columns = box
             global_rows = slice(domain.first_row + rows.start, domain.first_row + rows.stop)
             first = (domain.first_column + columns.start) % domain.map_width
@@ -4811,6 +4869,7 @@ def _regional_worlds(  # noqa: PLR0913 - settings and the inputs shared by each 
             map_rows=(domain.first_row, game_map.labels.shape[0]),
             outside_land=domain.contact_land,
             land_interface=land_inputs.land_interface,
+            iberia_interface=land_inputs.iberia_interface,
             strait=domain.strait,
             contact_terrain=terrain,
             island_sites=domain.island_sites,
@@ -5049,14 +5108,10 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             settings.new_world,
             generated_continents=frozenset(geography),
             inland_sizes={name: inland_sea_min_area(knobs) for name, knobs in geography.items()},
+            iberian_link=any(region.domain.join_iberia for region in regions),
         ),
     )
-    if (
-        any(region.domain.join_asia for region in regions)
-        and not checks["africa_asia_land_contacts"]
-    ):
-        message = "The African land approach does not join a passable Asian location"
-        raise NewWorldExportError(message)
+    _check_land_links(regions, checks)
     if complete_ocean:
         checks.update(_shared_ocean_boundaries(shared, shapes))
     enclaves = _enclosed_sea_cells(

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from rnw.app import controls
 from rnw.gui.controller import Controller
 from rnw.layers import land_key
-from rnw.settings import MamlukPolicy, MoroccoPolicy, build_settings
+from rnw.settings import MamlukPolicy, MoroccoPolicy, SettingsError, build_settings
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -152,3 +154,38 @@ def test_a_world_is_called_by_its_continents(tmp_path: Path) -> None:
     )
     controller.set_value("new_world.keep_geography", 1)
     assert called(short=True).startswith(text("continent.america_real"))
+
+
+def test_the_iberian_land_connection_is_a_choice_of_the_african_land(tmp_path: Path) -> None:
+    controller = Controller(data=tmp_path)
+    controller.set_continent("africa", enabled=True)
+    assert controller.region_settings("africa").iberia_connection == "off"
+    original = land_key(controller.world_code().settings(), 17)
+    plain = controller.code
+    controller.set_iberia_connection("allowed")
+    assert controller.region_settings("africa").iberia_connection == "allowed"
+    assert land_key(controller.world_code().settings(), 17) != original
+    controller.set_iberia_connection("required")
+    restored = Controller(data=tmp_path)
+    assert restored.use_code(controller.code) is None
+    assert restored.region_settings("africa").iberia_connection == "required"
+    # Not a mode: nothing changes. Off leaves a code that never heard of the option.
+    controller.set_iberia_connection("always")
+    assert controller.region_settings("africa").iberia_connection == "required"
+    controller.set_iberia_connection("off")
+    assert controller.region_settings("africa").iberia_connection == "off"
+    assert controller.code == plain
+    assert land_key(controller.world_code().settings(), 17) == original
+
+
+def test_a_settings_document_rejects_an_unknown_iberian_mode() -> None:
+    document: dict[str, object] = {"continents": {"africa": {"iberia_connection": "sometimes"}}}
+    with pytest.raises(SettingsError, match="Iberia"):
+        _ = build_settings("continents", document)
+    kept = build_settings(
+        "continents", {"continents": {"africa": {"iberia_connection": "allowed"}}}
+    )
+    assert kept.continents.regions[0].iberia_connection == "allowed"
+    assert kept.continents.regions[0].document()["iberia_connection"] == "allowed"
+    plain = build_settings("continents", {"continents": {"africa": True}})
+    assert "iberia_connection" not in plain.continents.regions[0].document()

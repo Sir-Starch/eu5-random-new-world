@@ -3322,6 +3322,21 @@ text = '''请至少选择一个大洲。'''
 source = "a936e75dbefa2ad8"
 text = "必须与亚洲陆路相连"
 
+["continent.africa.iberia_connection"]
+source = "5ee2a669bea0356b"
+text = '''允许与伊比利亚陆路相连（无海峡）'''
+
+["continent.africa.iberia_connection.about"]
+source = "bc27270c6e759856"
+text = '''地中海可能变成内海'''
+
+["continent.africa.iberia_connection.info"]
+source = "0019c0443d53d8cb"
+text = '''在某些世界中，非洲会在直布罗陀海峡所在之处与伊比利亚陆路相连。此时地中海无法通往大西洋，其港口也无法经海路抵达新世界。关闭此选项时，伊比利亚始终保留海峡。'''
+
+["continent.africa.iberia_connection.required"]
+source = "ec15b629f5350160"
+text = '''必须与伊比利亚陆路相连'''
 ["continent.sea_circumnavigation"]
 source = "53af14619d0e417c"
 text = "保留环球航行路线"

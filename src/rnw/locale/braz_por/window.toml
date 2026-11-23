@@ -3322,6 +3322,21 @@ text = '''Selecione pelo menos um continente.'''
 source = "a936e75dbefa2ad8"
 text = "Exigir uma ligação terrestre com a Ásia"
 
+["continent.africa.iberia_connection"]
+source = "5ee2a669bea0356b"
+text = '''Permitir uma ligação terrestre com a Ibéria (sem estreito)'''
+
+["continent.africa.iberia_connection.about"]
+source = "bc27270c6e759856"
+text = '''O Mediterrâneo pode tornar-se um mar interior'''
+
+["continent.africa.iberia_connection.info"]
+source = "0019c0443d53d8cb"
+text = '''Alguns mundos ligam a África à Ibéria por terra, onde fica o Estreito de Gibraltar. O Mediterrâneo fica então sem saída para o Atlântico, e os seus portos não chegam ao Novo Mundo por mar. Sem esta opção, a Ibéria mantém sempre o estreito.'''
+
+["continent.africa.iberia_connection.required"]
+source = "ec15b629f5350160"
+text = '''Exigir a ligação terrestre com a Ibéria'''
 ["continent.sea_circumnavigation"]
 source = "53af14619d0e417c"
 text = "Manter uma rota marítima ao redor do mundo"

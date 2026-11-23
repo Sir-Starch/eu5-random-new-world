@@ -51,6 +51,10 @@ SHARED_OCEAN_DIVISOR: Final[int] = 6
 AFRICA_LAND_CHANCE: Final[int] = 40
 EUROPE_STRAIT_CHANCE: Final[int] = 35
 EUROPE_STRAIT_GAP: Final[int] = 7
+# Where the owner allows Africa to join Iberia by land (no strait), the chance in a hundred that
+# a seed does; it rules out the strait of that seed.
+IBERIA_LAND_CHANCE: Final[int] = 35
+IBERIA_REGION: Final[str] = "iberia_region"
 OCEAN_SPECK_PX: Final[int] = 1024
 AFRICAN_NORTH_REACH_PX: Final[int] = 512
 # Open water nearer to retained Eurasian land than to any generated continent stays
@@ -137,6 +141,9 @@ class Domain:
     contact_land: NDArray[np.bool_] | None = None
     legacy_canvas: Canvas | None = None
     join_asia: bool = False
+    # Where generated land can meet passable Iberia, when Africa joins it by land.
+    iberia_interface: NDArray[np.bool_] | None = None
+    join_iberia: bool = False
     # 1 keeps water at the European shore, 2 admits an African landing.
     strait: NDArray[np.uint8] | None = None
     island_sites: tuple[tuple[int, int, int], ...] = ()
@@ -175,6 +182,13 @@ class Domain:
 
 def _membership(game_map: Eu5Map, continent: str) -> NDArray[np.bool_]:
     return np.fromiter((name == continent for name in game_map.continents), dtype=bool)
+
+
+def _region_members(game_map: Eu5Map, region: str) -> NDArray[np.bool_]:
+    """The locations of one of the game's regions (none where the map has not read them)."""
+    if not game_map.regions:
+        return np.zeros(len(game_map.keys), dtype=bool)
+    return np.fromiter((name == region for name in game_map.regions), dtype=bool)
 
 
 def _coastal_claim(
@@ -995,7 +1009,7 @@ def _with_released(
     return mask | zones
 
 
-def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast contacts.
+def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain and its coast contacts.
     game_map: Eu5Map,
     continent: Continent,
     number: int,
@@ -1005,6 +1019,7 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     solid: NDArray[np.bool_],
     join_asia: bool | None,
     europe_strait: bool,
+    join_iberia: bool = False,
     shared: SharedWater | None = None,
     released: NDArray[np.bool_] | None = None,
 ) -> Domain:
@@ -1053,6 +1068,7 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     if (
         shared is not None
         and not europe_strait
+        and not join_iberia
         and (continent.land_neighbor is None or join_asia is False)
     ):
         return _whole_domain(
@@ -1110,7 +1126,11 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     interface = None
     strait = None
     inland = footprint & solid[local]
-    near_africa = _near_african_shores(inland, map_width) if join_asia or europe_strait else None
+    near_africa = (
+        _near_african_shores(inland, map_width)
+        if join_asia or europe_strait or join_iberia
+        else None
+    )
     passable = np.fromiter((kind is CellClass.LAND for kind in game_map.classes), dtype=bool)
     if neighbor is not None:
         contact = inland
@@ -1123,6 +1143,13 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
             claim |= candidate & approach
             contact = inland | (claim & close)
         interface = _interface(contact, neighbor & passable[local])
+    iberia = None
+    if join_iberia and near_africa is not None:
+        iberian = (_region_members(game_map, IBERIA_REGION) & solid)[local]
+        claim, close, iberia = _iberian_approach(
+            iberian, passable[local], near_africa, inland, candidate, claim, close, guard
+        )
+        neighbor = iberian if neighbor is None else neighbor | iberian
     if europe_strait and near_africa is not None:
         europe = (_membership(game_map, "europe") & passable)[local] & near_africa
         near_europe = distance_from(europe, guard + 1, octagonal=True)
@@ -1147,6 +1174,7 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
             neighbor=neighbor,
             join_asia=bool(join_asia),
             strait=strait,
+            iberia=iberia,
             shared=shared,
         )
     sites = (
@@ -1161,6 +1189,8 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
     mask = _with_released(mask, released, local, taken, continent.key)
     if interface is not None:
         interface &= mask
+    if iberia is not None:
+        iberia &= mask
     if strait is not None:
         strait[~mask] = 0
     return Domain(
@@ -1173,9 +1203,32 @@ def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast 
         land_interface=interface,
         contact_land=neighbor,
         join_asia=bool(join_asia),
+        iberia_interface=iberia,
+        join_iberia=iberia is not None,
         strait=strait,
         island_sites=sites,
     )
+
+
+def _iberian_approach(  # noqa: PLR0913, PLR0917 - the claim and its limits round Iberia's shore.
+    iberian: NDArray[np.bool_],
+    passable: NDArray[np.bool_],
+    near_africa: NDArray[np.bool_],
+    inland: NDArray[np.bool_],
+    candidate: NDArray[np.bool_],
+    claim: NDArray[np.bool_],
+    close: NDArray[np.bool_],
+    guard: int,
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
+    """The claim and the room beside Iberia's shore, and where generated land can meet it.
+
+    The land bridge to Iberia replaces the strait: the water along Iberia's shore is claimed as
+    along western Asia's, so a bridge can reach it, and it meets only passable Iberian land.
+    """
+    approach = distance_from(iberian & near_africa, guard + 1, octagonal=True) <= guard
+    close = close | approach
+    claim = claim | (candidate & approach)
+    return claim, close, _interface(inland | (claim & close), iberian & passable)
 
 
 def _whole_domain(  # noqa: PLR0913, PLR0917 - complete ownership plus retained coastal identities.
@@ -1193,10 +1246,13 @@ def _whole_domain(  # noqa: PLR0913, PLR0917 - complete ownership plus retained 
     join_asia: bool,
     strait: NDArray[np.uint8] | None,
     shared: SharedWater,
+    iberia: NDArray[np.bool_] | None = None,
 ) -> Domain:
     mask = local_owners == number
     if interface is not None:
         interface = np.logical_and(interface, mask)
+    if iberia is not None:
+        iberia = np.logical_and(iberia, mask)
     if strait is not None:
         strait[~mask] = 0
     north_water_rows = max(0, shared.north_africa - top) if continent.key == "africa" else 0
@@ -1216,6 +1272,8 @@ def _whole_domain(  # noqa: PLR0913, PLR0917 - complete ownership plus retained 
         land_interface=interface,
         contact_land=neighbor,
         join_asia=join_asia,
+        iberia_interface=iberia,
+        join_iberia=iberia is not None,
         strait=strait,
         shared_ocean=True,
         north_water_rows=north_water_rows,
@@ -1328,11 +1386,12 @@ def _keep_coastal_waters(game_map: Eu5Map, domain: Domain, protected: NDArray[np
         for row, col, _ in domain.island_sites:
             anchors[row, col] = mask[row, col]
         mask = _attached_ocean(anchors, mask)
-    interface, strait = domain.land_interface, domain.strait
+    interface, strait, iberia = domain.land_interface, domain.strait, domain.iberia_interface
     return replace(
         domain,
         mask=mask,
         land_interface=None if interface is None else interface & mask,
+        iberia_interface=None if iberia is None else iberia & mask,
         strait=None if strait is None else np.where(mask, strait, 0).astype(np.uint8),
     )
 
@@ -1372,13 +1431,14 @@ def _without_islets(game_map: Eu5Map, domains: Sequence[Domain]) -> tuple[Domain
         mask = domain.mask.copy()
         for crop, original in domain.spans():
             mask[:, crop] &= ~goes[parts[domain.rows, original]]
-        interface, strait = domain.land_interface, domain.strait
+        interface, strait, iberia = domain.land_interface, domain.strait, domain.iberia_interface
         result.append(
             replace(
                 domain,
                 mask=mask,
                 footprint=domain.footprint & mask,
                 land_interface=None if interface is None else interface & mask,
+                iberia_interface=None if iberia is None else iberia & mask,
                 strait=None if strait is None else np.where(mask, strait, 0).astype(np.uint8),
             )
         )
@@ -1391,6 +1451,7 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
     *,
     seed: int | None = None,
     require_asia_connection: bool = False,
+    iberia_connection: str = "off",
     retained_tolls: Collection[str] = (),
     closed_waters: Collection[str] = (),
 ) -> tuple[Domain, ...]:
@@ -1438,8 +1499,22 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
         or SplitMix64(derive_seed(seed, "africa", "asia_connection")).below(100)
         < AFRICA_LAND_CHANCE
     )
-    strait = seed is not None and (
-        SplitMix64(derive_seed(seed, "africa", "europe_strait")).below(100) < EUROPE_STRAIT_CHANCE
+    # Africa joins Iberia by land where the seed is allowed to, or must (no strait then).
+    iberia = seed is not None and (
+        iberia_connection == "required"
+        or (
+            iberia_connection == "allowed"
+            and SplitMix64(derive_seed(seed, "africa", "iberia_connection")).below(100)
+            < IBERIA_LAND_CHANCE
+        )
+    )
+    strait = (
+        seed is not None
+        and not iberia
+        and (
+            SplitMix64(derive_seed(seed, "africa", "europe_strait")).below(100)
+            < EUROPE_STRAIT_CHANCE
+        )
     )
     for number, (key, continent) in enumerate(CONTINENTS.items()):
         if key != NEW_WORLD and key in selected:
@@ -1453,6 +1528,7 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
                 solid=solid,
                 join_asia=connect if key == "africa" else None,
                 europe_strait=strait and key == "africa",
+                join_iberia=iberia and key == "africa",
                 shared=shared,
                 released=None if released is None else released == number,
             )

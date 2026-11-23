@@ -108,6 +108,8 @@ class Eu5Map:
     rivers_chunks: tuple[tuple[bytes, bytes], ...]
     points: tuple[MapPoint, ...]
     inputs: tuple[FileFingerprint, ...]
+    # The game's region of each location (``iberia_region``), empty where not read.
+    regions: tuple[str, ...] = ()
 
 
 def _hash(game_dir: Path, relative: str) -> FileFingerprint:
@@ -262,8 +264,10 @@ def load_map(game_dir: Path) -> Eu5Map:
     index = {key: position for position, key in enumerate(keys)}
     colors = np.array([color for _, color in pairs], dtype=np.int64)
     continent = dict.fromkeys(keys, "")
+    region = dict.fromkeys(keys, "")
     for location in read_locations(game_dir / DEFINITIONS):
         continent[location.key] = location.continent
+        region[location.key] = location.region
     lists = read_class_lists(game_dir / DEFAULT_MAP)
     membership: dict[str, list[CellClass]] = {}
     for name, kind in CLASS_LISTS:
@@ -292,4 +296,5 @@ def load_map(game_dir: Path) -> Eu5Map:
         rivers_chunks=read_chunks(game_dir / RIVERS),
         points=tuple(point for point in points if point.key in index),
         inputs=input_fingerprints(game_dir),
+        regions=tuple(region[key] for key in keys),
     )

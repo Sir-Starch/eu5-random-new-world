@@ -70,6 +70,11 @@ def land_key(settings: Settings, seed: int) -> str:
                 r.key,
                 _land_settings(replace(r.new_world, reveal_at_start=0))
                 + ([("require_asia_connection", True)] if r.require_asia_connection else [])
+                + (
+                    [("iberia_connection", r.iberia_connection)]
+                    if r.iberia_connection != "off"
+                    else []
+                )
                 + ([("mask", r.mask.id)] if r.mask.id else []),
             )
             for r in settings.continents.regions

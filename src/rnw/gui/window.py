@@ -967,6 +967,23 @@ class MainWindow(QMainWindow):
 
         _ = self.asia_connection.toggled.connect(connection_toggled)
         layout.addRow(self.asia_connection)
+        self.iberia_connection: QCheckBox = QCheckBox(text("continent.africa.iberia_connection"))
+        self.iberia_connection.setToolTip(text("continent.africa.iberia_connection.info"))
+        self.iberia_required: QCheckBox = QCheckBox(
+            text("continent.africa.iberia_connection.required")
+        )
+        self.iberia_required.setStyleSheet("margin-left: 18px")
+
+        def iberia_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a positional bool.
+            self.controller.set_iberia_connection("allowed" if checked else "off")
+
+        def iberia_required_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a bool.
+            self.controller.set_iberia_connection("required" if checked else "allowed")
+
+        _ = self.iberia_connection.toggled.connect(iberia_toggled)
+        _ = self.iberia_required.toggled.connect(iberia_required_toggled)
+        layout.addRow(self.iberia_connection)
+        layout.addRow(self.iberia_required)
         self.circumnavigation: QCheckBox = QCheckBox(text("continent.sea_circumnavigation"))
 
         def circumnavigation_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a bool.
@@ -2016,6 +2033,16 @@ class MainWindow(QMainWindow):
         _ = self.asia_connection.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.asia_connection.setVisible(enabled)
         self.asia_connection.setEnabled(not busy)
+        for box, checked in (
+            (self.iberia_connection, settings.iberia_connection != "off"),
+            (self.iberia_required, settings.iberia_connection == "required"),
+        ):
+            _ = box.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+            box.setChecked(checked)
+            _ = box.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+            box.setVisible(enabled)
+            box.setEnabled(not busy)
+        self.iberia_required.setVisible(enabled and settings.iberia_connection != "off")
 
     def _refresh_regions(self, *, busy: bool) -> None:
         selection = self.controller.continent_selection()

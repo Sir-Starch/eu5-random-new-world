@@ -3322,6 +3322,21 @@ text = '''En az bir kıta seçin.'''
 source = "a936e75dbefa2ad8"
 text = "Asya ile kara bağlantısı zorunlu olsun"
 
+["continent.africa.iberia_connection"]
+source = "5ee2a669bea0356b"
+text = '''İber Yarımadası ile kara bağlantısına izin ver (boğaz olmadan)'''
+
+["continent.africa.iberia_connection.about"]
+source = "bc27270c6e759856"
+text = '''Akdeniz bir iç denize dönüşebilir'''
+
+["continent.africa.iberia_connection.info"]
+source = "0019c0443d53d8cb"
+text = '''Bazı dünyalarda Afrika, Cebelitarık Boğazı’nın bulunduğu yerde İber Yarımadası’na karadan bağlanır. O zaman Akdeniz’in Atlantik’e çıkışı kalmaz ve limanları denizden Yeni Dünya’ya ulaşamaz. Bu seçenek kapalıyken İber Yarımadası boğazı her zaman korur.'''
+
+["continent.africa.iberia_connection.required"]
+source = "ec15b629f5350160"
+text = '''İber Yarımadası ile kara bağlantısı zorunlu olsun'''
 ["continent.sea_circumnavigation"]
 source = "53af14619d0e417c"
 text = "Dünya çevresinde bir deniz rotası bırak"
