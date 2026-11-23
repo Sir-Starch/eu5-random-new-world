@@ -3331,8 +3331,8 @@ source = "bc27270c6e759856"
 text = '''El Mediterráneo puede convertirse en un mar interior'''
 
 ["continent.africa.iberia_connection.info"]
-source = "2258f68535e89fa8"
-text = '''Algunos mundos unen África con Iberia por tierra donde está el estrecho de Gibraltar. Entonces el Mediterráneo no tiene salida al Atlántico y sus puertos no pueden llegar por mar al Nuevo Mundo. Sin esta opción, Iberia conserva siempre el estrecho. Si «Conservar una ruta marítima alrededor del mundo» está activada y el mundo no tiene otra ruta, aún puede abrirse un canal estrecho junto a la conexión.'''
+source = "90ae09b44d872954"
+text = '''Algunos mundos unen África con Iberia por tierra donde está el estrecho de Gibraltar. Entonces el Mediterráneo no tiene salida al Atlántico y sus puertos no pueden llegar por mar al Nuevo Mundo. Sin esta opción, Iberia conserva siempre el estrecho. Si «Conservar una ruta marítima alrededor del mundo» está activada y el mundo no tiene otra ruta, se abre un canal estrecho en otro punto de la tierra generada.'''
 
 ["continent.africa.iberia_connection.required"]
 source = "ec15b629f5350160"

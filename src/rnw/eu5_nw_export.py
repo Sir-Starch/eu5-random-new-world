@@ -55,7 +55,7 @@ from rnw.content import OCEANS as OPEN_OCEANS
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
-from rnw.continent_domains import SHARED_OCEAN_DIVISOR, iberian_mainland, plan_domains
+from rnw.continent_domains import SHARED_OCEAN_DIVISOR, iberian_link_land, plan_domains
 from rnw.continent_world import (
     ComposedWorld,
     WorldRegion,
@@ -1744,8 +1744,8 @@ def _african_contacts(
         "africa_asia_land_contacts": contacts(lambda cell: game_map.continents[cell] == "asia")
     }
     if iberian_link:
-        peninsula = iberian_mainland(game_map)
-        found["africa_iberia_land_contacts"] = contacts(lambda cell: bool(peninsula[cell]))
+        strait_coast = iberian_link_land(game_map)
+        found["africa_iberia_land_contacts"] = contacts(lambda cell: bool(strait_coast[cell]))
     return found
 
 

@@ -3331,8 +3331,8 @@ source = "bc27270c6e759856"
 text = '''Morze Śródziemne może stać się morzem śródlądowym'''
 
 ["continent.africa.iberia_connection.info"]
-source = "2258f68535e89fa8"
-text = '''W niektórych światach Afryka łączy się z Iberią lądem w miejscu Cieśniny Gibraltarskiej. Morze Śródziemne nie ma wtedy wyjścia na Atlantyk, a jego porty nie dopłyną morzem do Nowego Świata. Bez tej opcji Iberia zawsze zachowuje cieśninę. Jeśli włączono „Zachowaj szlak morski wokół świata”, a świat nie ma innego szlaku, obok połączenia nadal może zostać wycięty wąski kanał.'''
+source = "90ae09b44d872954"
+text = '''W niektórych światach Afryka łączy się z Iberią lądem w miejscu Cieśniny Gibraltarskiej. Morze Śródziemne nie ma wtedy wyjścia na Atlantyk, a jego porty nie dopłyną morzem do Nowego Świata. Bez tej opcji Iberia zawsze zachowuje cieśninę. Jeśli włączono „Zachowaj szlak morski wokół świata”, a świat nie ma innego szlaku, w innym miejscu wygenerowanego lądu zostaje wycięty wąski kanał.'''
 
 ["continent.africa.iberia_connection.required"]
 source = "ec15b629f5350160"

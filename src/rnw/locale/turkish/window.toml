@@ -3331,8 +3331,8 @@ source = "bc27270c6e759856"
 text = '''Akdeniz bir iç denize dönüşebilir'''
 
 ["continent.africa.iberia_connection.info"]
-source = "2258f68535e89fa8"
-text = '''Bazı dünyalarda Afrika, Cebelitarık Boğazı’nın bulunduğu yerde İber Yarımadası’na karadan bağlanır. O zaman Akdeniz’in Atlantik’e çıkışı kalmaz ve limanları denizden Yeni Dünya’ya ulaşamaz. Bu seçenek kapalıyken İber Yarımadası boğazı her zaman korur. “Dünya çevresinde bir deniz rotası bırak” açıksa ve dünyada başka rota yoksa, bağlantının yanında yine de dar bir kanal açılabilir.'''
+source = "90ae09b44d872954"
+text = '''Bazı dünyalarda Afrika, Cebelitarık Boğazı’nın bulunduğu yerde İber Yarımadası’na karadan bağlanır. O zaman Akdeniz’in Atlantik’e çıkışı kalmaz ve limanları denizden Yeni Dünya’ya ulaşamaz. Bu seçenek kapalıyken İber Yarımadası boğazı her zaman korur. “Dünya çevresinde bir deniz rotası bırak” açıksa ve dünyada başka rota yoksa, oluşturulan karada başka bir yerde dar bir kanal açılır.'''
 
 ["continent.africa.iberia_connection.required"]
 source = "ec15b629f5350160"

@@ -57,6 +57,11 @@ IBERIA_LAND_CHANCE: Final[int] = 35
 IBERIA_REGION: Final[str] = "iberia_region"
 # The Balearic Islands lie in the region, but joining Africa to them leaves the Mediterranean open.
 IBERIA_ISLANDS: Final[frozenset[str]] = frozenset({"balearics_area"})
+# The land a bridge to Iberia may meet: the coast of the Strait of Gibraltar, where the strait it
+# replaces lies (the game's Andalusia and Granada, whose Gibraltar, Algeciras and Marbella the
+# Moroccan start holds). A bridge to the peninsula elsewhere, along Portugal's or Galicia's Atlantic
+# shore, would leave the strait open and shut the peninsula's own ports away.
+IBERIA_LINK_AREAS: Final[frozenset[str]] = frozenset({"andalusia_area", "granada_area"})
 OCEAN_SPECK_PX: Final[int] = 1024
 AFRICAN_NORTH_REACH_PX: Final[int] = 512
 # Open water nearer to retained Eurasian land than to any generated continent stays
@@ -199,6 +204,20 @@ def iberian_mainland(game_map: Eu5Map) -> NDArray[np.bool_]:
         dtype=bool,
         count=len(game_map.regions),
     )
+
+
+def iberian_link_land(game_map: Eu5Map) -> NDArray[np.bool_]:
+    """The locations of the peninsula a land bridge from Africa may meet (``IBERIA_LINK_AREAS``);
+    none where the map has not read its areas."""
+    mainland = iberian_mainland(game_map)
+    if not game_map.areas:
+        return mainland
+    on_strait = np.fromiter(
+        (area in IBERIA_LINK_AREAS for area in game_map.areas),
+        dtype=bool,
+        count=len(game_map.areas),
+    )
+    return mainland & on_strait
 
 
 def _coastal_claim(
@@ -1155,9 +1174,20 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
         interface = _interface(contact, neighbor & passable[local])
     iberia = None
     if join_iberia and near_africa is not None:
+        # The retained peninsula is land outside the window all the same; only the coast of the
+        # strait is where the bridge may end.
         iberian = (iberian_mainland(game_map) & solid)[local]
+        link_land = iberian_link_land(game_map) & solid
         claim, close, iberia = _iberian_approach(
-            iberian, passable[local], near_africa, inland, candidate, claim, close, guard
+            link_land[local],
+            (protected & ~link_land)[local],
+            passable[local],
+            near_africa,
+            inland,
+            candidate,
+            claim,
+            close,
+            guard,
         )
         neighbor = iberian if neighbor is None else neighbor | iberian
     if europe_strait and near_africa is not None:
@@ -1222,6 +1252,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
 
 def _iberian_approach(  # noqa: PLR0913, PLR0917 - the claim and its limits round Iberia's shore.
     iberian: NDArray[np.bool_],
+    others: NDArray[np.bool_],
     passable: NDArray[np.bool_],
     near_africa: NDArray[np.bool_],
     inland: NDArray[np.bool_],
@@ -1232,10 +1263,14 @@ def _iberian_approach(  # noqa: PLR0913, PLR0917 - the claim and its limits roun
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """The claim and the room beside Iberia's shore, and where generated land can meet it.
 
-    The land bridge to Iberia replaces the strait: the water along Iberia's shore is claimed as
-    along western Asia's, so a bridge can reach it, and it meets only passable Iberian land.
+    The land bridge to Iberia replaces the strait: the water along the strait's shore is claimed
+    as along western Asia's, so a bridge can reach it, and it meets only passable land there. The
+    room it takes stays half the retained shore away from the rest of the retained land
+    (``others``: Portugal, the Levante, the islands): a bridge is no wall along their coasts.
     """
     approach = distance_from(iberian & near_africa, guard + 1, octagonal=True) <= guard
+    apart = max(1, guard // 2)
+    approach &= distance_from(others, apart + 1, octagonal=True) > apart
     close = close | approach
     claim = claim | (candidate & approach)
     return claim, close, _interface(inland | (claim & close), iberian & passable)

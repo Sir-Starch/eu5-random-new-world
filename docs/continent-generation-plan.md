@@ -92,24 +92,24 @@ world join Africa to southern Iberia by land where the Strait of Gibraltar is. T
 chance of `IBERIA_LAND_CHANCE`, 35 in 100, on its own key `africa/iberia_connection`) or
 `required` (**Require the land connection to Iberia**, as the Asian link is required). A world that
 has the link has no strait (`europe_strait` is off for it), and the Mediterranean is left with
-no way out to the Atlantic. It is built as the Asian link is: `continent_domains._claim` claims the
-water along the shore of the game's `iberia_region` (not all of Europe, and not the Balearic
-Islands, which a bridge would end at without closing the Mediterranean) and gives the domain an
-`iberia_interface`, the pixels that touch its passable land, and `newworld._regional_approaches`
-raises a second land bridge (`_land_approach`) from it. The bridge does not keep the Mediterranean
-open, which is the option's point, and it keeps the guard against sealing off pockets of
-generated sea. The finished map must hold a border between passable Iberian land and generated
-African land (`africa_iberia_land_contacts`), or the export stops. The link's cells join
+no way out to the Atlantic. It is built as the Asian link is, but only at the strait:
+`continent_domains.iberian_link_land` is the land of the game's `andalusia_area` and
+`granada_area` (Gibraltar, Algeciras, Tarifa, Marbella, Málaga, Almería), and `_claim` claims the
+water within the retained shore's reach of it, no nearer than half that reach to any other
+retained land (Portugal, the Levante, the Balearic Islands), and gives the domain an
+`iberia_interface`, the pixels that touch that land. `newworld._regional_approaches` raises a
+second land bridge (`_land_approach`) from it, with the guard against sealing off pockets of
+generated sea. The first form took the whole `iberia_region` as the target, and the bridge walled
+in Portugal's and Galicia's Atlantic coast while the water south of Spain stayed open to the
+Atlantic. The finished map must hold a border between passable land of the strait's coast and
+generated African land (`africa_iberia_land_contacts`), or the export stops. The link's cells join
 `land_link`, so no wasteland and no sea route opening takes them. With the link and the Asian one
 both, the Mediterranean is shut at both ends: the identity plan gives water that no open ocean
 reaches no path to one (`eu5_newworld._protect_ocean_boundary`; it still stops where there is no
 ocean area at all). Where the world keeps a sea route round it, a route that ran through the
 Mediterranean is gone with the strait, and `rnw.circuit` opens the cheapest locations of Africa
-into sea when its land leaves no other: in the all-three world of seed 101 (no Asian link) it turned
-four wastelands (15,357 of 8.9 million pixels of land) beside the link's neck into a channel that
-joined the Atlantic and the Mediterranean again. Turn the sea route option off to keep the
-Mediterranean closed. The bridge may reach the peninsula on its Atlantic side (seed 202 lands in Portugal
-and Galicia): the option removes the strait as a separation, it does not promise a closed Mediterranean.
+into sea when its land leaves no other: in the worlds measured it turned one or two wastelands (at
+most 46,000 of 8.9 million pixels of land) far from the strait.
 
 With all three continents enabled, Eurasia and Greenland form a fourth
 canvas with their installed coastal and inland seas. It also keeps the open

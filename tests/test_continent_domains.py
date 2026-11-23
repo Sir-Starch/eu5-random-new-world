@@ -748,25 +748,28 @@ def test_window_climate_and_cell_size_votes_use_global_latitude() -> None:
 def _iberian_map() -> Eu5Map:
     """The test map with a European peninsula (area ``andalusia_area``) of the region
     ``iberia_region``, a strait west of Africa, an island of that region nearer to Africa than
-    the peninsula is, and another European location."""
+    the peninsula is, a Portuguese location (area ``north_portugal_area``) of the same peninsula
+    that lies as near to Africa, and another European location."""
     base = cast("SimpleNamespace", cast("object", _map()))
     labels = base.labels.copy()
     labels[130:200, 590:604] = 6
     labels[100:130, 560:604] = 7
     labels[140:160, 608:613] = 8
+    labels[200:240, 590:604] = 9
     return cast(
         "Eu5Map",
         cast(
             "object",
             SimpleNamespace(
-                keys=(*base.keys, "iberia", "france", "balearic"),
+                keys=(*base.keys, "iberia", "france", "balearic", "portugal"),
                 labels=labels,
-                continents=(*base.continents, "europe", "europe", "europe"),
-                classes=(*base.classes, CellClass.LAND, CellClass.LAND, CellClass.LAND),
-                ambiguous=np.array([*base.ambiguous, False, False, False]),
+                continents=(*base.continents, "europe", "europe", "europe", "europe"),
+                classes=(*base.classes, *(CellClass.LAND,) * 4),
+                ambiguous=np.array([*base.ambiguous, False, False, False, False]),
                 regions=("",) * len(base.keys)
-                + ("iberia_region", "france_region", "iberia_region"),
-                areas=("",) * len(base.keys) + ("andalusia_area", "paris_area", "balearics_area"),
+                + ("iberia_region", "france_region", "iberia_region", "iberia_region"),
+                areas=("",) * len(base.keys)
+                + ("andalusia_area", "paris_area", "balearics_area", "north_portugal_area"),
             ),
         ),
     )
@@ -803,12 +806,21 @@ def test_a_required_iberian_link_meets_only_iberian_land_and_leaves_no_strait() 
     touched[:, :-1] |= game.labels[:, 1:] == 6
     assert np.all(touched[interface])
     # Neither the other European location (the Seine side) nor the island of the region, which
-    # lies nearer to Africa and would leave the Mediterranean open, is a contact of the link.
+    # lies nearer to Africa and would leave the Mediterranean open, is a contact of the link; the
+    # land of the strait's coast is the only land it may meet, though Portugal stays retained land.
     assert domain.contact_land is not None
     contact = _in_world(domain, domain.contact_land, game.labels.shape)
     assert contact[game.labels == 6].all()
+    assert contact[game.labels == 9].all()
     assert not contact[game.labels == 7].any()
     assert not contact[game.labels == 8].any()
+    portugal = game.labels == 9
+    beside = np.zeros_like(portugal)
+    beside[1:] |= portugal[:-1]
+    beside[:-1] |= portugal[1:]
+    beside[:, 1:] |= portugal[:, :-1]
+    beside[:, :-1] |= portugal[:, 1:]
+    assert not np.any(interface & beside)
     islet = np.zeros(game.labels.shape, dtype=bool)
     islet[game.labels == 8] = True
     near = np.zeros_like(islet)

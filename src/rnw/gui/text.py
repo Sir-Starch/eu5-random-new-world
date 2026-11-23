@@ -47,7 +47,7 @@ STRINGS: Final[dict[str, str]] = {
         "The Mediterranean then has no way out to the Atlantic, and its ports cannot reach "
         "the New World by sea. Without this option Iberia always keeps the strait. If "
         "\u201cKeep a sea route around the world\u201d is on and the world has no other route, "
-        "a narrow channel may still be cut beside the link."
+        "a narrow channel is cut elsewhere through the generated land."
     ),
     "continent.africa.iberia_connection.required": "Require the land connection to Iberia",
     "continent.sea_circumnavigation": "Keep a sea route around the world",
