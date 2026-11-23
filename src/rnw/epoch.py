@@ -136,6 +136,7 @@ TABLELANDS: Final[int] = 64  # 1.3.0: plateaus are broad tablelands, not rare do
 POOLED_RESOURCES: Final[int] = 64  # 1.3.0: a small class of raw materials borrows broader ones.
 CONTINENT_SELECTION: Final[int] = 64  # 1.3.0: independent continents share one world map.
 LAW_NEGATIONS: Final[int] = 64  # 1.3.0: a law's `!=` condition holds when the values differ.
+ORPHAN_RIVERS: Final[int] = 64  # 1.3.0: a retained river cut from its source is not kept.
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
@@ -150,6 +151,7 @@ SWITCHES: Final[dict[str, int]] = {
     "POOLED_RESOURCES": POOLED_RESOURCES,
     "CONTINENT_SELECTION": CONTINENT_SELECTION,
     "LAW_NEGATIONS": LAW_NEGATIONS,
+    "ORPHAN_RIVERS": ORPHAN_RIVERS,
 }
 
 

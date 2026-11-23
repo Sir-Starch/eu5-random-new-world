@@ -278,7 +278,7 @@ from rnw.eu5_rewrite import (
     rewrite_templates,
     sound_toll_locations,
 )
-from rnw.eu5_rivers import RiverRasterError, encode_rivers, watershed_spans
+from rnw.eu5_rivers import RiverRasterError, encode_rivers, sourceless_rivers, watershed_spans
 from rnw.eu5_seas import (
     NO_UNITS,
     VFX_LOCATORS,
@@ -451,6 +451,8 @@ TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
 MAX_LOCATIONS: Final[int] = 32_000
 AMERICAN_GENERATION: Final[frozenset[str]] = frozenset({NEW_WORLD})
 RIVER_CLASSES: Final[int] = 16
+# Rows beyond the replaced canvas that are read for channels it cut from their sources.
+ORPHAN_RIVER_ROWS: Final[int] = 256
 # Vanilla uses widths 4, 5, 11 and 15 on 61.5%, 23.9%, 8.1% and 6.2% of Old World river
 # pixels [V-EXEC C59]; valleys are cut in proportion (vanilla rivers lie a median 318
 # and a quarter of them over 950 height units below the 17-pixel local mean).
@@ -2556,8 +2558,14 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
     )
 
 
-def _rasters(
-    game_map: Eu5Map, canvas: Canvas, world: NewWorld, plan: Plan, river_codes: NDArray[np.uint8]
+def _rasters(  # noqa: PLR0913 - the raster inputs and the epoch switch for orphaned rivers.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    plan: Plan,
+    river_codes: NDArray[np.uint8],
+    *,
+    orphans: bool = False,
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
     colors = np.array([cell.color for cell in plan.cells], dtype=np.int64)
     palette = np.stack([(colors >> 16) & 0xFF, (colors >> 8) & 0xFF, colors & 0xFF], axis=1)
@@ -2569,6 +2577,7 @@ def _rasters(
         [cell.kind in {CellClass.SEA, CellClass.LAKE} for cell in plan.cells], dtype=bool
     )
     rivers = game_map.rivers
+    before = rivers.copy() if orphans else rivers
     canvas.put(
         rivers,
         np.where(
@@ -2577,6 +2586,15 @@ def _rasters(
             np.where(water[world.labels], RIVER_WATER, RIVER_LAND),
         ).astype(np.uint8),
     )
+    if orphans:
+        # A retained river whose headwaters lay on the replaced canvas keeps no source: the
+        # game's loader would log its remainder, so it ends where the canvas begins.
+        changed = np.flatnonzero((rivers != before).any(axis=1))
+        if changed.size:
+            first = max(0, int(changed[0]) - ORPHAN_RIVER_ROWS)
+            last = min(rivers.shape[0], int(changed[-1]) + 1 + ORPHAN_RIVER_ROWS)
+            band = rivers[first:last]
+            band[sourceless_rivers(band, classes=RIVER_CLASSES)] = RIVER_LAND
     return rgb, rivers
 
 
@@ -5335,7 +5353,14 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         biome_stats["materials"] = slot_stats
 
         def build_locations() -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
-            return _rasters(game_map, canvas, world, plan, river_codes)
+            return _rasters(
+                game_map,
+                canvas,
+                world,
+                plan,
+                river_codes,
+                orphans=settings.algorithm >= epoch.ORPHAN_RIVERS,
+            )
 
         locations = stages.submit("location rasters", build_locations)
 

@@ -17,6 +17,7 @@ import numpy as np
 
 from rnw.progress import checkpoint
 from rnw.rivers import JOIN, NONE, SOURCE, STRIP_ROWS
+from rnw.topology import label_components
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -71,3 +72,25 @@ def encode_rivers(
         encoded[role == JOIN] = JOIN
         codes[first:last] = encoded
     return codes, {"cut_networks": 0, "fragments": 0, "isolated_points": 0, "boundary_pixels": 0}
+
+
+def sourceless_rivers(rivers: NDArray[np.uint8], *, classes: int) -> NDArray[np.bool_]:
+    """River pixels of the channels that have no source, as the game's river loader sees them.
+
+    A channel is a 4-connected run of river pixels (a code below ``classes``); the loader walks
+    it from its source (code ``SOURCE``) and logs "River source not found" for pixels it never
+    reaches. A vanilla river whose headwaters lay on a replaced canvas ends so. A channel that
+    touches the first or last row is not judged: its source may lie beyond the rows given.
+    """
+    river = rivers < classes
+    if not river.any():
+        return np.zeros(rivers.shape, dtype=np.bool_)
+    labels = label_components(river.astype(np.int32), wrap_x=True)
+    total = int(labels.max()) + 1
+    channel = np.zeros(total, dtype=np.bool_)
+    channel[labels.ravel()] = river.ravel()
+    judged = channel.copy()
+    judged[labels[rivers == SOURCE]] = False
+    judged[labels[0]] = False
+    judged[labels[-1]] = False
+    return judged[labels]

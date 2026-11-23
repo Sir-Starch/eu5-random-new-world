@@ -8,7 +8,12 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw.eu5_rivers import RiverRasterError, encode_rivers, watershed_spans
+from rnw.eu5_rivers import (
+    RiverRasterError,
+    encode_rivers,
+    sourceless_rivers,
+    watershed_spans,
+)
 from rnw.rivers import BODY, JOIN, NONE, SOURCE, Rivers
 
 WIDTHS = (4, 5, 11, 15)
@@ -66,3 +71,21 @@ def test_domain_bounds_close_only_world_edge_channel_samples(
     seam: int, expected: tuple[tuple[int, int], ...]
 ) -> None:
     assert watershed_spans(12, seam) == expected
+
+
+def test_a_channel_cut_from_its_source_is_found_whole() -> None:
+    """A vanilla river whose headwaters were replaced leaves a remainder the loader cannot walk."""
+    sea, land = 254, 255
+    rivers = np.full((12, 20), land, dtype=np.uint8)
+    rivers[1:11, 2] = 4  # reaches the first and last rows' neighbours, with its source
+    rivers[1, 2] = 0
+    rivers[5, 6:10] = 4  # a remainder: no source
+    rivers[6, 9] = 2
+    rivers[0:12, 15] = 4  # runs through the first and last rows: not judged
+    rivers[3, 12] = sea
+    found = sourceless_rivers(rivers, classes=16)
+    assert found.sum() == 5
+    assert found[5, 6:10].all()
+    assert found[6, 9]
+    assert not found[:, 2].any()
+    assert not found[:, 15].any()

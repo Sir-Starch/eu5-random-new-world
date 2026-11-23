@@ -5,6 +5,13 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Stop leaving **a river without a source** at the edge of a replaced continent. Where a vanilla
+  river's headwaters lay on land that a generated continent replaces, its remainder stayed with
+  no source and the game logged "River source not found" at the start (10 pixels in the east of
+  the Old World's far north). Such a remainder now
+  ends where the replaced land begins. Worlds whose replaced land cuts no river are byte for
+  byte as before.
+
 - Give **every generated country its marriage and heir religion laws**, and keep the Aboriginal
   peoples of Oceania off the Polynesian monarchy. The game logged "has no marriage_law" and "has
   no heir_religion_law" for each state written without a template (17 in a world of three
