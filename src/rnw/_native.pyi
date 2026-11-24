@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from numpy import bool_, float32, int8, int32, int64, uint8, uint16, uint32, uint64
+from numpy import bool_, float32, float64, int8, int32, int64, uint8, uint16, uint32, uint64
 from numpy.typing import NDArray
 
 class LzavError(ValueError): ...
@@ -76,6 +76,24 @@ def distance_from(
 ) -> NDArray[int32]: ...
 def euclidean_distance(sources: NDArray[bool_], limit: int) -> NDArray[int64]: ...
 def sea_voronoi(mask: NDArray[bool_], seeds: NDArray[int32]) -> NDArray[int32]: ...
+def sea_geodesic(
+    mask: NDArray[bool_], region: NDArray[int32], sites: NDArray[int64], start: NDArray[uint32]
+) -> tuple[NDArray[int32], NDArray[uint32]]: ...
+def sea_extremes(
+    label: NDArray[int32], cost: NDArray[uint32], centres: NDArray[float64]
+) -> tuple[NDArray[int64], NDArray[int64]]: ...
+def sea_refine(
+    mask: NDArray[bool_],
+    coarse: NDArray[int32],
+    step: int,
+    reach: int,
+    sites: NDArray[int64],
+    depth: NDArray[int32],
+    band_width: int,
+    last_band: int,
+    site_band: NDArray[int32],
+    site_claim: NDArray[int64],
+) -> NDArray[int32]: ...
 def nearest_rows(train: NDArray[int64], query: NDArray[int64], k: int) -> NDArray[int64]: ...
 def nearest_label(
     labels: NDArray[int32], sources: NDArray[bool_], limit: int

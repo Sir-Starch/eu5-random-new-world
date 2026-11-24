@@ -143,6 +143,9 @@ BOUNDED_CELLS: Final[int] = (
 SETTLED_PEOPLE: Final[int] = (
     64  # 1.3.0: a location's people follow the settlement that sized it, not its pixels.
 )
+COMPACT_SEAS: Final[int] = (
+    64  # 1.3.0: a sea cell is compact water of one size, divided on the way through the water.
+)
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
@@ -160,6 +163,7 @@ SWITCHES: Final[dict[str, int]] = {
     "ORPHAN_RIVERS": ORPHAN_RIVERS,
     "BOUNDED_CELLS": BOUNDED_CELLS,
     "SETTLED_PEOPLE": SETTLED_PEOPLE,
+    "COMPACT_SEAS": COMPACT_SEAS,
 }
 
 

@@ -13,7 +13,10 @@ graph: land cells on one side, the sea cells they touch on the other. ``plan_por
 matching that serves every sea zone it can and gives every other land cell the sea it touches
 longest. ``settle_seas`` makes the condition true by construction: a sea cell that cannot be
 served is made one cell with a neighbouring sea cell (never a land cell turned into something
-else), so the world the rest of the generator sees has a port for every coastal zone.
+else), so the world the rest of the generator sees has a port for every coastal zone. With
+``dissolve`` (epoch 64, ``epoch.COMPACT_SEAS``) a cell that two or more served neighbours can take
+between them is not folded into one of them but divided among them along the middle of the
+cell, so that no cell doubles in size for it.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -27,15 +30,21 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from rnw import _native
 from rnw.model import CellClass
 from rnw.newworld import STRIP_ROWS, derive_world
 from rnw.progress import checkpoint
-from rnw.topology import adjacency_lengths, unpack_pairs
+from rnw.topology import adjacency_lengths, label_components, unpack_pairs
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Mapping, Sequence
 
+    from numpy.typing import NDArray
+
     from rnw.newworld import NewWorld
+
+# A cell is divided among the served cells that border it only if there are this many of them.
+MIN_TAKERS = 2
 
 
 class PortError(ValueError):
@@ -194,6 +203,7 @@ def settle_seas(
     *,
     shared_coast: bool = False,
     minimum_sea: int = 0,
+    dissolve: bool = False,
 ) -> Settled:
     """``world`` with every coastal sea zone able to have a port of its own.
 
@@ -204,16 +214,21 @@ def settle_seas(
     folding along adjoining water. An unserved zone with no such route raises ``PortError``.
     When joining regional grids, small pieces at their common edges are first folded
     over their broadest marine contact, so each starts with a full-size sea neighbour.
+    With ``dissolve`` (and no ``minimum_sea``), an unserved cell that no foreign land touches and
+    that two or more served cells border is divided among them first (``_absorb``).
     """
     foreign = foreign or ForeignCoast()
     lengths = pair_lengths(world)
     links, needed = coast_links(world, foreign, lengths)
-    sea_links: dict[int, dict[int, int]] = {}
-    for (first, second), length in lengths.items():
-        if world.classes[first] is CellClass.SEA and world.classes[second] is CellClass.SEA:
-            sea_links.setdefault(first, {})[second] = length
-            sea_links.setdefault(second, {})[first] = length
+    sea_links = _sea_links(world, lengths)
     merged: dict[int, int] = {}
+    if dissolve and not minimum_sea:
+        labels, divided = _dissolve(world, foreign, lengths)
+        if divided:
+            world = replace(world, labels=labels)
+            merged.update(divided)
+            links, needed = coast_links(world, foreign, lengths)
+            sea_links = _sea_links(world, lengths)
     if minimum_sea:
         sizes = world.pixels.tolist()
         small = sorted(
@@ -242,6 +257,166 @@ def settle_seas(
         return Settled(world, foreign, tuple(range(len(world.classes))), 0)
     settled, cell_of = relabel(world, merged)
     return Settled(settled, foreign.renumbered(cell_of), cell_of, len(merged))
+
+
+def _sea_links(
+    world: NewWorld, lengths: Mapping[tuple[int, int], int]
+) -> dict[int, dict[int, int]]:
+    """How long every two touching sea cells share a border, for each of them."""
+    sea_links: dict[int, dict[int, int]] = {}
+    for (first, second), length in lengths.items():
+        if world.classes[first] is CellClass.SEA and world.classes[second] is CellClass.SEA:
+            sea_links.setdefault(first, {})[second] = length
+            sea_links.setdefault(second, {})[first] = length
+    return sea_links
+
+
+def _dissolve(
+    world: NewWorld, foreign: ForeignCoast, lengths: dict[tuple[int, int], int]
+) -> tuple[NDArray[np.int32], dict[int, int]]:
+    """The labels of ``world`` with every unserved cell that its served neighbours can take given
+    to them, and for each such cell the neighbour that took most of it.
+
+    A cell is taken when no land of the game's own map touches it (the foreign coast names it by
+    its number) and at least two served cells border it. ``lengths`` (the borders of the cells) is
+    kept in step with the labels; what is served is worked out again after each cell, since it
+    depends on the cells that are left.
+    """
+    abroad = set(foreign.held).union(*foreign.free.values())
+    labels = world.labels
+    copied = False
+    taken: dict[int, int] = {}
+    while True:
+        checkpoint()
+        links, needed = coast_links(world, foreign, lengths)
+        sea_links = _sea_links(world, lengths)
+        unserved = plan_ports(links, needed).unserved
+        gone = set(unserved)
+        for sea in unserved:
+            takers = sorted(
+                other
+                for other in sea_links.get(sea, {})
+                if other in needed and other not in gone and other not in abroad
+            )
+            if sea in abroad or len(takers) < MIN_TAKERS:
+                continue
+            if not copied:
+                labels, copied = labels.copy(), True
+            main = _absorb(labels, sea, takers, lengths, wrap_x=world.wrap_x)
+            if main is not None:
+                taken[sea] = main
+                break
+        else:
+            return labels, taken
+
+
+def _absorb(
+    labels: NDArray[np.int32],
+    sea: int,
+    takers: Sequence[int],
+    lengths: dict[tuple[int, int], int],
+    *,
+    wrap_x: bool,
+) -> int | None:
+    """Give the pixels of cell ``sea`` to ``takers`` in ``labels``, each to the taker whose border
+    with the cell is nearer by a way through the cell, and update the ``lengths`` of the borders.
+
+    Returns the taker that got most, or None, with nothing changed, where the cell reaches the
+    edge of a wrapping raster or a pixel of it is cut off from every taker.
+    """
+    rows, columns = np.nonzero(labels == sea)
+    top, bottom = max(0, int(rows.min()) - 1), min(labels.shape[0], int(rows.max()) + 2)
+    left, right = max(0, int(columns.min()) - 1), min(labels.shape[1], int(columns.max()) + 2)
+    if wrap_x and (left == 0 or right == labels.shape[1]):
+        return None
+    window = labels[top:bottom, left:right]
+    inside = window == sea
+    sites: list[tuple[int, int]] = []
+    owner: list[int] = []
+    for taker in takers:
+        theirs = window == taker
+        near = np.zeros_like(inside)
+        near[1:] |= theirs[:-1]
+        near[:-1] |= theirs[1:]
+        near[:, 1:] |= theirs[:, :-1]
+        near[:, :-1] |= theirs[:, 1:]
+        for row, column in zip(*np.nonzero(inside & near), strict=True):
+            sites.append((int(row), int(column)))
+            owner.append(taker)
+    if not sites:
+        return None
+    found, _ = _native.sea_geodesic(
+        np.ascontiguousarray(inside),
+        np.zeros(inside.shape, dtype=np.int32),
+        np.asarray(sites, dtype=np.int64),
+        np.zeros(len(sites), dtype=np.uint32),
+    )
+    if (found[inside] < 0).any():
+        return None
+    trial = window.copy()
+    trial[inside] = np.asarray(owner, dtype=np.int32)[found[inside]]
+    if not _joined(trial, window, takers):
+        return None
+    before = _pair_counts(window)
+    after = _pair_counts(trial)
+    given = trial[inside]
+    window[inside] = given
+    for pair in before.keys() | after.keys():
+        total = lengths.get(pair, 0) + after.get(pair, 0) - before.get(pair, 0)
+        if total:
+            lengths[pair] = total
+        else:
+            _ = lengths.pop(pair, None)
+    shares = np.bincount(given, minlength=int(given.max()) + 1)
+    return int(np.argmax(shares))
+
+
+def _joined(trial: NDArray[np.int32], window: NDArray[np.int32], takers: Sequence[int]) -> bool:
+    """Whether every taker of ``trial`` is still one piece of what it was in ``window``.
+
+    A pixel given to a taker can touch it by a corner only, where three cells meet; such a piece
+    (one no old pixel of the taker is joined to) is given to the taker it touches along most
+    sides. False, with ``trial`` left as it is, where a piece touches no taker along a side.
+    """
+    for _ in range(len(takers) + 1):
+        parts = label_components(trial)
+        changed = False
+        for taker in takers:
+            mine = trial == taker
+            old = np.unique(parts[window == taker])
+            lost = mine & ~np.isin(parts, old)
+            if not lost.any():
+                continue
+            votes: dict[int, int] = {}
+            for here, there in (
+                ((slice(None), slice(None, -1)), (slice(None), slice(1, None))),
+                ((slice(None), slice(1, None)), (slice(None), slice(None, -1))),
+                ((slice(None, -1), slice(None)), (slice(1, None), slice(None))),
+                ((slice(1, None), slice(None)), (slice(None, -1), slice(None))),
+            ):
+                touching = lost[here] & ~mine[there]
+                for other in np.unique(trial[there][touching]).tolist():
+                    if other in takers:
+                        votes[other] = votes.get(other, 0) + int(
+                            (trial[there][touching] == other).sum()
+                        )
+            if not votes:
+                return False
+            trial[lost] = max(votes, key=lambda other: (votes[other], -other))
+            changed = True
+        if not changed:
+            return True
+    return False
+
+
+def _pair_counts(labels: NDArray[np.int32]) -> dict[tuple[int, int], int]:
+    """How many pixel contacts every two labels of ``labels`` share (not counting the outside)."""
+    pairs, counts = adjacency_lengths(labels)
+    return {
+        pair: length
+        for pair, length in zip(unpack_pairs(pairs), counts.tolist(), strict=True)
+        if pair[0] >= 0 and pair[1] >= 0
+    }
 
 
 def _merge_target(  # noqa: PLR0913 - the merge uses every side of the coast graph.

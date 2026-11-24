@@ -207,14 +207,20 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
     removed: Collection[str],
     designed: np.ndarray[tuple[int, ...], np.dtype[np.bool_]] | None = None,
     minimum_sea: int = 0,
+    dissolve: bool = False,
 ) -> Coast:
-    """Settle the sea cells of ``world`` against ports; collect the game's lanes beside it."""
+    """Settle the sea cells of ``world`` against ports; collect the game's lanes beside it.
+
+    With ``dissolve`` a sea cell without a port is divided among the served cells beside it where
+    it can be (``rnw.ports.settle_seas``), not folded into one of them.
+    """
     contacts = outside_contacts(game_map, canvas, world, len(game_map.keys))
     settled = settle_seas(
         world,
         foreign_coast(game_map, world, contacts, ports, removed),
         shared_coast=world.wrap_x,
         minimum_sea=minimum_sea,
+        dissolve=dissolve,
     )
     samples: dict[int, list[Vector]] = {}
     docks: set[int] = set()

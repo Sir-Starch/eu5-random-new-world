@@ -4343,6 +4343,7 @@ def _prepare_american_geography(  # noqa: PLR0913, PLR0915 - preserve the legacy
             vanilla=vanilla_waters,
             removed=removed,
             designed=designed,
+            dissolve=settings.algorithm >= epoch.COMPACT_SEAS,
         ),
     )
     shapes = run_stage("water shapes", lambda: shape_water(settled))
@@ -5025,6 +5026,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             minimum_sea=min(knobs.min_sea_cell_px for knobs in geography.values())
             if complete_ocean
             else 0,
+            dissolve=settings.algorithm >= epoch.COMPACT_SEAS,
         ),
     )
     shapes = run_stage(

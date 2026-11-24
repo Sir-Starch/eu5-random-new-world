@@ -44,6 +44,7 @@ from rnw.sea_corridors import (
     corridor_paths,
     corridor_sites,
 )
+from rnw.seacells import partition as partition_sea
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_slivers, merge_small, renumber, seed_sites
 from rnw.timing import measured
@@ -1689,8 +1690,13 @@ def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement
     smallest: int,
     bands: NDArray[np.bool_] | None,
     domain: NDArray[np.bool_] | None = None,
+    algorithm: int = epoch.CURRENT,
 ) -> NDArray[np.int32]:
     """Partition actual ocean routes separately from ordinary water."""
+    if algorithm >= epoch.COMPACT_SEAS:
+        return _compact_sea_cells(
+            ocean, key=key, spacing=spacing, smallest=smallest, bands=bands, domain=domain
+        )
 
     def sea_part(mask: NDArray[np.bool_]) -> NDArray[np.int32]:
         sites = seed_sites(key, mask, spacing)
@@ -1729,6 +1735,41 @@ def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement
     del sites
     parts = label_components(nearest)
     del nearest
+    cells = merge_small(np.where(ocean, parts, -1).astype(np.int32), smallest)
+    return merge_slivers(
+        cells, spacing / SLIVER_DIVISOR, SLIVER_PERMILLE, _world_edge(ocean, domain)
+    )
+
+
+def _compact_sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement domain.
+    ocean: NDArray[np.bool_],
+    *,
+    key: int,
+    spacing: int,
+    smallest: int,
+    bands: NDArray[np.bool_] | None,
+    domain: NDArray[np.bool_] | None,
+) -> NDArray[np.int32]:
+    """The sea cells of epoch 64 (``epoch.COMPACT_SEAS``, ``rnw.seacells``): compact pieces of
+    water of one size, divided on the way through the water. The crossings are chains of cells
+    along their centre lines, as before; their sites keep their places."""
+    sites = seed_sites(key, ocean, spacing)
+    rows, columns = np.nonzero(sites >= 0)
+    rows, columns = rows.astype(np.int64), columns.astype(np.int64)
+    pinned = 0
+    if bands is not None:
+        if bands.shape != ocean.shape:
+            message = "Current bands do not fit the world"
+            raise ValueError(message)
+        paths = corridor_paths(ocean, bands, spacing, domain=domain)
+        clear = clear_of_corridors(rows, columns, paths, spacing * CLEAR_PERMILLE / PERMILLE)
+        chain_rows, chain_columns = corridor_sites(paths, ocean, spacing, key)
+        pinned = int(chain_rows.size)
+        rows = np.concatenate((chain_rows.astype(np.int64), rows[clear]))
+        columns = np.concatenate((chain_columns.astype(np.int64), columns[clear]))
+    labels = partition_sea(ocean, rows, columns, pinned=pinned, spacing=spacing)
+    parts = label_components(labels)
+    del labels
     cells = merge_small(np.where(ocean, parts, -1).astype(np.int32), smallest)
     return merge_slivers(
         cells, spacing / SLIVER_DIVISOR, SLIVER_PERMILLE, _world_edge(ocean, domain)
@@ -2001,6 +2042,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
                 smallest=settings.min_sea_cell_px,
                 bands=sea_bands,
                 domain=domain,
+                algorithm=algorithm,
             ),
         )
         # The hill country roughens once the drainage is planned (epoch 64, ``epoch.ROUGH_HILLS``).

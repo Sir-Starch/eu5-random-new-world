@@ -125,6 +125,63 @@ wide, a sea of deep cells and not a lane. Courses now run through the shallow st
 chain that continues the straight path through a junction is the course and not a branch, and a cell
 with eight or more lane cells within 2.2 typical cells (a wide stretch) carries no arrow. [V-EXEC]
 
+**Compact sea cells, 1.3.0 / pending epoch 64 (2026-11-24):** the owner's report was that generated
+sea cells looked grown like land cells: crooked outlines, tails, a few cells with access to far
+more neighbours than usual, and huge cells that let a ship be on both sides of a strait, where a
+vanilla cell ends beyond the strait and mostly has straight borders. Measured on the continents
+world (seed 7) before the change, the causes were three. The sea was cut by the nearest
+jittered-grid site in a straight line, so a cell reached across a strait or a spit and followed
+the coast only by accident. A ring of cells round a small island had no land of its own to serve
+it. And the port rule (every coastal sea cell needs a land that can serve it, `ports.plan_ports`)
+folded each cell it could not serve whole into a neighbour, and chains of such folds made the
+giants (32 merges, the largest cell 62.5 thousand pixels, 12 neighbours at most).
+
+From epoch 64 (`epoch.COMPACT_SEAS`, `rnw.seacells`, native `seacells.rs`) the sea is divided in
+the order the cells are meant to lie, and the folding is replaced by a division:
+
+- **Bands.** The water is cut into bands by its distance from land, warped so that every band is
+  as wide as a cell: a coastal band of 0.7 cells (cells that lie along the shore, narrow enough
+  that each touches few lands and the shore's lands can serve them), then three bands of one
+  cell, then open sea. A strait (water with land close on both sides) is a region of its own, so
+  no cell reaches through it.
+- **Cells.** Each band is divided by Lloyd's relaxation of sites on a coarse raster (a twentieth
+  of the cell spacing) with a walk through the water that stays inside its region (16 moves, so
+  a cell follows a bay and never crosses a spit); a cell above one and a half times the typical
+  area is split, one below half of it is dropped. Crossing chains (`rnw.sea_corridors`) keep
+  their pinned sites. The full-resolution pixel then goes to the nearest site of its own band, by
+  straight distance, which makes the borders of neighbouring cells straight lines.
+- **Small islands.** An island or group whose bounding radius is at most 0.675 of the spacing is
+  not a shore: a disk of water round it, its margin and the water of a cell, is one cell of its
+  own, the bands run level over it, and no ordinary site lies within a tenth of the spacing of the
+  disk. A ship that passes an islet therefore passes one cell.
+- **Ports.** `settle_seas(dissolve=True)` (`ports._dissolve`): an unserved cell that no land of
+  the game's own map touches and that two or more served cells border is given to those cells, each
+  pixel to the taker whose border is nearer through the cell, instead of being folded whole into
+  one. Pieces that would touch only at a corner are reattached. Folding remains for a cell with
+  one served neighbour or one that foreign land touches.
+
+Every step is integer arithmetic, with ties to the lower site, and the one walk through the water
+is single-threaded, so the division does not depend on the thread count; `tests/reference/seacells.py`
+holds independent versions of the three kernels. On the continents world, seed 7, the cells a ship
+can use, before and after:
+
+| | before | epoch 64 |
+|---|---|---|
+| largest cell (pixels) | 62.5 thousand | 34 thousand |
+| 99th percentile | 34.4 thousand | 25.3 thousand |
+| cells above 1.8 times the median | 36 | 11 |
+| cells below 0.4 times the median | 16 | 9 |
+| most neighbours of a cell | 12 | 8 |
+| cells with nine or more neighbours | 8 | 0 |
+| folds for the port rule | 32 | 10 |
+| cells longer than 2.5 times their width | 41 | 28 |
+
+The cells that are still large are mostly the disks of islets and island groups (up to about 34
+thousand pixels); on a coast with big land locations or with wastelands a few cells are still
+folded and stand at one and a half to two times the typical area. An elongated island above the
+radius limit gets ordinary rings. The epoch before 64 divides the sea as before (the reference
+world of epoch 63 is made byte for byte, ADR 0013). [V-EXEC, EU5 1.4.9 / build 26655995; claim C558]
+
 **Sea-cell slivers, 1.1.0 / epoch 60 (same report):** some generated sea locations are long
 and narrow, like a needle or a crescent round a retained island's footprint. A coast, a crossing band
 or a footprint cuts a Voronoi cell into pieces that were merged only by area, so thin pieces survived.

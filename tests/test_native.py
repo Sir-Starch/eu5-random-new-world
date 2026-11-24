@@ -30,6 +30,7 @@ from tests.reference import noise as reference_noise
 from tests.reference import objects as reference_objects
 from tests.reference import points as reference_points
 from tests.reference import rivers as reference_rivers
+from tests.reference import seacells as reference_seacells
 from tests.reference import slots as reference_slots
 from tests.reference import terrain as reference_terrain
 from tests.reference import tiles as reference_tiles
@@ -53,6 +54,75 @@ def test_sea_voronoi_matches_brute_force_squared_distances() -> None:
             ),
         )
     np.testing.assert_array_equal(_native.sea_voronoi(mask, seeds), expected)
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3, 4])
+def test_sea_geodesic_equals_the_reference(seed: int) -> None:
+    """The walk through the water, with regions, head starts, spits and ties between sites."""
+    rng = np.random.default_rng(seed)
+    height, width = 27, 34
+    mask = rng.random((height, width)) > 0.2
+    region = ((np.arange(height)[:, None] // 9 + np.arange(width)[None, :] // 12) % 3).astype(
+        np.int32
+    )
+    sites = np.stack((rng.integers(0, height, 11), rng.integers(0, width, 11)), axis=1).astype(
+        np.int64
+    )
+    sites[1] = sites[0]  # two sites on one pixel: the lower number keeps it
+    start = rng.choice(np.array([0, 0, 0, 1000, 2500, 4000]), size=11).astype(np.uint32)
+    label, cost = _native.sea_geodesic(mask, region, sites, start)
+    expected_label, expected_cost = reference_seacells.geodesic(mask, region, sites, start)
+    np.testing.assert_array_equal(cost, expected_cost)
+    np.testing.assert_array_equal(label, expected_label)
+
+
+@pytest.mark.parametrize("seed", [5, 6, 7])
+def test_sea_refine_equals_the_reference(seed: int) -> None:
+    """Each pixel's nearest site among those its coarse neighbours name, by band and by claim."""
+    rng = np.random.default_rng(seed)
+    step = 4
+    height, width = 26, 38
+    coarse_shape = (-(-height // step), -(-width // step))
+    mask = rng.random((height, width)) > 0.15
+    count = 7
+    coarse = rng.integers(-1, count, coarse_shape).astype(np.int32)
+    sites = np.stack(
+        (rng.integers(0, height, count), rng.integers(0, width, count)), axis=1
+    ).astype(np.int64)
+    depth = rng.integers(0, 4000, coarse_shape).astype(np.int32)
+    home = rng.integers(-1, 3, count).astype(np.int32)
+    claim = np.where(rng.random(count) > 0.6, rng.integers(4, 60, count), 0).astype(np.int64)
+    for reach in (1, 2):
+        found = _native.sea_refine(mask, coarse, step, reach, sites, depth, 1500, 2, home, claim)
+        expected = reference_seacells.refine(
+            mask, coarse, step, reach, sites, depth, 1500, 2, home, claim
+        )
+        np.testing.assert_array_equal(found, expected)
+
+
+def test_sea_extremes_equal_a_scan() -> None:
+    rng = np.random.default_rng(8)
+    label = rng.integers(-1, 4, (9, 12)).astype(np.int32)
+    cost = rng.integers(0, 9000, (9, 12)).astype(np.uint32)
+    centres = rng.random((4, 2)) * np.array([9, 12])
+    near, far = _native.sea_extremes(label, cost, centres)
+    for owner in range(4):
+        spots = [
+            (row * 12 + column)
+            for row in range(9)
+            for column in range(12)
+            if label[row, column] == owner
+        ]
+        if not spots:
+            assert (near[owner], far[owner]) == (-1, -1)
+            continue
+
+        def distance(at: int, owner: int = owner) -> float:
+            return float((at // 12 - centres[owner, 0]) ** 2 + (at % 12 - centres[owner, 1]) ** 2)
+
+        assert near[owner] == min(spots, key=lambda at: (distance(at), at))
+        highest = max(int(cost[at // 12, at % 12]) for at in spots)
+        assert far[owner] == next(at for at in spots if int(cost[at // 12, at % 12]) == highest)
 
 
 def _streams() -> list[bytes]:

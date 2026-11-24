@@ -5,6 +5,19 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Divide **the sea into compact, even cells**. Generated sea cells were cut like land cells:
+  crooked outlines, tails, some cells touching a dozen neighbours and huge cells that reached
+  across a strait, so that a ship could be on both sides of it. The sea is now cut into bands by
+  its distance from land (a narrow one along the coast, then bands one cell wide), each strait is
+  its own piece of water, the cells of a band are relaxed to one size and meet in straight borders,
+  and a small island or group lies inside one cell. A coastal cell that no land can serve is
+  divided among the served cells beside it instead of being folded whole into one. On a continents
+  world the largest cell fell from 62.5 to 34 thousand pixels, the cells above one and eight tenths
+  of the median from 36 to 11, and the most neighbours of a cell from 12 to 8. Island groups with
+  many wastelands and coasts of big locations still leave a few cells at one and a half to two
+  times the typical area. A new world code (epoch 64) makes this; the sea of an earlier epoch is
+  made as before.
+
 - Add the option **Allow a land connection to Iberia (no strait)** to Africa's block, with a
   sub-option **Require the land connection to Iberia** that makes it certain, as the Asian link
   is. Iberia always kept the Strait of Gibraltar; now a world can join Africa to Iberia by land

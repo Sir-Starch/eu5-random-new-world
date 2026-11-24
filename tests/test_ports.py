@@ -164,3 +164,55 @@ def test_folding_sea_cells_keeps_the_area_planned_for_each_cell() -> None:
     folded, _ = relabel(world, {0: 1})
     assert folded.planned is not None
     assert folded.planned.tolist() == [0, 70, 90]
+
+
+def test_dissolving_gives_an_unserved_cell_to_the_two_served_cells_beside_it() -> None:
+    """One land touches the cell in the middle and the cells at its sides, another one the right
+    side: the middle cell is unserved, and its pixels go half and half to its neighbours."""
+    world = block_world(["AAB", "123"], block=6)
+    assert served(world, ForeignCoast()).unserved == (3,)
+    merged = settle_seas(world)
+    assert merged.world.pixels.tolist() == [72, 36, 72, 36]  # folded whole into one side
+    dissolved = settle_seas(world, dissolve=True)
+    assert dissolved.merged == 1
+    assert dissolved.world.pixels.tolist() == [72, 36, 54, 54]
+    assert dissolved.cell_of == (0, 1, 2, 2, 3)
+    assert not served(dissolved.world, ForeignCoast()).unserved
+    land = world.labels < 2
+    assert np.array_equal(dissolved.world.labels[land], world.labels[land])
+
+
+def test_the_halves_of_a_dissolved_cell_are_each_one_piece_beside_their_taker() -> None:
+    world = block_world(["AAB", "123"], block=6)
+    dissolved = settle_seas(world, dissolve=True).world
+    left, right = int(dissolved.labels[11, 0]), int(dissolved.labels[11, 17])
+    assert left != right
+    assert (dissolved.labels[6:, :9] == left).all()
+    assert (dissolved.labels[6:, 9:] == right).all()
+
+
+def test_a_cell_with_one_served_neighbour_is_still_folded_into_it() -> None:
+    world = block_world(["ABB", "123"], block=6)
+    assert settle_seas(world, dissolve=True).world.pixels.tolist() == (
+        settle_seas(world).world.pixels.tolist()
+    )
+
+
+def test_a_cell_that_foreign_land_touches_is_not_dissolved() -> None:
+    world = block_world(["AAB", "123"], block=6)
+    foreign = ForeignCoast(held=frozenset({3}))
+    folded = settle_seas(world, foreign, dissolve=True)
+    assert folded.world.pixels.tolist() == settle_seas(world, foreign).world.pixels.tolist()
+
+
+def test_dissolving_does_not_change_a_settled_world() -> None:
+    world = block_world(["#.#"], block=6)
+    assert settle_seas(world, dissolve=True).world is world
+
+
+def test_a_dissolved_world_is_the_same_whichever_way_it_is_asked() -> None:
+    world = block_world(["AAB", "123"], block=6)
+    first = settle_seas(world, dissolve=True)
+    second = settle_seas(world, dissolve=True)
+    assert first.cell_of == second.cell_of
+    assert np.array_equal(first.world.labels, second.world.labels)

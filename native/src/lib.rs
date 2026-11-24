@@ -17,6 +17,7 @@ pub mod objects;
 pub mod pdx;
 pub mod raster;
 pub mod relief;
+pub mod seacells;
 pub mod slots;
 pub mod spacing;
 pub mod splnet;
@@ -1090,6 +1091,136 @@ mod _native {
         }
         let (flags, sites) = (mask.as_slice()?, seeds.as_slice()?);
         let out = py.detach(|| voronoi::partition(flags, sites, shape.1));
+        shaped(py, shape, out)
+    }
+
+    /// The distance through water from the nearest site, and the site, on a coarse raster.
+    #[pyfunction]
+    #[allow(clippy::type_complexity)]
+    fn sea_geodesic<'py>(
+        py: Python<'py>,
+        mask: PyReadonlyArray2<'py, bool>,
+        region: PyReadonlyArray2<'py, i32>,
+        sites: PyReadonlyArray2<'py, i64>,
+        start: PyReadonlyArray1<'py, u32>,
+    ) -> PyResult<(Bound<'py, PyArray2<i32>>, Bound<'py, PyArray2<u32>>)> {
+        let shape = mask.as_array().dim();
+        let flags = mask.as_slice()?;
+        let regions = region.as_slice()?;
+        if region.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the rasters do not fit together",
+            ));
+        }
+        let at = sites.as_array();
+        let (count, columns) = at.dim();
+        let begin = start.as_slice()?;
+        if columns != 2 || begin.len() != count {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the sites do not fit together",
+            ));
+        }
+        let mut points = Vec::with_capacity(count);
+        for row in 0..count {
+            let (r, c) = (at[[row, 0]], at[[row, 1]]);
+            if r < 0 || c < 0 || r as usize >= shape.0 || c as usize >= shape.1 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "a site lies outside the raster",
+                ));
+            }
+            points.push((r as usize, c as usize));
+        }
+        let found =
+            py.detach(|| seacells::geodesic(flags, regions, shape.0, shape.1, &points, begin));
+        Ok((
+            shaped(py, shape, found.label)?,
+            shaped(py, shape, found.cost)?,
+        ))
+    }
+
+    /// Per label of a geodesic partition: the pixel nearest the label's centre of mass and the
+    /// pixel farthest from its site, as flat indices (-1 where the label has no pixel).
+    #[pyfunction]
+    #[allow(clippy::type_complexity)]
+    fn sea_extremes<'py>(
+        py: Python<'py>,
+        label: PyReadonlyArray2<'py, i32>,
+        cost: PyReadonlyArray2<'py, u32>,
+        centres: PyReadonlyArray2<'py, f64>,
+    ) -> PyResult<(Bound<'py, PyArray1<i64>>, Bound<'py, PyArray1<i64>>)> {
+        let shape = label.as_array().dim();
+        let (labels, costs) = (label.as_slice()?, cost.as_slice()?);
+        let at = centres.as_array();
+        if cost.as_array().dim() != shape || at.dim().1 != 2 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the rasters do not fit together",
+            ));
+        }
+        let middles: Vec<(f64, f64)> = (0..at.dim().0)
+            .map(|row| (at[[row, 0]], at[[row, 1]]))
+            .collect();
+        let (near, far) = py.detach(|| seacells::extremes(labels, costs, shape.1, &middles));
+        Ok((near.into_pyarray(py), far.into_pyarray(py)))
+    }
+
+    /// The full raster's partition that follows a coarse one with exact borders.
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn sea_refine<'py>(
+        py: Python<'py>,
+        mask: PyReadonlyArray2<'py, bool>,
+        coarse: PyReadonlyArray2<'py, i32>,
+        step: usize,
+        reach: usize,
+        sites: PyReadonlyArray2<'py, i64>,
+        depth: PyReadonlyArray2<'py, i32>,
+        band_width: i64,
+        last_band: i64,
+        site_band: PyReadonlyArray1<'py, i32>,
+        site_claim: PyReadonlyArray1<'py, i64>,
+    ) -> PyResult<Bound<'py, PyArray2<i32>>> {
+        let shape = mask.as_array().dim();
+        let (flags, grid) = (mask.as_slice()?, coarse.as_slice()?);
+        let cells = coarse.as_array().dim();
+        let at = sites.as_array();
+        let bands_of = site_band.as_slice()?;
+        let claims = site_claim.as_slice()?;
+        if step == 0
+            || reach == 0
+            || cells.0 == 0
+            || cells.1 == 0
+            || cells.0 != shape.0.div_ceil(step)
+            || cells.1 != shape.1.div_ceil(step)
+            || depth.as_array().dim() != cells
+            || at.dim().1 != 2
+            || bands_of.len() != at.dim().0
+            || claims.len() != at.dim().0
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the rasters do not fit together",
+            ));
+        }
+        let points: Vec<(i64, i64)> = (0..at.dim().0)
+            .map(|row| (at[[row, 0]], at[[row, 1]]))
+            .collect();
+        if grid
+            .iter()
+            .any(|&label| label >= 0 && label as usize >= points.len())
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "a label has no site",
+            ));
+        }
+        let bands = seacells::Bands {
+            depth: depth.as_slice()?,
+            width: band_width,
+            last: last_band,
+            site: bands_of,
+            claim: claims,
+        };
+        let out = py.detach(|| {
+            seacells::refine(flags, shape.1, grid, cells.1, step, reach, &points, &bands)
+        });
         shaped(py, shape, out)
     }
 
