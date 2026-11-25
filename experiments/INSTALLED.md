@@ -2339,3 +2339,25 @@ The Windows wheel SHA-256 is
 `c701af8ac664cb55893ba68b1bf7c58fdc62a6a197db828f01646bd8f12b858c`.
 The Windows binaries match the previous hub, which is now in
 `.rnw-hub-backups/1.3.0-1795621844191672908`.
+
+2026-11-25, **Open Atlantic island sites** (`b431e27`, pending epoch 64 of 1.3.0, C561).
+[V-EXEC] Installed the America and Africa world of seed 101 into the existing Steam Proton profile
+for EU5 1.4.9 / build 26655995. Its 1,376 installed files match the prepared mod, including all
+1,347 gameplay files in the manifest. The library receipt recovers. Installation verified ten
+profile files by hash and the existing 21 mod folders by file size and modification time.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| RNW: America & Africa 3RAG | `rnw_exp_world_3ragquejl7` | `af36f85feeed1bf3699b5dc96b17335f8feaf6ab290a0aa92dd85445552f4cc4` |
+
+The two-continent export checks 3,999 ports. The separate America, Africa and Oceania export
+(seed 101, `rnw_exp_world_kmxwyk6hkq`) checks 4,318. Both have zero unreachable generated sea
+zones and zero lost retained contacts. A read-back of the six old island sites verified the
+location tables, location and river rasters, and primary terrain heights.
+
+Locked sync and `make check` passed with 3,916 Python tests (22 skipped) and 48 Rust tests.
+The America-only epoch 64 reference reproduced `473336d8…435f` (884 files). Both Linux window
+self-tests and both offscreen Wine self-tests passed. The updated hub passed file verification.
+Its Windows wheel SHA-256 is `758130af33f5a29b3ab1ceb63aa8643ec74b5bb756147af8ee614cb6e5b15ef8`.
+The native program files match the previous hub, which is in
+`.rnw-hub-backups/1.3.0-1795623900966497564`.
