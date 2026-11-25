@@ -2320,3 +2320,22 @@ Wine. The Windows generator also recovered the old LPWP atlas at the correct wra
 The hub passed installed-file verification. The Windows wheel SHA-256 is
 `77679f6d2e1753a4ad43ca37e9b8e7c3b2838a5d5c998081f1bfef4ae6fcc3bf`. The hub present before
 the task is in `.rnw-hub-backups/1.3.0-1795606703790366962`.
+
+2026-11-25, **Mediterranean identity with generated Africa** (`c2d8c68`, pending epoch 64
+of 1.3.0, C560). [V-EXEC] Installed the three-continent world of seed 101 with open
+Gibraltar into the Steam Proton profile for EU5 1.4.9 / build 26655995. All 1,492
+installed files match the prepared mod, including the 1,463 recorded gameplay files.
+The library receipt recovers and the export checks 4,317 ports with zero unreachable
+generated sea zones.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| RNW: Combined world MNQT | `rnw_exp_world_mnqtyqqcur` | `1acdac5670ee44f32f577acf5f25b7266f637a7a748645919018a049eaf17eb9` |
+
+Locked sync and `make check` passed with 3,911 Python tests (22 skipped) and 48 Rust tests.
+The America-only reference reproduces the existing epoch 64 digest `473336d8…435f`
+(884 files). The updated hub passed both offscreen Wine self-tests and file verification.
+The Windows wheel SHA-256 is
+`c701af8ac664cb55893ba68b1bf7c58fdc62a6a197db828f01646bd8f12b858c`.
+The Windows binaries match the previous hub, which is now in
+`.rnw-hub-backups/1.3.0-1795621844191672908`.
