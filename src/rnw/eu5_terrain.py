@@ -30,9 +30,13 @@ import numpy as np
 from rnw import _native
 from rnw.eu5_mountains import CAP, FULL, LOW
 from rnw.eu5_slots import (
+    CLIMATE_BORDER,
+    COAST_TRANSITION,
     LEVELS,
     NO_MATERIAL,
     REACH,
+    TOPOGRAPHY_BORDER,
+    VARIATION,
     SlotTables,
     level_counts,
     slot_remap,
@@ -40,7 +44,7 @@ from rnw.eu5_slots import (
 )
 from rnw.fields import PERMILLE
 from rnw.land_contact import MATERIAL_REACH, soften_rim
-from rnw.noise import NOISE_SCALE
+from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
 from rnw.relief import COAST_HEIGHT
@@ -646,27 +650,86 @@ def _fine_at(
     return fine[np.ix_(rows.reshape(-1), columns.reshape(-1))].astype(np.int64)
 
 
+def _contact_columns(
+    contact: ContactBlend | None, decal: Decal, first: int, last: int, width: int
+) -> NDArray[np.bool_]:
+    active = np.zeros(decal.columns, dtype=bool)
+    if contact is not None:
+        window = _contact_window(
+            contact,
+            ((last - first) * 2, decal.columns * 2),
+            first=decal.row0 + first,
+            column=decal.column0,
+            width=width,
+        )
+        if window is not None:
+            indices, _, columns = window
+            active[columns[::2] // 2] = contact.retouch[indices].any(axis=0)
+    return active
+
+
 def _contact_decals(
     contact: ContactBlend,
-    heights: NDArray[np.int64],
+    image: NDArray[np.uint16],
     *,
     first: int,
     column: int,
     width: int,
-) -> NDArray[np.bool_] | None:
-    """Taper detail against the same installed height used by the physical terrain."""
-    window = _contact_window(contact, heights.shape, first=first, column=column, width=width)
+) -> None:
+    """Blend the generated and retained heights to one surface along the join."""
+    window = _contact_window(contact, image.shape, first=first, column=column, width=width)
     if window is None:
-        return None
+        return
     indices, decal_rows, decal_cols = window
     weight = _fine_at(contact.fine_weight, indices)
     target = _fine_at(contact.fine_target, indices)
-    samples = heights[decal_rows, decal_cols]
-    heights[decal_rows, decal_cols] = (samples * (PERMILLE - weight) + target * weight) // PERMILLE
-    retouch = (contact.distance[indices] <= MATERIAL_REACH) & contact.retained[indices]
-    mask = np.zeros(heights.shape, dtype=bool)
-    mask[decal_rows, decal_cols] = np.repeat(np.repeat(retouch, 2, axis=0), 2, axis=1)
-    return mask
+    samples = image[decal_rows, decal_cols].astype(np.int64)
+    image[decal_rows, decal_cols] = (
+        (samples * (PERMILLE - weight) + target * weight) // PERMILLE
+    ).astype(np.uint16)
+
+
+def _contact_materials(  # noqa: PLR0913 - join, decal window, biome slots and absolute noise.
+    contact: ContactBlend,
+    image: NDArray[np.uint8],
+    labels: NDArray[np.int32],
+    tables: SlotTables,
+    *,
+    first: int,
+    column: int,
+    width: int,
+    seed: int,
+) -> None:
+    """Feather out the biome-border stripe and remnants of the old beach on dry ground."""
+    window = _contact_window(contact, image.shape, first=first, column=column, width=width)
+    if window is None:
+        return
+    indices, rows, columns = window
+    distance = np.repeat(np.repeat(contact.distance[indices], 2, axis=0), 2, axis=1)
+    near = distance <= MATERIAL_REACH + 4
+    if not near.any():
+        return
+    weight = _fine_at(contact.fine_weight, indices)
+    samples = image[rows, columns]
+    boundary = (samples >= TOPOGRAPHY_BORDER) & (samples <= CLIMATE_BORDER)
+    retained = np.repeat(np.repeat(contact.retained[indices], 2, axis=0), 2, axis=1)
+    old_beach = retained & (samples <= COAST_TRANSITION)
+    noise = fractal_noise(
+        derive_seed(seed, "junction_materials"),
+        2 * column,
+        2 * first + rows.start,
+        image.shape[1],
+        rows.stop - rows.start,
+        period=24,
+        octaves=2,
+        persistence_permille=500,
+    )[:, columns]
+    edit = near & (weight > PERMILLE // 2) & (boundary | old_beach)
+    edit &= distance <= MATERIAL_REACH + noise * 8 // NOISE_SCALE
+    variations = VARIATION + (noise[edit] + NOISE_SCALE) * 6 // (2 * NOISE_SCALE)
+    number = tables.materials[labels[rows, columns][edit]]
+    samples[edit] = slot_remap()[number.clip(0, slot_remap().shape[0] - 1), variations]
+    image[rows, columns] = samples
 
 
 def _contact_rim(
@@ -720,7 +783,9 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         ]
         != OUTSIDE
     )
-    active = np.flatnonzero(np.any(written, axis=0))
+    active = np.flatnonzero(
+        written.any(axis=0) | _contact_columns(inputs.contact, decal, first, last, width)
+    )
     if not active.size:
         return
     left, right = int(active[0]), int(active[-1]) + 1
@@ -789,20 +854,16 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
                 raise TerrainRangeError(str(error)) from error
         target = (slice(first * 2, last * 2), slice(left * 2, right * 2))
         height_image, material_image = images
-        retouch = (
-            None
-            if inputs.contact is None
-            else _contact_decals(
+        _write_where(height_image[target], heights, inside)
+        del heights
+        if inputs.contact is not None:
+            _contact_decals(
                 inputs.contact,
-                heights,
+                height_image[target],
                 first=decal.row0 + first,
                 column=decal.column0 + left,
                 width=width,
             )
-        )
-        _write_where(height_image[target], heights, inside)
-        del heights
-        if inputs.contact is not None:
             _contact_rim(
                 inputs.contact,
                 height_image[target],
@@ -813,7 +874,18 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
         if stamped is not None:
             slots = _lay_stamp_slots(slots, stamped, labels[core], tables)
-        _write_where(material_image[target], slots, inside if retouch is None else inside | retouch)
+        _write_where(material_image[target], slots, inside)
+        if inputs.contact is not None:
+            _contact_materials(
+                inputs.contact,
+                material_image[target],
+                labels[core],
+                tables,
+                first=decal.row0 + first,
+                column=decal.column0 + left,
+                width=width,
+                seed=seed,
+            )
 
 
 @measured
@@ -887,7 +959,9 @@ def terrain_outputs(
     touched = [
         plan
         for plan, original in zip(plans, store.decals, strict=True)
-        if plan != original or _touches_coast(plan, codes)
+        if plan != original
+        or _touches_coast(plan, codes)
+        or _contact_columns(inputs.contact, plan, 0, plan.rows, codes.shape[1]).any()
     ]
     columns = max((decal.columns for decal in touched), default=0) + 2 * MARGIN
     thin = BAND_BYTES * columns * (2 * BAND_HALO + MIN_BAND_ROWS)

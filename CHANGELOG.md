@@ -5,6 +5,10 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Smooth relief and material transitions on both sides of generated African land
+  connections to Asia and Iberia. Grow restored Morocco and the Mamluks as
+  connected territories around their retained holdings.
+
 - Extend Africa's canvas to the Arabian shore. Land connections to Asia can vary
   in location and shape, or be absent when optional. A new sub-option guarantees a
   connection at the original land border and allows a second one elsewhere.

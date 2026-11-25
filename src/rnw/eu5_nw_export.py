@@ -73,6 +73,7 @@ from rnw.eu5_africa_start import (
     CAIRO,
     MAMLUKS,
     MOROCCO,
+    african_land,
     algeciras,
     apply_morocco_start,
     damascus_sultanate,
@@ -1505,18 +1506,14 @@ def _inland_sea_cells(
     world: NewWorld,
     settings: NewWorldSettings,
     *,
-    by_continent: Mapping[str, int] | None = None,
-    plan: Plan | None = None,
+    by_cell: NDArray[np.int64] | None = None,
     outside_water: Collection[int] | None = None,
 ) -> frozenset[int]:
     """Allow substantial, physically enclosed seas; a small basin should have been a lake."""
     basins = inland_seas(world, outside_water=outside_water)
+    default = inland_sea_min_area(settings)
     for basin in basins:
-        minimum = (
-            by_continent[plan.cells[basin[0]].continent]
-            if by_continent is not None and plan is not None
-            else inland_sea_min_area(settings)
-        )
+        minimum = default if by_cell is None else min(int(by_cell[cell]) for cell in basin)
         area = sum(int(world.pixels[cell]) for cell in basin)
         if area < minimum:
             message = f"An inland sea has only {area} pixels (minimum {minimum}); expected a lake"
@@ -1597,7 +1594,7 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
     settings: NewWorldSettings,
     *,
     generated_continents: frozenset[str] = AMERICAN_GENERATION,
-    inland_sizes: Mapping[str, int] | None = None,
+    inland_sizes: NDArray[np.int64] | None = None,
     iberian_link: bool = False,
     outside_water: Collection[int] | None = None,
 ) -> tuple[dict[str, int], frozenset[int]]:
@@ -1680,9 +1677,7 @@ def _check_world(  # noqa: C901, PLR0913, PLR0915, PLR0917 - check the raster an
             if other not in seen:
                 seen.add(other)
                 queue.append(other)
-    inland = _inland_sea_cells(
-        world, settings, by_continent=inland_sizes, plan=plan, outside_water=outside_water
-    )
+    inland = _inland_sea_cells(world, settings, by_cell=inland_sizes, outside_water=outside_water)
     orphan = [
         i
         for i in range(vanilla_count, vanilla_count + count)
@@ -1882,9 +1877,9 @@ def check_composed_map(
         _final_labels(game_map, canvas, world),
         plan,
         water.zones,
-        next(iter(geography.values())),
+        min(geography.values(), key=inland_sea_min_area),
         generated_continents=frozenset(geography),
-        inland_sizes={name: inland_sea_min_area(settings) for name, settings in geography.items()},
+        outside_water=water.coast.outside_water,
     )
     return counts
 
@@ -4635,6 +4630,17 @@ def _shared_ocean_boundaries(shared: ComposedWorld, water: Water) -> dict[str, i
     return results
 
 
+def _inland_sizes(
+    shared: ComposedWorld, coast: Coast, geography: Mapping[str, NewWorldSettings]
+) -> NDArray[np.int64]:
+    """Read the sea scale from the generation canvas, before names and sea cells are merged."""
+    source = np.asarray(coast.source_cells, dtype=np.int64)
+    sizes = np.full(len(coast.world.classes), np.iinfo(np.int64).max, dtype=np.int64)
+    for name, cells in shared.cell_ids.items():
+        np.minimum.at(sizes, source[cells], inland_sea_min_area(geography[name]))
+    return sizes
+
+
 @dataclass(frozen=True, slots=True)
 class CompositionInputs:
     """What the plan of a world of several continents reads besides the map and the seed: each
@@ -5170,7 +5176,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             shapes.zones,
             settings.new_world,
             generated_continents=frozenset(geography),
-            inland_sizes={name: inland_sea_min_area(knobs) for name, knobs in geography.items()},
+            inland_sizes=_inland_sizes(shared, shapes.coast, geography),
             iberian_link=any(region.domain.join_iberia for region in regions),
             outside_water=shapes.coast.outside_water,
         ),
@@ -5218,7 +5224,8 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
 def reserve_african_countries(  # noqa: PLR0913, PLR0917 - installed and generated geography.
     game_dir: Path,
     plan: Plan,
-    world: NewWorld,
+    water: Water,
+    game_map: Eu5Map,
     original: Mapping[str, tuple[int, int]],
     hierarchy: Mapping[str, Location],
     settings: RegionalSettings | None,
@@ -5230,10 +5237,10 @@ def reserve_african_countries(  # noqa: PLR0913, PLR0917 - installed and generat
     country_text = _setup_paths(game_dir, regional=True)[COUNTRIES_FILE].read_text(
         encoding="utf-8-sig"
     )
-    morocco = reserve_morocco(plan, world, original, settings.morocco, morocco_donors(country_text))
+    land = african_land(plan, water, game_map.keys)
+    morocco = reserve_morocco(plan, land, original, settings.morocco, morocco_donors(country_text))
     mamluks = reserve_mamluks(
-        plan,
-        world,
+        land,
         original,
         country_text,
         {key for key, place in hierarchy.items() if place.continent == "africa"},
@@ -5320,7 +5327,7 @@ def _build_composed_start(  # noqa: PLR0913 - regional settings and the complete
     }
     africa = next((region for region in regions if region.key == "africa"), None)
     morocco, mamluks, remap = reserve_african_countries(
-        game_dir, plan, world, original, hierarchy, africa, remap
+        game_dir, plan, prepared.shape, map_, original, hierarchy, africa, remap
     )
     held = (() if morocco is None else morocco.africa) + (() if mamluks is None else mamluks.africa)
     rules = installed_rules(base)

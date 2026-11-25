@@ -7,6 +7,7 @@ import pytest
 from rnw.eu5_africa_start import (
     COUNTRIES_BLOCK,
     COUNTRIES_FILE,
+    AfricanLand,
     AfricanStartError,
     damascus_sultanate,
     plan_mamluks,
@@ -15,6 +16,7 @@ from rnw.eu5_africa_start import (
 )
 from rnw.eu5_rewrite import owned_locations, prune_regional_setup
 from rnw.geography import Location
+from rnw.history_model import Route
 from rnw.loc_keys import KeySpace
 from rnw.pdx import parse
 from rnw.settings import MamlukPolicy
@@ -39,6 +41,9 @@ AFRICA = {
     "near_iskenderun": (8, 97),
     "distant": (30, 30),
 }
+LAND = AfricanLand(
+    AFRICA, 100, (Route("nearest_to_cairo", "near_iskenderun"), Route("near_iskenderun", "wrapped"))
+)
 
 
 def test_restore_mamluk_capital_and_both_sides_of_the_start() -> None:
@@ -46,15 +51,14 @@ def test_restore_mamluk_capital_and_both_sides_of_the_start() -> None:
     assert countries is not None
     mamluks = countries.block("MAM")
     assert mamluks is not None
-    start = plan_mamluks(AFRICA, ORIGINAL, 100, mamluks, OLD_AFRICA, reserved={"moroccan"})
+    start = plan_mamluks(LAND, ORIGINAL, mamluks, OLD_AFRICA, reserved={"moroccan"})
     assert start.core == ("nearest_to_cairo", "near_iskenderun")
     assert start.integrated == ("wrapped",)
     assert start.capital == "nearest_to_cairo"
     assert start.asia == {"damascus", "iskenderun"}
     assert start == plan_mamluks(
-        dict(reversed(tuple(AFRICA.items()))),
+        AfricanLand(dict(reversed(tuple(AFRICA.items()))), 100, LAND.routes[::-1]),
         ORIGINAL,
-        100,
         mamluks,
         OLD_AFRICA,
         reserved={"moroccan"},
@@ -92,14 +96,16 @@ def test_mamluk_reservation_cannot_take_moroccos_land() -> None:
     assert mamluks is not None
     with pytest.raises(AfricanStartError, match="require 3 unreserved passable locations"):
         _ = plan_mamluks(
-            AFRICA, ORIGINAL, 100, mamluks, OLD_AFRICA, reserved={"moroccan", "wrapped", "distant"}
+            LAND, ORIGINAL, mamluks, OLD_AFRICA, reserved={"moroccan", "wrapped", "distant"}
         )
 
 
 def test_independent_damascus_takes_the_asian_holdings_only() -> None:
     mamluks = parse(SETUP).block(*COUNTRIES_BLOCK, "MAM")
     assert mamluks is not None
-    start = plan_mamluks({}, ORIGINAL, 100, mamluks, OLD_AFRICA, policy=MamlukPolicy.DAMASCUS)
+    start = plan_mamluks(
+        AfricanLand({}, 100, ()), ORIGINAL, mamluks, OLD_AFRICA, policy=MamlukPolicy.DAMASCUS
+    )
     assert start.africa == ()
     assert start.capital == "damascus"
     hierarchy = {

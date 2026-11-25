@@ -11,17 +11,21 @@ from rnw.eu5_africa_start import (
     COUNTRIES_BLOCK,
     COUNTRIES_FILE,
     IBERIAN_HOLDINGS,
+    AfricanLand,
     AfricanStartError,
     algeciras,
     apply_morocco_start,
     plan_morocco,
 )
 from rnw.eu5_rewrite import owned_locations
+from rnw.history_model import Route
 from rnw.loc_keys import KeySpace
 from rnw.pdx import parse
 from rnw.settings import MoroccoPolicy
 
 AFRICA = {f"loc_{i:03d}": (i + 5, 4) for i in range(110)}
+ROUTES = tuple(Route(f"loc_{i:03d}", f"loc_{i + 1:03d}") for i in range(109))
+LAND = AfricanLand(AFRICA, 1000, ROUTES)
 ORIGINAL = dict.fromkeys(IBERIAN_HOLDINGS, (4, 4)) | {"fez": (12, 4)}
 SETUP = f"""countries = {{ countries = {{
     CAS = {{ capital = toledo own_control_core = {{ toledo }} }}
@@ -37,26 +41,36 @@ SETUP = f"""countries = {{ countries = {{
 
 
 def test_reservation_uses_passable_candidates_and_wraps_distance() -> None:
-    start = plan_morocco(AFRICA | {"at_wrap": (4, 998)}, ORIGINAL, 1000)
+    points = AFRICA | {"at_wrap": (4, 998), "isolated": (4, 4)}
+    routes = (*ROUTES, Route("at_wrap", "loc_000"))
+    start = plan_morocco(AfricanLand(points, 1000, routes), ORIGINAL)
     assert start.policy is MoroccoPolicy.RESTORE
     assert len(start.africa) == AFRICAN_HOLDINGS
     assert "at_wrap" in start.africa
+    assert "isolated" not in start.africa
     assert start.capital == "loc_007"
     assert "loc_109" not in start.africa
-    reverse = dict(reversed(tuple(AFRICA.items())))
-    assert plan_morocco(reverse | {"at_wrap": (4, 998)}, ORIGINAL, 1000) == start
+    reverse = AfricanLand(dict(reversed(tuple(points.items()))), 1000, routes[::-1])
+    assert plan_morocco(reverse, ORIGINAL) == start
+
+
+def test_reservation_grows_from_a_passable_iberian_border() -> None:
+    grounded = replace(LAND, borders=(("loc_109", "gibraltar", 0), ("loc_000", "ronda", 1)))
+    start = plan_morocco(grounded, ORIGINAL)
+    assert start.africa[0] == "loc_109"
+    assert set(start.africa) == {f"loc_{i:03d}" for i in range(24, 110)}
 
 
 def test_reservation_requires_enough_land_for_the_exact_holdings() -> None:
     with pytest.raises(AfricanStartError, match="requires 86 passable locations"):
-        _ = plan_morocco({"tiny": (8, 4)}, ORIGINAL, 1000)
+        _ = plan_morocco(AfricanLand({"tiny": (8, 4)}, 1000, ()), ORIGINAL)
 
 
 @pytest.mark.parametrize("policy", list(MoroccoPolicy))
 def test_policy_has_one_iberian_owner_and_never_changes_its_population(
     policy: MoroccoPolicy,
 ) -> None:
-    start = plan_morocco(AFRICA, ORIGINAL, 1000, policy)
+    start = plan_morocco(LAND, ORIGINAL, policy)
     if policy is MoroccoPolicy.RESTORE:
         start = replace(start, capital_province="province_of_morocco")
     emirate = algeciras(42, frozenset({"MOR", "CAS", "GRA"}), KeySpace(set()), frozenset())
@@ -115,7 +129,7 @@ def test_policy_has_one_iberian_owner_and_never_changes_its_population(
 
 
 def test_a_forged_reservation_cannot_take_a_vanilla_holding() -> None:
-    start = plan_morocco(AFRICA, ORIGINAL, 1000)
+    start = plan_morocco(LAND, ORIGINAL)
     bad = replace(start, africa=("ronda", *start.africa[1:]))
     with pytest.raises(AfricanStartError, match="86 distinct new African holdings"):
         _ = apply_morocco_start(

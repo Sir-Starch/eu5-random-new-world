@@ -105,17 +105,17 @@ approach Europe closely enough for an army crossing over one navigable strait.
 When generating Africa, **Morocco's Iberian holdings** offers four outcomes for
 Ronda, Algeciras, Gibraltar and Marbella.
 
-- **Keep Morocco** keeps the Iberian holdings and gives Morocco the 86 closest
-  passable locations in the new Africa. Morocco's capital is the holding closest
-  to Fez's original position.
+- **Keep Morocco** keeps the Iberian holdings and grows a connected territory of
+  86 passable locations in the new Africa. A border with its Iberian holdings
+  guides the choice where one exists. Its capital is the holding closest to Fez.
 - **Independent Algeciras** gives the four holdings to an Andalusi Sunni emirate.
 - **Join Castile** or **Join Granada** gives all four to the chosen country.
 
 **Mamluk holdings in Asia** offers two outcomes.
 
-- **Keep Mamluks** keeps all 75 Asian holdings and gives the Mamluks the 68
-  closest passable locations in the new Africa. Their capital is the new
-  holding closest to the original Cairo.
+- **Keep Mamluks** keeps all 75 Asian holdings and grows a connected territory
+  of 68 passable African locations, joining the Asian holdings where possible.
+  Its capital is the new holding closest to Cairo.
 - **Independent Sultanate of Damascus** gives all 75 Asian holdings to a new
   Sunni Levantine monarchy with Damascus as its capital.
 

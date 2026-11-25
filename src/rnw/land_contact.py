@@ -18,7 +18,8 @@ if TYPE_CHECKING:
 
 REACH: Final[int] = 240
 DETAIL_REACH: Final[int] = 36
-MATERIAL_REACH: Final[int] = 10
+VISUAL_REACH: Final[int] = 64
+MATERIAL_REACH: Final[int] = 18
 # Averages are taken over this many units a pixel, so a window holding only a few retained pixels
 # (a thin sliver of weight) is still exact. A scale counts once retained ground fills a few
 # millionths of its window, which is little enough to reach as far as its blur does.
@@ -132,14 +133,25 @@ class ContactTerrain:
             share = smoothstep(weight * MILLIONTH // PRECISION, *SCALE_PRESENT)
             step = (PERMILLE - smoothstep(gap, held, gone)) * share // PERMILLE
             target = (target * (PERMILLE - step) + average * step) // PERMILLE
+        coast = distance_from(water, COAST_TAPER, octagonal=True).astype(np.int64)
+        ground = generated | retained
+        seam = shore | (generated & (distance == 1))
+        # Give both sides the same surface and its slope across the seam. A short blur takes
+        # out the traces of the old coast, while the fade preserves the surrounding relief.
+        visual = box_blur(target, 4)
+        visual_distance = distance_from(seam, VISUAL_REACH, octagonal=True).astype(np.int64)
+        visual_weight = (
+            (PERMILLE - smoothstep(visual_distance, 3, VISUAL_REACH))
+            * smoothstep(coast, 1, 12)
+            // PERMILLE
+        )
+        visual_weight[~ground] = 0
         exact = PERMILLE - smoothstep(gap, *SEAM_EXACT)
         target = (target * (PERMILLE - exact) + carried * exact) // PERMILLE
-        coast = distance_from(water, COAST_TAPER, octagonal=True).astype(np.int64)
         inland = smoothstep(coast, 0, COAST_TAPER)
         # Far from the seam the generated coast keeps its profile; at the seam, ground is ground.
         held = smoothstep(gap, *SEAM_HOLD)
         taper = PERMILLE - held * (PERMILLE - inland) // PERMILLE
-        weight = _weight(distance, taper, generated, DETAIL_REACH)
         quarters = _upsample(np.where(rim == NO_RIM, RIM_REACH, from_cut) * QUARTER, retained)
         fine_rim = np.where(
             quarters >= RIM_REACH * QUARTER,
@@ -155,8 +167,9 @@ class ContactTerrain:
             nearest,
             target,
             taper,
-            _upsample(target, generated).astype(np.int32),
-            _upsample(weight, generated).astype(np.int16),
+            ground & (distance_from((visual_weight > 0) | (rim != NO_RIM), 2) <= 1),
+            _upsample(visual, ground).astype(np.int32),
+            _upsample(visual_weight, ground).astype(np.int16),
             fine_rim.astype(np.int32),
         )
 
@@ -207,6 +220,7 @@ class ContactBlend:
     nearest: NDArray[np.int32]
     target: NDArray[np.int64]
     taper: NDArray[np.int64]
+    retouch: NDArray[np.bool_]
     fine_target: NDArray[np.int32]
     fine_weight: NDArray[np.int16]
     fine_rim: NDArray[np.int32]

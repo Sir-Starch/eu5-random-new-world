@@ -79,8 +79,12 @@ applied to the retained heights before they are carried into the generated side,
 so both sides of the seam agree, and the target, its weight and the cap reach
 the decals by interpolation (two samples a location pixel), not as repeated
 whole pixels, so no pixel grid shows where the height slopes.
-Retained climate and vegetation supply a joint vote
-that weakens inland. Border materials follow the new shoreline.
+Retained climate and vegetation supply a joint vote that weakens inland. Both
+sides of a dry junction blend into the same smooth height surface at decal
+resolution and fade back into their terrain within 64 location pixels. Close
+to the junction, ordinary ground variations replace the former beach and the
+line of biome-border materials. The location raster and retained location
+definitions keep their existing values.
 
 **Allow a land connection to Iberia (no strait)** (C557; Africa's block, off by default) lets a
 world join Africa to southern Iberia by land where the Strait of Gibraltar is. The setting
@@ -233,11 +237,10 @@ When Africa is generated, the 1337 start offers four choices for Ronda,
 Algeciras, Gibraltar and Marbella.
 
 1. **Keep Morocco (default).** Morocco retains its Iberian holdings, its
-   tag and its start government. It receives the 86 passable generated
-   African locations closest to those four holdings. Distance compares
-   centres on the wrapped raster and crosses water. Choose the location
-   nearest vanilla Fez from those 86 as the African capital. Reserve the
-   locations before building the other African polities.
+   tag and its start government. It grows a connected territory of 86 passable
+   generated African locations near those holdings. The holding nearest
+   vanilla Fez becomes the African capital. Reserve the locations before
+   building the other African polities.
 2. **Independent Algeciras.** The four locations form a Sunni Andalusi
    emirate centred on Algeciras. The normal tag allocator assigns it a
    fresh tag. Morocco retires from this start.
@@ -258,9 +261,11 @@ The offline setup trial exercised all four choices on the same map.
 
 **Keep Mamluks** is the default when Africa is generated. The Mamluks keep
 their tag, government and all 75 Asian holdings, including conquered Iskenderun.
-Their 68 original African holdings are replaced by the 68 passable generated
-locations closest to their Asian territory, using the same wrapped distance
-as for Morocco.
+Their 68 original African holdings are replaced by a connected territory of
+68 passable generated locations. For both countries the reservation prefers a
+direct border with retained holdings, then a validated strait. It grows along
+land borders and uses short navigable water routes when the component needs
+them to reach its full size. Wrapped distance ranks the eligible locations.
 Morocco's reservation takes priority if both claims reach the same location.
 The 54 holdings nearest the original Cairo become cores, including the new
 capital, and the other 14 start integrated. Both reservations are made before

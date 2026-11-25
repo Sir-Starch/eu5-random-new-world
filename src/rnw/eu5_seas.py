@@ -180,6 +180,7 @@ class Coast:
     designed: frozenset[int] = frozenset()
     source_cells: tuple[int, ...] = ()
     outside_water: frozenset[int] | None = None
+    land_borders: tuple[tuple[int, int], ...] = ()
 
     def renumbered(self, world: NewWorld, cell_of: Sequence[int], keep: Collection[int]) -> Coast:
         """This coast in ``world``, whose cells are the old ones folded as ``cell_of`` says.
@@ -199,6 +200,7 @@ class Coast:
             None
             if self.outside_water is None
             else frozenset(cell_of[cell] for cell in self.outside_water),
+            tuple((old, cell_of[cell]) for old, cell in self.land_borders),
         )
 
 
@@ -278,6 +280,13 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         )
         if classify_shared_basins
         else None,
+        tuple(
+            (old, settled.cell_of[cell])
+            for old, cell in sorted(contacts)
+            if game_map.classes[old] is CellClass.LAND and world.classes[cell] is CellClass.LAND
+        )
+        if classify_shared_basins
+        else (),
     )
 
 

@@ -7,7 +7,11 @@ from __future__ import annotations
 import numpy as np
 
 from rnw.eu5_biomes import _anchor_biome_votes  # pyright: ignore[reportPrivateUsage]
-from rnw.eu5_terrain import _contact_decals  # pyright: ignore[reportPrivateUsage]
+from rnw.eu5_slots import SlotTables
+from rnw.eu5_terrain import (
+    _contact_decals,  # pyright: ignore[reportPrivateUsage]
+    _contact_materials,  # pyright: ignore[reportPrivateUsage]
+)
 from rnw.land_contact import (
     NO_RIM,
     RIM_BASE,
@@ -41,14 +45,25 @@ def test_rock_and_climate_join_the_retained_side_then_fade() -> None:
     assert np.all(relief[:, 0] == 20000)
     assert np.all(np.abs(np.diff(relief, axis=1)) < 120)
 
-    visible = np.full((80, 600), 30000, dtype=np.int64)
-    materials = _contact_decals(blend, visible, first=0, column=0, width=300)
-    assert materials is not None
-    # A decal sample lies a quarter of a pixel from its pixel's middle; the height slopes 6 a row.
-    assert np.all(np.abs(visible[::2, 528] - height[:, 265]) <= 6)
-    assert np.all(visible[:, 530:] == 30000)
-    assert np.all(materials[:, 530])
-    assert not materials[:, :530].any()
+    visible = np.full((80, 600), 20000, dtype=np.uint16)
+    visible[:, :530] = 12000
+    _contact_decals(blend, visible, first=0, column=0, width=300)
+    # Both sides use the same smooth field, at the full decal sample resolution.
+    assert np.max(np.abs(np.diff(visible[:, 528:532].astype(np.int64), axis=1))) < 10
+    assert np.all(visible[:, 530] < 7000)
+    assert np.all(visible[:, :380] == 12000)
+
+    slots = np.full(visible.shape, 7, dtype=np.uint8)
+    slots[25, :] = 6
+    labels = np.zeros(visible.shape, dtype=np.int32)
+    zeros = np.zeros(1, dtype=np.int64)
+    tables = SlotTables(
+        np.zeros(1, dtype=bool), zeros, zeros, zeros, zeros, zeros, zeros, np.array([16])
+    )
+    _contact_materials(blend, slots, labels, tables, first=0, column=0, width=300, seed=5)
+    assert np.all(slots[40, 525:535] >= 10)
+    assert np.all(slots[25] == 6)
+    assert np.all(slots[40, :440] == 7)
 
     new = np.tile(np.repeat(np.arange(3, dtype=np.int32), 100), (40, 1))[box]
     old = np.ones_like(new)

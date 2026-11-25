@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import heapq
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
@@ -15,20 +16,23 @@ from rnw.eu5_rewrite import (
     prune_regional_setup,
 )
 from rnw.eu5_start import Country
+from rnw.history_model import PERMILLE, Route
+from rnw.history_routes import PhysicalMap, physical_routes
 from rnw.model import CellClass
 from rnw.pdx import Block, Edits, parse
+from rnw.progress import checkpoint
 from rnw.rng import derive_seed
 from rnw.settings import DEFAULT_MOROCCO_POLICY, MamlukPolicy, MoroccoPolicy
 from rnw.societies import STATE
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping
+    from collections.abc import Collection, Mapping, Sequence
 
     from rnw.eu5_newworld import Plan
     from rnw.eu5_rewrite import SetupResult
+    from rnw.eu5_seas import Water
     from rnw.geography import Location
     from rnw.loc_keys import KeySpace
-    from rnw.newworld import NewWorld
 
 MOROCCO: Final[str] = "MOR"
 MAMLUKS: Final[str] = "MAM"
@@ -79,50 +83,144 @@ def _distance(first: Point, second: Point, width: int) -> int:
     return (first[0] - second[0]) ** 2 + min(across, width - across) ** 2
 
 
-def _nearest_holdings(
-    africa: Mapping[str, Point], origins: Collection[Point], width: int, count: int
-) -> tuple[str, ...]:
-    return tuple(
-        sorted(
-            africa,
-            key=lambda key: (min(_distance(africa[key], point, width) for point in origins), key),
-        )[:count]
-    )
+@dataclass(frozen=True, slots=True)
+class AfricanLand:
+    """Passable African locations, their routes and contacts with retained territory."""
+
+    points: Mapping[str, Point]
+    width: int
+    routes: Sequence[Route]
+    borders: Collection[tuple[str, str, int]] = ()
+
+    def holdings(
+        self,
+        origins: Mapping[str, Point],
+        count: int,
+        *,
+        reserved: Collection[str] = (),
+    ) -> tuple[str, ...]:
+        """Grow one connected holding, starting at an owned border where possible."""
+        available = self.points.keys() - reserved
+        distance = {
+            key: min(_distance(self.points[key], point, self.width) for point in origins.values())
+            for key in available
+        }
+        neighbours: dict[str, list[tuple[int, int, str]]] = {key: [] for key in available}
+        reaches = {0}
+        for route in self.routes:
+            if route.first in available and route.second in available:
+                reaches.add(route.sea_steps)
+                neighbours[route.first].append((route.sea_steps, route.cost, route.second))
+                neighbours[route.second].append((route.sea_steps, route.cost, route.first))
+        anchors: dict[str, int] = {}
+        for local, old, steps in self.borders:
+            if local in available and old in origins:
+                anchors[local] = min(steps, anchors.get(local, steps))
+        anchor, limit = _holding_anchor(neighbours, distance, anchors, reaches, count)
+
+        frontier = [(0, distance[anchor], 0, anchor)]
+        added: dict[str, None] = {}
+        while frontier and len(added) < count:
+            _, _, _, key = heapq.heappop(frontier)
+            if key in added:
+                continue
+            added[key] = None
+            for steps, cost, other in neighbours[key]:
+                if steps <= limit and other not in added:
+                    heapq.heappush(frontier, (steps, distance[other], cost, other))
+        if len(added) != count:
+            message = f"The African holdings have only {len(added)} connected locations of {count}"
+            raise AfricanStartError(message)
+        return tuple(added)
 
 
-def _african_points(plan: Plan, world: NewWorld) -> dict[str, Point]:
-    return {
-        cell.key: (int(world.centroids[i, 0]), int(world.centroids[i, 1]))
+def _holding_anchor(
+    neighbours: Mapping[str, Sequence[tuple[int, int, str]]],
+    distance: Mapping[str, int],
+    anchors: Mapping[str, int],
+    reaches: Collection[int],
+    count: int,
+) -> tuple[str, int]:
+    """Choose an anchor in a component that can supply the full quota of land."""
+    choices: list[tuple[int, int, int, str]] = []
+    unconnected = max(anchors.values(), default=0) + 1
+    for limit in sorted(reaches):
+        unseen = set(neighbours)
+        while unseen:
+            component = [unseen.pop()]
+            for key in component:
+                for steps, _, other in neighbours[key]:
+                    if steps <= limit and other in unseen:
+                        unseen.remove(other)
+                        component.append(other)
+            if len(component) >= count:
+                anchor = min(
+                    component, key=lambda key: (anchors.get(key, unconnected), distance[key], key)
+                )
+                choices.append((anchors.get(anchor, unconnected), limit, distance[anchor], anchor))
+    if not choices:
+        message = f"Africa has no connected territory of {count} passable locations"
+        raise AfricanStartError(message)
+    _, limit, _, anchor = min(choices)
+    return anchor, limit
+
+
+def african_land(
+    plan: Plan,
+    water: Water,
+    retained: tuple[str, ...],
+) -> AfricanLand:
+    """Read the finished land, straits and navigable water from the sheet the game gets."""
+    world = water.coast.world
+    local = {
+        i: cell.key
         for i, cell in enumerate(plan.cells)
         if cell.kind is CellClass.LAND and cell.continent == "africa"
     }
+    points = {
+        key: (int(world.centroids[i, 0]), int(world.centroids[i, 1])) for i, key in local.items()
+    }
+    classes = tuple(
+        CellClass.WASTELAND
+        if i in water.zones or (kind is CellClass.LAND and i not in local)
+        else kind
+        for i, kind in enumerate(world.classes)
+    )
+    routes = physical_routes(
+        PhysicalMap(
+            tuple(local.values()), tuple(local), (PERMILLE,) * len(local), classes, world.edges
+        ),
+        checkpoint=checkpoint,
+    ) + tuple(
+        Route(local[crossing.first], local[crossing.second], sea_steps=1)
+        for crossing in water.crossings
+        if crossing.first in local and crossing.second in local
+    )
+    borders = tuple(
+        (local[cell], retained[old], 0) for old, cell in water.coast.land_borders if cell in local
+    ) + tuple((crossing.africa, crossing.europe, 1) for crossing in water.external_crossings)
+    return AfricanLand(points, int(world.labels.shape[1]), routes, borders)
 
 
 def plan_morocco(
-    africa: Mapping[str, Point],
+    africa: AfricanLand,
     original: Mapping[str, Point],
-    width: int,
     policy: MoroccoPolicy = DEFAULT_MOROCCO_POLICY,
 ) -> MoroccoStart:
-    """Reserve nearest passable African locations by wrapped centre distance.
-
-    Callers supply final passable African candidates. The four Iberian centres
-    act as one set of origins, and a location's key breaks equal-distance ties.
-    The capital is chosen within those holdings using the centre of vanilla Fez.
-    """
+    """Reserve connected land by the Iberian holdings and put the capital near Fez."""
     if policy is not MoroccoPolicy.RESTORE:
         return MoroccoStart(policy)
     missing = {*IBERIAN_HOLDINGS, "fez"} - original.keys()
     if missing:
         message = f"Missing original Moroccan locations: {', '.join(sorted(missing))}"
         raise AfricanStartError(message)
-    if width <= 0 or len(africa) < AFRICAN_HOLDINGS:
+    if africa.width <= 0 or len(africa.points) < AFRICAN_HOLDINGS:
         message = f"Morocco requires {AFRICAN_HOLDINGS} passable locations in generated Africa"
         raise AfricanStartError(message)
-    owned = _nearest_holdings(
-        africa, [original[key] for key in IBERIAN_HOLDINGS], width, AFRICAN_HOLDINGS
+    owned = africa.holdings({key: original[key] for key in IBERIAN_HOLDINGS}, AFRICAN_HOLDINGS)
+    capital = min(
+        owned, key=lambda key: (_distance(africa.points[key], original["fez"], africa.width), key)
     )
-    capital = min(owned, key=lambda key: (_distance(africa[key], original["fez"], width), key))
     return MoroccoStart(policy, owned, capital)
 
 
@@ -141,13 +239,13 @@ def morocco_donors(text: str) -> tuple[str, ...]:
 
 def reserve_morocco(
     plan: Plan,
-    world: NewWorld,
+    africa: AfricanLand,
     original: Mapping[str, Point],
     policy: MoroccoPolicy,
     donors: tuple[str, ...] = (),
 ) -> MoroccoStart:
     """Reserve 1337 ownership against the finished passable African locations."""
-    start = plan_morocco(_african_points(plan, world), original, int(world.labels.shape[1]), policy)
+    start = plan_morocco(africa, original, policy)
     if start.capital:
         province = next(cell.province for cell in plan.cells if cell.key == start.capital)
         return replace(start, capital_province=province, donors=donors)
@@ -155,9 +253,8 @@ def reserve_morocco(
 
 
 def plan_mamluks(  # noqa: PLR0913 - original ownership and both maps.
-    africa: Mapping[str, Point],
+    africa: AfricanLand,
     original: Mapping[str, Point],
-    width: int,
     territory: Block,
     original_africa: Collection[str],
     *,
@@ -191,12 +288,16 @@ def plan_mamluks(  # noqa: PLR0913 - original ownership and both maps.
             message = "The independent sultanate needs Damascus among the retained holdings"
             raise AfricanStartError(message)
         return MamlukStart(frozenset(asia), (), (), DAMASCUS, policy)
-    available = {key: point for key, point in africa.items() if key not in reserved}
-    if width <= 0 or len(available) < len(replaced):
+    if africa.width <= 0 or len(africa.points.keys() - reserved) < len(replaced):
         message = f"The Mamluks require {len(replaced)} unreserved passable locations in Africa"
         raise AfricanStartError(message)
-    holdings = _nearest_holdings(available, [original[key] for key in asia], width, len(replaced))
-    ranked = sorted(holdings, key=lambda key: (_distance(africa[key], original[CAIRO], width), key))
+    holdings = africa.holdings(
+        {key: original[key] for key in asia}, len(replaced), reserved=reserved
+    )
+    ranked = sorted(
+        holdings,
+        key=lambda key: (_distance(africa.points[key], original[CAIRO], africa.width), key),
+    )
     return MamlukStart(
         frozenset(asia),
         tuple(ranked[:core_count]),
@@ -208,8 +309,7 @@ def plan_mamluks(  # noqa: PLR0913 - original ownership and both maps.
 
 
 def reserve_mamluks(  # noqa: PLR0913 - the installed setup and finished map.
-    plan: Plan,
-    world: NewWorld,
+    africa: AfricanLand,
     original: Mapping[str, Point],
     text: str,
     original_africa: Collection[str],
@@ -222,9 +322,8 @@ def reserve_mamluks(  # noqa: PLR0913 - the installed setup and finished map.
         message = "The installed 1337 start is missing the Mamluks"
         raise AfricanStartError(message)
     return plan_mamluks(
-        _african_points(plan, world),
+        africa,
         original,
-        int(world.labels.shape[1]),
         mamluks,
         original_africa,
         reserved=reserved,
