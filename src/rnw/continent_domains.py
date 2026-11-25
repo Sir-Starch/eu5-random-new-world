@@ -49,6 +49,7 @@ ISLAND_POOL: Final[int] = 8  # Coast and offshore water radius, in ocean grid co
 # map as new ocean. Existing land is always taken in full.
 SHARED_OCEAN_DIVISOR: Final[int] = 6
 AFRICA_LAND_CHANCE: Final[int] = 40
+ARABIAN_FRONTIER_WATERS: Final[frozenset[str]] = frozenset({"red_sea_area", "arabian_area"})
 EUROPE_STRAIT_CHANCE: Final[int] = 35
 EUROPE_STRAIT_GAP: Final[int] = 7
 # Where the owner allows Africa to join Iberia by land (no strait), the chance in a hundred that
@@ -92,7 +93,6 @@ class Continent:
     key: str
     preset: str
     ocean_band_px: int | None = None
-    land_neighbor: str | None = None
     island_band_px: int = 224
 
     def geography(self, preset: str | None = None) -> NewWorldSettings:
@@ -113,7 +113,7 @@ CONTINENTS: Final[Mapping[str, Continent]] = MappingProxyType(
         region.key: region
         for region in (
             Continent(NEW_WORLD, "continents"),
-            Continent("africa", *REGIONAL_PRESETS["africa"], land_neighbor="asia"),
+            Continent("africa", *REGIONAL_PRESETS["africa"]),
             Continent("oceania", *REGIONAL_PRESETS["oceania"]),
         )
     }
@@ -172,6 +172,7 @@ class Domain:
     first_row: int = 0
     # Local pixels where generated land can meet passable retained terrain.
     land_interface: NDArray[np.bool_] | None = None
+    vanilla_asia_interface: NDArray[np.bool_] | None = None
     # Dry land of the eligible retained neighbor throughout the regional window.
     contact_land: NDArray[np.bool_] | None = None
     legacy_canvas: Canvas | None = None
@@ -579,12 +580,30 @@ def _released_coasts(
     return np.where(released, touching.argmax(axis=1), -1).astype(np.int8)
 
 
-def _shared_water(
+def _arabian_frontier(
+    game_map: Eu5Map, sea: NDArray[np.bool_], spared: Collection[str]
+) -> NDArray[np.bool_]:
+    """Sea between the African and Arabian mainlands that Africa can reshape."""
+    areas = getattr(game_map, "areas", ())
+    if not areas:
+        return np.zeros_like(sea)
+    return sea & np.fromiter(
+        (
+            area in ARABIAN_FRONTIER_WATERS and key not in spared
+            for area, key in zip(areas, game_map.keys, strict=True)
+        ),
+        dtype=bool,
+    )
+
+
+def _shared_water(  # noqa: PLR0913 - the map, shared claims and coastal exceptions.
     game_map: Eu5Map,
     claims: OceanClaims,
     sea: NDArray[np.bool_],
     selected: Collection[str],
     retained_tolls: Collection[str],
+    *,
+    arabian_frontier: NDArray[np.bool_],
 ) -> SharedWater:
     selected_land, cores = _continental_cores(game_map, sea)
     eurasian = _eurasian_waters(game_map, claims, sea, CONTINENTS)
@@ -601,6 +620,7 @@ def _shared_water(
         dtype=bool,
     ) | (sea & eurasian)
     result = np.full(len(sea), -1, dtype=np.int8)
+    result[arabian_frontier] = AFRICA_NUMBER
     groups = ocean_island_groups(game_map)
     members = np.zeros(len(sea), dtype=bool)
     for group in groups:
@@ -996,13 +1016,52 @@ def _pacific_islands(  # noqa: PLR0913 - reserve compact island groups on the sh
 
 
 def _interface(inside: NDArray[np.bool_], neighbor: NDArray[np.bool_]) -> NDArray[np.bool_]:
-    """Original solid land contacts in the continuous regional window."""
+    """Pixels that share an edge with retained land in the regional window."""
     touching = np.zeros(inside.shape, dtype=bool)
     touching[1:] = neighbor[:-1]
     touching[:-1] |= neighbor[1:]
     touching[:, 1:] |= neighbor[:, :-1]
     touching[:, :-1] |= neighbor[:, 1:]
     return inside & touching
+
+
+def _african_interfaces(  # noqa: PLR0913 - the shoreline and the requested links to it.
+    game_map: Eu5Map,
+    domain: Domain,
+    solid: NDArray[np.bool_],
+    frontier: NDArray[np.bool_],
+    *,
+    required: bool,
+    vanilla: bool,
+    variable: bool,
+) -> Domain:
+    local = _read(game_map.labels[domain.rows], domain.first_column, domain.mask.shape[1])
+    asian = (_membership(game_map, "asia") & solid)[local]
+    # All retained Asian land is a barrier for drainage. Only the mainland can be a landing.
+    retained = asian if domain.contact_land is None else asian | domain.contact_land
+    if not vanilla and not variable:
+        return replace(domain, contact_land=retained)
+    passable = np.fromiter((kind is CellClass.LAND for kind in game_map.classes), dtype=bool)
+    original = _interface(domain.footprint & solid[local], asian & passable[local])
+    coast = None
+    if variable:
+        mainland = label_components(asian.astype(np.int32))
+        adjoining = mainland[_interface(asian, domain.footprint & solid[local])]
+        mainland_land = asian & np.isin(mainland, np.unique(adjoining)) & passable[local]
+        coast = _interface(domain.mask & frontier[local], mainland_land)
+        if vanilla:
+            # An extra landing must be a separate connection, away from the original border.
+            separation = max(1, 300 * domain.map_width // REFERENCE_WIDTH)
+            coast &= distance_from(original, separation + 1, octagonal=True) > separation
+        else:
+            coast |= original
+    return replace(
+        domain,
+        land_interface=coast,
+        vanilla_asia_interface=original if vanilla else None,
+        contact_land=retained,
+        join_asia=required,
+    )
 
 
 def _coastal_waters(
@@ -1070,7 +1129,7 @@ def _with_released(
     return mask | zones
 
 
-def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain and its coast contacts.
+def _claim(  # noqa: PLR0913, PLR0915 - assemble a cropped domain and its coast contacts.
     game_map: Eu5Map,
     continent: Continent,
     number: int,
@@ -1078,7 +1137,6 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
     *,
     sea: NDArray[np.bool_],
     solid: NDArray[np.bool_],
-    join_asia: bool | None,
     europe_strait: bool,
     join_iberia: bool = False,
     shared: SharedWater | None = None,
@@ -1126,12 +1184,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
             )
         ]
     )
-    if (
-        shared is not None
-        and not europe_strait
-        and not join_iberia
-        and (continent.land_neighbor is None or join_asia is False)
-    ):
+    if shared is not None and not europe_strait and not join_iberia:
         return _whole_domain(
             continent,
             first,
@@ -1141,9 +1194,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
             local,
             footprint,
             local_owners,
-            interface=None,
             neighbor=None,
-            join_asia=False,
             strait=None,
             shared=shared,
         )
@@ -1177,33 +1228,13 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
             first,
             width,
         )
-    neighbor = (
-        None
-        if continent.land_neighbor is None or join_asia is False
-        else (_membership(game_map, continent.land_neighbor) & solid)[local]
-    )
+    neighbor = None
     close = near > guard
     del near
-    interface = None
     strait = None
     inland = footprint & solid[local]
-    near_africa = (
-        _near_african_shores(inland, map_width)
-        if join_asia or europe_strait or join_iberia
-        else None
-    )
+    near_africa = _near_african_shores(inland, map_width) if europe_strait or join_iberia else None
     passable = np.fromiter((kind is CellClass.LAND for kind in game_map.classes), dtype=bool)
-    if neighbor is not None:
-        contact = inland
-        if join_asia and near_africa is not None:
-            # Permit approach within the African domain along western Asia's
-            # contiguous shore as well as across the old overland boundary.
-            asian_shore = neighbor & near_africa
-            approach = distance_from(asian_shore, guard + 1, octagonal=True) <= guard
-            close |= approach
-            claim |= candidate & approach
-            contact = inland | (claim & close)
-        interface = _interface(contact, neighbor & passable[local])
     iberia = None
     if join_iberia and near_africa is not None:
         # The retained peninsula is land outside the window all the same; only the coast of the
@@ -1221,7 +1252,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
             close,
             guard,
         )
-        neighbor = iberian if neighbor is None else neighbor | iberian
+        neighbor = iberian
     if europe_strait and near_africa is not None:
         europe = (_membership(game_map, "europe") & passable)[local] & near_africa
         near_europe = distance_from(europe, guard + 1, octagonal=True)
@@ -1242,9 +1273,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
             local,
             footprint,
             local_owners,
-            interface=interface,
             neighbor=neighbor,
-            join_asia=bool(join_asia),
             strait=strait,
             iberia=iberia,
             shared=shared,
@@ -1257,8 +1286,6 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
     mask = _attached_ocean(footprint, claim) | original_seas[local]
     sites = tuple(site for site in sites if mask[site[0], site[1]])
     mask = _with_released(mask, released, local, taken, continent.key)
-    if interface is not None:
-        interface &= mask
     if iberia is not None:
         iberia &= mask
     if strait is not None:
@@ -1270,9 +1297,7 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
         mask,
         footprint,
         first_row=top,
-        land_interface=interface,
         contact_land=neighbor,
-        join_asia=bool(join_asia),
         iberia_interface=iberia,
         join_iberia=iberia is not None,
         strait=strait,
@@ -1316,16 +1341,12 @@ def _whole_domain(  # noqa: PLR0913, PLR0917 - complete ownership plus retained 
     footprint: NDArray[np.bool_],
     local_owners: NDArray[np.int8],
     *,
-    interface: NDArray[np.bool_] | None,
     neighbor: NDArray[np.bool_] | None,
-    join_asia: bool,
     strait: NDArray[np.uint8] | None,
     shared: SharedWater,
     iberia: NDArray[np.bool_] | None = None,
 ) -> Domain:
     mask = local_owners == number
-    if interface is not None:
-        interface = np.logical_and(interface, mask)
     if iberia is not None:
         iberia = np.logical_and(iberia, mask)
     if strait is not None:
@@ -1344,9 +1365,7 @@ def _whole_domain(  # noqa: PLR0913, PLR0917 - complete ownership plus retained 
         mask,
         footprint & mask,
         first_row=top,
-        land_interface=interface,
         contact_land=neighbor,
-        join_asia=join_asia,
         iberia_interface=iberia,
         join_iberia=iberia is not None,
         strait=strait,
@@ -1523,6 +1542,7 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
     *,
     seed: int | None = None,
     require_asia_connection: bool = False,
+    require_vanilla_asia_connection: bool = False,
     iberia_connection: str = "off",
     retained_tolls: Collection[str] = (),
     closed_waters: Collection[str] = (),
@@ -1554,21 +1574,33 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
         if complete
         else _ocean_claims(game_map, selected, sea, solid, seed, closed_waters)
     )
-    shared = _shared_water(game_map, claims, sea, selected, retained_tolls) if complete else None
+    spared = {*retained_tolls, *closed_waters, *NAVAL_ANCHORS}
+    frontier = (
+        _arabian_frontier(game_map, sea, spared) if AFRICA in selected else np.zeros_like(sea)
+    )
+    shared = (
+        _shared_water(game_map, claims, sea, selected, retained_tolls, arabian_frontier=frontier)
+        if complete
+        else None
+    )
     released = (
         None
         if complete
-        else _released_coasts(
-            game_map,
-            _coastal_zones(game_map, sea),
-            selected,
-            {*retained_tolls, *NAVAL_ANCHORS},
+        else np.where(
+            frontier,
+            AFRICA_NUMBER,
+            _released_coasts(
+                game_map,
+                _coastal_zones(game_map, sea),
+                selected,
+                {*retained_tolls, *NAVAL_ANCHORS},
+            ),
         )
     )
-    connect = (
-        None
-        if seed is None
-        else require_asia_connection
+    vanilla = seed is not None and require_vanilla_asia_connection
+    required = seed is not None and (require_asia_connection or vanilla)
+    variable = seed is not None and (
+        (required and not vanilla)
         or SplitMix64(derive_seed(seed, "africa", "asia_connection")).below(100)
         < AFRICA_LAND_CHANCE
     )
@@ -1599,7 +1631,6 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
                 claims,
                 sea=sea,
                 solid=solid,
-                join_asia=connect if key == "africa" else None,
                 europe_strait=strait and key == "africa",
                 join_iberia=iberia and key == "africa",
                 shared=shared,
@@ -1618,7 +1649,6 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
                 claims,
                 sea=sea,
                 solid=solid,
-                join_asia=None,
                 europe_strait=False,
                 shared=shared,
                 released=None if released is None else released == 0,
@@ -1636,20 +1666,33 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
             if not np.array_equal(occupied[rows], shared.owners[rows] >= 0):
                 message = "The generated canvases do not partition the map around retained Eurasia"
                 raise CanvasError(message)
-        return tuple(planned[key] for key in CONTINENTS)
-    protected = _protected_sea(game_map, occupied, selected)
-    protected |= np.fromiter(
-        (
-            (key in retained_tolls or key in NAVAL_ANCHORS) and continent not in selected and is_sea
-            for key, continent, is_sea in zip(game_map.keys, game_map.continents, sea, strict=True)
-        ),
-        dtype=bool,
-    )
-    return _without_islets(
-        game_map,
-        [
-            _keep_coastal_waters(game_map, planned[key], protected)
-            for key in CONTINENTS
-            if key in planned
-        ],
+        domains = tuple(planned[key] for key in CONTINENTS)
+    else:
+        protected = _protected_sea(game_map, occupied, selected)
+        protected |= np.fromiter(
+            (
+                (key in retained_tolls or key in NAVAL_ANCHORS)
+                and continent not in selected
+                and is_sea
+                for key, continent, is_sea in zip(
+                    game_map.keys, game_map.continents, sea, strict=True
+                )
+            ),
+            dtype=bool,
+        )
+        domains = _without_islets(
+            game_map,
+            [
+                _keep_coastal_waters(game_map, planned[key], protected)
+                for key in CONTINENTS
+                if key in planned
+            ],
+        )
+    return tuple(
+        _african_interfaces(
+            game_map, domain, solid, frontier, required=required, vanilla=vanilla, variable=variable
+        )
+        if domain.continent.key == AFRICA
+        else domain
+        for domain in domains
     )

@@ -3322,6 +3322,18 @@ text = '''En az bir kıta seçin.'''
 source = "a936e75dbefa2ad8"
 text = "Asya ile kara bağlantısı zorunlu olsun"
 
+["continent.africa.asia_connection.info"]
+source = "79c32474a5944dd8"
+text = '''Afrika, Arap Yarımadası kıyısının herhangi bir noktasında veya özgün kara sınırında Asya'ya bağlanabilir. Bu seçenek kapalıysa tohum, Afrika'yı denizle ayrılmış da bırakabilir.'''
+
+["continent.africa.asia_connection.vanilla"]
+source = "b2bdaeffca0a7133"
+text = '''Özgün kara sınırında bağlantı gerektir'''
+
+["continent.africa.asia_connection.vanilla.info"]
+source = "2c8981bc4ede203f"
+text = '''Afrika ile Asya arasındaki özgün kara sınırındaki bağlantı şartı karşılar. Tohum, Arap Yarımadası kıyısında bir bağlantı daha oluşturabilir. Afrika ve Asya'daki topraklarının kara bağlantısını koruyabilmesi için «Memlükleri koru» seçildiğinde önerilir.'''
+
 ["continent.africa.iberia_connection"]
 source = "5ee2a669bea0356b"
 text = '''İber Yarımadası ile kara bağlantısına izin ver (boğaz olmadan)'''

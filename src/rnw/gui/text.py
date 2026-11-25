@@ -40,6 +40,16 @@ STRINGS: Final[dict[str, str]] = {
     "continent.mamluks.restore": "Keep Mamluks",
     "continent.mamluks.damascus": "Independent Sultanate of Damascus",
     "continent.africa.asia_connection": "Require a land connection to Asia",
+    "continent.africa.asia_connection.info": (
+        "Africa can meet Asia anywhere along the Arabian shore or at the original land border. "
+        "With this option off, the seed can also leave Africa separated by sea."
+    ),
+    "continent.africa.asia_connection.vanilla": "Require a connection at the original land border",
+    "continent.africa.asia_connection.vanilla.info": (
+        "A land connection at the original Africa–Asia border satisfies the requirement. "
+        "The seed may add another connection along the Arabian shore. Recommended when keeping "
+        "the Mamluks so their African and Asian holdings can stay connected."
+    ),
     "continent.africa.iberia_connection": "Allow a land connection to Iberia (no strait)",
     "continent.africa.iberia_connection.about": "The Mediterranean can become an inland sea",
     "continent.africa.iberia_connection.info": (

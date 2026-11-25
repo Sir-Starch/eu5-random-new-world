@@ -322,20 +322,28 @@ def _exterior(lab: NDArray[np.int32], count: int, *, wrap_x: bool = False) -> ND
     return flags
 
 
-def inland_seas(world: NewWorld) -> tuple[tuple[int, ...], ...]:
-    """Physical SEA components enclosed entirely inside the generated domain.
+def inland_seas(
+    world: NewWorld, *, outside_water: Collection[int] | None = None
+) -> tuple[tuple[int, ...], ...]:
+    """Physical SEA components enclosed by land.
 
-    Use exact raster contacts, including one-pixel holes and the crop edges. A disconnected
-    ocean route that still reaches retained geography is never an inland-sea exemption.
+    With explicit outside-water contacts, a retained shore can also enclose a basin.
+    A disconnected route that touches retained water is never an inland-sea exemption.
     """
     sea = np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)
-    exterior = _exterior(world.labels, len(sea), wrap_x=world.wrap_x)
+    if outside_water is None:
+        exterior = _exterior(world.labels, len(sea), wrap_x=world.wrap_x)
+    else:
+        exterior = np.zeros(len(sea), dtype=bool)
+        exterior[list(outside_water)] = True
     return tuple(
         tuple(group) for group in _components(sea, _neighbours(world)) if not exterior[group].any()
     )
 
 
-def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
+def analyse(
+    world: NewWorld, shore: Collection[int] = (), *, outside_water: Collection[int] | None = None
+) -> Waters:
     """The shape of the water of ``world``.
 
     ``shore`` are sea cells that touch land the world does not hold: the game's own land at the
@@ -366,7 +374,7 @@ def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
     enclosed |= _pockets(
         sea & ~narrow & ~enclosed, _exterior(lab, count, wrap_x=world.wrap_x), sea_links
     )
-    inland = {cell for basin in inland_seas(world) for cell in basin}
+    inland = {cell for basin in inland_seas(world, outside_water=outside_water) for cell in basin}
     # A closed basin is a sea in its own right, including when settlement folded it into
     # one large cell; it is neither an ocean current nor a passage to another water.
     narrow[list(inland)] = False

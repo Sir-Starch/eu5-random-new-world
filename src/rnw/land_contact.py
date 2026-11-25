@@ -193,8 +193,8 @@ def _upsample(values: NDArray[np.int64], valid: NDArray[np.bool_]) -> NDArray[np
 def soften_rim(heights: NDArray[np.int64], rim: NDArray[np.int64]) -> NDArray[np.int64]:
     """Retained ``heights`` with what rises over the ``rim`` limits saturated, to at most
     ``RIM_MARGIN`` over them (the excess ``e`` becomes ``e * RIM_MARGIN / (e + RIM_MARGIN)``)."""
-    over = heights - rim
-    return np.where(over > 0, rim + over * RIM_MARGIN // (over + RIM_MARGIN), heights)
+    over = np.maximum(0, heights - rim)
+    return heights - over + over * RIM_MARGIN // (over + RIM_MARGIN)
 
 
 @dataclass(frozen=True, slots=True, eq=False)

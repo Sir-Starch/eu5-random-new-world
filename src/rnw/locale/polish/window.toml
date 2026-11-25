@@ -3322,6 +3322,18 @@ text = '''Wybierz co najmniej jeden kontynent.'''
 source = "a936e75dbefa2ad8"
 text = "Wymagaj połączenia lądowego z Azją"
 
+["continent.africa.asia_connection.info"]
+source = "79c32474a5944dd8"
+text = '''Afryka może połączyć się z Azją w dowolnym miejscu wzdłuż wybrzeża Półwyspu Arabskiego lub na pierwotnej granicy lądowej. Po wyłączeniu tej opcji ziarno może również oddzielić Afrykę od Azji morzem.'''
+
+["continent.africa.asia_connection.vanilla"]
+source = "b2bdaeffca0a7133"
+text = '''Wymagaj połączenia na pierwotnej granicy lądowej'''
+
+["continent.africa.asia_connection.vanilla.info"]
+source = "2c8981bc4ede203f"
+text = '''Połączenie na pierwotnej granicy lądowej Afryki i Azji spełnia warunek. Ziarno może dodać drugie połączenie wzdłuż wybrzeża Półwyspu Arabskiego. Zalecane po wybraniu opcji „Zachowaj mameluków”, aby ich posiadłości w Afryce i Azji mogły pozostać połączone.'''
+
 ["continent.africa.iberia_connection"]
 source = "5ee2a669bea0356b"
 text = '''Zezwól na połączenie lądowe z Iberią (bez cieśniny)'''

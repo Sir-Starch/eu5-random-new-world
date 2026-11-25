@@ -277,6 +277,7 @@ class RegionalSettings:
     iberia_connection: str = IBERIA_OFF
     # The land drawn in an image instead of by the generator, as America's ``Settings.mask``.
     mask: MaskSettings = MASK
+    require_vanilla_asia_connection: bool = False
 
     def document(self) -> dict[str, object]:
         data: dict[str, object] = {
@@ -292,8 +293,11 @@ class RegionalSettings:
             data["morocco"] = self.morocco.value
         if self.mamluks is MamlukPolicy.DAMASCUS:
             data["mamluks"] = self.mamluks.value
-        if self.require_asia_connection:
-            data["require_asia_connection"] = True
+        keep_mamluks = self.mamluks is MamlukPolicy.RESTORE
+        if self.require_asia_connection or keep_mamluks:
+            data["require_asia_connection"] = self.require_asia_connection
+        if self.require_vanilla_asia_connection or (keep_mamluks and self.require_asia_connection):
+            data["require_vanilla_asia_connection"] = self.require_vanilla_asia_connection
         if self.iberia_connection != IBERIA_OFF:
             data["iberia_connection"] = self.iberia_connection
         return data
@@ -697,7 +701,15 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     fallback, band = REGIONAL_PRESETS[key]
     allowed = {"preset", "new_world", "natives", "resources", "mask"}
     if key == "africa":
-        allowed.update(("morocco", "mamluks", "require_asia_connection", "iberia_connection"))
+        allowed.update(
+            (
+                "morocco",
+                "mamluks",
+                "require_asia_connection",
+                "require_vanilla_asia_connection",
+                "iberia_connection",
+            )
+        )
     if unknown := fields_.keys() - allowed:
         message = f"Unknown {key} settings: {', '.join(sorted(unknown))}"
         raise SettingsError(message)
@@ -725,9 +737,17 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     mamluks = (
         _mamluk_policy(fields_.get("mamluks", MamlukPolicy.RESTORE)) if key == "africa" else None
     )
-    connection = fields_.get("require_asia_connection", False)
-    if type(connection) is not bool:
+    keep_mamluks = mamluks is MamlukPolicy.RESTORE
+    connection = fields_.get(
+        "require_asia_connection",
+        keep_mamluks or fields_.get("require_vanilla_asia_connection") is True,
+    )
+    vanilla_connection = fields_.get("require_vanilla_asia_connection", keep_mamluks and connection)
+    if type(connection) is not bool or type(vanilla_connection) is not bool:
         message = "Africa's land connection requirement must be on or off"
+        raise SettingsError(message)
+    if vanilla_connection and not connection:
+        message = "Requiring the vanilla land connection also requires a land connection to Asia"
         raise SettingsError(message)
     iberia = fields_.get("iberia_connection", IBERIA_OFF)
     if not isinstance(iberia, str) or iberia not in IBERIA_CONNECTIONS:
@@ -748,6 +768,7 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
         mamluks,
         iberia,
         _merge(MASK, f"{key} drawing", fields_.get("mask", {})),
+        require_vanilla_asia_connection=vanilla_connection,
     )
 
 

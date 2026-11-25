@@ -196,10 +196,15 @@ def test_ocean_folding_keeps_the_classification_used_to_plan_lanes(
     original_scale = analyse(world).scale
     calls = 0
 
-    def changing_analysis(world: NewWorld, shore: Collection[int] = ()) -> Waters:
+    def changing_analysis(
+        world: NewWorld,
+        shore: Collection[int] = (),
+        *,
+        outside_water: Collection[int] | None = None,
+    ) -> Waters:
         nonlocal calls
         calls += 1
-        result = analyse(world, shore)
+        result = analyse(world, shore, outside_water=outside_water)
         if calls == 2:
             result = replace(
                 result,
@@ -340,11 +345,19 @@ def test_a_small_inland_sea_is_rejected_instead_of_bypassing_classification() ->
 
 
 def test_even_a_one_pixel_exterior_contact_excludes_an_inland_sea() -> None:
-    world = block_world(["#####", "#000#", "#####"], block=10)
+    layout = ["#####", "#000#", "#####"]
+    world = block_world(layout, block=10)
+    basin = cell(layout, 1, 1)
     assert inland_seas(world)
     labels = world.labels.copy()
     labels[10, 10] = -1
-    assert not inland_seas(replace(world, labels=labels))
+    shore = replace(world, labels=labels)
+    assert not inland_seas(shore)
+    assert not inland_seas(shore, outside_water=(basin,))
+    assert inland_seas(shore, outside_water=()) == ((basin,),)
+    assert (
+        analyse(shore, shore=(basin,), outside_water=()).topography[basin] is Topography.INLAND_SEA
+    )
 
 
 @pytest.mark.parametrize("height", [1, 255, 256, 257, 513])

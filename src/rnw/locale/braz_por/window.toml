@@ -3322,6 +3322,18 @@ text = '''Selecione pelo menos um continente.'''
 source = "a936e75dbefa2ad8"
 text = "Exigir uma ligação terrestre com a Ásia"
 
+["continent.africa.asia_connection.info"]
+source = "79c32474a5944dd8"
+text = '''A África pode se ligar à Ásia em qualquer ponto da costa árabe ou na fronteira terrestre original. Com esta opção desativada, a semente também pode deixar a África separada pelo mar.'''
+
+["continent.africa.asia_connection.vanilla"]
+source = "b2bdaeffca0a7133"
+text = '''Exigir uma ligação na fronteira terrestre original'''
+
+["continent.africa.asia_connection.vanilla.info"]
+source = "2c8981bc4ede203f"
+text = '''Uma ligação terrestre na fronteira original entre a África e a Ásia cumpre o requisito. A semente pode criar outra ligação na costa árabe. Esta opção é recomendada ao escolher «Manter os mamelucos» para que seus territórios africanos e asiáticos possam continuar ligados.'''
+
 ["continent.africa.iberia_connection"]
 source = "5ee2a669bea0356b"
 text = '''Permitir uma ligação terrestre com a Ibéria (sem estreito)'''

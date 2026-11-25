@@ -194,7 +194,10 @@ def test_the_area_of_a_continent_in_several_follows_the_seed_and_its_own_shore()
         "continents",
         {
             "continents": {
-                "africa": {"new_world": {"ocean_band_px": 300}, "require_asia_connection": True},
+                "africa": {
+                    "new_world": {"ocean_band_px": 300},
+                    "require_vanilla_asia_connection": False,
+                },
                 "oceania": True,
             }
         },

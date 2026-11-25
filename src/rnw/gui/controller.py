@@ -532,11 +532,23 @@ class Controller:
             self._edit_region("africa", {"morocco": policy})
 
     def set_mamluks(self, policy: str) -> None:
-        if policy in {mode.value for mode in MamlukPolicy}:
-            self._edit_region("africa", {"mamluks": policy})
+        if policy in {mode.value for mode in MamlukPolicy} and (
+            policy != self.region_settings("africa").mamluks
+        ):
+            changes: dict[str, object] = {"mamluks": policy}
+            if policy == MamlukPolicy.RESTORE:
+                changes.update(require_asia_connection=None, require_vanilla_asia_connection=None)
+            self._edit_region("africa", changes)
 
     def set_asia_connection(self, *, required: bool) -> None:
-        self._edit_region("africa", {"require_asia_connection": required})
+        changes: dict[str, object] = {"require_asia_connection": required}
+        if not required:
+            changes["require_vanilla_asia_connection"] = False
+        self._edit_region("africa", changes)
+
+    def set_vanilla_asia_connection(self, *, required: bool) -> None:
+        if self.region_settings("africa").require_asia_connection:
+            self._edit_region("africa", {"require_vanilla_asia_connection": required})
 
     def set_iberia_connection(self, mode: str) -> None:
         """Africa's land connection to Iberia: off (the strait), allowed or required."""

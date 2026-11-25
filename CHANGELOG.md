@@ -5,6 +5,11 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Extend Africa's canvas to the Arabian shore. Land connections to Asia can vary
+  in location and shape, or be absent when optional. A new sub-option guarantees a
+  connection at the original land border and allows a second one elsewhere.
+  **Keep Mamluks** enables both requirements by default.
+
 - Release the small open-Atlantic island sites when generating both America and Africa.
   New shores and sea cells can cover their old positions. Sites between the generated
   regions become part of the surrounding sea.

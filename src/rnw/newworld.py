@@ -925,6 +925,14 @@ class Approach:
     point: tuple[int, int]
 
 
+@dataclass(frozen=True, slots=True, eq=False)
+class ArabianApproach:
+    """Eligible shoreline for a seeded Asian land connection and whether it must be made."""
+
+    interface: NDArray[np.bool_] | None
+    required: bool
+
+
 def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed define the coast.
     land: NDArray[np.bool_],
     domain: NDArray[np.bool_],
@@ -937,6 +945,7 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
     scale: int = PERMILLE,
     whole: NDArray[np.bool_] | None = None,
     keep_seas: bool = False,
+    random_landing: bool = False,
 ) -> Approach | None:
     """Raise a land bridge from a seeded shore to the continent: a bent, swelling ridge of land.
 
@@ -947,18 +956,19 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
     landing would across the Mediterranean and leave a bay no generated sea leads out of.
 
     The sites of ``interface`` are tried in the order of their distance from the continent
-    (the largest land) and a seeded jitter; the first whose bridge joins both is made. None when
-    none does.
+    (the largest land) and a seeded jitter. On the Arabian shore, the seed instead orders sites
+    along the full frontier and varies the width. The first feasible bridge is made.
     """
     step = max(8, settings.location_px // 2)
     sites = np.argwhere(interface & domain)
+    if not sites.size:
+        return None
     parts = label_components(land.astype(np.int32))
-    sizes = np.bincount(parts.ravel())
-    sizes[~np.isin(np.arange(len(sizes)), parts[land])] = 0
+    sizes = np.bincount(parts[land], minlength=int(parts.max()) + 1)
     continent = land & (sizes[parts] * 2 >= sizes.max())
     del parts
     core = np.argwhere(continent[::step, ::step]) * step
-    if sites.size == 0 or core.size == 0:
+    if not core.size:
         return None
     _, unique = np.unique(sites // (step * 4), axis=0, return_index=True)
     sites = sites[unique]
@@ -970,7 +980,9 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
     candidates = sorted(
         range(len(sites)),
         key=lambda i: (
-            int(distance[i])
+            mix64(key ^ (int(sites[i, 0]) << 32) ^ int(sites[i, 1]))
+            if random_landing
+            else int(distance[i])
             + mix64(key ^ (int(sites[i, 0]) << 32) ^ int(sites[i, 1])) % (12 * step),
             i,
         ),
@@ -980,7 +992,7 @@ def _land_approach(  # noqa: PLR0913 - the terrain, its boundaries and the seed 
         open_water = _touching_open_sea(whole, outside_land)
         seas = _sea_state(whole, land, shore, open_water, settings.min_sea_cell_px)
         ground = replace(ground, whole=whole, open_water=open_water, seas=seas, keep_seas=keep_seas)
-    for index in candidates[:BRIDGE_TRIES]:
+    for index in candidates if random_landing else candidates[:BRIDGE_TRIES]:
         checkpoint()
         approach = _bridge(
             ground,
@@ -1164,14 +1176,15 @@ def _bridge(
     axis, allowed = found
     # The axis lies in the window; the body is painted in a box round it.
     box, ridge = _bridge_ridge(ground, window, allowed, axis, seed)
-    contact = int(np.count_nonzero(ridge & ground.interface[box]))
     joined = label_components((ground.land[box] | ridge).astype(np.int32))
-    reaches = np.unique(joined[ridge & ground.continent[box]])
     origin = (box[0].start - window[0].start, box[1].start - window[1].start)
+    start = (here[0] - origin[0], here[1] - origin[1])
+    ridge &= joined == joined[start]
+    contact = int(np.count_nonzero(ridge & ground.interface[box]))
     if (
         contact < max(8, location // 2)
-        or reaches.size == 0
-        or not ridge[here[0] - origin[0], here[1] - origin[1]]
+        or not ridge[start]
+        or not np.any(ridge & ground.continent[box])
     ):
         return None
     fresh = ridge & ~ground.land[box]
@@ -1187,7 +1200,7 @@ def _bridge(
     ground.shore[box] &= ~ridge
     path = np.zeros(ridge.shape, dtype=bool)
     path[axis[:, 0] - origin[0], axis[:, 1] - origin[1]] = True
-    return Approach(box, path, site)
+    return Approach(box, path & ridge, site)
 
 
 def _link_cells(labels: NDArray[np.int32], approaches: tuple[Approach, ...]) -> NDArray[np.int64]:
@@ -1243,6 +1256,7 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
     shore: NDArray[np.bool_],
     *,
     interface: NDArray[np.bool_] | None,
+    arabian: ArabianApproach | None,
     iberia: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None,
     outside_land: NDArray[np.bool_] | None,
@@ -1262,9 +1276,30 @@ def _regional_approaches(  # noqa: PLR0913 - coastal construction inputs.
             whole=domain,
         )
         if approach is None:
-            message = "The African canvas has no continuous approach to a passable Asian location"
+            message = (
+                "The African canvas cannot reach a passable location at the original Asian border"
+            )
             raise ValueError(message)
         links.append(approach)
+    if arabian is not None and arabian.interface is not None:
+        key = derive_seed(seed, "arabian_approach")
+        approach = _land_approach(
+            land,
+            domain,
+            shore,
+            arabian.interface,
+            outside_land=outside_land,
+            settings=settings,
+            seed=key,
+            scale=700 + SplitMix64(key).below(1101),
+            whole=domain,
+            random_landing=True,
+        )
+        if approach is not None:
+            links.append(approach)
+        elif arabian.required:
+            message = "The African canvas has no continuous approach to a passable Asian location"
+            raise ValueError(message)
     if iberia is not None:
         # The land joins Iberia where the strait would be, and may close the Mediterranean.
         approach = _land_approach(
@@ -1788,11 +1823,6 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
     outside_land: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Land, ocean and lake masks of the domain: drawn, kept from a sketch or made now."""
-    if outside_land is not None and (
-        outside_land.shape != domain.shape or np.any(outside_land & domain)
-    ):
-        message = "Retained land must fit the generation window and lie outside its domain"
-        raise ValueError(message)
     if drawn is None and lakes is not None:
         message = "Marked lakes belong to a drawn land, and none was given"
         raise ValueError(message)
@@ -1845,6 +1875,7 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     lakes_drawn: NDArray[np.bool_] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    arabian: ArabianApproach | None = None,
     iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     island_sites: tuple[tuple[int, int, int], ...] = (),
@@ -1860,8 +1891,21 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
     if reserve_north:
         land_domain = domain.copy()
         land_domain[:reserve_north] = False
+    if outside_land is not None and (
+        outside_land.shape != domain.shape or np.any(outside_land & domain)
+    ):
+        message = "Retained land must fit the generation window and lie outside its domain"
+        raise ValueError(message)
+    # Build the African coast with a water margin. The planned approaches cross it.
     land, ocean, lakes = _first_land(
-        land_domain, seed, settings, drawn, stage, template, lakes_drawn, outside_land=outside_land
+        land_domain,
+        seed,
+        settings,
+        drawn,
+        stage,
+        template,
+        lakes_drawn,
+        outside_land=outside_land if arabian is None else None,
     )
     del land_domain
     whole = domain
@@ -1888,6 +1932,7 @@ def finished_land(  # noqa: PLR0913 - the coastal inputs of ``generate_new_world
         domain,
         shore,
         interface=land_interface,
+        arabian=arabian,
         iberia=iberia_interface,
         strait=strait,
         outside_land=outside_land,
@@ -1923,6 +1968,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    arabian: ArabianApproach | None = None,
     iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
@@ -1984,6 +2030,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - staged world construction.
         lakes_drawn=lakes_drawn,
         outside_land=outside_land,
         land_interface=land_interface,
+        arabian=arabian,
         iberia_interface=iberia_interface,
         strait=strait,
         island_sites=island_sites,

@@ -167,6 +167,7 @@ class Coast:
     the currents of the lanes that the canvas replaced ran over the generated cells, ``docks``
     the generated cells that touch water of the game's that ships can enter, ``shore`` those that
     touch land of the game's (an islet inside the canvas, the land at its edge).
+    ``outside_water`` records all retained water contacts when a basin may share a retained shore.
     """
 
     world: NewWorld
@@ -178,6 +179,7 @@ class Coast:
     merged: int
     designed: frozenset[int] = frozenset()
     source_cells: tuple[int, ...] = ()
+    outside_water: frozenset[int] | None = None
 
     def renumbered(self, world: NewWorld, cell_of: Sequence[int], keep: Collection[int]) -> Coast:
         """This coast in ``world``, whose cells are the old ones folded as ``cell_of`` says.
@@ -194,6 +196,9 @@ class Coast:
             self.merged,
             frozenset(cell_of[cell] for cell in self.designed if cell in keep),
             tuple(cell_of[cell] for cell in self.source_cells),
+            None
+            if self.outside_water is None
+            else frozenset(cell_of[cell] for cell in self.outside_water),
         )
 
 
@@ -208,6 +213,7 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
     designed: np.ndarray[tuple[int, ...], np.dtype[np.bool_]] | None = None,
     minimum_sea: int = 0,
     dissolve: bool = False,
+    classify_shared_basins: bool = False,
 ) -> Coast:
     """Settle the sea cells of ``world`` against ports; collect the game's lanes beside it.
 
@@ -264,6 +270,14 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         settled.merged,
         frozenset(designed_cells),
         settled.cell_of if world.wrap_x else (),
+        frozenset(
+            settled.cell_of[cell]
+            for label, cell in contacts
+            if game_map.classes[label] in {CellClass.SEA, CellClass.LAKE}
+            and world.classes[cell] is CellClass.SEA
+        )
+        if classify_shared_basins
+        else None,
     )
 
 
@@ -374,7 +388,7 @@ def shape_water(coast: Coast, *, regular_grid: bool = False) -> Water:
     form a clear course that continues a current of the game (``rnw.currents``); every other lane
     cell stays navigable deep ocean without an arrow, as one of the game's 750 deep zones is.
     """
-    waters = analyse(coast.world, coast.shore)
+    waters = analyse(coast.world, coast.shore, outside_water=coast.outside_water)
     original_topography = waters.topography
     original_scale = waters.scale
     chosen = plan_lanes(
@@ -401,7 +415,7 @@ def shape_water(coast: Coast, *, regular_grid: bool = False) -> Water:
     if fold:
         world, cell_of = relabel(coast.world, fold)
         final = coast.renumbered(world, cell_of, set(range(len(coast.world.classes))) - set(fold))
-        waters = analyse(world, final.shore)
+        waters = analyse(world, final.shore, outside_water=final.outside_water)
     else:
         world, cell_of, final = coast.world, tuple(range(len(coast.world.classes))), coast
     lanes = frozenset(cell_of[cell] for cell in chosen.lanes)
@@ -617,7 +631,9 @@ def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, obje
             if other not in reached and other not in shut and world.classes[other] is CellClass.SEA:
                 reached.add(other)
                 queue.append(other)
-    inland = {cell for basin in inland_seas(world) for cell in basin}
+    inland = {
+        cell for basin in inland_seas(world, outside_water=coast.outside_water) for cell in basin
+    }
     cut_off = [
         cell for cell in sea if cell not in shut and cell not in reached and cell not in inland
     ]

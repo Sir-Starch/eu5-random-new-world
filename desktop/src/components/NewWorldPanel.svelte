@@ -229,7 +229,16 @@
               {#if key === "africa"}
                 <Check checked={region.require_asia_connection} disabled={locked}
                   label={t("continent.africa.asia_connection")}
+                  info={t("continent.africa.asia_connection.info")}
                   onchange={(required) => app.call("set_asia_connection", { required })} />
+                {#if region.require_asia_connection}
+                  <div class="sub">
+                    <Check checked={region.require_vanilla_asia_connection} disabled={locked}
+                      label={t("continent.africa.asia_connection.vanilla")}
+                      info={t("continent.africa.asia_connection.vanilla.info")}
+                      onchange={(required) => app.call("set_vanilla_asia_connection", { required })} />
+                  </div>
+                {/if}
                 <Check checked={region.iberia_connection !== "off"} disabled={locked}
                   label={t("continent.africa.iberia_connection")}
                   hint={t("continent.africa.iberia_connection.about")}

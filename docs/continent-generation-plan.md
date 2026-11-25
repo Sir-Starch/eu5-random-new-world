@@ -36,33 +36,29 @@ regional resource trial, and the installed 1337 data audit.
 ## Geography and the starting map
 
 Africa covers the game's `africa` continent, including Egypt, Sinai and the
-Atlantic islands it assigns to Africa. A seed can select a dry approach to
-western Asia, along its nearby coastline or at the existing land interface.
-The **Require a land connection to Asia** option always constructs a passable
-approach, a land bridge (`land_bridge.py`). Its axis is the cheapest route from
-a site on the interface to the continent over a noisy landscape that keeps clear
-of the domain's coast margin, on coarse blocks and with sixteen moves so that no
-direction is preferred. A route of more than a few locations is made to wind:
-it is routed again through waypoints, one every few locations, a location or two
-to its left and right in turn, so that no stretch of it stays straight for long.
-It is then
-smoothed until no corner is left. Its body is
-a union of discs along the axis whose radius swells and narrows, flares at both
-ends, narrows to the room beside the coast margin and has the same irregular
-edge as every other coast; a one-location spine is always kept. A site whose
-bridge does not touch the interface, join the continent and cover the site is
-dropped for the next candidate, and none at all fails explicitly. So is a site whose
-bridge would shut a bay of water off round a retained islet or leave a pocket of the
-Levant's coast with no sea of its own to lead out of it (`newworld.py`): of seven seeds of
-the all-continents selection five stopped at export with "Sea cutout at cell N has no coast
-or retained sea" or a sea-reach error before this guard, and all seven generate with it.
-Two export checks that failed sound worlds were corrected with it: the removed-locations
-check read a native people's culture Pende or Teke as the location of that name, and a land
-location whose only way to a port lay through the retained land beside it was rejected
-(`eu5_nw_export.py`). The bridge's
-construction is all integer arithmetic, so a seed gives the same bridge on every platform. The
-generated shore and land cells follow the resulting terrain.
-The final adjacency check requires a direct border between passable locations.
+Atlantic islands it assigns to Africa. Its canvas also owns the Red Sea and
+the Gulf of Aden waters in `red_sea_area` and `arabian_area`, so the generated coast
+can reach the retained mainland along Arabia. Named closed waters, toll endpoints
+and required naval anchors remain outside the claim.
+
+**Require a land connection to Asia** guarantees a passable approach. The seed
+can choose the original land interface or a landing along the Arabian coast.
+With the requirement off, the seed may leave the continents separated by water.
+**Require a connection at the original land border** guarantees a passable
+connection at that interface and lets the seed attempt a second landing farther
+along the Arabian shore. In settings these are `require_asia_connection` and
+`require_vanilla_asia_connection`. Both default to on with **Keep Mamluks**. The
+Sultanate of Damascus defaults to the optional mode.
+
+A bridge starts at a seeded site and reaches the main generated land by routing
+over a noisy landscape (`land_bridge.py`). Waypoints bend its axis, and its
+width and irregular edges vary with the seed. A candidate must connect both
+shores and retain navigable access for sea pockets around retained terrain.
+An enclosed basin can have a retained land shore, as when bridges close off
+part of the Red Sea. Its inland classification uses the actual contacts with
+retained water.
+The final adjacency checks require a direct border between passable locations
+and check the original interface separately when it is required.
 Nearby European shores can admit a separate approach with a short navigable
 strait, built the same way at a smaller scale. Only a crossing validated
 against the pixels on both shores and the

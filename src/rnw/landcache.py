@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from rnw.eu5_biomes import SizeModel
     from rnw.eu5_map import Eu5Map
     from rnw.land_contact import ContactTerrain
+    from rnw.newworld import ArabianApproach
     from rnw.relief import ReliefHints
     from rnw.settings import NewWorldSettings
 
@@ -133,6 +134,7 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    arabian: ArabianApproach | None = None,
     iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
@@ -182,9 +184,12 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
             digest.update(grid.tobytes())
     if map_rows is not None:
         digest.update(f"map_rows={map_rows}".encode("ascii"))
+    if arabian is not None:
+        digest.update(b"arabian_required" if arabian.required else b"arabian")
     for name, neighbor in (
         (b"outside_land", outside_land),
         (b"land_interface", land_interface),
+        (b"arabian_interface", None if arabian is None else arabian.interface),
         (b"iberia_interface", iberia_interface),
         (b"strait", strait),
     ):
@@ -534,6 +539,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     map_rows: tuple[int, int] | None = None,
     outside_land: NDArray[np.bool_] | None = None,
     land_interface: NDArray[np.bool_] | None = None,
+    arabian: ArabianApproach | None = None,
     iberia_interface: NDArray[np.bool_] | None = None,
     strait: NDArray[np.uint8] | None = None,
     contact_terrain: ContactTerrain | None = None,
@@ -567,6 +573,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             map_rows=map_rows,
             outside_land=outside_land,
             land_interface=land_interface,
+            arabian=arabian,
             iberia_interface=iberia_interface,
             strait=strait,
             contact_terrain=contact_terrain,
@@ -606,6 +613,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
         map_rows=map_rows,
         outside_land=outside_land,
         land_interface=land_interface,
+        arabian=arabian,
         iberia_interface=iberia_interface,
         strait=strait,
         contact_terrain=contact_terrain,

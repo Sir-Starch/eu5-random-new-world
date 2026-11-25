@@ -123,9 +123,11 @@ def test_all_selections_cover_their_land_once(names: tuple[str, ...]) -> None:
 
 def test_original_african_land_interface_and_oceanian_wrap() -> None:
     game = _map()
-    africa, oceania = plan_domains(game, _settings(("africa", "oceania")))
-    assert africa.land_interface is not None
-    interface = _in_world(africa, africa.land_interface, game.labels.shape)
+    africa, oceania = plan_domains(
+        game, _settings(("africa", "oceania")), seed=42, require_vanilla_asia_connection=True
+    )
+    assert africa.vanilla_asia_interface is not None
+    interface = _in_world(africa, africa.vanilla_asia_interface, game.labels.shape)
     expected = np.zeros(game.labels.shape, dtype=bool)
     expected[70, 660:715] = True
     assert np.array_equal(interface, expected)
@@ -150,6 +152,59 @@ def test_shared_southern_ocean_and_seeded_african_boundary() -> None:
     plans = plan_domains(game, selected, seed=42)
     assert not plans[1].join_asia
     assert plans[1].land_interface is None
+
+
+@pytest.mark.parametrize("selected", [("africa",), tuple(CONTINENTS)])
+def test_the_african_canvas_reaches_arabia_in_each_connection_mode(
+    selected: tuple[str, ...],
+) -> None:
+    game = _map()
+    labels = game.labels.copy()
+    labels[70:210, 724:735] = 6
+    labels[45:210, 735:755] = 3
+    labels[45:70, 715:735] = 3
+    source = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                **(
+                    vars(game)
+                    | {
+                        "keys": (*game.keys, "red_sea"),
+                        "areas": ("",) * len(game.keys) + ("red_sea_area",),
+                        "labels": labels,
+                        "classes": (*game.classes, CellClass.SEA),
+                        "continents": (*game.continents, "asia"),
+                        "ambiguous": np.append(game.ambiguous, False),
+                    }
+                )
+            ),
+        ),
+    )
+    modes = (
+        plan_domains(source, _settings(selected), seed=42),
+        plan_domains(source, _settings(selected), seed=42, require_asia_connection=True),
+        plan_domains(source, _settings(selected), seed=7, require_vanilla_asia_connection=True),
+    )
+    optional, required, vanilla = (
+        next(domain for domain in domains if domain.continent.key == "africa") for domains in modes
+    )
+    for domain in (optional, required, vanilla):
+        mask = _in_world(domain, domain.mask, labels.shape)
+        assert np.all(mask[labels == 6])
+        assert not mask[labels == 3].any()
+    assert optional.land_interface is None
+    assert required.land_interface is not None
+    assert vanilla.land_interface is not None
+    assert vanilla.vanilla_asia_interface is not None
+    variable_shore = _in_world(required, required.land_interface, labels.shape)
+    original_border = _in_world(vanilla, vanilla.vanilla_asia_interface, labels.shape)
+    extra_shore = _in_world(vanilla, vanilla.land_interface, labels.shape)
+    assert np.all(variable_shore[70:210, 734])
+    assert np.all(original_border[70, 660:724])
+    assert np.any(extra_shore[70:210, 734])
+    assert not np.any(extra_shore & original_border)
 
 
 def test_three_canvases_partition_the_whole_ocean_and_share_borders() -> None:

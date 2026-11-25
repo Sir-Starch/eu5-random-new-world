@@ -145,6 +145,9 @@ class Bridge:
             "set_morocco": lambda p: c.set_morocco(_str(p, "policy")),
             "set_mamluks": lambda p: c.set_mamluks(_str(p, "policy")),
             "set_asia_connection": lambda p: c.set_asia_connection(required=_bool(p, "required")),
+            "set_vanilla_asia_connection": lambda p: c.set_vanilla_asia_connection(
+                required=_bool(p, "required")
+            ),
             "set_iberia_connection": lambda p: c.set_iberia_connection(_str(p, "mode")),
             "set_sea_circumnavigation": lambda p: c.set_sea_circumnavigation(
                 enabled=_bool(p, "enabled")

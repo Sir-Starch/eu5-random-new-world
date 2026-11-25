@@ -65,9 +65,8 @@ def test_land_versions_distinguish_regional_geography(tmp_path: Path) -> None:
     assert legacy != original
     controller.set_region_value("africa", "resources.coffee", 200)
     controller.set_morocco("granada")
-    controller.set_mamluks("damascus")
     assert land_key(controller.world_code().settings(), 17) == original
-    controller.set_asia_connection(required=True)
+    controller.set_vanilla_asia_connection(required=False)
     assert land_key(controller.world_code().settings(), 17) != original
     controller.set_asia_connection(required=False)
     controller.set_region_value("africa", "new_world.land_permille", 500)
@@ -78,6 +77,35 @@ def test_land_versions_distinguish_regional_geography(tmp_path: Path) -> None:
         )
         < controls.LOCATION_BUDGET
     )
+
+
+def test_keep_mamluks_defaults_and_asian_connection_overrides_roundtrip(tmp_path: Path) -> None:
+    controller = Controller(data=tmp_path)
+    controller.set_continent("africa", enabled=True)
+    africa = controller.region_settings("africa")
+    assert africa.require_asia_connection
+    assert africa.require_vanilla_asia_connection
+    controller.set_vanilla_asia_connection(required=False)
+    restored = Controller(data=tmp_path)
+    assert restored.use_code(controller.code) is None
+    africa = restored.region_settings("africa")
+    assert africa.require_asia_connection
+    assert not africa.require_vanilla_asia_connection
+    assert africa.document()["require_vanilla_asia_connection"] is False
+    restored.set_asia_connection(required=False)
+    assert controller.use_code(restored.code) is None
+    africa = controller.region_settings("africa")
+    assert not africa.require_asia_connection
+    assert not africa.require_vanilla_asia_connection
+    assert africa.document()["require_asia_connection"] is False
+    controller.set_mamluks("damascus")
+    africa = controller.region_settings("africa")
+    assert not africa.require_asia_connection
+    assert not africa.require_vanilla_asia_connection
+    controller.set_mamluks("restore")
+    africa = controller.region_settings("africa")
+    assert africa.require_asia_connection
+    assert africa.require_vanilla_asia_connection
 
 
 def test_circumnavigation_option_is_optional_and_roundtrips(tmp_path: Path) -> None:

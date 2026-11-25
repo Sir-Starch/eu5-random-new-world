@@ -3322,6 +3322,18 @@ text = '''Selecciona al menos un continente.'''
 source = "a936e75dbefa2ad8"
 text = "Exigir una conexión terrestre con Asia"
 
+["continent.africa.asia_connection.info"]
+source = "79c32474a5944dd8"
+text = '''África puede unirse a Asia en cualquier punto de la costa arábiga o en la frontera terrestre original. Si desactivas esta opción, la semilla también puede dejar a África separada por el mar.'''
+
+["continent.africa.asia_connection.vanilla"]
+source = "b2bdaeffca0a7133"
+text = '''Exigir una conexión en la frontera terrestre original'''
+
+["continent.africa.asia_connection.vanilla.info"]
+source = "2c8981bc4ede203f"
+text = '''Una conexión terrestre en la frontera original entre África y Asia cumple el requisito. La semilla puede añadir otra conexión en la costa arábiga. Se recomienda al elegir «Conservar a los mamelucos» para que sus posesiones africanas y asiáticas puedan seguir comunicadas por tierra.'''
+
 ["continent.africa.iberia_connection"]
 source = "5ee2a669bea0356b"
 text = '''Permitir una conexión terrestre con Iberia (sin estrecho)'''

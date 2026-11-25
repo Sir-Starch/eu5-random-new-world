@@ -71,6 +71,11 @@ def land_key(settings: Settings, seed: int) -> str:
                 _land_settings(replace(r.new_world, reveal_at_start=0))
                 + ([("require_asia_connection", True)] if r.require_asia_connection else [])
                 + (
+                    [("require_vanilla_asia_connection", True)]
+                    if r.require_vanilla_asia_connection
+                    else []
+                )
+                + (
                     [("iberia_connection", r.iberia_connection)]
                     if r.iberia_connection != "off"
                     else []

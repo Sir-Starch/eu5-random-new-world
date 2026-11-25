@@ -3322,6 +3322,18 @@ text = '''请至少选择一个大洲。'''
 source = "a936e75dbefa2ad8"
 text = "必须与亚洲陆路相连"
 
+["continent.africa.asia_connection.info"]
+source = "79c32474a5944dd8"
+text = '''非洲可以在阿拉伯半岛沿岸的任意地点或原版陆地边界与亚洲相连。关闭此选项后，种子也可能让海洋隔开非洲和亚洲。'''
+
+["continent.africa.asia_connection.vanilla"]
+source = "b2bdaeffca0a7133"
+text = '''要求在原版陆地边界相连'''
+
+["continent.africa.asia_connection.vanilla.info"]
+source = "2c8981bc4ede203f"
+text = '''只要非洲和亚洲在原版陆地边界相连，就满足要求。种子还可能在阿拉伯半岛沿岸生成另一处陆地连接。选择「保留马穆鲁克」时建议启用，以便其非洲和亚洲领地保持陆路相通。'''
+
 ["continent.africa.iberia_connection"]
 source = "5ee2a669bea0356b"
 text = '''允许与伊比利亚陆路相连（无海峡）'''

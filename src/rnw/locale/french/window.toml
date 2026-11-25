@@ -3322,6 +3322,18 @@ text = '''Sélectionnez au moins un continent.'''
 source = "a936e75dbefa2ad8"
 text = "Exiger une liaison terrestre avec l’Asie"
 
+["continent.africa.asia_connection.info"]
+source = "79c32474a5944dd8"
+text = '''L’Afrique peut rejoindre l’Asie n’importe où le long de la côte arabique ou à la frontière terrestre d’origine. Si cette option est désactivée, la graine peut aussi laisser l’Afrique séparée par la mer.'''
+
+["continent.africa.asia_connection.vanilla"]
+source = "b2bdaeffca0a7133"
+text = '''Exiger une liaison à la frontière terrestre d’origine'''
+
+["continent.africa.asia_connection.vanilla.info"]
+source = "2c8981bc4ede203f"
+text = '''Une liaison terrestre à la frontière d’origine entre l’Afrique et l’Asie suffit. La graine peut ajouter une autre liaison le long de la côte arabique. Option recommandée avec « Conserver les Mamelouks » pour que leurs possessions africaines et asiatiques puissent rester reliées.'''
+
 ["continent.africa.iberia_connection"]
 source = "5ee2a669bea0356b"
 text = '''Autoriser une liaison terrestre avec l’Ibérie (sans détroit)'''

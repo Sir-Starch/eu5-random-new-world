@@ -960,13 +960,7 @@ class MainWindow(QMainWindow):
             layout.addRow(switch, preset)
             self.regional_presets[name] = preset
         self._add_african_policies(layout)
-        self.asia_connection: QCheckBox = QCheckBox(text("continent.africa.asia_connection"))
-
-        def connection_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a positional bool.
-            self.controller.set_asia_connection(required=checked)
-
-        _ = self.asia_connection.toggled.connect(connection_toggled)
-        layout.addRow(self.asia_connection)
+        self._add_asian_options(layout)
         self.iberia_connection: QCheckBox = QCheckBox(text("continent.africa.iberia_connection"))
         self.iberia_connection.setToolTip(text("continent.africa.iberia_connection.info"))
         self.iberia_required: QCheckBox = QCheckBox(
@@ -992,6 +986,29 @@ class MainWindow(QMainWindow):
         _ = self.circumnavigation.toggled.connect(circumnavigation_toggled)
         layout.addRow(self.circumnavigation)
         return group
+
+    def _add_asian_options(self, layout: QFormLayout) -> None:
+        self.asia_connection: QCheckBox = QCheckBox(text("continent.africa.asia_connection"))
+        self.asia_connection.setToolTip(text("continent.africa.asia_connection.info"))
+        self.vanilla_asia_connection: QCheckBox = QCheckBox(
+            text("continent.africa.asia_connection.vanilla")
+        )
+        self.vanilla_asia_connection.setToolTip(
+            text("continent.africa.asia_connection.vanilla.info")
+        )
+        self.vanilla_asia_connection.setStyleSheet("margin-left: 18px")
+
+        def connection_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a positional bool.
+            self.controller.set_asia_connection(required=checked)
+
+        _ = self.asia_connection.toggled.connect(connection_toggled)
+        layout.addRow(self.asia_connection)
+
+        def vanilla_connection_toggled(checked: bool) -> None:  # noqa: FBT001 - Qt emits a bool.
+            self.controller.set_vanilla_asia_connection(required=checked)
+
+        _ = self.vanilla_asia_connection.toggled.connect(vanilla_connection_toggled)
+        layout.addRow(self.vanilla_asia_connection)
 
     def _add_african_policies(self, layout: QFormLayout) -> None:
         self.african_policies: dict[str, tuple[QLabel, QComboBox]] = {}
@@ -2028,12 +2045,9 @@ class MainWindow(QMainWindow):
             combo.setVisible(enabled)
             label.setVisible(enabled)
             combo.setEnabled(not busy)
-        _ = self.asia_connection.blockSignals(True)  # noqa: FBT003 - Qt synchronization
-        self.asia_connection.setChecked(settings.require_asia_connection)
-        _ = self.asia_connection.blockSignals(False)  # noqa: FBT003 - Qt synchronization
-        self.asia_connection.setVisible(enabled)
-        self.asia_connection.setEnabled(not busy)
         for box, checked in (
+            (self.asia_connection, settings.require_asia_connection),
+            (self.vanilla_asia_connection, settings.require_vanilla_asia_connection),
             (self.iberia_connection, settings.iberia_connection != "off"),
             (self.iberia_required, settings.iberia_connection == "required"),
         ):
@@ -2042,6 +2056,7 @@ class MainWindow(QMainWindow):
             _ = box.blockSignals(False)  # noqa: FBT003 - Qt synchronization
             box.setVisible(enabled)
             box.setEnabled(not busy)
+        self.vanilla_asia_connection.setVisible(enabled and settings.require_asia_connection)
         self.iberia_required.setVisible(enabled and settings.iberia_connection != "off")
 
     def _refresh_regions(self, *, busy: bool) -> None:
