@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import landcache
-from rnw.continent_domains import CONTINENTS
+from rnw.continent_domains import CONTINENTS, retired_atlantic_islands
 from rnw.eu5_map import input_fingerprints, load_map
 from rnw.eu5_nw_export import TEMPLATES, CompositionInputs, retained_facts
 from rnw.model import CellClass
@@ -240,8 +240,10 @@ def get_area(
     game_map = run_stage("load map", lambda: load_map(game_dir))
     height, width = (int(size) for size in game_map.labels.shape)
     others = None
+    generated: tuple[str, ...] = ()
     if plan is not None:
         domains = run_stage("select canvas", lambda: planned_domains(game_dir, game_map, plan))
+        generated = tuple(one.continent.key for one in domains)
         domain = next(one for one in domains if one.continent.key == plan.continent)
         area = replace(
             from_domain(domain),
@@ -257,7 +259,7 @@ def get_area(
             from_canvas(canvas), origin=(0, (canvas.col0 - canvas.roll) % width, height, width)
         )
     # The map is let go on return.
-    area = replace(area, world=world_land(game_map), others=others)
+    area = replace(area, world=world_land(game_map, generated), others=others)
     if target is not None and cache is not None:
         write_area(target, area)
         landcache.prune(cache)
@@ -310,12 +312,13 @@ def world_areas(domains: Collection[Domain], shape: tuple[int, int]) -> NDArray[
     return found
 
 
-def world_land(game_map: Eu5Map) -> NDArray[np.bool_]:
-    """The game's land every ``WORLD_STEP``th pixel of its whole map."""
+def world_land(game_map: Eu5Map, generated: Collection[str] = ()) -> NDArray[np.bool_]:
+    """The retained geography behind the editor, at every ``WORLD_STEP``th pixel."""
     water = np.array(
         [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=np.bool_
     )
-    return np.ascontiguousarray(~water[game_map.labels[::WORLD_STEP, ::WORLD_STEP]])
+    land = ~(water | retired_atlantic_islands(game_map, generated))
+    return np.ascontiguousarray(land[game_map.labels[::WORLD_STEP, ::WORLD_STEP]])
 
 
 def write_area(target: Path, area: LandArea) -> None:

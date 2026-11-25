@@ -37,11 +37,17 @@ def test_mediterranean_membership_comes_from_the_installed_script(tmp_path: Path
 
 
 @pytest.mark.parametrize("land_bridge", [False, True])
-def test_mediterranean_keeps_its_shore_areas_and_stops_at_other_water(*, land_bridge: bool) -> None:
+@pytest.mark.parametrize("isolated_overlap", [False, True])
+def test_mediterranean_keeps_its_shore_areas_and_stops_at_other_water(
+    *, land_bridge: bool, isolated_overlap: bool
+) -> None:
     # Two retained shores in one basin, with newly flooded land between them. The western
     # outlet has Atlantic water, and a cut-off former Mediterranean cell has an eastern outlet.
     labels = np.array([[-1, 0, 1, 2, 3, -1, 4, 5, -1, 6, -1, 7, -1]], dtype=np.int32)
     old = np.array([[2, 2, 3, 3, 3, 1, 3, 0, 0, 2, 4, 2, 3]], dtype=np.int32)
+    if isolated_overlap:
+        # The old Red Sea overlap only reaches the new Mediterranean.
+        old[0, 2] = 4
     sea = CellClass.SEA
     land = CellClass.LAND
     world = derive_world(
@@ -75,4 +81,10 @@ def test_mediterranean_keeps_its_shore_areas_and_stops_at_other_water(*, land_br
         original_areas=("atlantic", "west", "east", "land", "other_sea"),
         basin_areas={"west", "east"},
     )
-    assert found == {0: "east", 1: "east", 2: "west", 3: "west", 4: "west"}
+    assert found == {
+        0: "east",
+        1: "east",
+        2: "east" if isolated_overlap else "west",
+        3: "west",
+        4: "west",
+    }

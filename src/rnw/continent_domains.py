@@ -124,6 +124,34 @@ AFRICA: Final[str] = "africa"
 AFRICA_NUMBER: Final[int] = tuple(CONTINENTS).index(AFRICA)
 
 
+def retired_atlantic_islands(game_map: Eu5Map, generated: Collection[str]) -> NDArray[np.bool_]:
+    """The small islands the game files under the open Atlantic between the two continents."""
+    if NEW_WORLD not in generated or AFRICA not in generated:
+        return np.zeros(len(game_map.classes), dtype=bool)
+    return np.fromiter(
+        (
+            continent == "atlantic_ocean_continent"
+            and kind in {CellClass.LAND, CellClass.WASTELAND}
+            for continent, kind in zip(game_map.continents, game_map.classes, strict=True)
+        ),
+        dtype=bool,
+    )
+
+
+def _release_atlantic_island_sites(game_map: Eu5Map, generated: Collection[str]) -> Eu5Map:
+    """Let the surrounding sea claims cover old sites without a guard or a placement group."""
+    retired = retired_atlantic_islands(game_map, generated)
+    if not retired.any():
+        return game_map
+    return replace(
+        game_map,
+        classes=tuple(
+            CellClass.SEA if island else kind
+            for kind, island in zip(game_map.classes, retired.tolist(), strict=True)
+        ),
+    )
+
+
 def _validate_geography(continent: Continent, settings: NewWorldSettings) -> None:
     if continent.key != NEW_WORLD and (
         settings.landform or settings.template_permille or settings.keep_geography
@@ -1513,6 +1541,7 @@ def plan_domains(  # noqa: PLR0913 - the map, the selection and the retained fac
     if tuple(selected) == (NEW_WORLD,):
         return (_legacy_domain(game_map, selected[NEW_WORLD]),)
 
+    game_map = _release_atlantic_island_sites(game_map, selected)
     sea = np.fromiter((kind is CellClass.SEA for kind in game_map.classes), dtype=bool)
     solid = np.fromiter(
         (kind not in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes), dtype=bool

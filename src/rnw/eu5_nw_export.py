@@ -55,7 +55,12 @@ from rnw.content import OCEANS as OPEN_OCEANS
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.content_inventory import world_footprint
-from rnw.continent_domains import SHARED_OCEAN_DIVISOR, iberian_link_land, plan_domains
+from rnw.continent_domains import (
+    SHARED_OCEAN_DIVISOR,
+    iberian_link_land,
+    plan_domains,
+    retired_atlantic_islands,
+)
 from rnw.continent_world import (
     ComposedWorld,
     WorldRegion,
@@ -1798,12 +1803,38 @@ def composed_bindings(  # noqa: PLR0913 - finished coast and original geographic
     """Find the final port rows and replacements for all removed geographic identities."""
     world = water.coast.world
     ports = _ports(plan, world, canvas, water.coast.foreign, vanilla_ports)
+    retired = retired_atlantic_islands(
+        game_map, {cell.continent for cell in plan.cells if cell.kind is CellClass.LAND}
+    )
+    continents = dict(zip(game_map.keys, game_map.continents, strict=True))
+    # Open-ocean islets have no generated land under their old hierarchy. Their scripts
+    # can bind to a nearby place on either shore with the original land or port role.
+    for index in np.flatnonzero(retired & canvas.removed).tolist():
+        continents[game_map.keys[index]] = ""
+    island_centres = (
+        {
+            point.key: (point.y, point.x)
+            for point in game_map.points
+            if point.source == f"{MAP_OBJECTS}/generated_locators_vfx.txt"
+        }
+        if retired.any()
+        else {}
+    )
+    lost: list[tuple[str, CellClass, int, int]] = []
+    for index in np.flatnonzero(canvas.removed).tolist():
+        key = game_map.keys[index]
+        if key not in removed:
+            continue
+        if retired[index] and canvas.drowned is not None and canvas.drowned[index]:
+            if key not in island_centres:
+                message = f"The removed Atlantic island {key} has no original map position"
+                raise NewWorldExportError(message)
+            row, column = island_centres[key]
+        else:
+            row, column = int(geometry.rows[index]), int(geometry.columns[index])
+        lost.append((key, game_map.classes[index], row, column))
     remap = build_remap(
-        [
-            (game_map.keys[i], game_map.classes[i], int(geometry.rows[i]), int(geometry.columns[i]))
-            for i in np.flatnonzero(canvas.removed).tolist()
-            if game_map.keys[i] in removed
-        ],
+        lost,
         plan,
         world.centroids,
         _removed_provinces(hierarchy, removed),
@@ -1818,9 +1849,7 @@ def composed_bindings(  # noqa: PLR0913 - finished coast and original geographic
             ),
             closed_seas=water.zones,
         ),
-        regions=RemapRegions(
-            dict(zip(game_map.keys, game_map.continents, strict=True)), canvas.shape[1]
-        ),
+        regions=RemapRegions(continents, canvas.shape[1]),
     )
     return ports, remap
 
@@ -4185,9 +4214,7 @@ def _water_textures(  # noqa: PLR0913 - read the fixed map plus the new mask and
 ) -> dict[str, int]:
     codes = _codes(game_map, canvas, world)
     canvas_world = codes != OUTSIDE
-    vanilla_water = np.array(
-        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
-    )[game_map.labels]
+    vanilla_water = _vanilla_water(game_map, canvas)
     new_water = vanilla_water.copy()
     new_water[canvas_world] = codes[canvas_world] == WATER_CODE
     inland = None
@@ -5635,10 +5662,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
 
             def decals() -> tuple[NDArray[np.uint8], dict[str, object]]:
                 codes = _codes(game_map, canvas, world)
-                vanilla_water = np.array(
-                    [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes],
-                    dtype=bool,
-                )[game_map.labels]
+                vanilla_water = _vanilla_water(game_map, canvas)
 
                 def relief_window(rows: slice, columns: slice) -> NDArray[np.int32]:
                     """Carved relief of a window of the world, zero off the canvas mask."""
@@ -5671,6 +5695,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             terrain_stats.update(water.result())
             canvas_world = np.zeros(game_map.labels.shape, dtype=bool)
             canvas.put(canvas_world, canvas.mask)
+            for part in canvas.flooded_land:
+                for row, left, right in part.runs.tolist():
+                    canvas_world[row, left:right] = True
             pixel_classes, class_count, coarse_count = _pixel_classes(
                 game_map, vanilla_attributes, biomes, final_labels, materials_world
             )
@@ -6245,7 +6272,7 @@ def mod_metadata(name: str, title: str, world_code: str | None) -> bytes:
 
 
 def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8]:
-    """World-sized code map: -1 off the canvas, 0 generated water, 1 generated land."""
+    """World-sized terrain edits: -1 retained, 0 water, 1 land."""
     codes = np.full(game_map.labels.shape, OUTSIDE, dtype=np.int8)
     table = np.array(
         [
@@ -6255,7 +6282,21 @@ def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8
         dtype=np.int8,
     )
     canvas.put(codes, table[world.labels])
+    for part in canvas.flooded_land:
+        for row, left, right in part.runs.tolist():
+            codes[row, left:right] = WATER_CODE
     return codes
+
+
+def _vanilla_water(game_map: Eu5Map, canvas: Canvas) -> NDArray[np.bool_]:
+    """The surface under the terrain writes, before flooding any Atlantic island sites."""
+    water = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
+    )[game_map.labels]
+    for part in canvas.flooded_land:
+        for row, left, right in part.runs.tolist():
+            water[row, left:right] = False
+    return water
 
 
 def _vocabulary(values: list[str]) -> tuple[list[str], NDArray[np.int64]]:

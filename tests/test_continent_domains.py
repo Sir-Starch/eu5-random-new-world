@@ -27,6 +27,7 @@ from rnw.continent_domains import (
 )
 from rnw.eu5_biomes import EQUATOR_ROW, block_features, climate_grid, land_features, latitude_tenths
 from rnw.eu5_canvas import CanvasError, select_canvas
+from rnw.eu5_map import Eu5Map
 from rnw.model import CellClass
 from rnw.settings import PRESETS
 from rnw.topology import adjacency_pairs, unpack_pairs
@@ -34,7 +35,6 @@ from rnw.topology import adjacency_pairs, unpack_pairs
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-    from rnw.eu5_map import Eu5Map
     from rnw.settings import NewWorldSettings
 
 
@@ -280,7 +280,7 @@ def test_open_ocean_island_enters_placement_inside_its_canvas() -> None:
                 labels=labels,
                 keys=(*game.keys, "island"),
                 classes=(*game.classes, CellClass.LAND),
-                continents=(*game.continents, "atlantic_ocean_continent"),
+                continents=(*game.continents, "pacific_ocean_continent"),
                 ambiguous=np.append(game.ambiguous, False),
             ),
         ),
@@ -291,6 +291,33 @@ def test_open_ocean_island_enters_placement_inside_its_canvas() -> None:
     points = holder.footprints[0]
     assert points.size == 25
     assert np.all(holder.mask[points.rows, points.columns])
+
+
+@pytest.mark.parametrize("names", [("america", "africa"), tuple(CONTINENTS)])
+def test_replaced_atlantic_islet_leaves_no_hole_or_placement_group(names: tuple[str, ...]) -> None:
+    base = _map()
+    base.labels[205:209, 585:589] = 6
+    game = Eu5Map(
+        keys=(*base.keys, "islet"),
+        colors=np.arange(7, dtype=np.int64),
+        classes=(*base.classes, CellClass.WASTELAND),
+        ambiguous=np.append(base.ambiguous, False),
+        continents=(*base.continents, "atlantic_ocean_continent"),
+        rgb=np.empty((0, 0, 3), dtype=np.uint8),
+        labels=base.labels,
+        rivers=np.empty((0, 0), dtype=np.uint8),
+        locations_chunks=(),
+        rivers_chunks=(),
+        points=(),
+        inputs=(),
+    )
+    domains = plan_domains(game, _settings(names), seed=739)
+    africa = next(domain for domain in domains if domain.continent.key == "africa")
+    mask = _in_world(africa, africa.mask, game.labels.shape)
+    assert mask[200:215, 580:595].all()
+    assert not any(domain.footprints for domain in domains)
+    keep = plan_domains(game, _settings(("africa", "oceania")), seed=739)[0]
+    assert not _in_world(keep, keep.mask, game.labels.shape)[205:209, 585:589].any()
 
 
 def _with_locations(

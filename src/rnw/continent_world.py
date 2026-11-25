@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.continent_domains import ocean_speck_limit
+from rnw.continent_domains import ocean_speck_limit, retired_atlantic_islands
 from rnw.eu5_canvas import Canvas, CanvasError, OceanRemainder, remainder_boxes, remainder_runs
+from rnw.eu5_map import RIVER_WATER
 from rnw.islands import Footprint, carve
 from rnw.model import CellClass
 from rnw.newworld import (
@@ -121,6 +122,7 @@ def relocated_canvas(game_map: Eu5Map, canvas: Canvas) -> Canvas:
         moves=canvas.moves,
         enclosed_ocean=canvas.enclosed_ocean,
         drowned=canvas.drowned,
+        flooded_land=canvas.flooded_land,
     )
 
 
@@ -228,6 +230,7 @@ def absorb_land_fragments(
     colour of the retained location that surrounds it the most, and the recolouring is recorded
     among the ocean identities' patches, the only changes allowed outside the canvas. A location
     that has no pixel left is recorded as drowned: removed from the map without a canvas.
+    The old Atlantic island sites also lose their dry terrain and river background.
     """
     labels = game_map.labels
     height, width = labels.shape
@@ -239,6 +242,8 @@ def absorb_land_fragments(
         (name in generated and kind not in {CellClass.SEA, CellClass.LAKE} for name, kind in kinds),
         dtype=bool,
     )
+    islands = retired_atlantic_islands(game_map, generated)
+    replaced |= islands
     found: list[NDArray[np.int64]] = []
     for first in range(0, height, BAND_ROWS):
         checkpoint()
@@ -259,6 +264,8 @@ def absorb_land_fragments(
         ),
         dtype=bool,
     )
+    retained &= ~islands
+    sea = retained & np.fromiter((kind is CellClass.SEA for kind in game_map.classes), dtype=bool)
     count = len(game_map.keys)
     lost = np.bincount(labels[flat // width, flat % width], minlength=count)
     total = np.zeros(count, dtype=np.int64)
@@ -266,19 +273,31 @@ def absorb_land_fragments(
         total += np.bincount(labels[first : first + BAND_ROWS].ravel(), minlength=count)
     labels, rgb = labels.copy(), game_map.rgb.copy()
     edits: list[tuple[OceanRemainder, int]] = []
+    flooded: list[OceanRemainder] = []
     for piece in _pieces(flat, width, height, limit):
-        bank = _bank(piece, labels, retained)
-        colour = int(game_map.colors[bank])
         rows, columns = np.divmod(np.asarray(piece, dtype=np.int64), width)
+        island = bool(islands[labels[rows, columns]].any())
+        bank = _bank(piece, labels, sea if island else retained)
+        colour = int(game_map.colors[bank])
         labels[rows, columns] = bank
         rgb[rows, columns] = (colour >> 16, (colour >> 8) & 255, colour & 255)
-        edits.append((OceanRemainder(bank, _piece_runs(rows, columns), len(piece)), colour))
+        part = OceanRemainder(bank, _piece_runs(rows, columns), len(piece))
+        edits.append((part, colour))
+        if island:
+            flooded.append(part)
+    rivers = game_map.rivers
+    if flooded:
+        rivers = rivers.copy()
+        for part in flooded:
+            for row, left, right in part.runs.tolist():
+                rivers[row, left:right] = RIVER_WATER
     return (
-        replace(game_map, labels=labels, rgb=rgb),
+        replace(game_map, labels=labels, rgb=rgb, rivers=rivers),
         replace(
             canvas,
             enclosed_ocean=(*canvas.enclosed_ocean, *edits),
             drowned=(lost > 0) & (lost == total),
+            flooded_land=tuple(flooded),
         ),
     )
 

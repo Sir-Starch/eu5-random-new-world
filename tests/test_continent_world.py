@@ -21,7 +21,7 @@ from rnw.continent_world import (
 )
 from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_canvas import Canvas, CanvasError, OceanRemainder
-from rnw.eu5_map import Eu5Map
+from rnw.eu5_map import RIVER_LAND, RIVER_WATER, Eu5Map
 from rnw.eu5_newworld import outside_contacts, regional_geometry
 from rnw.eu5_nw_export import (
     _replacement_water_links,  # pyright: ignore[reportPrivateUsage]
@@ -233,6 +233,25 @@ def test_an_islet_left_out_of_every_canvas_whole_is_drowned_and_counted_as_remov
     counted = relocated_canvas(result, fixed)
     assert counted.removed.tolist() == [False, True, False]
     assert not counted.trimmed.any()
+
+
+def test_retired_atlantic_islet_outside_the_canvas_becomes_water() -> None:
+    game, canvas = _islet_map()
+    game = replace(
+        game,
+        continents=("asia", "atlantic_ocean_continent", "atlantic_ocean_continent"),
+        rivers=np.full(game.labels.shape, RIVER_LAND, dtype=np.uint8),
+    )
+    untouched, _ = absorb_land_fragments(game, canvas, {"africa"})
+    assert untouched is game
+    result, fixed = absorb_land_fragments(game, canvas, {"america", "africa"})
+    (flooded,) = fixed.flooded_land
+    assert flooded.pixels == 4
+    assert result.labels[3, 501] == 2
+    assert result.rivers[3, 501] == RIVER_WATER
+    assert result.rivers[3, 503] == RIVER_LAND
+    assert not relocated_canvas(result, fixed).trimmed[1]
+    assert relocated_canvas(result, fixed).removed[1]
 
 
 def test_a_canvas_that_leaves_no_replaced_land_out_is_not_changed() -> None:

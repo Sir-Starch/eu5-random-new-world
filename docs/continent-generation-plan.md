@@ -29,8 +29,8 @@ regional resource trial, and the installed 1337 data audit.
   possible relocation of some vanilla Pacific islands. With all three
   enabled, outlying islets of regenerated continents belong to their
   surrounding canvas. The replacement geography covers their old sites.
-  Retained islands filed under the open ocean use the existing island
-  placement rules. Coastlines can change in a shared border area when
+  The open-Atlantic islands follow the rule below. Other retained open-ocean
+  islands use the existing placement rules. Coastlines can change in a shared border area when
   the continents selected for generation change.
 
 ## Geography and the starting map
@@ -131,6 +131,15 @@ African and Oceanian claims: water that retained shores enclose and water
 beyond Africa's limit stays vanilla.
 The three generated regions share borders across the Pacific, Atlantic and
 Indian oceans. Their coasts and intervening deep water form during generation.
+When both America and Africa are generated, the map planner releases the small
+island sites that the game files under the open Atlantic. The surrounding
+canvas can generate across them, including in the land editor. A site beyond
+the canvases joins the sea location around it, with underwater terrain and
+river background. The Atlantic islands filed under a continent belong to
+that continent's ordinary footprint. References to retired island keys use the
+nearest generated location with the same access role, measured from the old
+site. The content decisions still apply to historical events tied to specific
+places.
 The sea plan checks the common borders for deep water and keeps small residual
 pieces with adjacent navigable water. **Keep a sea route around the world**
 (default on for regional worlds, omitted for The Wall) is a step of the
@@ -163,7 +172,9 @@ Mediterranean areas listed in the installed game's scripted geography. Overlap w
 the original waters distinguishes the Mediterranean from its neighbours at their
 mouths. Where former land is underwater, the shortest path through the finished sea
 decides which shore's water reaches it. Each extension connects to retained water
-of its own area. Its new cells and provinces use the game's localized name for the
+of its own area. A pocket whose only outlets reach new cells of the basin joins
+the area's water with which it shares the most borders, even where it overlaps
+another sea on the old map. Its new cells and provinces use the game's localized name for the
 Mediterranean, and the existing areas and locations keep their local names.
 
 **Coasts the game files under another continent (2026-11-22, owner's report on `qpktias5fw`, 1.3.0 /

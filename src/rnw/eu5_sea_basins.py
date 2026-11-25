@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.hierarchy import pieces
 from rnw.model import CellClass
 from rnw.pdx import parse
 from rnw.progress import checkpoint
@@ -64,6 +65,36 @@ def _marine_overlap(
             inside += np.bincount(new[wet & med[old]], minlength=count)
             outside += np.bincount(new[wet & sea[old] & ~med[old]], minlength=count)
     return inside, outside
+
+
+def _join_basin_pockets(
+    game_map: Eu5Map,
+    world: NewWorld,
+    graph: ContactGraph,
+    contacts: Collection[tuple[int, int]],
+    members: dict[int, str],
+) -> None:
+    """Give water supported only by the basin's new waters to their own areas."""
+    if not members:
+        return
+    sea = CellClass.SEA
+    shore = {cell for label, cell in contacts if game_map.classes[label] is sea}
+    for left, right in world.edges:
+        if (world.classes[left] is sea) != (world.classes[right] is sea):
+            shore.add(left if world.classes[left] is sea else right)
+    other = [cell for cell, kind in enumerate(world.classes) if kind is sea and cell not in members]
+    for pocket in pieces(graph, other):
+        if shore.intersection(pocket):
+            continue
+        banks = Counter(
+            members[neighbor]
+            for cell in pocket
+            for neighbor, _ in graph.links[cell]
+            if neighbor in members
+        )
+        if banks:
+            area = min(banks, key=lambda name: (-banks[name], name))
+            members.update(dict.fromkeys(pocket, area))
 
 
 def mediterranean_cells(  # noqa: PLR0913 - the finished water and its retained geography.
@@ -123,4 +154,6 @@ def mediterranean_cells(  # noqa: PLR0913 - the finished water and its retained 
         for neighbour, length in graph.links[cell]:
             if neighbour not in assigned and (area or not core[neighbour]):
                 heapq.heappush(frontier, (distance + length, area, neighbour))
-    return {cell: area for cell, area in assigned.items() if area}
+    members = {cell: area for cell, area in assigned.items() if area}
+    _join_basin_pockets(game_map, world, graph, contacts, members)
+    return members

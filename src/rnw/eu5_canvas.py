@@ -95,6 +95,8 @@ class Canvas:
     # Replaced locations whose every pixel went to the retained water round them: removed from
     # the map without a canvas of their own.
     drowned: NDArray[np.bool_] | None = None
+    # Retired Atlantic island pieces outside the generated canvases. Their terrain becomes sea.
+    flooded_land: tuple[OceanRemainder, ...] = ()
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""
