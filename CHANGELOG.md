@@ -5,6 +5,13 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Align retained land in the map viewer to the full width of the world, including across the
+  Pacific wrap. The viewer also reads existing worlds whose atlases recorded the crop width.
+
+- Keep reserved Oceanian archipelagos together on the Pacific side when generating America.
+  Groups that must move keep their shape and can shift west or along their meridian. When both
+  continents are generated, new outlying island groups use water connected to Oceania's shelf.
+
 - Divide **the sea into compact, even cells**. Generated sea cells were cut like land cells:
   crooked outlines, tails, some cells touching a dozen neighbours and huge cells that reached
   across a strait, so that a ship could be on both sides of it. The sea now uses a regular grid

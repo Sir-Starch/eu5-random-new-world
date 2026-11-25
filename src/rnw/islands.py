@@ -6,6 +6,7 @@ them) that stays or moves as one rigid piece. It stays where the generated land 
 margin away from it on open ocean; otherwise it moves to the free ocean nearest to its old
 place, by a deterministic search over translations. Moving is a pure translation, so the shape
 of the group and the distances between its islands survive.
+Oceanian groups carried by the expanded American canvas only move westward or along a meridian.
 
 A group prefers to keep its latitude: a step north or south counts twice a step sideways.
 Failing to find a place for a group is an explicit error.
@@ -42,6 +43,7 @@ class Footprint:
 
     rows: NDArray[np.int32]
     columns: NDArray[np.int32]
+    pacific_west: bool = False
 
     @property
     def size(self) -> int:
@@ -108,6 +110,8 @@ def _nearest(blocked: NDArray[np.bool_], footprint: Footprint) -> tuple[int, int
     if shape.shape[0] > blocked.shape[0] or shape.shape[1] > blocked.shape[1]:
         return None
     free = _overlaps(blocked, shape) < 0.5  # noqa: PLR2004 - counts of blocks are integers
+    if footprint.pacific_west:
+        free[:, left // BLOCK + 1 :] = False
     rows, columns = np.nonzero(free)
     if rows.size == 0:
         return None

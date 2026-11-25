@@ -151,6 +151,12 @@ New Guinea and Hawaii. Indonesia stays vanilla. Preserve the distinction between
 a continent's land footprint and the waters filed under its hierarchy by the
 game. The common ocean planner assigns the latter according to the final coasts
 and connections. Pacific location identities remain continuous across the wrap.
+From epoch 64, a retained Oceanian group displaced by an expanded American
+canvas moves as a unit to the closest eligible open water west of its old
+position or on the same meridian. The placement still weights latitude and
+checks the full group and its margins. When only America and Oceania are
+generated, new outlying groups use unoccupied water within Oceania's own claim
+and must still be attached to its shelf after protection of retained waters.
 
 **Coasts the game files under another continent (2026-11-22, owner's report on `qpktias5fw`, 1.3.0 /
 epoch 64).** The game files the Red Sea, the Gulf of Aden, the delta mouths and Morocco's Atlantic coast

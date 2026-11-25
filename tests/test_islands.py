@@ -4,6 +4,7 @@
 # pyright: reportAny=false
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -75,6 +76,15 @@ def test_a_group_that_no_ocean_can_hold_is_an_explicit_error() -> None:
     group = _footprint(slice(90, 100), slice(100, 130))
     with pytest.raises(PlacementError, match="No free ocean"):
         _ = place(domain, land, ocean, [group], margin=MARGIN)
+
+
+def test_an_oceanian_group_moves_toward_the_pacific_even_when_eastern_water_is_nearer() -> None:
+    domain, land, ocean = _world()
+    group = _footprint(slice(90, 100), slice(221, 232))
+    ((_, ordinary),) = place(domain, land, ocean, [group], margin=MARGIN)
+    ((rows, west),) = place(domain, land, ocean, [replace(group, pacific_west=True)], margin=MARGIN)
+    assert ordinary > 0 > west
+    assert not (within(land, MARGIN) | ~ocean)[group.rows + rows, group.columns + west].any()
 
 
 def test_carving_removes_the_groups_at_their_places() -> None:

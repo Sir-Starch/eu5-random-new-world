@@ -122,6 +122,9 @@ of its own.
   bold between the zooms 0.32 and 0.55 and faded out, for a world of several continents only.
   Both are read from `Controller.surroundings` on the drawing worker, once for an atlas; a world
   whose surroundings cannot be read is drawn without them.
+  The atlas records its position on the full map so retained land aligns across the Pacific wrap.
+  If an older atlas has no position or records the crop's width, the viewer aligns it with that
+  world's overview before drawing the retained land.
 
 ## 7. Surfaces
 

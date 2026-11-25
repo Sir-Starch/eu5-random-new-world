@@ -84,6 +84,12 @@ def test_a_recorded_place_is_used_as_it_is() -> None:
     assert surroundings.placed(found, _preview(world)) == (64, 40, HEIGHT, WIDTH)
 
 
+def test_an_atlas_with_the_crop_width_recovers_the_real_origin_across_the_seam() -> None:
+    world = _map(7)
+    found = replace(_atlas(world, 64, 480, 32, 64), origin=(64, 224, HEIGHT, 256))
+    assert surroundings.placed(found, _preview(world)) == (64, 480, HEIGHT, WIDTH)
+
+
 def test_a_box_that_fits_its_picture_in_many_places_is_not_placed() -> None:
     """All sea fits anywhere: the world is shown without its surroundings."""
     world = np.full((HEIGHT, WIDTH), SEA, dtype=np.int8)
@@ -139,3 +145,25 @@ def test_the_atlas_records_where_its_box_lies_on_the_map() -> None:
     assert atlas_module.from_files(document, picture).origin == built.origin
     older = replace(built, origin=None)
     assert atlas_module.from_files(*atlas_module.to_files(older)).origin is None
+
+
+def test_a_new_atlas_places_a_crop_in_the_full_map() -> None:
+    world, plan, biomes, natives, mask = synthetic_world()
+    height, width = mask.shape
+    local = build_atlas(
+        world=world, plan=plan, biomes=biomes, natives=natives, mask=mask, step=1, margin=3
+    )
+    full = build_atlas(
+        world=world,
+        plan=plan,
+        biomes=biomes,
+        natives=natives,
+        mask=mask,
+        step=1,
+        margin=3,
+        map_shape=(height, width * 3),
+        column_shift=-width,
+    )
+    assert local.origin is not None
+    row, column = local.origin[:2]
+    assert full.origin == (row, column + 2 * width, height, width * 3)

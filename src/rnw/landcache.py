@@ -162,6 +162,7 @@ def cache_key(  # noqa: C901, PLR0912, PLR0913, PLR0917 - hash each independent 
     for group in groups:
         digest.update(group.rows.tobytes())
         digest.update(group.columns.tobytes())
+        digest.update(bytes([group.pacific_west]))
     for raster in (domain, drawn, sea_bands, template if settings.template_permille else None):
         digest.update(b"none" if raster is None else b"raster")
         if raster is not None:

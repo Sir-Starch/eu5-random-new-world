@@ -188,7 +188,7 @@ from rnw.eu5_held_society import (
 )
 from rnw.eu5_history import installed_rules
 from rnw.eu5_history_build import build_history_start as build_start_plan
-from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
+from rnw.eu5_islands import moved_pixels_of, pacific_footprints, relocate_map, shifts
 from rnw.eu5_lobby import (
     COVER_INCLUDE,
     DRAWINGS_INCLUDE,
@@ -4233,6 +4233,9 @@ def _prepare_american_geography(  # noqa: PLR0913, PLR0915 - preserve the legacy
     drawing: Fitted | None = (
         None if land_mask is None else fit_drawing(land_mask, clean.mask.shape, settings.algorithm)
     )
+    footprints = pacific_footprints(
+        game_map, clean, westward=settings.algorithm >= epoch.OCEANIAN_ISLANDS
+    )
 
     preparations: list[_PreparedVanilla] = []
 
@@ -4275,7 +4278,7 @@ def _prepare_american_geography(  # noqa: PLR0913, PLR0915 - preserve the legacy
             settings=settings.new_world,
             drawn=None if drawing is None else drawing.land,
             sea_bands=bands,
-            groups=clean.footprints,
+            groups=footprints,
             template=clean.template,
             lakes_drawn=None if drawing is None else drawing.lakes,
             hints=None if drawing is None else drawing.hints,
@@ -5815,6 +5818,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     mask=canvas.mask if real_america is None else society_world.labels >= 0,
                     development=development.initial,
                     column_shift=canvas.col0 - canvas.roll,
+                    map_shape=canvas.shape,
                 )
             ),
         )

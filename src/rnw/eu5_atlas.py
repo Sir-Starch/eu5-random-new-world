@@ -96,6 +96,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     mask: NDArray[np.bool_],
     development: Mapping[str, int] | None = None,
     column_shift: int = 0,
+    map_shape: tuple[int, int] | None = None,
     step: int = STEP,
     margin: int = SEA_MARGIN,
 ) -> Atlas:
@@ -104,8 +105,8 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     ``mask`` is the canvas in the crop's coordinates; ``world.labels`` is in the same. The box is
     the canvas at ``1/step`` of the map's size, trimmed to where it has pixels. ``development``
     is each land location's start development in thousandths (``Development.initial``). The
-    canvas's rows are the map's; its column ``c`` is the map's ``(c + column_shift) mod width``
-    (``Canvas``: ``col0 - roll``), which places the box on the map (``Atlas.origin``).
+    canvas's rows are the map's. Its columns wrap at the full map width after applying
+    ``column_shift`` (``Canvas.col0 - Canvas.roll``), which places the box on the map.
     """
     count = len(world.classes)
     if world.labels.shape != mask.shape:
@@ -116,7 +117,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     kinds = np.array([kind_of.get(kind.value, 0) for kind in world.classes], dtype=np.uint8)
     solid = np.concatenate([np.array([False]), kinds != KINDS.index("sea")])[shrunk]
     labels, top, left = _trim(np.where(grown_mask(solid, margin), shrunk, 0).astype(np.int32))
-    height, width = mask.shape
+    height, width = mask.shape if map_shape is None else map_shape
     origin = (top * step, (left * step + column_shift) % width, height, width)
     keys = tuple(cell.key for cell in plan.cells)
     names = tuple(

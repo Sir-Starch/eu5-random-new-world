@@ -573,10 +573,11 @@ def test_a_small_piece_of_replaced_land_among_retained_water_is_left_out_of_the_
     assert result.mask[:, 50:2000].all()
 
 
-def test_a_small_piece_with_an_island_site_stays_in_the_canvas() -> None:
+def test_an_island_site_does_not_keep_a_disconnected_piece_in_the_canvas() -> None:
     game, domains = _islets(site=True)
     (result,) = _without_islets(game, domains)
-    assert result.mask[2, 9000:9004].all()
+    assert not result.mask[2, 9000:9004].any()
+    assert not result.island_sites
     assert not result.mask[2, 12000:12020].any()
 
 
@@ -594,11 +595,13 @@ def test_canvases_without_small_pieces_are_not_changed() -> None:
     assert _without_islets(game, (domain,)) == (domain,)
 
 
-def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -> None:
+def test_open_pacific_islands_stay_inside_the_existing_oceanian_shelf() -> None:
     labels = np.zeros((128, 512), dtype=np.int32)
     owners = np.full(labels.shape, -1, dtype=np.int8)
     owners[:, 40:110] = 0
-    keep = owners == 0
+    owners[:, :40] = 2
+    owners[:, -55:] = 2
+    original = owners.copy()
     first = _pacific_islands(
         _map(),
         labels,
@@ -610,14 +613,43 @@ def test_open_pacific_islands_take_compact_sites_between_the_existing_claims() -
     )
     assert len(first) == 3
     assert all(owners[row, col] == 2 for row, col, _ in first)
-    assert np.array_equal(owners == 0, keep)
-    assert 0 < np.count_nonzero(owners == 2) < 500
+    assert np.array_equal(owners, original)
+    assert not _pacific_islands(
+        _map(),
+        labels,
+        np.minimum(owners, 0),
+        np.arange(128, dtype=np.int64),
+        np.arange(512, dtype=np.int64),
+        step=1,
+        seed=17,
+    )
+
+
+def test_an_oceanian_water_zone_can_hold_an_island_group() -> None:
+    shape = (128, 512)
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(keys=("shelf",), continents=("oceania",), classes=(CellClass.SEA,)),
+        ),
+    )
+    sites = _pacific_islands(
+        game,
+        np.zeros(shape, dtype=np.int32),
+        np.full(shape, 2, dtype=np.int8),
+        np.arange(shape[0], dtype=np.int64),
+        np.arange(shape[1], dtype=np.int64),
+        step=1,
+        seed=17,
+    )
+    assert len(sites) == 3
 
 
 def test_pacific_islands_keep_away_from_impassable_retained_water() -> None:
     labels = np.zeros((128, 512), dtype=np.int32)
     labels[:, 440:] = 1
-    owners = np.full(labels.shape, -1, dtype=np.int8)
+    owners = np.full(labels.shape, 2, dtype=np.int8)
     owners[:, 40:110] = 0
     game = cast(
         "Eu5Map",
@@ -626,21 +658,22 @@ def test_pacific_islands_keep_away_from_impassable_retained_water() -> None:
             SimpleNamespace(
                 keys=("ocean", "shut"),
                 continents=("pacific_ocean_continent", "pacific_ocean_continent"),
+                classes=(CellClass.SEA, CellClass.SEA),
             ),
         ),
     )
     rows, columns = np.arange(128, dtype=np.int64), np.arange(512, dtype=np.int64)
 
-    def place(closed: tuple[str, ...]) -> NDArray[np.bool_]:
-        claimed = owners.copy()
-        sites = _pacific_islands(
-            game, labels, claimed, rows, columns, step=1, seed=17, closed=closed
-        )
-        assert sites
-        return claimed == 2
-
-    assert place(())[:, 440:].any()
-    assert not place(("shut",))[:, 440 - 9 :].any()
+    regenerated = _pacific_islands(
+        game, labels, owners, rows, columns, step=1, seed=17, closed=("shut",)
+    )
+    assert any(col >= 440 for _, col, _ in regenerated)
+    owners[:, 440:] = -1
+    retained = _pacific_islands(
+        game, labels, owners, rows, columns, step=1, seed=17, closed=("shut",)
+    )
+    assert retained
+    assert all(8 < col < 440 - 9 for _, col, _ in retained)
 
 
 def test_a_partly_claimed_retained_gulf_keeps_its_whole_shore() -> None:

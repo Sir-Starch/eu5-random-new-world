@@ -26,6 +26,21 @@ if TYPE_CHECKING:
 
     from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
+    from rnw.islands import Footprint
+
+
+def pacific_footprints(
+    game_map: Eu5Map, canvas: Canvas, *, westward: bool
+) -> tuple[Footprint, ...]:
+    """Keep wrapped Pacific groups on the Oceanian side of the American crop."""
+    if not westward:
+        return canvas.footprints
+    return tuple(
+        replace(
+            place, pacific_west=any(game_map.continents[i] == "oceania" for i in group.locations)
+        )
+        for group, place in zip(canvas.groups, canvas.footprints, strict=True)
+    )
 
 
 def shifts(game_map: Eu5Map, canvas: Canvas) -> dict[str, tuple[int, int]]:

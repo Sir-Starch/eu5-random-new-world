@@ -924,17 +924,22 @@ def _pacific_islands(  # noqa: PLR0913 - reserve compact island groups on the sh
     seed: int,
     closed: Collection[str] = (),
 ) -> tuple[tuple[int, int, int], ...]:
-    """Reserve a few widely spaced groups on the existing Pacific canvas.
+    """Reserve a few widely spaced groups inside Oceania's existing Pacific shelf.
 
-    A group's water must meet navigable retained water: ``closed`` names the impassable
-    ocean locations, and no group is placed beside them, where its sea would be cut off.
+    Keep the group clear of impassable retained water. Impassable vanilla water inside the
+    Oceanian claim is part of the sea that will be generated around the group.
     """
-    pacific = np.array([c == "pacific_ocean_continent" for c in game_map.continents], dtype=bool)[
-        labels
-    ]
+    pacific = np.fromiter(
+        (
+            kind is CellClass.SEA and name in {"pacific_ocean_continent", "oceania"}
+            for kind, name in zip(game_map.classes, game_map.continents, strict=True)
+        ),
+        dtype=bool,
+    )[labels]
     radius = ISLAND_POOL
-    room = distance_from(~pacific | (owners == 0), radius + 1, octagonal=True, wrap_x=True)
-    shut = np.array([key in closed for key in game_map.keys], dtype=bool)[labels]
+    oceanian = owners == list(CONTINENTS).index("oceania")
+    room = distance_from(~pacific | ~oceanian, radius + 1, octagonal=True, wrap_x=True)
+    shut = np.array([key in closed for key in game_map.keys], dtype=bool)[labels] & ~oceanian
     clear = distance_from(shut, radius + 2, octagonal=True, wrap_x=True)
     height, width = labels.shape
     yy = np.arange(height, dtype=np.int64)[:, None]
@@ -957,7 +962,6 @@ def _pacific_islands(  # noqa: PLR0913 - reserve compact island groups on the sh
         row, column = np.unravel_index(np.argmin(scores), owners.shape)
         dx = np.abs(xx - column)
         halo = (2 * (yy - row)) ** 2 + np.minimum(dx, width - dx) ** 2 <= radius**2
-        owners[halo] = 2
         room[halo] = 0
         sites.append((int(rows[row]), int(columns[column]), step))
     return tuple(sites)
@@ -1222,10 +1226,8 @@ def _claim(  # noqa: C901, PLR0912, PLR0913, PLR0915 - assemble a cropped domain
         if continent.key == "oceania"
         else ()
     )
-    anchors = footprint.copy() if sites else footprint
-    for row, col, _ in sites:
-        anchors[row, col] = claim[row, col]
-    mask = _attached_ocean(anchors, claim) | original_seas[local]
+    mask = _attached_ocean(footprint, claim) | original_seas[local]
+    sites = tuple(site for site in sites if mask[site[0], site[1]])
     mask = _with_released(mask, released, local, taken, continent.key)
     if interface is not None:
         interface &= mask
@@ -1427,14 +1429,12 @@ def _keep_coastal_waters(game_map: Eu5Map, domain: Domain, protected: NDArray[np
     if np.array_equal(mask, domain.mask):
         return domain
     if domain.continent.key != NEW_WORLD:
-        anchors = domain.footprint.copy() if domain.island_sites else domain.footprint
-        for row, col, _ in domain.island_sites:
-            anchors[row, col] = mask[row, col]
-        mask = _attached_ocean(anchors, mask)
+        mask = _attached_ocean(domain.footprint, mask)
     interface, strait, iberia = domain.land_interface, domain.strait, domain.iberia_interface
     return replace(
         domain,
         mask=mask,
+        island_sites=tuple(site for site in domain.island_sites if mask[site[0], site[1]]),
         land_interface=None if interface is None else interface & mask,
         iberia_interface=None if iberia is None else iberia & mask,
         strait=None if strait is None else np.where(mask, strait, 0).astype(np.uint8),
@@ -1449,7 +1449,7 @@ def _without_islets(game_map: Eu5Map, domains: Sequence[Domain]) -> tuple[Domain
     as a piece of a few pixels and becomes a generated location with no neighbour. A piece of
     the canvases below ``ocean_speck_limit`` that holds replaced land is left out of them, and
     the export gives its land to the water round it
-    (``continent_world.absorb_land_fragments``). A piece that holds an island site stays.
+    (``continent_world.absorb_land_fragments``).
     """
     labels = game_map.labels
     width = labels.shape[1]
@@ -1466,8 +1466,6 @@ def _without_islets(game_map: Eu5Map, domains: Sequence[Domain]) -> tuple[Domain
     for domain in domains:
         for crop, original in domain.spans():
             holds_land[parts[domain.rows, original][domain.footprint[:, crop]]] = True
-        for row, column, _ in domain.island_sites:
-            goes[parts[row + domain.first_row, (column + domain.first_column) % width]] = False
     goes &= holds_land
     if not goes.any():
         return tuple(domains)
@@ -1482,6 +1480,7 @@ def _without_islets(game_map: Eu5Map, domains: Sequence[Domain]) -> tuple[Domain
                 domain,
                 mask=mask,
                 footprint=domain.footprint & mask,
+                island_sites=tuple(site for site in domain.island_sites if mask[site[0], site[1]]),
                 land_interface=None if interface is None else interface & mask,
                 iberia_interface=None if iberia is None else iberia & mask,
                 strait=None if strait is None else np.where(mask, strait, 0).astype(np.uint8),

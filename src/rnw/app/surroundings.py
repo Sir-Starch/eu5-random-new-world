@@ -70,10 +70,12 @@ def surroundings(
 
 
 def placed(atlas: Atlas, preview: NDArray[np.uint8]) -> tuple[int, int, int, int] | None:
-    """Where the box lies on the map (``Atlas.origin``): as recorded, else found by matching it to
-    the world's picture; None when neither places it."""
+    """Use the recorded origin when it agrees with the full map size of the preview."""
     if atlas.origin is not None:
-        return atlas.origin
+        _, _, height, width = atlas.origin
+        if (-(-height // PREVIEW_STEP), -(-width // PREVIEW_STEP)) == preview.shape[:2]:
+            return atlas.origin
+    # Early atlases could store the crop width and wrap their column against it.
     return match_origin(atlas, preview)
 
 
