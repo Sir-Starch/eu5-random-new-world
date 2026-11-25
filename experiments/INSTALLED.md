@@ -2275,3 +2275,25 @@ reference reproduced as `c9fe0929f131c5dbb66c5a79de14be93dfc6a36df6e5aab4021896a
 Windows native module, and installed-file verification. The Windows wheel SHA-256 is
 `28a4c5d04ebc76f1e3001d10b07a343ab6ccff0d0d8e8e9fcc030cbec14b108b`. The previous hub is in
 `.rnw-hub-backups/1.3.0-1795567667405389118`.
+
+2026-11-25, **Rectangular offshore grid** (`42233f2`, pending epoch 64 of 1.3.0, C558).
+[V-EXEC] Islands seed 7 with the peoples roll advanced once so the new export has its own
+folder. Parnoban's four land locations occupy the same pixels as in the disk version. They
+now meet four natural sea cells, with all four ports. The export verifies 6,801 ports and
+reports zero unreachable generated zones. All 884 gameplay files match the installed manifest
+by SHA-256. All 913 installed files match the prepared copy and the library receipt recovers.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| RNW: Scattered islands LPWP | `rnw_exp_world_lpwpdbgrlc` | `aa861c72d726b1ec51b07760e68ef1f8129e553f7cd7b8dd70eb64948fba41db` |
+
+`make check` passed with 3,902 Python tests (22 skipped) and 48 Rust tests. The epoch 64 reference
+reproduced as `aa25277321d2ef72a576f14fa4a54b722c8a8ff0dbfafdefac79c1b7a0fbabf4` (884 files).
+The epoch 63 comparison on EU5 1.4.9 matched `b7d4cfa6…8918` (884 files). The separate
+three-continent export (seed 101, Iberian link required) checked 4,363 ports and had no unreachable
+generated sea zones. The Linux window self-tests and
+both offscreen Wine self-tests passed. In the Windows package a separate raster test placed
+two off-centre islets in the same unchanged grid rectangle. The Windows wheel SHA-256 is
+`d50f313a379ce42f9dfaf0ec9d934be177679cbf729837d35957d27d9fb7ba46`.
+The hub passed installed-file verification and its previous copy is in
+`.rnw-hub-backups/1.3.0-1795603178027674986`.

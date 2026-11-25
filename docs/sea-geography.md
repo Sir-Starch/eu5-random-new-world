@@ -220,6 +220,12 @@ pixels; those chains are the same as before the change, whose largest were 117, 
 thousand). The pieces below the smallest cell are folded first there, then `dissolve` divides
 eligible cells. [V-EXEC, EU5 1.4.9 / build 26655995; claim C558]
 
+The same three-continent world with the open-water grid passes the port and navigation checks.
+Excluding the polar contact, it has 1,953 navigable cells, a median of 14,778 pixels and a 99th
+percentile of 23,138. Its largest non-polar cell is 119,231 pixels, up from 117,674. Counting
+retained neighbours, the highest degree is 17 in both exports. Long folded cells where generated
+water meets retained coasts remain possible. [V-EXEC, EU5 1.4.9 / build 26655995; C558]
+
 **Sea-cell slivers, 1.1.0 / epoch 60 (same report):** some generated sea locations are long
 and narrow, like a needle or a crescent round a retained island's footprint. A coast, a crossing band
 or a footprint cuts a Voronoi cell into pieces that were merged only by area, so thin pieces survived.
