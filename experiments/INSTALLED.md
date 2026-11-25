@@ -2297,3 +2297,26 @@ two off-centre islets in the same unchanged grid rectangle. The Windows wheel SH
 `d50f313a379ce42f9dfaf0ec9d934be177679cbf729837d35957d27d9fb7ba46`.
 The hub passed installed-file verification and its previous copy is in
 `.rnw-hub-backups/1.3.0-1795603178027674986`.
+
+2026-11-25, **Atlas alignment and Oceanian island placement** (`b3ade15`, pending epoch 64 of
+1.3.0, C559). [V-EXEC] Islands seed 7, with the peoples roll advanced again from LPWP to give the
+candidate its own folder. The installed map keeps the original colours of all 31 translated
+groups, 29 of them Oceanian, over 506,046 pixels. None of the 44 Oceanian groups moved east.
+The export checks 6,808 ports and finds no unreachable generated sea zones. The installed copy
+matches all 913 prepared files by SHA-256, including all 884 gameplay files, and the library
+receipt recovers.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| RNW: Scattered islands BKJB | `rnw_exp_world_bkjbp2mk4h` | `81561af949095eaf9c4cc221dd374a79b9d3c0ee7d472e4941bdcfecb6d78367` |
+
+The local America and Oceania export (seed 101, Oceania Archipelago) writes 999 verified gameplay
+files, checks 4,319 ports and has no unreachable generated sea zones. Its new island group
+falls within the Oceanian shelf and is filed under Oceania in the emitted map. The re-run of the
+epoch 64 reference yielded `473336d87fb2483ddf2417c76e8151a1df92f7419bd64b1d2c2446fbc78a435f`
+(884 files). Locked sync and `make check` passed with 3,906 Python tests (22 skipped) and 48
+Rust tests. Both window self-tests passed on Linux and on the installed Windows hub under
+Wine. The Windows generator also recovered the old LPWP atlas at the correct wrap position.
+The hub passed installed-file verification. The Windows wheel SHA-256 is
+`77679f6d2e1753a4ad43ca37e9b8e7c3b2838a5d5c998081f1bfef4ae6fcc3bf`. The hub present before
+the task is in `.rnw-hub-backups/1.3.0-1795606703790366962`.
