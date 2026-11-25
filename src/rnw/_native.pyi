@@ -92,7 +92,6 @@ def sea_refine(
     band_width: int,
     last_band: int,
     site_band: NDArray[int32],
-    site_claim: NDArray[int64],
 ) -> NDArray[int32]: ...
 def nearest_rows(train: NDArray[int64], query: NDArray[int64], k: int) -> NDArray[int64]: ...
 def nearest_label(

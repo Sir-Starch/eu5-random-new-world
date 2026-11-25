@@ -125,9 +125,11 @@ def first_pixels(components: NDArray[np.integer]) -> NDArray[np.int64]:
     return _native.first_pixels64(np.ascontiguousarray(components, dtype=np.int64))
 
 
-def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.int32]:
-    """Jittered-grid seeds inside ``mask``; each mask component gets at least one."""
-    height, width = mask.shape
+def jittered_sites(
+    key: int, shape: tuple[int, int], spacing: int
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """One deterministic site in each complete grid square, clipped at the raster edges."""
+    height, width = shape
     gx = np.arange((width + spacing - 1) // spacing, dtype=np.int64)
     gy = np.arange((height + spacing - 1) // spacing, dtype=np.int64)
     hashed = hash_grid(key, gx[np.newaxis, :], gy[:, np.newaxis])
@@ -137,7 +139,13 @@ def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.in
         + ((hashed >> np.uint64(16)) & np.uint64(0xFFFF)).astype(np.int64) % spacing
     )
     inside = (sx < width) & (sy < height)
-    flat = (sy * width + sx)[inside]
+    return sy[inside], sx[inside]
+
+
+def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.int32]:
+    """Jittered-grid seeds inside ``mask``; each mask component gets at least one."""
+    rows, columns = jittered_sites(key, mask.shape, spacing)
+    flat = rows * mask.shape[1] + columns
     flat = flat[mask.ravel()[flat]]
     components = label_components(mask.astype(np.int32))
     covered = np.zeros(int(components.max()) + 1, dtype=bool)

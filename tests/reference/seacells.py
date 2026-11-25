@@ -126,16 +126,17 @@ def refine(  # noqa: PLR0913, PLR0917 - the rasters, the sites and what a band i
     band_width: int,
     last_band: int,
     site_band: NDArray[np.int32],
-    site_claim: NDArray[np.int64],
 ) -> NDArray[np.int32]:
     """Each water pixel takes, of the labels of the coarse pixels round it, the one whose site is
-    nearest (the lowest on a tie) among those of its own band. A claim wins inside its disk,
-    ordered by distance squared minus land radius squared where disks overlap."""
+    nearest (the lowest on a tie) among those of its own band."""
     out = np.full(mask.shape, -1, dtype=np.int32)
     coarse_rows, coarse_columns = coarse.shape
     for found_row, found_column in zip(*np.nonzero(mask), strict=True):
         row, column = int(found_row), int(found_column)
         cr, cc = row // step, column // step
+        if coarse[cr, cc] < -1:
+            out[row, column] = len(sites) - (int(coarse[cr, cc]) + 2)
+            continue
         band = min(_smooth_depth(depth, step, row, column) // max(band_width, 1), last_band)
         owners = {
             int(coarse[r, c])
@@ -150,17 +151,10 @@ def refine(  # noqa: PLR0913, PLR0917 - the rasters, the sites and what a band i
             )
             for owner in owners
         }
-        claimed = [
-            (squared - int(site_claim[owner, 1]), owner)
-            for owner, (squared, _) in keys.items()
-            if site_claim[owner, 0] > 0 and squared <= site_claim[owner, 0]
-        ]
         own = [
             key for owner, key in keys.items() if site_band[owner] < 0 or site_band[owner] == band
         ]
-        if claimed:
-            out[row, column] = min(claimed)[1]
-        elif own:
+        if own:
             out[row, column] = min(own)[1]
         elif keys:
             out[row, column] = min(keys.values())[1]

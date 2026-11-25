@@ -245,21 +245,17 @@ pub struct Bands<'a> {
     pub last: i64,
     /// The band of every site; below zero for a site that belongs to no band (a strait's).
     pub site: &'a [i32],
-    /// Squared radii of the disk of water and the island it encloses, or (0, 0) for other sites.
-    pub claim: &'a [(i64, i64)],
 }
 
 /// The partition of the full raster: each water pixel takes, of the labels that the coarse
 /// partition gives to the coarse pixels round it (`reach` of them each way), the label whose site
 /// (`sites`, in full-raster pixels) is the nearest in a straight line, the lower label on a tie.
-/// A site with a `claim` holds every pixel within that radius of it, whatever else is nearer: the
-/// cell of an island is the disk that holds the island and the water round it. Where disks overlap,
-/// compare squared distances minus the squared land radii (power distance), so their straight
-/// shared border gives the bigger island room for its wider shore. The lower label breaks a tie.
 /// Only the sites of the pixel's own band compete (a strait's site competes with every band), the
 /// band of a pixel being read from the smooth distance, so the border between two bands is a smooth
 /// line and the border between two cells of a band a straight one. A pixel that no coarse pixel
 /// near it gives a label to stays `-1`.
+/// Coarse values below `-1` encode final rectangular tiles as `-2 - tile`. Those tiles have
+/// their own labels after the coastal sites and do not take part in the local search.
 #[allow(clippy::too_many_arguments)]
 pub fn refine(
     mask: &[bool],
@@ -284,6 +280,11 @@ pub fn refine(
                     continue;
                 }
                 let cc = column / step;
+                let tile = coarse[cr * coarse_width + cc];
+                if tile < -1 {
+                    *slot = sites.len() as i32 - (tile + 2);
+                    continue;
+                }
                 let columns = cc.saturating_sub(reach)..=(cc + reach).min(coarse_width - 1);
                 let depth =
                     smooth_depth(bands.depth, coarse_height, coarse_width, step, row, column);
@@ -292,7 +293,6 @@ pub fn refine(
                 let mut any = (i64::MAX, i32::MAX);
                 let mut seen = [-1_i32; 64];
                 let mut count = 0;
-                let mut claimed = (i64::MAX, i32::MAX);
                 for r in rows.clone() {
                     for c in columns.clone() {
                         let owner = coarse[r * coarse_width + c];
@@ -306,10 +306,6 @@ pub fn refine(
                         let (sr, sc) = sites[owner as usize];
                         let (dr, dc) = (row as i64 - sr, column as i64 - sc);
                         let squared = dr * dr + dc * dc;
-                        let (disk, shore) = bands.claim[owner as usize];
-                        if disk > 0 && squared <= disk {
-                            claimed = claimed.min((squared - shore, owner));
-                        }
                         let key = (squared, owner);
                         any = any.min(key);
                         let belongs = bands.site[owner as usize];
@@ -318,13 +314,7 @@ pub fn refine(
                         }
                     }
                 }
-                let chosen = if claimed.1 != i32::MAX {
-                    claimed.1
-                } else if best.1 == i32::MAX {
-                    any.1
-                } else {
-                    best.1
-                };
+                let chosen = if best.1 == i32::MAX { any.1 } else { best.1 };
                 if chosen != i32::MAX {
                     *slot = chosen;
                 }
@@ -435,7 +425,6 @@ mod tests {
             width: 8000,
             last: 0,
             site: &[0, 0],
-            claim: &[(0, 0), (0, 0)],
         };
         let found = refine(&mask, 12, &coarse, 12, 1, 1, &[(0, 1), (0, 10)], &bands);
         assert_eq!(found, [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]);
@@ -453,38 +442,11 @@ mod tests {
             width: 4000,
             last: 2,
             site: &[0, 1],
-            claim: &[(0, 0), (0, 0)],
         };
         let found = refine(&mask, 12, &coarse, 12, 1, 12, &[(0, 1), (0, 4)], &bands);
         // Pixels with distance under 4000 (columns 0..=3, interpolated at their centres) are band 0.
         assert!(found[..3].iter().all(|&label| label == 0));
         assert!(found[6..].iter().all(|&label| label == 1));
-    }
-
-    #[test]
-    fn refine_gives_a_claimed_disk_to_its_site_whatever_is_nearer() {
-        // Site 1 claims the pixels within 3 of column 8, which takes column 5 from site 0 itself.
-        let mask = all(1, 12);
-        let coarse = vec![0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1];
-        let bands = Bands {
-            depth: &[0; 12],
-            width: 8000,
-            last: 0,
-            site: &[0, 0],
-            claim: &[(0, 0), (9, 0)],
-        };
-        let found = refine(&mask, 12, &coarse, 12, 1, 12, &[(0, 5), (0, 8)], &bands);
-        assert_eq!(found, [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]);
-        let wide = Bands {
-            depth: &[0; 12],
-            width: 8000,
-            last: 0,
-            site: &[0, 0],
-            claim: &[(0, 0), (25, 0)],
-        };
-        let found = refine(&mask, 12, &coarse, 12, 1, 12, &[(0, 5), (0, 8)], &wide);
-        assert_eq!(found[3..], [1, 1, 1, 1, 1, 1, 1, 1, 1]);
-        assert_eq!(found[..3], [0, 0, 0]);
     }
 
     #[test]

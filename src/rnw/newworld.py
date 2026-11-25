@@ -1753,21 +1753,7 @@ def _compact_sea_cells(  # noqa: PLR0913 - partition inputs and the physical rep
     """The sea cells of epoch 64 (``epoch.COMPACT_SEAS``, ``rnw.seacells``): compact pieces of
     water of one size, divided on the way through the water. The crossings are chains of cells
     along their centre lines, as before; their sites keep their places."""
-    sites = seed_sites(key, ocean, spacing)
-    rows, columns = np.nonzero(sites >= 0)
-    rows, columns = rows.astype(np.int64), columns.astype(np.int64)
-    pinned = 0
-    if bands is not None:
-        if bands.shape != ocean.shape:
-            message = "Current bands do not fit the world"
-            raise ValueError(message)
-        paths = corridor_paths(ocean, bands, spacing, domain=domain)
-        clear = clear_of_corridors(rows, columns, paths, spacing * CLEAR_PERMILLE / PERMILLE)
-        chain_rows, chain_columns = corridor_sites(paths, ocean, spacing, key)
-        pinned = int(chain_rows.size)
-        rows = np.concatenate((chain_rows.astype(np.int64), rows[clear]))
-        columns = np.concatenate((chain_columns.astype(np.int64), columns[clear]))
-    labels = partition_sea(ocean, rows, columns, pinned=pinned, spacing=spacing)
+    labels = partition_sea(ocean, key, spacing=spacing, bands=bands, domain=domain)
     parts = label_components(labels)
     del labels
     cells = merge_small(np.where(ocean, parts, -1).astype(np.int32), smallest)

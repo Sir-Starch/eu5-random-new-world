@@ -12,7 +12,7 @@ import numpy as np
 from rnw import epoch, newworld, seacells
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, served, settle_seas
-from rnw.synth import seed_sites
+from rnw.synth import jittered_sites
 from rnw.topology import label_components
 
 if TYPE_CHECKING:
@@ -22,14 +22,8 @@ SPACING = 60
 TYPICAL = SPACING * SPACING
 
 
-def _sites(ocean: NDArray[np.bool_], key: int = 5) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
-    rows, columns = np.nonzero(seed_sites(key, ocean, SPACING) >= 0)
-    return rows.astype(np.int64), columns.astype(np.int64)
-
-
 def _partition(ocean: NDArray[np.bool_], key: int = 5) -> NDArray[np.int32]:
-    rows, columns = _sites(ocean, key)
-    return seacells.partition(ocean, rows, columns, pinned=0, spacing=SPACING)
+    return seacells.partition(ocean, key, spacing=SPACING)
 
 
 def _sea_with_a_shore() -> NDArray[np.bool_]:
@@ -89,6 +83,17 @@ def test_a_strait_is_a_cell_of_its_own_and_no_cell_reaches_through_it() -> None:
     assert not strait & (west | east)
 
 
+def test_a_strait_is_detected_even_when_the_mouths_have_another_route() -> None:
+    ocean = np.zeros((320, 600), dtype=np.bool_)
+    ocean[20:300, 20:280] = True
+    ocean[20:300, 320:580] = True
+    ocean[20:100, 280:320] = True
+    ocean[200:214, 280:320] = True
+    flags = seacells.layout(ocean, SPACING)
+    assert flags.neck[207 // flags.step, 300 // flags.step]
+    assert not flags.neck[55 // flags.step, 300 // flags.step]
+
+
 def test_no_cell_reaches_through_a_strait_after_the_small_pieces_are_folded() -> None:
     """The whole cut of the export (``newworld._sea_cells``, with its smallest cell and the
     folding of slivers) keeps the water on either side of a narrow strait in cells of its own."""
@@ -111,65 +116,58 @@ def test_no_cell_reaches_through_a_strait_after_the_small_pieces_are_folded() ->
         assert np.array_equal(labels >= 0, ocean)
 
 
-def test_a_small_island_lies_inside_one_cell() -> None:
+def test_open_sea_uses_rectangles_even_with_an_off_centre_island() -> None:
     ocean = np.ones((420, 480), dtype=np.bool_)
     rows, columns = np.ogrid[:420, :480]
-    for centre in ((100, 120), (230, 240), (330, 400)):
-        ocean &= (rows - centre[0]) ** 2 + (columns - centre[1]) ** 2 > 14**2
+    ocean &= (rows - 140) ** 2 + (columns - 144) ** 2 > 11**2
+    empty_sea = _partition(np.ones_like(ocean))
     labels = _partition(ocean)
-    for centre in ((100, 120), (230, 240), (330, 400)):
-        near = (rows - centre[0]) ** 2 + (columns - centre[1]) ** 2 <= 17**2
-        assert np.unique(labels[near & ocean]).size == 1, centre
+    assert np.array_equal(labels[ocean], empty_sea[ocean])
+    assert (labels[~ocean] == -1).all()
+    cell = labels[120, 120]
+    assert np.array_equal(labels == cell, ocean & (rows // 60 == 2) & (columns // 60 == 2))
 
 
 def test_a_small_island_is_no_shore_for_the_bands() -> None:
-    """The bands about an island that a cell holds are level, and the disk is not water to them."""
+    """A small island does not affect the surrounding water's depth bands."""
     ocean = np.ones((420, 480), dtype=np.bool_)
     rows, columns = np.ogrid[:420, :480]
     ocean &= (rows - 210) ** 2 + (columns - 240) ** 2 > 14**2
     flags = seacells.layout(ocean, SPACING)
-    assert len(flags.islands) == 1
-    row, column, reach, shore_radius = flags.islands[0].tolist()
-    assert reach >= 14
-    assert shore_radius < reach
     step = flags.step
-    assert abs(row * step - 210) <= step
-    assert abs(column * step - 240) <= step
-    assert flags.discs[row, column] == 1
-    assert not flags.water[row, column]
-    assert flags.depth[flags.discs == 1].min() == flags.depth[flags.discs == 1].max()
+    assert flags.water[210 // step, 240 // step]
+    assert np.array_equal(flags.depth, seacells.layout(np.ones_like(ocean), SPACING).depth)
 
 
-def test_close_small_islands_keep_separate_coastal_cells_and_ports() -> None:
+def test_a_cluster_shares_one_grid_cell_and_each_island_can_have_a_port() -> None:
     rows, columns = np.ogrid[:240, :300]
-    distances = ((rows - 120) ** 2 + (columns - 105) ** 2, (rows - 120) ** 2 + (columns - 135) ** 2)
-    radii = (12, 10)
-    first, second = (
-        distance <= radius**2 for distance, radius in zip(distances, radii, strict=True)
-    )
-    ocean = ~(first | second)
+    dry = np.full((240, 300), -1, dtype=np.int32)
+    for land, (row, column) in enumerate(((132, 132), (141, 153), (158, 137), (161, 159))):
+        dry[(rows - row) ** 2 + (columns - column) ** 2 <= 5**2] = land
+    ocean = dry < 0
     cut = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
         ocean, key=5, spacing=SPACING, smallest=500, bands=None, algorithm=epoch.COMPACT_SEAS
     )
-    labels = np.where(ocean, cut + 2, np.where(first, 0, 1)).astype(np.int32)
-    classes = (CellClass.LAND,) * 2 + (CellClass.SEA,) * (int(cut.max()) + 1)
+    labels = np.where(ocean, cut + 4, dry).astype(np.int32)
+    classes = (CellClass.LAND,) * 4 + (CellClass.SEA,) * (int(cut.max()) + 1)
     world = newworld.derive_world(labels, classes, np.zeros_like(labels))
     settled = settle_seas(world, dissolve=True)
     ports = served(settled.world, ForeignCoast())
     assert ports.unserved == ()
-    assert ports.port[0] != ports.port[1]
+    assert set(ports.port) == set(range(4))
+    assert len(set(ports.port.values())) == 1
     assert settled.merged == 0
-    for land, (distance, radius) in enumerate(zip(distances, radii, strict=True)):
-        sea = ports.port[land]
-        assert np.all(settled.world.labels[ocean & (distance <= (radius + 1) ** 2)] == sea)
-        assert 0.5 * TYPICAL <= settled.world.pixels[sea] <= 1.5 * TYPICAL
+    sea = ports.port[0]
+    assert np.array_equal(
+        settled.world.labels == sea, ocean & (rows // 60 == 2) & (columns // 60 == 2)
+    )
 
 
 def test_a_large_island_is_a_shore_the_cells_follow() -> None:
     ocean = np.ones((520, 560), dtype=np.bool_)
     ocean[160:360, 160:400] = False
     flags = seacells.layout(ocean, SPACING)
-    assert len(flags.islands) == 0
+    assert not flags.water[250 // flags.step, 250 // flags.step]
     labels = _partition(ocean)
     rows, columns = np.ogrid[:520, :560]
     shore = ocean & (
@@ -182,6 +180,28 @@ def test_a_large_island_is_a_shore_the_cells_follow() -> None:
     assert np.unique(labels[shore]).size >= 8
 
 
+def test_a_four_location_island_can_cross_an_ordinary_grid_edge() -> None:
+    dry = np.full((360, 420), -1, dtype=np.int32)
+    dry[137:149, 154:187] = 0
+    dry[137:149, 187:219] = 1
+    dry[149:160, 154:187] = 2
+    dry[149:160, 187:219] = 3
+    ocean = dry < 0
+    labels = _partition(ocean)
+    empty = _partition(np.ones_like(ocean))
+    assert np.array_equal(labels[ocean], empty[ocean])
+    world = newworld.derive_world(
+        np.where(ocean, labels + 4, dry).astype(np.int32),
+        (CellClass.LAND,) * 4 + (CellClass.SEA,) * (int(labels.max()) + 1),
+        np.zeros_like(labels),
+    )
+    settled = settle_seas(world, dissolve=True)
+    ports = served(settled.world, ForeignCoast())
+    assert settled.world is world
+    assert not ports.unserved
+    assert len(set(ports.port.values())) == 2
+
+
 def test_the_same_water_is_divided_the_same_way_twice() -> None:
     ocean = _sea_with_a_shore()
     assert np.array_equal(_partition(ocean), _partition(ocean))
@@ -189,12 +209,18 @@ def test_the_same_water_is_divided_the_same_way_twice() -> None:
 
 def test_pinned_sites_keep_their_place() -> None:
     ocean = np.ones((300, 420), dtype=np.bool_)
-    rows, columns = _sites(ocean)
+    rows, columns = jittered_sites(5, ocean.shape, SPACING)
     pin_rows = np.array([150, 150], dtype=np.int64)
     pin_columns = np.array([100, 300], dtype=np.int64)
-    rows = np.concatenate((pin_rows, rows))
-    columns = np.concatenate((pin_columns, columns))
-    labels = seacells.partition(ocean, rows, columns, pinned=2, spacing=SPACING)
+    labels = seacells._draw(  # pyright: ignore[reportPrivateUsage]
+        ocean,
+        seacells.layout(ocean, SPACING),
+        rows,
+        columns,
+        pinned_rows=pin_rows,
+        pinned_columns=pin_columns,
+        spacing=SPACING,
+    )
     assert labels[150, 100] == 0
     assert labels[150, 300] == 1
 

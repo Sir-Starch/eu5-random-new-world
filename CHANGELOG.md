@@ -7,17 +7,13 @@ worlds and saves are not rewritten or migrated.
 
 - Divide **the sea into compact, even cells**. Generated sea cells were cut like land cells:
   crooked outlines, tails, some cells touching a dozen neighbours and huge cells that reached
-  across a strait, so that a ship could be on both sides of it. The sea is now cut into bands by
-  its distance from land (a narrow one along the coast, then bands one cell wide). Narrow straits
-  get their own cells, cells within a band meet along straight borders, and a compact island or
-  group gets a cell around it. Where two island cells overlap, the shared border accounts for the
-  position and size of both shores. Coastal cells without ports can be divided among the served
-  cells beside them once the small pieces at regional joins have been attached. On a continents
-  world the largest cell fell from 62.5 to 34 thousand pixels, the cells above one and eight tenths
-  of the median from 36 to 11, and the most neighbours of a cell from 12 to 8. Island groups with
-  many wastelands and coasts of big locations still leave some cells larger than their neighbours.
-  At retained shores where a generated cell has no port, it can still join several cells along
-  the way to a port. The new division applies to epoch 64.
+  across a strait, so that a ship could be on both sides of it. The sea now uses a regular grid
+  in open water, with a local partition along shores and through narrow straits.
+  Small islands and their groups sit inside the ordinary grid. One cell can contain several
+  islands or touch part of a larger island. Where two sea cells compete for a port, the generator
+  can shift their shared straight border before it needs to fold or divide a cell. This also
+  applies after small pieces have been attached at regional joins. The new division applies
+  to epoch 64.
 
 - Add the option **Allow a land connection to Iberia (no strait)** to Africa's block, with a
   sub-option **Require the land connection to Iberia** that makes it certain, as the Asian link

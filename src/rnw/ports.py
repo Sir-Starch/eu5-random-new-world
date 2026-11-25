@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field, replace
+from math import isqrt
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -214,9 +215,9 @@ def settle_seas(
     folding along adjoining water. An unserved zone with no such route raises ``PortError``.
     When joining regional grids, small pieces at their common edges are first folded
     over their broadest marine contact, so each starts with a full-size sea neighbour.
-    With ``dissolve``, an unserved cell that no foreign land touches and that two or more served
-    cells border is divided among them first (``_absorb``); where ``minimum_sea`` is set the small
-    pieces are folded before that, as the cells they leave behind are what is served.
+    With ``dissolve``, a shared straight grid edge may shift to give both cells enough ports.
+    An unserved cell that no foreign land touches and that two or more served cells border can
+    then be divided among them. Where ``minimum_sea`` is set, small pieces are folded first.
     """
     foreign = foreign or ForeignCoast()
     lengths = pair_lengths(world)
@@ -237,11 +238,14 @@ def settle_seas(
             tuple(later.cell_of[cell] for cell in cell_of),
             len(merged) + later.merged,
         )
+    original = world.labels
     if dissolve:
+        world = _shift_port_borders(world, foreign, lengths)
         labels, divided = _dissolve(world, foreign, lengths)
         if divided:
             world = replace(world, labels=labels)
             merged.update(divided)
+        if world.labels is not original:
             links, needed = coast_links(world, foreign, lengths)
             sea_links = _sea_links(world, lengths)
     if minimum_sea:
@@ -257,7 +261,7 @@ def settle_seas(
         )
         _merge(sea, target, sea_links, links, needed)
         merged[sea] = target
-    if not merged:
+    if not merged and world.labels is original:
         return Settled(world, foreign, tuple(range(len(world.classes))), 0)
     settled, cell_of = relabel(world, merged)
     return Settled(settled, foreign.renumbered(cell_of), cell_of, len(merged))
@@ -295,6 +299,149 @@ def _sea_links(
             sea_links.setdefault(first, {})[second] = length
             sea_links.setdefault(second, {})[first] = length
     return sea_links
+
+
+def _shift_port_borders(
+    world: NewWorld, foreign: ForeignCoast, lengths: dict[tuple[int, int], int]
+) -> NewWorld:
+    """Try moving a straight common border before replacing an unserved cell with a larger one."""
+    labels = world.labels
+    sizes = world.pixels.copy()
+    abroad = set(foreign.held).union(*foreign.free.values())
+    while True:
+        checkpoint()
+        links, needed = coast_links(world, foreign, lengths)
+        unserved = plan_ports(links, needed).unserved
+        neighbours = _sea_links(world, lengths)
+        for cell in unserved:
+            if cell in abroad:
+                continue
+            targets = neighbours.get(cell, {})
+            for other in sorted(targets, key=lambda key: (-targets[key], key)):
+                if other in abroad or 2 * targets[other] < isqrt(min(sizes[cell], sizes[other])):
+                    continue
+                pair = (cell, other)
+                bounds = _port_window(labels, world, sizes, pair)
+                if bounds is None:
+                    continue
+                trial = _port_cut(labels[bounds], pair, world, foreign, lengths, len(unserved))
+                if trial is None:
+                    continue
+                if labels is world.labels:
+                    labels = labels.copy()
+                labels[bounds] = trial
+                sizes[list(pair)] = [int((trial == part).sum()) for part in pair]
+                break
+            else:
+                continue
+            break
+        else:
+            return world if labels is world.labels else replace(world, labels=labels)
+
+
+def _port_window(
+    labels: NDArray[np.int32],
+    world: NewWorld,
+    sizes: NDArray[np.int64],
+    pair: tuple[int, int],
+) -> tuple[slice, slice] | None:
+    """Local search with a one-pixel collar. The caller checks that both cells fit entirely."""
+    centres = world.centroids[list(pair)].astype(np.int64)
+    radius = 2 * isqrt(max(sizes[list(pair)])) + 2
+    start = np.maximum(0, centres.min(axis=0) - radius)
+    stop = np.minimum(world.labels.shape, centres.max(axis=0) + radius + 1)
+    if world.wrap_x and (start[1] == 0 or stop[1] == world.labels.shape[1]):
+        return None
+    # A long strip or a cut with contacts against the retained map is not a pair of grid tiles.
+    window = (slice(int(start[0]), int(stop[0])), slice(int(start[1]), int(stop[1])))
+    block = labels[window]
+    if any(np.count_nonzero(block == cell) != sizes[cell] for cell in pair):
+        return None
+    points = np.nonzero(np.isin(block, pair))
+    top, left = (max(0, int(values.min()) - 1) for values in points)
+    bottom, right = (
+        min(size, int(values.max()) + 2) for values, size in zip(points, block.shape, strict=True)
+    )
+    if (block[top:bottom, left:right] < 0).any():
+        return None
+    return (
+        slice(window[0].start + top, window[0].start + bottom),
+        slice(window[1].start + left, window[1].start + right),
+    )
+
+
+def _port_cut(  # noqa: PLR0913, PLR0917 - the two tiles, their external contacts and the matching.
+    window: NDArray[np.int32],
+    pair: tuple[int, int],
+    world: NewWorld,
+    foreign: ForeignCoast,
+    lengths: dict[tuple[int, int], int],
+    unserved: int,
+) -> NDArray[np.int32] | None:
+    """Search nearby parallel cuts and accept only a better port matching at comparable areas."""
+    first, second = pair
+    for scan in (window, window.T):
+        a = np.flatnonzero((scan == first).any(axis=0))
+        b = np.flatnonzero((scan == second).any(axis=0))
+        if b[-1] < a[0]:
+            a, b, first, second = b, a, second, first
+        if a[-1] + 1 != b[0]:
+            continue
+        inside = (scan == first) | (scan == second)
+        mass = np.cumsum(inside.sum(axis=0), dtype=np.int64)
+        total = int(mass[-1])
+        span = min(len(a), len(b)) // 4
+        edge = int(b[0])
+        cuts = sorted(range(edge - span, edge + span + 1), key=lambda at: (abs(at - edge), at))
+        before = _pair_counts(scan)
+        tried = {_port_contacts(before, world.classes, pair)}
+        for cut in cuts:
+            if cut == edge or 5 * min(mass[cut - 1], total - mass[cut - 1]) < 2 * total:
+                continue
+            trial = scan.copy()
+            trial[:, :cut][inside[:, :cut]] = first
+            trial[:, cut:][inside[:, cut:]] = second
+            after = _pair_counts(trial)
+            contact = _port_contacts(after, world.classes, pair)
+            if contact in tried:
+                continue
+            revised = lengths.copy()
+            _replace_borders(revised, before, after)
+            links, needed = coast_links(world, foreign, revised)
+            if len(plan_ports(links, needed).unserved) >= unserved:
+                tried.add(contact)
+                continue
+            old_degree = max(_water_neighbours(before, world.classes, cell) for cell in pair)
+            new_degree = max(_water_neighbours(after, world.classes, cell) for cell in pair)
+            if new_degree > max(6, old_degree):
+                continue
+            parts = label_components(trial)
+            if any(np.unique(parts[trial == cell]).size != 1 for cell in pair):
+                continue
+            _replace_borders(lengths, before, after)
+            return trial if scan is window else trial.T
+    return None
+
+
+def _water_neighbours(
+    lengths: Mapping[tuple[int, int], int], kinds: Sequence[CellClass], sea: int
+) -> int:
+    """The number of other sea cells a grid tile touches, counted in its complete window."""
+    return sum(
+        (a == sea and kinds[b] is CellClass.SEA) or (b == sea and kinds[a] is CellClass.SEA)
+        for a, b in lengths
+    )
+
+
+def _port_contacts(
+    lengths: Mapping[tuple[int, int], int], kinds: Sequence[CellClass], pair: tuple[int, int]
+) -> frozenset[tuple[int, int]]:
+    """Only the presence of a land/sea contact matters to the size of the matching."""
+    return frozenset(
+        (a, b)
+        for a, b in lengths
+        if (a in pair and kinds[b] is CellClass.LAND) or (b in pair and kinds[a] is CellClass.LAND)
+    )
 
 
 def _dissolve(
@@ -387,12 +534,7 @@ def _absorb(
     after = _pair_counts(trial)
     given = trial[inside]
     window[inside] = given
-    for pair in before.keys() | after.keys():
-        total = lengths.get(pair, 0) + after.get(pair, 0) - before.get(pair, 0)
-        if total:
-            lengths[pair] = total
-        else:
-            _ = lengths.pop(pair, None)
+    _replace_borders(lengths, before, after)
     shares = np.bincount(given, minlength=int(given.max()) + 1)
     return int(np.argmax(shares))
 
@@ -443,6 +585,20 @@ def _pair_counts(labels: NDArray[np.int32]) -> dict[tuple[int, int], int]:
         for pair, length in zip(unpack_pairs(pairs), counts.tolist(), strict=True)
         if pair[0] >= 0 and pair[1] >= 0
     }
+
+
+def _replace_borders(
+    lengths: dict[tuple[int, int], int],
+    before: Mapping[tuple[int, int], int],
+    after: Mapping[tuple[int, int], int],
+) -> None:
+    """Replace one window's portion of the map's border lengths."""
+    for pair in before.keys() | after.keys():
+        total = lengths.get(pair, 0) + after.get(pair, 0) - before.get(pair, 0)
+        if total:
+            lengths[pair] = total
+        else:
+            _ = lengths.pop(pair, None)
 
 
 def _merge_target(  # noqa: PLR0913 - the merge uses every side of the coast graph.

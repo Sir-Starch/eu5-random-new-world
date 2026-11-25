@@ -136,35 +136,39 @@ it. And the port rule (every coastal sea cell needs a land that can serve it, `p
 folded each cell it could not serve whole into a neighbour, and chains of such folds made the
 giants (32 merges, the largest cell 62.5 thousand pixels, 12 neighbours at most).
 
-From epoch 64 (`epoch.COMPACT_SEAS`, `rnw.seacells`, native `seacells.rs`) the sea is divided in
-the order the cells are meant to lie, and the folding is replaced by a division:
+From epoch 64 (`epoch.COMPACT_SEAS`, `rnw.seacells`, native `seacells.rs`) the sea uses a grid
+in open water, with a local partition where the coast or a narrow passage affects navigation.
 
-- **Bands.** The water is cut into bands by its distance from land, warped so that every band is
-  as wide as a cell: a coastal band of 0.7 cells (cells that lie along the shore, narrow enough
-  that each touches few lands and the shore's lands can serve them), then three bands of one
-  cell, then open sea. A strait (water with land close on both sides) is a region of its own, so
-  no cell reaches through it.
+- **Open water.** Balanced rows and columns give the sea rectangular tiles of about one cell's
+  width. A tile stays on the grid when it lies wholly beyond the coastal bands and is clear of
+  a strait and the sites of a designed crossing.
+- **Shore and straits.** Distance from significant land gives a coastal band 0.7 cells wide and
+  one band a cell wide outside it. Water that joins two wider mouths through a passage narrower
+  than about 0.6 of a cell is a region of its own. The mouths are tested in a local window as
+  well as across the map, since elsewhere in an archipelago there can be a second route between
+  the same waters.
 - **Cells.** Each band is divided by Lloyd's relaxation of sites on a coarse raster (a twentieth
   of the cell spacing) with a walk through the water that stays inside its region (16 moves, so
   a cell follows a bay and never crosses a spit); a cell above one and a half times the typical
   area is split, one below half of it is dropped. Crossing chains (`rnw.sea_corridors`) keep
   their pinned sites. The full-resolution pixel then goes to the nearest site of its own band, by
   straight distance, which makes the borders of neighbouring cells straight lines.
-- **Small islands.** An island or group whose bounding radius is at most 0.675 of the spacing is
-  not a shore: a disk of water round it, its margin and the water of a cell, is one cell of its
-  own, the bands run level over it, and no ordinary site lies within a tenth of the spacing of the
-  disk. A ship that passes an islet therefore passes one cell.
-- **Ports.** `settle_seas(dissolve=True)` (`ports._dissolve`): an unserved cell that no land of
-  the game's own map touches and that two or more served cells border is given to those cells, each
-  pixel to the taker whose border is nearer through the cell, instead of being folded whole into
-  one. Pieces that would touch only at a corner are reattached. Folding remains for a cell with
-  one served neighbour or one that foreign land touches. Where regional grids are joined
-  (`minimum_sea`) the small pieces are folded first and the rest is divided afterwards.
+- **Islands.** Land that fits within 1.25 cell widths along both axes and occupies up to 45% of
+  a typical square leaves the offshore grid and depth bands transparent to it. The land is
+  still present in the passage test, the full-resolution cut, the connectivity of every final
+  cell and the port graph. Several islets can sit anywhere in a shared cell. The extent of
+  substantial land and the water around it determine where a shore band or a strait takes over.
+- **Ports.** `settle_seas(dissolve=True)` first tries moving the straight edge between two
+  adjacent local cells. A move must improve the port matching, keep both areas within 40–60%
+  of their joint area, keep them connected and limit their neighbour counts. This can give all
+  of a small island's shore to one cell while the other stays open water. Where that does not
+  settle a cell, it can be divided among served neighbours or folded as the port graph requires.
+  The small pieces at regional joins (`minimum_sea`) are attached before this step.
 
 Every step is integer arithmetic, with ties to the lower site, and the one walk through the water
 is single-threaded, so the division does not depend on the thread count; `tests/reference/seacells.py`
-holds independent versions of the three kernels. On the continents world, seed 7, the cells a ship
-can use, before and after:
+holds independent versions of the three kernels. These measurements precede the open-water
+grid. They record the first epoch-64 partition, on the continents world, seed 7:
 
 | | before | epoch 64 |
 |---|---|---|
@@ -186,22 +190,28 @@ water of both sides (at least 0.15 of a cell on each); up to a cell wide 2 of 26
 thousand pixels beyond one mouth. A strait cell has a notched outline in steps of six pixels, the
 resolution of the coarse picture, where it meets its neighbours.
 
-The cells that are still large are mostly the disks of islets and island groups (up to about 34
-thousand pixels); on a coast with big land locations or with wastelands a few cells are still
-folded and stand at one and a half to two times the typical area. An elongated island above the
-radius limit gets ordinary bands. Where two small-island disks overlap, the straight boundary is
-given by squared distance to each island's centre minus its squared land radius. Both the coarse
-layout and full raster use this rule to keep an earlier disk from wrapping around its neighbour.
-The close-islands regression follows the full sea cut through port assignment and checks that
-each island's shore touches one compact cell with a port.
-In the Islands preset, seed 7, a read-back of the exported locations and ports found 342 compact
-land components with a passable shore, a radius of at most 81 pixels, and only generated sea
-around them. Of those, 300 touch one sea cell (282 before the overlap fix). The largest adjoining
-cell fell from about 46 to 38 thousand pixels, and every navigable cell touching their passable
-shores has a port. At `rnw_loc_05204`, the two old cells held 68 and 36 pixels of shore border.
-The new cell holds all 104 pixels. [V-EXEC, EU5 1.4.9 / build 26655995; C558]
+The first partition drew disks around islands. The owner reported that both islets and the
+four-location island of Parnoban received round cells. In Islands seed 7, Parnoban's four land
+locations had a bounding box of 129 by 89 pixels and one sea cell of 25,668 pixels. The installed
+vanilla map gives examples across the range. Nuku Hiva lies off-centre in its sea zone. The sea
+zone of Terceira touches four separate land components and covers 9,657 pixels, close to its
+neighbours' median of 9,407. In Fiji, Kandavu Passage touches 11 land components and has two
+ports. Sicily's shore meets several cells around its headlands, bays and straits. The outer
+contour at Saint Helena is nearly circular, a shape that occurred far more broadly in the first
+RNW partition. [V-GAME input, V-LOCAL, EU5 1.4.9 / build 26655995; C558]
 
-The composed world of America, Africa and Oceania (continents, seed 101, Iberian link required)
+With the open-water grid, the same four Parnoban locations meet four ordinary zones of
+11,183–20,777 pixels with four to seven navigable neighbours. Each location has a port.
+The Islands seed-7 comparison finds 101 exactly rectangular navigable cells, counting
+rectangles with dry holes, against three in the disk version. The median area is 14,745
+pixels, the 99th percentile 24,950, and the largest zone 38,223 (formerly 14,720, 25,987 and
+40,211). The highest neighbour count is 13, including eight retained zones at a map join.
+The rectangular cell `rnw_sea_02641` encloses two separate islands. A synthetic regression
+places four off-centre islets inside the same rectangle and verifies a port for each.
+The complete port and navigation checks pass. [V-EXEC, EU5 1.4.9 / build 26655995; C558]
+
+In the first epoch-64 partition, the composed world of America, Africa and Oceania (continents,
+seed 101, Iberian link required)
 joins its regional grids and keeps retained Old World shores. A generated sea cell beside a
 retained location whose port already serves a retained sea can reach a suitable port only over
 adjoining water. This can fold chains of cells (1,925 navigable cells besides the polar contact,

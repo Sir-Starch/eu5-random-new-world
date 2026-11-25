@@ -78,26 +78,22 @@ def test_sea_geodesic_equals_the_reference(seed: int) -> None:
 
 @pytest.mark.parametrize("seed", [5, 6, 7])
 def test_sea_refine_equals_the_reference(seed: int) -> None:
-    """Each pixel's nearest site among those its coarse neighbours name, by band and by claim."""
+    """Each pixel's nearest site among those its coarse neighbours name, by band."""
     rng = np.random.default_rng(seed)
     step = 4
     height, width = 26, 38
     coarse_shape = (-(-height // step), -(-width // step))
     mask = rng.random((height, width)) > 0.15
     count = 7
-    coarse = rng.integers(-1, count, coarse_shape).astype(np.int32)
+    coarse = rng.integers(-3, count, coarse_shape).astype(np.int32)
     sites = np.stack(
         (rng.integers(0, height, count), rng.integers(0, width, count)), axis=1
     ).astype(np.int64)
     depth = rng.integers(0, 4000, coarse_shape).astype(np.int32)
     home = rng.integers(-1, 3, count).astype(np.int32)
-    disk = np.where(rng.random(count) > 0.6, rng.integers(4, 60, count), 0).astype(np.int64)
-    claim = np.stack((disk, disk // 2), axis=1)
     for reach in (1, 2):
-        found = _native.sea_refine(mask, coarse, step, reach, sites, depth, 1500, 2, home, claim)
-        expected = reference_seacells.refine(
-            mask, coarse, step, reach, sites, depth, 1500, 2, home, claim
-        )
+        found = _native.sea_refine(mask, coarse, step, reach, sites, depth, 1500, 2, home)
+        expected = reference_seacells.refine(mask, coarse, step, reach, sites, depth, 1500, 2, home)
         np.testing.assert_array_equal(found, expected)
 
 

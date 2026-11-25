@@ -73,6 +73,23 @@ def test_a_settled_world_is_the_world_itself() -> None:
     assert settled.cell_of == (0, 1, 2)
 
 
+def test_shift_a_straight_edge_past_a_small_island_before_folding_two_cells() -> None:
+    labels = np.ones((40, 80), dtype=np.int32)
+    labels[:, 40:] = 2
+    labels[17:22, 37:43] = 0
+    kinds = (CellClass.LAND, CellClass.SEA, CellClass.SEA)
+    world = derive_world(labels, kinds, np.zeros_like(labels))
+    assert len(served(world, ForeignCoast()).unserved) == 1
+    settled = settle_seas(world, dissolve=True)
+    assert settled.cell_of == (0, 1, 2)
+    assert settled.merged == 0
+    assert not served(settled.world, ForeignCoast()).unserved
+    assert (settled.world.labels[:, :36] == 1).all()
+    assert (settled.world.labels[labels > 0].reshape(-1) > 0).all()
+    assert np.array_equal(settled.world.labels == 0, labels == 0)
+    assert settled.world.pixels.tolist() == [30, 1440, 1730]
+
+
 def test_small_open_water_fragment_folds_into_its_broadest_sea_neighbour() -> None:
     labels = np.zeros((6, 9), dtype=np.int32)
     labels[:, 6:] = 1

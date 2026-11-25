@@ -1,34 +1,9 @@
-"""Compact sea cells: the water divided into pieces that a ship can cross, of one size and shape.
+"""Rectangular open-sea cells and a local partition for shores, straits and ocean crossings.
 
-The sea of a generated world was divided by the nearest of a jittered grid of sites, in a straight
-line. That is a land cell's way, and it makes a sea cell that is not what the game's own are:
-water behind a spit of land belongs to the cell on the other side of it, a cell reaches through
-a strait to the sea beyond, a cell is a long crescent round an island, and the sizes run from a
-fifth of the spacing to three times it. The game's sea zones are the other thing: each is one
-compact piece of water, the zones beside each other are of one size, the zones along a coast lie
-in rows that follow it, and a strait is a zone of its own.
-
-The water is therefore divided in three steps:
-
-* **Regions.** The water is cut into bands of about one cell's width by its distance from land (the
-  coastal band, the next, ... the open sea beyond the last) and a strait, a passage no wider than
-  two ``NECK_PERMILLE`` of a cell, is a region of its own. No cell ever crosses the border of a
-  region, so the cells of a band are a row along the coast, each next row is cut on its own (as
-  the bricks of a wall are), and no cell reaches through a strait to the sea beyond it.
-* **Cells.** The sites are relaxed on the **distance through the water** (``geodesic``), not the
-  straight distance: a cell is the water nearer to its site than to any other by a way that stays
-  in its region, so a spit or an island ends it. The sites move to the middle of their cells (a
-  Lloyd step) and a cell that is too large is divided, one that is too small is given to its
-  neighbours, until the sizes are even.
-* **Islands.** A small island is no coast the bands follow: it lies inside a cell of its own, the
-  disk of water about it (a cell's own port is all such a coast can give), as the game's halo
-  around a small island is one zone, not a ring of crescents each of which would need a port. The
-  other cells are made round the disk.
-* **Borders.** The final raster follows the coarse one but with every border cut straight
-  between two sites (``refine``), so that the cells are polygons with straight sides, not stairs.
-
-Nothing here draws a random number: the sites are the jittered grid's (``synth.seed_sites``) and
-the corridors' chains (``sea_corridors``), which keep their places.
+Start with a balanced rectangular grid. Whole tiles in unconstrained water stay as drawn.
+The rest is divided along shore bands and into separate narrows by a geodesic partition.
+The sites of designed crossings keep their places. Compact islands contribute to the actual
+land mask and port graph. The shape of the offshore grid is independent of their positions.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -36,13 +11,15 @@ the corridors' chains (``sea_corridors``), which keep their places.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
 from rnw import _native
 from rnw.progress import checkpoint
+from rnw.sea_corridors import CLEAR_PERMILLE, clear_of_corridors, corridor_paths, corridor_sites
+from rnw.synth import jittered_sites
 from rnw.topology import euclidean_distance, label_components
 
 if TYPE_CHECKING:
@@ -54,7 +31,7 @@ MIN_COARSE: Final[int] = 2
 # The width of a band along the coast and the number of bands before the open sea, in permille
 # of the typical cell's side and in bands.
 BAND_PERMILLE: Final[int] = 1000
-BANDS: Final[int] = 4
+BANDS: Final[int] = 2
 # The coastal band alone is this wide (permille of the typical cell's side): its cells lie along the
 # coast longer than they are wide, so that there are fewer of them to serve with the ports of the
 # land beside them.
@@ -67,15 +44,10 @@ NECK_PERMILLE: Final[int] = 300
 SPLIT_PERMILLE: Final[int] = 1500
 DROP_PERMILLE: Final[int] = 500
 PERMILLE: Final[int] = 1000
-# An island that a disk of this radius (permille of the cell's side) holds lies in a cell of its
-# own: the disk of water about it. The bands keep level about the island, and the disk reaches
-# beyond its shore, by ISLAND_MARGIN_PERMILLE of the side; the water in the disk is at least
-# ISLAND_WATER_PERMILLE of a typical cell, whatever the island's size. The sites of other cells keep
-# ISLAND_CLEAR_PERMILLE of the side off the disk.
-ISLAND_PERMILLE: Final[int] = 675
-ISLAND_MARGIN_PERMILLE: Final[int] = 250
-ISLAND_WATER_PERMILLE: Final[int] = 600
-ISLAND_CLEAR_PERMILLE: Final[int] = 100
+# A compact obstruction can lie inside one tile, leaving most of it navigable. Both bounds
+# matter: a thin island longer than a tile is a coast, as is bulky land within the span.
+ISLAND_SPAN_PERMILLE: Final[int] = 1250
+ISLAND_AREA_PERMILLE: Final[int] = 450
 # The relaxation: rounds that may divide and remove cells, then rounds that only centre them.
 SETTLING_ROUNDS: Final[int] = 14
 CENTRING_ROUNDS: Final[int] = 4
@@ -96,9 +68,7 @@ class Layout:
     """The water on the coarse raster: its weight, its flags and its regions.
 
     ``depth`` is the distance of every coarse pixel from land in eighths of a coarse pixel, ``band``
-    the width of a band in the same unit, ``neck`` the water of the straits and ``islands`` the
-    middles (coarse row, column), water radii and land radii of the small islands the water lies
-    round without a band.
+    the width of a band in the same unit, and ``neck`` the water of the straits.
     """
 
     step: int
@@ -108,8 +78,6 @@ class Layout:
     depth: NDArray[np.int32]
     neck: NDArray[np.bool_]
     band: int
-    islands: NDArray[np.int64]
-    discs: NDArray[np.int32]
 
 
 def _mass(flags: NDArray[np.bool_], step: int) -> NDArray[np.int64]:
@@ -153,104 +121,102 @@ def _necks(water: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
     joined: dict[int, set[int]] = {}
     for pair in pairs:
         joined.setdefault(pair // wide_count, set()).add(pair % wide_count)
-    neck_ids = np.array(
-        sorted(key for key, group in joined.items() if len(group) >= JOINS), dtype=np.int64
-    )
+    necks = {key for key, group in joined.items() if len(group) >= JOINS}
+    # A longer route may connect the mouths elsewhere, as in an archipelago or between
+    # an island and the mainland. Identify such mouths on a bounded local window.
+    candidates = sorted(joined.keys() - necks)
+    if candidates:
+        rows, columns = np.nonzero(thin)
+        ids = narrow[rows, columns]
+        order = np.argsort(ids, kind="stable")
+        sorted_ids = ids[order]
+        first = np.searchsorted(sorted_ids, candidates)
+        past = np.searchsorted(sorted_ids, candidates, side="right")
+        for key, start, stop in zip(candidates, first, past, strict=True):
+            points = order[start:stop]
+            if _local_mouths(wide, narrow, key, rows[points], columns[points], radius):
+                necks.add(key)
+    neck_ids = np.array(sorted(necks), dtype=np.int64)
     return thin & np.isin(narrow, neck_ids)
 
 
-def _small_islands(
-    land: NDArray[np.bool_], solid: NDArray[np.int64], step: int, limit: int
-) -> tuple[NDArray[np.int32], NDArray[np.int64]]:
-    """The islands of ``land`` that a disk of ``limit`` pixels holds: a map and their middles.
+def _local_mouths(  # noqa: PLR0913, PLR0917 - the shape and the scale of the passage.
+    wide: NDArray[np.bool_],
+    narrow: NDArray[np.int32],
+    key: int,
+    rows: NDArray[np.int64],
+    columns: NDArray[np.int64],
+    radius: int,
+) -> bool:
+    """Test for two substantial mouths within a few sea widths of the same narrow passage."""
+    collar = 2 * radius
+    if max(np.ptp(rows), np.ptp(columns)) > 8 * radius:
+        return False
+    window = (
+        slice(max(0, int(rows.min()) - collar), int(rows.max()) + collar + 1),
+        slice(max(0, int(columns.min()) - collar), int(columns.max()) + collar + 1),
+    )
+    water = wide[window]
+    parts = label_components(water.astype(np.int32))
+    cut = narrow[window] == key
+    contact = np.zeros_like(cut)
+    contact[:-1] |= cut[1:]
+    contact[1:] |= cut[:-1]
+    contact[:, :-1] |= cut[:, 1:]
+    contact[:, 1:] |= cut[:, :-1]
+    mouths = np.unique(parts[contact & water])
+    areas = np.bincount(parts.ravel())
+    return int((areas[mouths] >= radius**2).sum()) >= JOINS
 
-    ``solid`` is the land in every coarse pixel, in pixels. The map numbers the islands from 1 (0
-    elsewhere); there is a row of the second array for each island, in the order of the numbers:
-    the centre of mass (row, column in coarse pixels), the radius, in pixels, of the disk about it
-    that holds the island, and its area in pixels.
-    """
+
+def _compact_islands(solid: NDArray[np.int64], step: int, spacing: int) -> NDArray[np.bool_]:
+    """Find land whose footprint can sit within a tile without imposing a row of coastal cells."""
+    land = solid > 0
     parts = label_components(land.astype(np.int32))
     count = int(parts.max()) + 1
     rows, columns = np.nonzero(land)
     owner = parts[rows, columns]
-    weight = solid[rows, columns].astype(np.float64)
-    area = np.bincount(owner, weights=weight, minlength=count)
-    mean_row = np.bincount(owner, weights=weight * rows, minlength=count) / np.maximum(area, 1.0)
-    mean_column = np.bincount(owner, weights=weight * columns, minlength=count) / np.maximum(
-        area, 1.0
+    area = np.bincount(owner, weights=solid[rows, columns], minlength=count)
+    low = np.full((2, count), max(land.shape), dtype=np.int64)
+    high = np.zeros_like(low)
+    for axis, coords in enumerate((rows, columns)):
+        np.minimum.at(low[axis], owner, coords)
+        np.maximum.at(high[axis], owner, coords)
+    span = (high - low + 1).max(axis=0)
+    small = (
+        (area > 0)
+        & (area * PERMILLE <= spacing**2 * ISLAND_AREA_PERMILLE)
+        & (span * step * PERMILLE <= spacing * ISLAND_SPAN_PERMILLE)
     )
-    # Half a coarse pixel more than the farthest pixel's middle: the pixel's own edge.
-    reach = np.hypot(rows - mean_row[owner], columns - mean_column[owner]) + 0.5
-    radius = np.zeros(count)
-    np.maximum.at(radius, owner, reach)
-    small = (area > 0) & (radius * step <= limit)
-    chosen = np.flatnonzero(small)
-    number = np.zeros(count, dtype=np.int32)
-    number[chosen] = np.arange(1, len(chosen) + 1, dtype=np.int32)
-    middles = np.stack(
-        (
-            np.rint(mean_row[chosen]),
-            np.rint(mean_column[chosen]),
-            np.ceil(radius[chosen] * step),
-            area[chosen],
-        ),
-        axis=1,
-    )
-    return np.where(land, number[parts], 0).astype(np.int32), middles.astype(np.int64)
+    return land & small[parts]
 
 
 def layout(ocean: NDArray[np.bool_], spacing: int) -> Layout:
     """The coarse raster of ``ocean`` and its regions: the bands along the coast and the straits.
 
     Whatever is not ocean is the shore the bands follow: the land, the lakes and the edge of the
-    generated domain, where the cells lie along the edge as they lie along a coast. A small island
-    is no shore: the water is taken to cover it, the bands are level over the disk of water that is
-    its cell, and that disk is no water for the cells of the rest.
+    generated domain, where the cells lie along the edge as they lie along a coast. Distances and
+    the coarse partition can run across a small island. The true water mask still excludes it
+    when the full-resolution cells are drawn.
     """
     step = coarse_step(spacing)
     mass = _mass(ocean, step)
     solid = _mass(~ocean, step)
-    land = 2 * solid >= step * step
-    covering, found = _small_islands(land, solid, step, ISLAND_PERMILLE * spacing // PERMILLE)
-    covered = covering > 0
+    covered = _compact_islands(solid, step, spacing)
     water = (mass > 0) | covered
-    land &= ~covered
+    land = (2 * solid >= step * step) & ~covered
     band = EIGHTH * max(1, round(BAND_PERMILLE * spacing / (PERMILLE * step)))
     coast = EIGHTH * max(1, round(COAST_PERMILLE * spacing / (PERMILLE * step)))
     reached = euclidean_distance(land, band * (BANDS + 1))
     # The distance is counted in bands: the coastal band is ``coast`` wide, the others ``band``.
     depth = np.where(reached < coast, reached * band // coast, reached - coast + band)
-    # The disk of an island holds the island, a margin of water about it and water for a cell.
-    needed = ISLAND_WATER_PERMILLE * spacing * spacing / PERMILLE + found[:, 3]
-    reach = np.maximum(
-        found[:, 2] + ISLAND_MARGIN_PERMILLE * spacing // PERMILLE, np.ceil(np.sqrt(needed / np.pi))
-    ).astype(np.int64)
-    islands = np.stack((found[:, 0], found[:, 1], reach, found[:, 2]), axis=1)
-    levels = depth[islands[:, 0], islands[:, 1]]
-    discs = np.zeros(land.shape, dtype=np.int32)
-    best = np.full(land.shape, np.iinfo(np.int64).max, dtype=np.int64)
-    for index, (row, column, radius, shore_radius) in enumerate(islands.tolist()):
-        span = radius // step + 1
-        window = (
-            slice(max(0, row - span), min(land.shape[0], row + span + 1)),
-            slice(max(0, column - span), min(land.shape[1], column + span + 1)),
-        )
-        rows, columns = np.ogrid[window]
-        squared = ((rows - row) ** 2 + (columns - column) ** 2) * step**2
-        rank = squared - shore_radius**2
-        # In an overlap, use the same power distance to the island's core as sea_refine.
-        inside = (squared <= radius**2) & (rank < best[window])
-        best[window][inside] = rank[inside]
-        depth[window][inside & water[window]] = levels[index]
-        discs[window][inside] = index + 1
     ring = np.minimum(depth // band, BANDS)
-    neck = _necks(water & ~covered, max(1, round(NECK_PERMILLE * spacing / (PERMILLE * step))))
-    water &= discs == 0
+    neck = _necks(mass > 0, max(1, round(NECK_PERMILLE * spacing / (PERMILLE * step))))
     code = np.where(water, ring + 1, 0)
     code[neck & water] = BANDS + 2
     region = label_components(code.astype(np.int32))
     return Layout(
-        step, mass, water, region, depth.astype(np.int32), neck & water, band, islands, discs
+        step, mass + np.where(covered, solid, 0), water, region, depth.astype(np.int32), neck, band
     )
 
 
@@ -308,6 +274,8 @@ def relax(
     water = flags.water
     width = water.shape[1]
     sea = np.flatnonzero(water.ravel())
+    if not sea.size:
+        return rows, columns, np.full(water.shape, -1, dtype=np.int32)
     sea_rows, sea_columns = sea // width, sea % width
     weights = flags.mass.ravel()[sea].astype(np.float64)
     rows, columns = _unserved(flags, rows, columns)
@@ -354,54 +322,93 @@ def relax(
     return rows, columns, label
 
 
+def _grid(
+    flags: Layout,
+    spacing: int,
+    pinned_rows: NDArray[np.int64],
+    pinned_columns: NDArray[np.int64],
+) -> NDArray[np.int32]:
+    """Give each whole tile in deep water its grid number, and give other water to the local cut."""
+    sides: list[NDArray[np.int64]] = []
+    for size in flags.water.shape:
+        count = max(1, (size * flags.step + spacing // 2) // spacing)
+        sides.append(np.arange(count + 1, dtype=np.int64) * size // count)
+    rows, columns = sides
+    open_water = flags.water & ~flags.neck & (flags.depth >= flags.band * BANDS)
+    open_water[pinned_rows, pinned_columns] = False
+    complete = np.logical_and.reduceat(open_water, rows[:-1], axis=0)
+    complete = np.logical_and.reduceat(complete, columns[:-1], axis=1)
+    tiles = np.full(complete.shape, -1, dtype=np.int32)
+    tiles[complete] = np.arange(int(complete.sum()), dtype=np.int32)
+    return np.repeat(np.repeat(tiles, np.diff(rows), axis=0), np.diff(columns), axis=1)
+
+
 def partition(
     ocean: NDArray[np.bool_],
+    key: int,
+    *,
+    spacing: int,
+    bands: NDArray[np.bool_] | None = None,
+    domain: NDArray[np.bool_] | None = None,
+) -> NDArray[np.int32]:
+    """Lay out the offshore grid and solve the water along its coasts at the original resolution."""
+    flags = layout(ocean, spacing)
+    rows, columns = jittered_sites(key, ocean.shape, spacing)
+    pinned_rows = np.empty(0, dtype=np.int64)
+    pinned_columns = np.empty(0, dtype=np.int64)
+    if bands is not None:
+        if bands.shape != ocean.shape:
+            message = "Current bands do not fit the world"
+            raise ValueError(message)
+        paths = corridor_paths(ocean, bands, spacing, domain=domain)
+        clear = clear_of_corridors(rows, columns, paths, spacing * CLEAR_PERMILLE / PERMILLE)
+        pinned_rows, pinned_columns = corridor_sites(paths, ocean, spacing, key)
+        rows, columns = rows[clear], columns[clear]
+    return _draw(
+        ocean,
+        flags,
+        rows,
+        columns,
+        pinned_rows=pinned_rows,
+        pinned_columns=pinned_columns,
+        spacing=spacing,
+    )
+
+
+def _draw(  # noqa: PLR0913 - the mesh, size and two sets of coordinates.
+    ocean: NDArray[np.bool_],
+    flags: Layout,
     rows: NDArray[np.int64],
     columns: NDArray[np.int64],
     *,
-    pinned: int,
+    pinned_rows: NDArray[np.int64],
+    pinned_columns: NDArray[np.int64],
     spacing: int,
 ) -> NDArray[np.int32]:
-    """The sea cells of ``ocean``, relaxed from the sites at ``rows`` / ``columns`` (the first
-    ``pinned`` of which keep their place); -1 outside the water, cells numbered by site.
-
-    A cell can be in several pieces where the coarse raster joined what the full one parts (the
-    caller's ``label_components`` tells them apart).
-    """
-    flags = layout(ocean, spacing)
     step = flags.step
-    middle_rows = flags.islands[:, 0] * step + step // 2
-    middle_columns = flags.islands[:, 1] * step + step // 2
-    reach = flags.islands[:, 2]
-    free = np.arange(len(rows)) >= pinned
-    if len(middle_rows):
-        # The sites of other cells give way to the disk of an island's cell.
-        clear = reach + ISLAND_CLEAR_PERMILLE * spacing // PERMILLE
-        beside = (
-            (rows[:, None] - middle_rows[None, :]) ** 2
-            + (columns[:, None] - middle_columns[None, :]) ** 2
-            < clear[None, :] ** 2
-        ).any(axis=1)
-        free &= ~beside
-    chain = pinned
-    rows = np.concatenate((rows[:pinned], middle_rows, rows[free]))
-    columns = np.concatenate((columns[:pinned], middle_columns, columns[free]))
-    pinned += len(middle_rows)
+    tiles = _grid(flags, spacing, pinned_rows // step, pinned_columns // step)
+    water = flags.water & (tiles < 0)
+    bands = np.where(water, np.minimum(flags.depth // flags.band, BANDS) + 1, 0)
+    bands[flags.neck & water] = BANDS + 2
+    adaptive = replace(flags, water=water, region=label_components(bands.astype(np.int32)))
+    valid = water[rows // step, columns // step]
+    pinned = len(pinned_rows)
+    rows = np.concatenate((pinned_rows, rows[valid]))
+    columns = np.concatenate((pinned_columns, columns[valid]))
     final_rows, final_columns, coarse = relax(
-        flags,
+        adaptive,
         (rows // step).astype(np.int64),
         (columns // step).astype(np.int64),
         pinned,
         float(spacing * spacing),
     )
-    # An island's disk is its cell's, whatever the water round it gave the other cells.
-    coarse = np.where(flags.discs > 0, chain + flags.discs - 1, coarse).astype(np.int32)
     sites = np.stack((final_rows * step + step // 2, final_columns * step + step // 2), axis=1)
     sites[:pinned] = np.stack((rows[:pinned], columns[:pinned]), axis=1)
+    # Values below -1 mark finished grid tiles in the native rasteriser.
+    locked = tiles >= 0
+    coarse[locked] = -2 - tiles[locked]
     home = np.minimum(flags.depth[final_rows, final_columns] // flags.band, BANDS).astype(np.int32)
     home[flags.neck[final_rows, final_columns]] = -1
-    claim = np.zeros((len(final_rows), 2), dtype=np.int64)
-    claim[chain : chain + len(reach)] = flags.islands[:, 2:] ** 2
     checkpoint()
     labels = _native.sea_refine(
         np.ascontiguousarray(ocean),
@@ -413,7 +420,6 @@ def partition(
         flags.band,
         BANDS,
         np.ascontiguousarray(home),
-        np.ascontiguousarray(claim),
     )
     checkpoint()
     return labels
