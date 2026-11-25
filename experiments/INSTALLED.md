@@ -2380,3 +2380,7 @@ files. The recovery receipt passed, and the native library adopted the corrected
 | World | Folder | Manifest SHA-256 |
 |---|---|---|
 | RNW: Combined world 3QLA | `rnw_exp_world_3qlajcechi` | `a3cb7bcb2470d14ed245432dd35be48982d857699c0b67dd84ef22f0884ab673` |
+
+2026-11-25, **African land connections along the Arabian shore** (C562, source `4ec8dbf`, pending epoch 64). [V-EXEC] Installed the all-continent seed 7 candidate **RNW: Combined world IDYB** in `rnw_exp_world_idybtycyvq` in the existing Windows/Proton profile for EU5 1.4.9 / Steam build 26655995. Both Asian requirements are on through the Keep Mamluks defaults. The written map has a passable border near Gaza and Beersheba and a separate landing in Dhofar. All 1,465 canonical installed files match the export record, with digest `9426bbe11f01e4543417345077552c75b299af845568cf1833c27f2590793376`. Existing mod file listings, sizes and modification times and top-level profile files were checked across the copy.
+
+[V-EXEC] Updated `rnw_exp_hub` in the same profile. The offscreen Wine self-tests passed for both windows and the updater verified all installed files. The previous hub is retained in `.rnw-hub-backups/1.3.0-1795643062243574253`. The wheel SHA-256 is `db448d6c0426b769135fa2dfe4bc57df282d96fa69710d691f751a6e8b612926` and the Tauri executable SHA-256 is `9619a7c16ac3164b72c5659d7f12bca28c1b41c280dba0eb8a159c24f6954fb7`.
