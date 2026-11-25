@@ -234,6 +234,16 @@ scope when chosen.
 - **Institutions at the start:** research whether a world mod can seed them.
 - **Curated ready-made worlds:** further standalone Workshop items, such as the published
   Wall world, are the owner's distribution choice, not a generator release.
+- **1444 — The Dawn of Discovery:** add an optional scenario profile that reads the
+  installed mod before generation. Start with generated America and preserve the mod's
+  1444 countries, population, markets and institutions outside it. Adapt references to
+  replaced places and countries, anchor RNW's history to the scenario date, and check
+  the opening conditions for institutions and colonization. On EU5 1.4.9, the inspected
+  mod version 0.4.0 uses `setup/1337`, which RNW also writes, and its bookmark date
+  differs from `START_DATE` [V-LOCAL]. Confirm the effective date, record the mod
+  revision and input hashes with the world, and verify the combined start with Dawn of
+  Discovery loaded before the generated world. See the [Workshop mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3620871699)
+  and [history export](history-core.md#export-integration-h4-fourth-part).
 - **More Locations:** only as an explicitly supported input layer after a payload audit
   ([assessment](research/more-locations-compatibility.md)).
 - **Generating the whole world** remains an idea for a separate project after RNW, not
