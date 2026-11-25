@@ -245,17 +245,17 @@ pub struct Bands<'a> {
     pub last: i64,
     /// The band of every site; below zero for a site that belongs to no band (a strait's).
     pub site: &'a [i32],
-    /// The square of the radius, in pixels, of the disk that is all of the site's cell or none of
-    /// the others' (an island's), 0 for an ordinary site.
-    pub claim: &'a [i64],
+    /// Squared radii of the disk of water and the island it encloses, or (0, 0) for other sites.
+    pub claim: &'a [(i64, i64)],
 }
 
 /// The partition of the full raster: each water pixel takes, of the labels that the coarse
 /// partition gives to the coarse pixels round it (`reach` of them each way), the label whose site
 /// (`sites`, in full-raster pixels) is the nearest in a straight line, the lower label on a tie.
 /// A site with a `claim` holds every pixel within that radius of it, whatever else is nearer: the
-/// cell of an island is the disk that holds the island and the water round it (the lowest label if
-/// two disks overlap); between two ordinary sites the border is a straight one.
+/// cell of an island is the disk that holds the island and the water round it. Where disks overlap,
+/// compare squared distances minus the squared land radii (power distance), so their straight
+/// shared border gives the bigger island room for its wider shore. The lower label breaks a tie.
 /// Only the sites of the pixel's own band compete (a strait's site competes with every band), the
 /// band of a pixel being read from the smooth distance, so the border between two bands is a smooth
 /// line and the border between two cells of a band a straight one. A pixel that no coarse pixel
@@ -292,7 +292,7 @@ pub fn refine(
                 let mut any = (i64::MAX, i32::MAX);
                 let mut seen = [-1_i32; 64];
                 let mut count = 0;
-                let mut claimed = i32::MAX;
+                let mut claimed = (i64::MAX, i32::MAX);
                 for r in rows.clone() {
                     for c in columns.clone() {
                         let owner = coarse[r * coarse_width + c];
@@ -306,9 +306,9 @@ pub fn refine(
                         let (sr, sc) = sites[owner as usize];
                         let (dr, dc) = (row as i64 - sr, column as i64 - sc);
                         let squared = dr * dr + dc * dc;
-                        let claim = bands.claim[owner as usize];
-                        if claim > 0 && squared <= claim {
-                            claimed = claimed.min(owner);
+                        let (disk, shore) = bands.claim[owner as usize];
+                        if disk > 0 && squared <= disk {
+                            claimed = claimed.min((squared - shore, owner));
                         }
                         let key = (squared, owner);
                         any = any.min(key);
@@ -318,8 +318,8 @@ pub fn refine(
                         }
                     }
                 }
-                let chosen = if claimed != i32::MAX {
-                    claimed
+                let chosen = if claimed.1 != i32::MAX {
+                    claimed.1
                 } else if best.1 == i32::MAX {
                     any.1
                 } else {
@@ -435,7 +435,7 @@ mod tests {
             width: 8000,
             last: 0,
             site: &[0, 0],
-            claim: &[0, 0],
+            claim: &[(0, 0), (0, 0)],
         };
         let found = refine(&mask, 12, &coarse, 12, 1, 1, &[(0, 1), (0, 10)], &bands);
         assert_eq!(found, [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]);
@@ -453,7 +453,7 @@ mod tests {
             width: 4000,
             last: 2,
             site: &[0, 1],
-            claim: &[0, 0],
+            claim: &[(0, 0), (0, 0)],
         };
         let found = refine(&mask, 12, &coarse, 12, 1, 12, &[(0, 1), (0, 4)], &bands);
         // Pixels with distance under 4000 (columns 0..=3, interpolated at their centres) are band 0.
@@ -471,7 +471,7 @@ mod tests {
             width: 8000,
             last: 0,
             site: &[0, 0],
-            claim: &[0, 9],
+            claim: &[(0, 0), (9, 0)],
         };
         let found = refine(&mask, 12, &coarse, 12, 1, 12, &[(0, 5), (0, 8)], &bands);
         assert_eq!(found, [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]);
@@ -480,7 +480,7 @@ mod tests {
             width: 8000,
             last: 0,
             site: &[0, 0],
-            claim: &[0, 25],
+            claim: &[(0, 0), (25, 0)],
         };
         let found = refine(&mask, 12, &coarse, 12, 1, 12, &[(0, 5), (0, 8)], &wide);
         assert_eq!(found[3..], [1, 1, 1, 1, 1, 1, 1, 1, 1]);

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from rnw import epoch, newworld, seacells
+from rnw.model import CellClass
+from rnw.ports import ForeignCoast, served, settle_seas
 from rnw.synth import seed_sites
 from rnw.topology import label_components
 
@@ -87,6 +89,28 @@ def test_a_strait_is_a_cell_of_its_own_and_no_cell_reaches_through_it() -> None:
     assert not strait & (west | east)
 
 
+def test_no_cell_reaches_through_a_strait_after_the_small_pieces_are_folded() -> None:
+    """The whole cut of the export (``newworld._sea_cells``, with its smallest cell and the
+    folding of slivers) keeps the water on either side of a narrow strait in cells of its own."""
+    ocean = np.zeros((260, 600), dtype=np.bool_)
+    ocean[20:240, 20:280] = True
+    ocean[20:240, 320:580] = True
+    ocean[120:134, 280:320] = True
+    for smallest in (500, 2000):
+        labels = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+            ocean,
+            key=5,
+            spacing=SPACING,
+            smallest=smallest,
+            bands=None,
+            algorithm=epoch.COMPACT_SEAS,
+        )
+        west = set(np.unique(labels[20:240, 20:270]).tolist())
+        east = set(np.unique(labels[20:240, 330:580]).tolist())
+        assert not west & east, smallest
+        assert np.array_equal(labels >= 0, ocean)
+
+
 def test_a_small_island_lies_inside_one_cell() -> None:
     ocean = np.ones((420, 480), dtype=np.bool_)
     rows, columns = np.ogrid[:420, :480]
@@ -105,14 +129,40 @@ def test_a_small_island_is_no_shore_for_the_bands() -> None:
     ocean &= (rows - 210) ** 2 + (columns - 240) ** 2 > 14**2
     flags = seacells.layout(ocean, SPACING)
     assert len(flags.islands) == 1
-    row, column, reach = flags.islands[0].tolist()
+    row, column, reach, shore_radius = flags.islands[0].tolist()
     assert reach >= 14
+    assert shore_radius < reach
     step = flags.step
     assert abs(row * step - 210) <= step
     assert abs(column * step - 240) <= step
     assert flags.discs[row, column] == 1
     assert not flags.water[row, column]
     assert flags.depth[flags.discs == 1].min() == flags.depth[flags.discs == 1].max()
+
+
+def test_close_small_islands_keep_separate_coastal_cells_and_ports() -> None:
+    rows, columns = np.ogrid[:240, :300]
+    distances = ((rows - 120) ** 2 + (columns - 105) ** 2, (rows - 120) ** 2 + (columns - 135) ** 2)
+    radii = (12, 10)
+    first, second = (
+        distance <= radius**2 for distance, radius in zip(distances, radii, strict=True)
+    )
+    ocean = ~(first | second)
+    cut = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+        ocean, key=5, spacing=SPACING, smallest=500, bands=None, algorithm=epoch.COMPACT_SEAS
+    )
+    labels = np.where(ocean, cut + 2, np.where(first, 0, 1)).astype(np.int32)
+    classes = (CellClass.LAND,) * 2 + (CellClass.SEA,) * (int(cut.max()) + 1)
+    world = newworld.derive_world(labels, classes, np.zeros_like(labels))
+    settled = settle_seas(world, dissolve=True)
+    ports = served(settled.world, ForeignCoast())
+    assert ports.unserved == ()
+    assert ports.port[0] != ports.port[1]
+    assert settled.merged == 0
+    for land, (distance, radius) in enumerate(zip(distances, radii, strict=True)):
+        sea = ports.port[land]
+        assert np.all(settled.world.labels[ocean & (distance <= (radius + 1) ** 2)] == sea)
+        assert 0.5 * TYPICAL <= settled.world.pixels[sea] <= 1.5 * TYPICAL
 
 
 def test_a_large_island_is_a_shore_the_cells_follow() -> None:

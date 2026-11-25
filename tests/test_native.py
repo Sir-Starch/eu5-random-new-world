@@ -91,7 +91,8 @@ def test_sea_refine_equals_the_reference(seed: int) -> None:
     ).astype(np.int64)
     depth = rng.integers(0, 4000, coarse_shape).astype(np.int32)
     home = rng.integers(-1, 3, count).astype(np.int32)
-    claim = np.where(rng.random(count) > 0.6, rng.integers(4, 60, count), 0).astype(np.int64)
+    disk = np.where(rng.random(count) > 0.6, rng.integers(4, 60, count), 0).astype(np.int64)
+    claim = np.stack((disk, disk // 2), axis=1)
     for reach in (1, 2):
         found = _native.sea_refine(mask, coarse, step, reach, sites, depth, 1500, 2, home, claim)
         expected = reference_seacells.refine(

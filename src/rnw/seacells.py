@@ -97,7 +97,8 @@ class Layout:
 
     ``depth`` is the distance of every coarse pixel from land in eighths of a coarse pixel, ``band``
     the width of a band in the same unit, ``neck`` the water of the straits and ``islands`` the
-    middles (coarse row, column) of the small islands the water lies round without a band.
+    middles (coarse row, column), water radii and land radii of the small islands the water lies
+    round without a band.
     """
 
     step: int
@@ -224,19 +225,23 @@ def layout(ocean: NDArray[np.bool_], spacing: int) -> Layout:
     reach = np.maximum(
         found[:, 2] + ISLAND_MARGIN_PERMILLE * spacing // PERMILLE, np.ceil(np.sqrt(needed / np.pi))
     ).astype(np.int64)
-    islands = np.stack((found[:, 0], found[:, 1], reach), axis=1)
+    islands = np.stack((found[:, 0], found[:, 1], reach, found[:, 2]), axis=1)
+    levels = depth[islands[:, 0], islands[:, 1]]
     discs = np.zeros(land.shape, dtype=np.int32)
-    for index, (row, column, radius) in enumerate(islands.tolist()):
+    best = np.full(land.shape, np.iinfo(np.int64).max, dtype=np.int64)
+    for index, (row, column, radius, shore_radius) in enumerate(islands.tolist()):
         span = radius // step + 1
         window = (
             slice(max(0, row - span), min(land.shape[0], row + span + 1)),
             slice(max(0, column - span), min(land.shape[1], column + span + 1)),
         )
         rows, columns = np.ogrid[window]
-        inside = (rows - row) ** 2 + (columns - column) ** 2 <= (radius / step) ** 2
-        inside &= discs[window] == 0
-        # The bands run level over the disk, at the level of its middle (after the first disk's).
-        depth[window][inside & water[window]] = depth[row, column]
+        squared = ((rows - row) ** 2 + (columns - column) ** 2) * step**2
+        rank = squared - shore_radius**2
+        # In an overlap, use the same power distance to the island's core as sea_refine.
+        inside = (squared <= radius**2) & (rank < best[window])
+        best[window][inside] = rank[inside]
+        depth[window][inside & water[window]] = levels[index]
         discs[window][inside] = index + 1
     ring = np.minimum(depth // band, BANDS)
     neck = _necks(water & ~covered, max(1, round(NECK_PERMILLE * spacing / (PERMILLE * step))))
@@ -395,8 +400,8 @@ def partition(
     sites[:pinned] = np.stack((rows[:pinned], columns[:pinned]), axis=1)
     home = np.minimum(flags.depth[final_rows, final_columns] // flags.band, BANDS).astype(np.int32)
     home[flags.neck[final_rows, final_columns]] = -1
-    claim = np.zeros(len(final_rows), dtype=np.int64)
-    claim[chain : chain + len(reach)] = reach * reach
+    claim = np.zeros((len(final_rows), 2), dtype=np.int64)
+    claim[chain : chain + len(reach)] = flags.islands[:, 2:] ** 2
     checkpoint()
     labels = _native.sea_refine(
         np.ascontiguousarray(ocean),

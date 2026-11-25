@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from rnw.model import CellClass
-from rnw.newworld import derive_world
+from rnw.newworld import NewWorld, derive_world
 from rnw.ports import ForeignCoast, PortError, plan_ports, relabel, served, settle_seas
 from tests.block_worlds import block_world, cell
 
@@ -216,3 +216,40 @@ def test_a_dissolved_world_is_the_same_whichever_way_it_is_asked() -> None:
     second = settle_seas(world, dissolve=True)
     assert first.cell_of == second.cell_of
     assert np.array_equal(first.world.labels, second.world.labels)
+
+
+def _grid_with_a_small_piece() -> NewWorld:
+    """Land A over twelve columns and B over six; below them a piece of two columns (``t``), then
+    the seas ``1``, ``2`` and ``3`` six columns wide each. A touches ``t``, ``1`` and ``2``, B
+    only ``3``."""
+    labels = np.zeros((6, 20), dtype=np.int32)
+    labels[:3, 14:] = 1
+    labels[3:, :2] = 2
+    labels[3:, 2:8] = 3
+    labels[3:, 8:14] = 4
+    labels[3:, 14:] = 5
+    kinds = (CellClass.LAND, CellClass.LAND) + (CellClass.SEA,) * 4
+    return derive_world(labels, kinds, np.zeros_like(labels))
+
+
+def test_a_small_piece_is_folded_first_and_the_cell_that_cannot_be_served_is_divided() -> None:
+    world = _grid_with_a_small_piece()
+    settled = settle_seas(world, minimum_sea=10, dissolve=True)
+    assert settled.world.classes == (CellClass.LAND, CellClass.LAND, CellClass.SEA, CellClass.SEA)
+    assert not served(settled.world, ForeignCoast()).unserved
+    labels = settled.world.labels
+    # the piece went with the sea beside it, the cell in the middle was shared by both sides
+    assert (labels[3:, :11] == labels[3, 0]).all()
+    assert (labels[3:, 11:] == labels[3, 19]).all()
+    assert settled.cell_of[2] == settled.cell_of[3] == int(labels[3, 0])
+    assert settled.cell_of[4] in {int(labels[3, 0]), int(labels[3, 19])}
+    assert settled.merged == 2
+
+
+def test_with_small_pieces_and_no_dissolving_the_cell_is_folded_whole_as_before() -> None:
+    world = _grid_with_a_small_piece()
+    settled = settle_seas(world, minimum_sea=10)
+    # the piece and the unserved middle cell both went whole to the left
+    assert settled.world.pixels.tolist() == [42, 18, 42, 18]
+    assert settled.cell_of == (0, 1, 2, 2, 2, 3)
+    assert not served(settled.world, ForeignCoast()).unserved

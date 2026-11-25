@@ -1177,14 +1177,14 @@ mod _native {
         band_width: i64,
         last_band: i64,
         site_band: PyReadonlyArray1<'py, i32>,
-        site_claim: PyReadonlyArray1<'py, i64>,
+        site_claim: PyReadonlyArray2<'py, i64>,
     ) -> PyResult<Bound<'py, PyArray2<i32>>> {
         let shape = mask.as_array().dim();
         let (flags, grid) = (mask.as_slice()?, coarse.as_slice()?);
         let cells = coarse.as_array().dim();
         let at = sites.as_array();
         let bands_of = site_band.as_slice()?;
-        let claims = site_claim.as_slice()?;
+        let claim = site_claim.as_array();
         if step == 0
             || reach == 0
             || cells.0 == 0
@@ -1194,7 +1194,7 @@ mod _native {
             || depth.as_array().dim() != cells
             || at.dim().1 != 2
             || bands_of.len() != at.dim().0
-            || claims.len() != at.dim().0
+            || claim.dim() != (at.dim().0, 2)
         {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "the rasters do not fit together",
@@ -1202,6 +1202,9 @@ mod _native {
         }
         let points: Vec<(i64, i64)> = (0..at.dim().0)
             .map(|row| (at[[row, 0]], at[[row, 1]]))
+            .collect();
+        let claims: Vec<(i64, i64)> = (0..at.dim().0)
+            .map(|row| (claim[[row, 0]], claim[[row, 1]]))
             .collect();
         if grid
             .iter()
@@ -1216,7 +1219,7 @@ mod _native {
             width: band_width,
             last: last_band,
             site: bands_of,
-            claim: claims,
+            claim: &claims,
         };
         let out = py.detach(|| {
             seacells::refine(flags, shape.1, grid, cells.1, step, reach, &points, &bands)

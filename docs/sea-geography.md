@@ -158,7 +158,8 @@ the order the cells are meant to lie, and the folding is replaced by a division:
   the game's own map touches and that two or more served cells border is given to those cells, each
   pixel to the taker whose border is nearer through the cell, instead of being folded whole into
   one. Pieces that would touch only at a corner are reattached. Folding remains for a cell with
-  one served neighbour or one that foreign land touches.
+  one served neighbour or one that foreign land touches. Where regional grids are joined
+  (`minimum_sea`) the small pieces are folded first and the rest is divided afterwards.
 
 Every step is integer arithmetic, with ties to the lower site, and the one walk through the water
 is single-threaded, so the division does not depend on the thread count; `tests/reference/seacells.py`
@@ -176,11 +177,38 @@ can use, before and after:
 | folds for the port rule | 32 | 10 |
 | cells longer than 2.5 times their width | 41 | 28 |
 
+Corners and straits, measured on the same world (a corner is a junction of three cells, or of two
+cells and land, within three pixels): the median cell has five corners, 90 per cent have four to
+six and 6 per cent more than six (the coastal band 86 and 10, the open sea 95 and 3 per cent); the
+game's own sea zones measured the same way give a median of five, 75 per cent with four to six and
+22 per cent with more than six. Of the four straits narrower than 0.6 of a cell no cell holds the
+water of both sides (at least 0.15 of a cell on each); up to a cell wide 2 of 26 do, each with 3
+thousand pixels beyond one mouth. A strait cell has a notched outline in steps of six pixels, the
+resolution of the coarse picture, where it meets its neighbours.
+
 The cells that are still large are mostly the disks of islets and island groups (up to about 34
 thousand pixels); on a coast with big land locations or with wastelands a few cells are still
 folded and stand at one and a half to two times the typical area. An elongated island above the
-radius limit gets ordinary rings. The epoch before 64 divides the sea as before (the reference
-world of epoch 63 is made byte for byte, ADR 0013). [V-EXEC, EU5 1.4.9 / build 26655995; claim C558]
+radius limit gets ordinary bands. Where two small-island disks overlap, the straight boundary is
+given by squared distance to each island's centre minus its squared land radius. Both the coarse
+layout and full raster use this rule to keep an earlier disk from wrapping around its neighbour.
+The close-islands regression follows the full sea cut through port assignment and checks that
+each island's shore touches one compact cell with a port.
+In the Islands preset, seed 7, a read-back of the exported locations and ports found 342 compact
+land components with a passable shore, a radius of at most 81 pixels, and only generated sea
+around them. Of those, 300 touch one sea cell (282 before the overlap fix). The largest adjoining
+cell fell from about 46 to 38 thousand pixels, and every navigable cell touching their passable
+shores has a port. At `rnw_loc_05204`, the two old cells held 68 and 36 pixels of shore border.
+The new cell holds all 104 pixels. [V-EXEC, EU5 1.4.9 / build 26655995; C558]
+
+The composed world of America, Africa and Oceania (continents, seed 101, Iberian link required)
+joins its regional grids and keeps retained Old World shores. A generated sea cell beside a
+retained location whose port already serves a retained sea can reach a suitable port only over
+adjoining water. This can fold chains of cells (1,925 navigable cells besides the polar contact,
+p99 of 22 thousand pixels, 7 cells above 1.8 times the median, the three largest 117, 63 and 47 thousand
+pixels; those chains are the same as before the change, whose largest were 117, 63 and 43
+thousand). The pieces below the smallest cell are folded first there, then `dissolve` divides
+eligible cells. [V-EXEC, EU5 1.4.9 / build 26655995; claim C558]
 
 **Sea-cell slivers, 1.1.0 / epoch 60 (same report):** some generated sea locations are long
 and narrow, like a needle or a crescent round a retained island's footprint. A coast, a crossing band

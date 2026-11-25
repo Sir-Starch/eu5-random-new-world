@@ -214,15 +214,30 @@ def settle_seas(
     folding along adjoining water. An unserved zone with no such route raises ``PortError``.
     When joining regional grids, small pieces at their common edges are first folded
     over their broadest marine contact, so each starts with a full-size sea neighbour.
-    With ``dissolve`` (and no ``minimum_sea``), an unserved cell that no foreign land touches and
-    that two or more served cells border is divided among them first (``_absorb``).
+    With ``dissolve``, an unserved cell that no foreign land touches and that two or more served
+    cells border is divided among them first (``_absorb``); where ``minimum_sea`` is set the small
+    pieces are folded before that, as the cells they leave behind are what is served.
     """
     foreign = foreign or ForeignCoast()
     lengths = pair_lengths(world)
     links, needed = coast_links(world, foreign, lengths)
     sea_links = _sea_links(world, lengths)
     merged: dict[int, int] = {}
-    if dissolve and not minimum_sea:
+    if dissolve and minimum_sea:
+        _fold_small(world, minimum_sea, sea_links, links, needed, merged)
+        folded, cell_of = (
+            relabel(world, merged) if merged else (world, tuple(range(len(world.classes))))
+        )
+        later = settle_seas(
+            folded, foreign.renumbered(cell_of), shared_coast=shared_coast, dissolve=True
+        )
+        return Settled(
+            later.world,
+            later.foreign,
+            tuple(later.cell_of[cell] for cell in cell_of),
+            len(merged) + later.merged,
+        )
+    if dissolve:
         labels, divided = _dissolve(world, foreign, lengths)
         if divided:
             world = replace(world, labels=labels)
@@ -230,18 +245,7 @@ def settle_seas(
             links, needed = coast_links(world, foreign, lengths)
             sea_links = _sea_links(world, lengths)
     if minimum_sea:
-        sizes = world.pixels.tolist()
-        small = sorted(
-            (sea for sea in sea_links if sizes[sea] < minimum_sea), key=sizes.__getitem__
-        )
-        for sea in small:
-            neighbours = sea_links[sea]
-            if sizes[sea] >= minimum_sea or not neighbours:
-                continue
-            target = min(neighbours, key=lambda other: (-neighbours[other], -sizes[other], other))
-            _merge(sea, target, sea_links, links, needed)
-            merged[sea] = target
-            sizes[target] += sizes[sea]
+        _fold_small(world, minimum_sea, sea_links, links, needed, merged)
     while True:
         checkpoint()
         unserved = plan_ports(links, needed).unserved
@@ -257,6 +261,28 @@ def settle_seas(
         return Settled(world, foreign, tuple(range(len(world.classes))), 0)
     settled, cell_of = relabel(world, merged)
     return Settled(settled, foreign.renumbered(cell_of), cell_of, len(merged))
+
+
+def _fold_small(  # noqa: PLR0913, PLR0917 - the sizes, the coast graph and what was folded.
+    world: NewWorld,
+    minimum_sea: int,
+    sea_links: dict[int, dict[int, int]],
+    links: dict[int, dict[int, int]],
+    needed: set[int],
+    merged: dict[int, int],
+) -> None:
+    """Fold each sea cell smaller than ``minimum_sea``, the smallest first, into the sea
+    neighbour it shares most with (the larger, then the lower, on a tie)."""
+    sizes = world.pixels.tolist()
+    small = sorted((sea for sea in sea_links if sizes[sea] < minimum_sea), key=sizes.__getitem__)
+    for sea in small:
+        neighbours = sea_links[sea]
+        if sizes[sea] >= minimum_sea or not neighbours:
+            continue
+        target = min(neighbours, key=lambda other: (-neighbours[other], -sizes[other], other))
+        _merge(sea, target, sea_links, links, needed)
+        merged[sea] = target
+        sizes[target] += sizes[sea]
 
 
 def _sea_links(
