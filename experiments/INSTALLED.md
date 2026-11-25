@@ -2250,10 +2250,28 @@ The updated `rnw_exp_hub` passed both offscreen Wine self-tests and installed-fi
 
 The record is in both libraries, native and Proton, and loads and recovers there. The locked checks passed with 3,869 Python tests (22 skipped) and the installed-game reference check of the epoch-64 America-only world. The updated local `rnw_exp_hub` passed both offscreen Wine self-tests and installed-file verification; its previous copy is in `.rnw-hub-backups/1.3.0-1795473790062876646`. The Windows wheel SHA-256 is `6c84fe16108429eca46408af9711fd955908f1636e8d4726f06ec8eaf0c565f6`. The source-run window binary was rebuilt with `npx tauri build --no-bundle --ci`. No existing world folder, save, playset or setting changed. This did not publish or update the Workshop item.
 
-2026-11-24, **Even sea cells** (source `05a823c`, pending epoch 64 of 1.3.0; C558; the owner's request for sea cells that are cells, of one size, with straight borders and none that reaches across a strait). [V-EXEC] One world installed as a new folder by the install step, from the code of the continents preset on seed 7 (EU5 1.4.9 / build 26655995, EU5 not running): `rnw_exp_world_jannkgkv7k`, 911 files in the mod folder, manifest of 908 entries. Against the same code made with the commit before (compared as cells a ship can use): largest cell 62.5 to 34 thousand pixels, cells above 1.8 times the median 36 to 11, most neighbours of a cell 12 to 8, cells with nine or more neighbours 8 to 0, folds for the port rule 32 to 10. The same change also exported on the archipelago, islands and wall presets and on one world of America, Africa and Oceania together, each passing the export's own checks.
+2026-11-24, **Even sea cells** (source `05a823c`, pending epoch 64 of 1.3.0; C558; the owner's request for sea cells that are cells, of one size, with straight borders and none that reaches across a strait). [V-EXEC] One world installed as a new folder by the install step, from the code of the continents preset on seed 7 (EU5 1.4.9 / build 26655995, EU5 not running): `rnw_exp_world_jannkgkv7k`, 911 files in the mod folder: 884 of the manifest's 908 entries by SHA-256 (the other 24 are library-only), and 27 files of the library's metadata. Against the same code made with the commit before (compared as cells a ship can use): largest cell 62.5 to 34 thousand pixels, cells above 1.8 times the median 36 to 11, most neighbours of a cell 12 to 8, cells with nine or more neighbours 8 to 0, folds for the port rule 32 to 10. The same change also exported on the archipelago, islands and wall presets and on one world of America, Africa and Oceania together, each passing the export's own checks. No cell of that world holds the water of both sides of a strait narrower than 0.6 of a cell (0 of 4 straits in the continents world; 2 of 26 up to a cell wide, each holding 3 thousand pixels beyond one mouth).
 
 | World | Folder | Manifest SHA-256 |
 |---|---|---|
 | Continents, seed 7, even sea cells | `rnw_exp_world_jannkgkv7k` | `37ab16abbb6ca4752e05438da09d34251656e8f16c4d562f3571df55ff7fa3d0` |
 
-The record is in both libraries, native and Proton, and loads and recovers there. The pending reference digest is `662acae0caada4bf8935fe1cc79c59693822e0169c5bfb5945790c206215e292` (884 files; it was `693076f3…4264a`), reproduced by the installed-game check in 216 s against 201 s with a peak of 9.8 against 10.4 GiB; epoch 63, made with the code before and with the new code on EU5 1.4.9, gives one digest (`b7d4cfa6…8918`). The locked checks passed with 3,895 Python tests (22 skipped) and 49 Rust tests. The updated local `rnw_exp_hub` passed both offscreen Wine self-tests and installed-file verification; its previous copy is in `.rnw-hub-backups/1.3.0-1795524637863203693`. The Windows wheel SHA-256 is `8a38b8053eeb1eb976bc3a538b9df55138edc01051d9aa67336275ccc067a7aa`. No existing world folder, save, playset or setting changed. This did not publish or update the Workshop item.
+The record is in both libraries, native and Proton, and loads and recovers there. The pending reference digest is `662acae0caada4bf8935fe1cc79c59693822e0169c5bfb5945790c206215e292` (884 files; it was `693076f3…4264a`), reproduced by the installed-game check in 216 s against 201 s with a peak of 9.8 against 10.4 GiB; epoch 63, made with the code before and with the new code on EU5 1.4.9, gives one digest (`b7d4cfa6…8918`). The locked checks passed with 3,895 Python tests (22 skipped) and 49 Rust tests. The updated local `rnw_exp_hub` passed both offscreen Wine self-tests and installed-file verification; its previous copy is in `.rnw-hub-backups/1.3.0-1795524637863203693`. The Windows wheel SHA-256 is `8a38b8053eeb1eb976bc3a538b9df55138edc01051d9aa67336275ccc067a7aa`. The install step added the one world folder and replaced only `rnw_exp_hub`. This did not publish or update the Workshop item.
+
+2026-11-25, **Small-island sea cells** (`de968fe`, pending epoch 64 of 1.3.0, C558).
+[V-EXEC] Exported Islands seed 7 on EU5 1.4.9 / build 26655995. The port and navigation checks
+passed. The new folder's 913 files match the prepared mod, all 884 gameplay files match the
+export manifest by SHA-256, and recovery from the installed receipt succeeds.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| Islands, seed 7, small-island sea cells | `rnw_exp_world_wawecpqd2e` | `c2c7d931b21fd1a52229003608b79fdc640dc45201225922e9dabb045f4b0b9e` |
+
+`make check` passed with 3,899 Python tests (22 skipped) and 49 Rust tests. The pending epoch 64
+reference reproduced as `c9fe0929f131c5dbb66c5a79de14be93dfc6a36df6e5aab4021896afe61d72bf`
+(884 files) in 245 seconds. The epoch 63 comparison on this installation still yields
+`b7d4cfa6…8918` (884 files). Both Linux window self-tests passed. The updated local
+`rnw_exp_hub` passed both offscreen Wine self-tests, the weighted overlap check with its
+Windows native module, and installed-file verification. The Windows wheel SHA-256 is
+`28a4c5d04ebc76f1e3001d10b07a343ab6ccff0d0d8e8e9fcc030cbec14b108b`. The previous hub is in
+`.rnw-hub-backups/1.3.0-1795567667405389118`.
