@@ -2361,3 +2361,22 @@ self-tests and both offscreen Wine self-tests passed. The updated hub passed fil
 Its Windows wheel SHA-256 is `758130af33f5a29b3ab1ceb63aa8643ec74b5bb756147af8ee614cb6e5b15ef8`.
 The native program files match the previous hub, which is in
 `.rnw-hub-backups/1.3.0-1795623900966497564`.
+
+2026-11-25, **The reported Terra Incognita preview** (`b431e27`, C561).
+[V-LOCAL] The five blue dots in the owner's screenshot match the covered preview of
+`rnw_exp_world_3hbqopu6s4` (3HBQ), including Ascension's displaced position. The native
+generator process had started at 16:55 local time, before the island fix. Its later
+18:08 export still contained the original island identities.
+
+[V-EXEC] An export from a fresh process with the same seed, resolved settings and reroll
+counts took 213.4 seconds. The code's naming origin gives this candidate its own folder.
+In the written and installed covered previews, all 725 pixels of the five reported
+patches are terra incognita. The six retired locations are absent from the map tables
+and their old raster positions are underwater. The export checked 4,726 ports and found
+zero unreachable generated sea zones, split generated cells or lost retained contacts.
+All 1,492 installed files match the prepared copy, including the 1,463 recorded gameplay
+files. The recovery receipt passed, and the native library adopted the corrected preview.
+
+| World | Folder | Manifest SHA-256 |
+|---|---|---|
+| RNW: Combined world 3QLA | `rnw_exp_world_3qlajcechi` | `a3cb7bcb2470d14ed245432dd35be48982d857699c0b67dd84ef22f0884ab673` |
