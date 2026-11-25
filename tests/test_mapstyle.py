@@ -18,7 +18,7 @@ from rnw.atlas import Country
 from rnw.eu5_history_plan import project_start
 from rnw.gui import mapstyle
 from rnw.opinions import TREATIES
-from rnw.wording import Name, english, render
+from rnw.wording import Name, english, reference, render
 from tests.fakes import synthetic_atlas
 from tests.history_fixtures import divided_valley
 from tests.test_history_archive import history_atlas
@@ -147,6 +147,22 @@ def test_game_identifiers_are_named_by_the_game() -> None:
     assert "chukchi_sea" in mapstyle.identifiers(
         replace(found, names=(*found.names[:-1], "$chukchi_sea$"))
     )
+
+
+def test_an_atlas_uses_the_games_localized_sea_name() -> None:
+    key = "mediterranean_sea_geography"
+    basin = reference(key)
+    atlas = synthetic_atlas()
+    atlas = replace(atlas, names=(*atlas.names[:-1], basin))
+    atlas = atlas_module.from_files(*atlas_module.to_files(atlas))
+    assert key in mapstyle.identifiers(atlas)
+
+    def localized(key: str) -> str:
+        return {"mediterranean_sea_geography": "Средиземное море"}[key]
+
+    words = replace(atlas_module.ENGLISH, key=localized)
+    assert mapstyle.written(atlas.names[-1], words) == "Средиземное море"
+    assert mapstyle.written(atlas.names[-1], atlas_module.ENGLISH) == "Mediterranean Sea"
 
 
 def test_a_world_with_history_asks_the_game_for_its_treaty_opinions() -> None:

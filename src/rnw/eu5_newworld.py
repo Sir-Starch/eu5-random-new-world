@@ -39,6 +39,7 @@ from rnw.eu5_regionkeys import (
     standard,
     unstandard,
 )
+from rnw.eu5_sea_basins import MEDITERRANEAN, mediterranean_cells
 from rnw.hierarchy import (
     absorb_small_pieces,
     balanced_parts,
@@ -116,6 +117,7 @@ LAND_FAMILY: Final[frozenset[CellClass]] = frozenset(
 )
 LEVELS: Final[tuple[str, ...]] = ("province", "area", "region", "subcontinent")
 NO_CELLS: Final[frozenset[int]] = frozenset()
+NO_AREAS: Final[frozenset[str]] = frozenset()
 
 
 class IdentityError(ValueError):
@@ -293,6 +295,7 @@ class _Area:
     parents: tuple[str, str, str]
     provinces: list[list[int]]
     new: bool
+    basin: str = ""
 
 
 def _rounded(value: int, size: int) -> int:
@@ -1009,6 +1012,28 @@ def _retained_pockets(  # noqa: PLR0913 - physical sea pieces and the retained a
     )
 
 
+def _mediterranean_water(
+    sea: ContactGraph, members: Mapping[int, str], parents: Mapping[str, tuple[str, str, str]]
+) -> list[_Area]:
+    by_area: dict[str, list[int]] = {}
+    for cell, area in sorted(members.items()):
+        by_area.setdefault(area, []).append(cell)
+    return [
+        _Area(
+            area,
+            parents[area],
+            [
+                province
+                for piece in pieces(sea, cells)
+                for province in split(sea, piece, max(1, _rounded(len(piece), SEA_PROVINCE_ZONES)))
+            ],
+            new=False,
+            basin=MEDITERRANEAN,
+        )
+        for area, cells in sorted(by_area.items())
+    ]
+
+
 def _land_partition(  # noqa: PLR0913 - cell graph, regional hierarchy and portable keys.
     is_land: list[bool],
     tally: _Tally,
@@ -1158,14 +1183,32 @@ def _water_areas(  # noqa: PLR0913 - shared waters read the final coast and its 
     selected: Collection[str] = (NEW_WORLD,),
     oceans_continents: frozenset[str] = OCEANS,
     intercontinental: frozenset[int] = NO_CELLS,
+    mediterranean_areas: frozenset[str] = NO_AREAS,
 ) -> tuple[list[_Area], set[str]]:
     count = len(game_map.keys)
     is_sea = [kind is CellClass.SEA for kind in world.classes]
-    sea = contact_graph(world.centroids, world.edges, is_sea)
     region_of = {
         cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
     }
     contacts = outside_contacts(game_map, canvas, world, count)
+    parents = _area_parents(hierarchy)
+    parents.update({area.parents[0]: area.parents for area in areas})
+    sea = contact_graph(world.centroids, world.edges, is_sea)
+    mediterranean = mediterranean_cells(
+        game_map,
+        canvas,
+        world,
+        sea,
+        contacts=contacts,
+        original_areas=geometry.areas,
+        basin_areas=mediterranean_areas,
+    )
+    inherited = _mediterranean_water(sea, mediterranean, parents)
+    if inherited:
+        _check_pieces(sea, inherited, depth=1, exempt=set())
+        for cell in mediterranean:
+            is_sea[cell] = False
+        sea = contact_graph(world.centroids, world.edges, is_sea)
     boundary = {
         cell
         for label, cell in contacts
@@ -1195,11 +1238,10 @@ def _water_areas(  # noqa: PLR0913 - shared waters read the final coast and its 
         },
         boundary | intercontinental,
     )
-    parents = _area_parents(hierarchy)
-    parents.update({area.parents[0]: area.parents for area in areas})
     seas = _vanilla_seas(
         game_map, canvas, hierarchy, geometry, selected=selected, adjacent=adjacent
     )
+    seas = [place for place in seas if place.name not in mediterranean_areas]
     open_cells = [cell for cell, flag in enumerate(is_sea) if flag and cell not in inland]
     pockets, assigned, roots = (
         _retained_pockets(
@@ -1233,7 +1275,7 @@ def _water_areas(  # noqa: PLR0913 - shared waters read the final coast and its 
     sea_areas.extend(_inland_areas(sea, basins, all_coasts, parents, keys))
     _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
     _check_shores(sea, sea_areas, all_coasts, roots)
-    return sea_areas, anchored
+    return sea_areas + inherited, anchored | {area.name for area in inherited}
 
 
 def _units(world: NewWorld, biomes: CellBiomes) -> LocationUnits:
@@ -1273,6 +1315,7 @@ def plan_composed_identities(  # noqa: PLR0913 - regional assignments and the co
     seed: int,
     keys: KeySpace,
     waters: Waters,
+    mediterranean_areas: frozenset[str] = NO_AREAS,
     algorithm: int = CURRENT,
 ) -> Plan:
     """Assign one key and colour space after combining land and settling the shared seas."""
@@ -1315,6 +1358,7 @@ def plan_composed_identities(  # noqa: PLR0913 - regional assignments and the co
         selected=regions.keys(),
         oceans_continents=oceans,
         intercontinental=intercontinental,
+        mediterranean_areas=mediterranean_areas,
     )
     return _name_areas(
         game_map,
@@ -1408,7 +1452,9 @@ def _name_areas(  # noqa: PLR0913 - geography, seeds and water conventions for o
     placed: list[Placement | None] = [
         None
         if (area := area_of[cell]) is None or kind is not CellClass.SEA
-        else Placement(province_of[cell], area.name, area.parents[2] in named.oceans_continents)
+        else Placement(
+            province_of[cell], area.name, area.parents[2] in named.oceans_continents, area.basin
+        )
         for cell, kind in enumerate(world.classes)
     ]
     sea = name_waters(world, waters, placed, seed=seed)
@@ -1440,8 +1486,9 @@ def _name_areas(  # noqa: PLR0913 - geography, seeds and water conventions for o
         )
     plan.cells = [plan.cells[unit] for unit in named.owner]
     reused = {cell.area for cell in plan.cells} | {cell.region for cell in plan.cells}
+    preserved = {area.name for area in named.areas if area.basin}
     override_names = NameGenerator(seed, "overrides")
-    for name in sorted(reused):
+    for name in sorted(reused - preserved):
         if name not in plan.display_overrides and _in_continents(hierarchy, name, named.continents):
             plan.display_overrides[name] = override_names.next()
     vanilla_new_world_areas = {

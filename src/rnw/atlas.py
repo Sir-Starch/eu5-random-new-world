@@ -257,7 +257,12 @@ def development_text(milli: int) -> str:
 def pretty(key: str) -> str:
     """A readable name for an identifier: underscores to spaces, capitals to words; a region or
     an area without the word that says so."""
-    plain = key.removeprefix("goods_").removesuffix("_region").removesuffix("_area")
+    plain = (
+        key.removeprefix("goods_")
+        .removesuffix("_region")
+        .removesuffix("_area")
+        .removesuffix("_geography")
+    )
     return plain.replace("_", " ").strip().title()
 
 

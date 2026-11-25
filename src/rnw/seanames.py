@@ -99,11 +99,12 @@ FEATURES: Final[dict[int, Kind]] = {
 @dataclass(frozen=True, slots=True)
 class Placement:
     """Where a sea cell stands in the hierarchy: its province and area, and whether the area is
-    one of the game's own ocean areas (named by the game, in every language)."""
+    one of the game's own ocean areas. A retained basin supplies the name of its new cells."""
 
     province: str
     area: str
     ocean: bool
+    basin: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,7 +211,10 @@ def name_waters(
         if placement is None:  # pragma: no cover - every sea cell is placed
             message = f"Sea cell {cell} has no province or area"
             raise ValueError(message)
-        _ = names.setdefault(cell, area_text[placement.area])
+        if placement.basin:
+            names[cell] = reference(placement.basin)
+        else:
+            _ = names.setdefault(cell, area_text[placement.area])
     provinces = _name_provinces(sea, placed, names, area_text)
     return SeaNames(names, provinces, _own_areas(area_text, placed))
 
@@ -270,7 +274,7 @@ def _name_areas(
         placement = placed[cell]
         assert placement is not None  # noqa: S101 - a sea cell is placed
         cells_of.setdefault(placement.area, []).append(cell)
-        ocean[placement.area] = placement.ocean
+        ocean[placement.area] = placement.ocean or bool(placement.basin)
     text: dict[str, Name] = {}
     dominated: dict[int, list[str]] = {}
     for area in sorted(cells_of):
@@ -334,7 +338,11 @@ def _own_areas(
     area_text: Mapping[str, Name], placed: Sequence[Placement | None]
 ) -> dict[str, Name]:
     """The names of the areas that are not the game's ocean areas."""
-    own = {placement.area for placement in placed if placement is not None and not placement.ocean}
+    own = {
+        placement.area
+        for placement in placed
+        if placement is not None and not (placement.ocean or placement.basin)
+    }
     return {area: text for area, text in area_text.items() if area in own}
 
 
@@ -358,7 +366,10 @@ def _name_provinces(
         ]
         area = placed[cells[0]]
         assert area is not None  # noqa: S101 - a sea cell is placed
-        provinces[province] = (
-            max(shared, key=lambda text: counts[text]) if shared else area_text[area.area]
-        )
+        if area.basin:
+            provinces[province] = reference(area.basin)
+        else:
+            provinces[province] = (
+                max(shared, key=lambda text: counts[text]) if shared else area_text[area.area]
+            )
     return provinces

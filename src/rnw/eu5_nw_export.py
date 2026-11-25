@@ -298,6 +298,7 @@ from rnw.eu5_rewrite import (
     sound_toll_locations,
 )
 from rnw.eu5_rivers import RiverRasterError, encode_rivers, sourceless_rivers, watershed_spans
+from rnw.eu5_sea_basins import mediterranean_areas
 from rnw.eu5_seas import (
     NO_UNITS,
     VFX_LOCATORS,
@@ -4491,6 +4492,7 @@ def _composed_identities(  # noqa: PLR0913 - country-independent location geogra
     geography: Mapping[str, NewWorldSettings],
     keys: KeySpace,
     seed: int,
+    mediterranean: frozenset[str],
 ) -> Plan:
     pairs = unpack_pairs(training.pairs)
     source_cells = water.coast.source_cells
@@ -4536,6 +4538,7 @@ def _composed_identities(  # noqa: PLR0913 - country-independent location geogra
         seed=seed,
         keys=keys,
         waters=water.waters,
+        mediterranean_areas=mediterranean,
     )
     plan.oceans = plan_oceans(game_map, canvas, world, plan, hierarchy, water.zones, keys)
     plan.oceans.patches.extend(canvas.enclosed_ocean)
@@ -5070,6 +5073,7 @@ def _prepare_composed_geography(  # noqa: PLR0913, PLR0915 - stages share geogra
             geography=geography,
             keys=keys,
             seed=seed,
+            mediterranean=mediterranean_areas(game_dir) if "africa" in geography else frozenset(),
         ),
     )
     for region in regions:

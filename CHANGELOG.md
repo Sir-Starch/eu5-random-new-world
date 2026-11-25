@@ -5,6 +5,10 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Keep the Mediterranean together when generating Africa. Its new sea cells join the retained
+  Mediterranean areas along the new coast and share the game's name for the sea. The existing
+  names of its bays and sub-seas stay with the waters they describe.
+
 - Align retained land in the map viewer to the full width of the world, including across the
   Pacific wrap. The viewer also reads existing worlds whose atlases recorded the crop width.
 

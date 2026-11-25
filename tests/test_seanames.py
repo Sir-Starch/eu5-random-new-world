@@ -131,6 +131,26 @@ def test_open_water_takes_the_name_of_its_area_and_an_ocean_area_keeps_the_games
     assert "pacific_area" not in ocean.areas
 
 
+def test_named_basin_unifies_new_cells_and_keeps_its_vanilla_area_names() -> None:
+    world = block_world(WALL_WITH_A_GAP)
+    waters = analyse(world)
+    basin = "mediterranean_sea_geography"
+    gap = waters.passages[0].cells
+    placed = [
+        Placement(f"single_{number}", f"vanilla_{number}", ocean=False, basin=basin)
+        if number in gap
+        else Placement("outside_province", "outside_area", ocean=True)
+        if kind is CellClass.SEA
+        else None
+        for number, kind in enumerate(world.classes)
+    ]
+    named = name_waters(world, waters, placed, seed=1)
+    assert {named.cells[number] for number in gap} == {reference(basin)}
+    assert {named.provinces[f"single_{number}"] for number in gap} == {reference(basin)}
+    assert all(named.cells[number] != reference(basin) for number in set(waters.sea()) - set(gap))
+    assert not named.areas
+
+
 def test_an_area_that_is_mostly_a_sea_is_named_for_it_and_for_its_side_of_it() -> None:
     def halves(row: int, column: int) -> str:
         if not (2 <= row <= 7 and 2 <= column <= 13):

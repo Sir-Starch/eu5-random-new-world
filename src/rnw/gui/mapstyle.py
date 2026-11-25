@@ -35,6 +35,7 @@ from rnw.history_values import SHOWN as SHOWN_VALUES
 from rnw.history_values import poles as value_poles
 from rnw.opinions import TREATIES
 from rnw.topology import euclidean_distance
+from rnw.wording import REFERENCE, Phrase
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -1053,15 +1054,22 @@ def names(atlas: Atlas, lens: StyledLens, words: Words, *, tribes: bool) -> list
     return found
 
 
+def _game_name_key(value: object) -> str:
+    if isinstance(value, Phrase) and value.term == REFERENCE:
+        return value.word
+    if isinstance(value, str):
+        key = value.strip("$")
+        if key != value or ("_" in key and " " not in key):
+            return key
+    return ""
+
+
 def written(value: object, words: Words) -> str:
     """A name of the atlas as the window writes it: a generated name in its language, as the
     world's localization writes it (a plain name too is transliterated, ``wording.render``), an
     identifier of the game (a region, an area, a ``$key$`` sea) by the game's name for it."""
-    if isinstance(value, str):
-        key = value.strip("$")
-        if key != value or ("_" in key and " " not in key):
-            return words.key(key)
-        return words.name(value) if value else ""
+    if key := _game_name_key(value):
+        return words.key(key)
     return words.name(value) if value else ""  # pyright: ignore[reportArgumentType]
 
 
@@ -1080,10 +1088,8 @@ def identifiers(atlas: Atlas) -> frozenset[str]:
             found.update(pole for axis in axes for pole in value_poles(axis))
             found.add("game_concept_societal_values")
     for value in (*atlas.regions, *atlas.areas, *atlas.names):
-        if isinstance(value, str) and value:
-            key = value.strip("$")
-            if key != value or ("_" in key and " " not in key):
-                found.add(key)
+        if key := _game_name_key(value):
+            found.add(key)
     found.update(atlas.region_keys or ())
     return frozenset(found)
 

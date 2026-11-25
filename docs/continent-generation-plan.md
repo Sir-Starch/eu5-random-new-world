@@ -158,6 +158,14 @@ checks the full group and its margins. When only America and Oceania are
 generated, new outlying groups use unoccupied water within Oceania's own claim
 and must still be attached to its shelf after protection of retained waters.
 
+**The Mediterranean.** With a generated Africa, the sea hierarchy first extends the
+Mediterranean areas listed in the installed game's scripted geography. Overlap with
+the original waters distinguishes the Mediterranean from its neighbours at their
+mouths. Where former land is underwater, the shortest path through the finished sea
+decides which shore's water reaches it. Each extension connects to retained water
+of its own area. Its new cells and provinces use the game's localized name for the
+Mediterranean, and the existing areas and locations keep their local names.
+
 **Coasts the game files under another continent (2026-11-22, owner's report on `qpktias5fw`, 1.3.0 /
 epoch 64).** The game files the Red Sea, the Gulf of Aden, the delta mouths and Morocco's Atlantic coast
 under `asia` or `europe`, and the Mediterranean bays of the African shore under `africa` although
