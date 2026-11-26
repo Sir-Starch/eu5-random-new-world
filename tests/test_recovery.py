@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from rnw import __version__, atlas
+from rnw import __version__, atlas, epoch
 from rnw.app import library, recovery, service
 from rnw.app.discovery import GameInstall, Profile
 from rnw.app.worldcode import encode, new_code
@@ -73,15 +73,20 @@ def test_a_mod_without_a_valid_code_stays_visible_as_unregistered(
     assert library.strays(profile, []) == [mod]
 
 
+@pytest.mark.parametrize("defaults", ["current", "older_code", "previous_calibration"])
 def test_a_generated_mod_restores_atlas_record_and_previews_after_library_loss(
     tmp_path: Path,
+    defaults: str,
 ) -> None:
     profile = tmp_path / "profile"
     profile.mkdir()
     data = tmp_path / "data"
+    code = new_code("continents", 42)
+    if defaults == "older_code":
+        code = replace(code, generator=epoch.stamp_of(epoch.REGIONAL_LOCATION_DEFAULTS - 1))
     request = service.Request(
         game=GameInstall(tmp_path / "game", None, "26043558"),
-        code=new_code("continents", 42),
+        code=code,
         data=data,
         profile=Profile(profile, "chosen", has_mods=False),
         install=True,
@@ -90,12 +95,16 @@ def test_a_generated_mod_restores_atlas_record_and_previews_after_library_loss(
     made = service.generate(request, exporter=FakeExport())
     assert made.installed is not None
     assert made.world.record is not None
+    record = replace(made.world.record, release=made.world.generator)
+    if defaults == "previous_calibration":
+        previous = code.settings(algorithm=epoch.REGIONAL_LOCATION_DEFAULTS - 1)
+        record = replace(record, settings=previous.to_json_data())
     world = replace(
         made.world,
         notes="PRIVATE NOTE",
         user_tag="PRIVATE TAG",
         starred=True,
-        record=replace(made.world.record, release=made.world.generator),
+        record=record,
     )
     bundle = library.folder(data, world)
     document, labels = atlas.to_files(synthetic_atlas())

@@ -21,7 +21,7 @@ from rnw.app import install, library, logs
 from rnw.app.exchange import checked_world
 from rnw.app.worldcode import IN_TEXT, decode
 from rnw.bundle import COVER_COPY
-from rnw.epoch import parse
+from rnw.epoch import REGIONAL_LOCATION_DEFAULTS, parse
 from rnw.landmask import DRAWN_FILES
 from rnw.pngread import read_rgb
 from rnw.record import manifest_digest
@@ -29,6 +29,9 @@ from rnw.settings import drawn_ids
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from rnw.app.worldcode import WorldCode
+    from rnw.record import Record
 
 RECEIPT: Final[str] = ".metadata/rnw-library"
 ASSETS: Final[tuple[str, ...]] = (
@@ -113,6 +116,17 @@ def _legacy(mod: Path, metadata: dict[str, object]) -> library.World:
     )
 
 
+def _matches_settings(code: WorldCode, record: Record) -> bool:
+    settings = record.resolved_settings()
+    if settings == code.settings(algorithm=record.algorithm):
+        return True
+    # The pending epoch had playable builds using the previous location defaults.
+    # Their receipts already contain the settings that produced the installed map.
+    return record.algorithm == REGIONAL_LOCATION_DEFAULTS and settings == replace(
+        code.settings(algorithm=REGIONAL_LOCATION_DEFAULTS - 1), algorithm=record.algorithm
+    )
+
+
 def _read(mod: Path, metadata: dict[str, object]) -> library.World:
     path = mod / RECEIPT / library.RECORD
     if not path.is_file():
@@ -133,7 +147,7 @@ def _read(mod: Path, metadata: dict[str, object]) -> library.World:
     record = world.record
     if record is not None and (
         (record.seed, record.preset, record.release) != (world.seed, world.preset, world.generator)
-        or record.resolved_settings() != code.settings()
+        or not _matches_settings(code, record)
         or (record.code is not None and record.code != world.code)
     ):
         message = "World receipt and reproducibility record disagree"
