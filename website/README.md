@@ -27,9 +27,11 @@ footer links.
 Terra Incognita fog (`#4d443d`), caption parchment and rhumb lines from compass nodes, as on the
 Workshop banners (`docs/images/workshop/make_banners.py`). Titles are set in Cinzel; Russian uses
 Noto Serif in capitals and Japanese, Korean and Chinese use Noto Serif CJK, as the banners do.
-The text is Noto Sans, the generator's own face. The world-type vignettes, the fog over the hero
-map and the rhumb backgrounds are drawn by `sitegen.py`. The pictures are crops of the
-owner-approved screenshots in `docs/images/showcase`.
+The text is Noto Sans, the generator's own face. The fog over the hero map and the rhumb
+backgrounds are drawn by `sitegen.py`. The pictures are crops of the owner-approved screenshots in
+`docs/images/showcase`; each world type shows a real world of that type
+(`docs/images/showcase/world-types/<type>.jpg`, the frame that shows the type's name best), all cut
+to the same square of the New World's canvas.
 
 The four steps show the real screens with the controls marked. Steps 2 and 3 are the released
 generator window in the page's own language, captured by `capture_window.mjs`: for each language
@@ -53,7 +55,8 @@ uv run python website/sitegen.py
 ## Words on the page
 
 - **Controls of the generator** are written `{ui:KEY}` and resolved from the window's catalogues
-  **at the release tag** in `RELEASE` (`rnw/gui/text.py` and `rnw/locale/<language>/window.toml`).
+  **at the release tag** in `RELEASE` (`rnw/gui/text.py`, the society panel's `history_presenter.SOURCES`
+  that the window joins to it, and `rnw/locale/<language>/window.toml`).
   A missing or stale window translation stops the build, as it would stop the window.
 - **Parts of EU5's interface** are written `{game:KEY}` and come from `GAME_TERMS`, read from the
   installed game's `main_menu/localization` (single interface words only).

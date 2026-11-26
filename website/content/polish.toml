@@ -1,4 +1,4 @@
-source = "f462402450b2b2b9"
+source = "852be0f3a33f039d"
 
 [meta]
 title = "Random New World · Poradnik gracza"
@@ -21,7 +21,7 @@ workshop = "Warsztat"
 
 [hero]
 kicker = "Poradnik gracza"
-lead = "Zastąp obie Ameryki nowym światem w następnej kampanii EU5. Popłyń na zachód, na nieznane wody, albo poprowadź jeden z tubylczych krajów. Stary Świat pozostaje nietknięty."
+lead = "Zastąp obie Ameryki — a opcjonalnie także Afrykę lub Oceanię — nowym światem w następnej kampanii EU5 (Eurazja w przygotowaniu). Popłyń na nieznane wody albo poprowadź jeden z tubylczych krajów. Pozostałe kontynenty pozostają nietknięte."
 fact_generator = "Generator {v:version}"
 fact_game = "EU5 {v:game}"
 fact_languages = "11 języków"
@@ -43,7 +43,7 @@ lead = "Do pierwszej kampanii wystarczą ustawienia domyślne. Cała reszta tej 
 "4_text" = "W menu {game:mods_dlcs} zaznacz nowy świat, np. **RNW: Small continents 7K3Q**, kliknij {game:apply} i rozpocznij nową kampanię w 1337 roku."
 "4_note" = "Samego moda **Random New World (RNW)** nie zaznaczaj: zawiera tylko generator. Mod świata ma wszystko, czego potrzebuje kampania."
 ready_title = "Chcesz po prostu grać?"
-ready_text = "Zasubskrybuj gotowy świat [RNW: The Wall CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151). Generator nie jest potrzebny."
+ready_text = "Zasubskrybuj gotowy świat, generator nie jest potrzebny: [The Wall](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151), górską barierę do pokonania, albo [Seas & Islands](https://steamcommunity.com/sharedfiles/filedetails/?id=3836463904), morze wysp do przepłynięcia."
 
 [rules]
 title = "Przed grą"
@@ -61,6 +61,7 @@ lead = "Wygenerowana mapa to mod jak każdy inny, ale z kilkoma własnymi zasada
 title = "Rodzaje świata"
 lead = "Rodzaj świata to zestaw ustawień początkowych. Wybierz kształt, który ci odpowiada, a potem dopasuj go na karcie {ui:new_tab.world} lub {ui:new_tab.advanced}."
 wall_note = "Gdy odznaczysz opcję {ui:control.new_world.wall_allow_gaps}, Mur stanie się ciągłą barierą, której statki nie przepłyną ani nie opłyną."
+omerika_text = "Wartością {ui:control.new_world.template_permille} na karcie {ui:new_tab.advanced} ustawisz, jak wiernie ląd odtwarza Ameryki; wybrzeża, morza, góry i rzeki są zawsze nowe. Albo zaznacz {ui:control.new_world.keep_geography} na karcie {ui:new_tab.world}, aby zachować prawdziwe Ameryki dokładnie takie, jak rysuje je gra, i wygenerować tylko ich społeczności. Taki świat powstaje znacznie szybciej niż pełny."
 
 [settings]
 title = "Po swojemu"
@@ -75,6 +76,10 @@ ocean_title = "{ui:control.new_world.expand_oceans}"
 ocean_text = "Domyślnie włączone: kontynenty mają miejsce poza dawnym zarysem obu Ameryk. Zwiększ wartość {ui:control.new_world.centre_permille} na karcie {ui:new_tab.advanced}, by przesunąć ląd ku środkowi oceanu."
 peoples_title = "Społeczności tubylcze"
 peoples_text = "Szybki wybór to {ui:quick.states} na karcie {ui:new_tab.world}. Na karcie {ui:new_tab.advanced} suwak {ui:control.natives.state_share_permille} określa, ile zamieszkanej ziemi należy do państw (3–60%), a {ui:control.natives.peasant_peak_permille} ogranicza udział chłopów w osiadłej lokacji (30–80%). Na ubogiej ziemi życie pozostaje bardziej plemienne."
+history_title = "{ui:quick.turbulence}"
+history_text = "Trzy stulecia przed 1337 rokiem są symulowane: państwa powstają, rozpadają się i przesuwają ludność. Wybierz {ui:quick.turbulence.calm}, {ui:quick.turbulence.varied} (domyślnie) lub {ui:quick.turbulence.turbulent} na karcie {ui:new_tab.world} albo przesuń suwak o tej samej nazwie na karcie {ui:new_tab.advanced}. Spokojne światy zachowują starsze, większe państwa; burzliwe mają więcej mniejszych państw i świeższe zmiany granic."
+past_title = "Czytaj przeszłość"
+past_text = "Kliknij {ui:reveal_world}, otwórz mapę i kliknij miejsce. Jego karta ma zakładki {ui:history.tab_place}, {ui:history.tab_society}, {ui:history.chronicle} i {ui:history.tab_relations}: rząd i wartości społeczne kraju w 1337 roku, wydarzenia, które go ukształtowały, oraz jego opinię o innych krajach pierwszego dnia."
 resources_title = "Zasoby"
 resources_text = "Na karcie {ui:new_tab.advanced} każdy zasób ma własną częstość: 1× to gra podstawowa, 0 go usuwa. Więcej jednego zostawia mniej lokacji dla pozostałych. O tym, gdzie który może się pojawić, nadal decydują klimat i teren."
 
@@ -84,7 +89,8 @@ lead = "Nowe światy są na początku zakryte. Wybór kraju pokazuje Terra Incog
 covered = "Zakryty: Nowy Świat to Terra Incognita"
 shown = "Odkryty: tubylcze kraje roku 1337"
 reveal_text = "Odsłania mapy świata w generatorze. Gra zachowuje własne ustawienie."
-show_text = "Odsłania obraz moda i mapę wyboru kraju w EU5. Ustaw to na karcie {ui:new_tab.output} albo później na karcie {ui:tab.world} gotowego świata, bez ponownego generowania; potem zamknij i ponownie otwórz menu modów."
+show_text = "Pole jest domyślnie zaznaczone na karcie {ui:new_tab.world}: obraz moda i mapa wyboru kraju w EU5 ukrywają Nowy Świat. Odznacz je, aby go pokazać. Gotowy świat ma to samo pole na swojej karcie {ui:tab.world}; zmienisz je tam bez ponownego generowania. Potem zamknij i ponownie otwórz menu modów. Świat zachowujący prawdziwe Ameryki nigdy nie jest zasłonięty."
+start_text = "Dla multiplayera, na karcie {ui:new_tab.world}, domyślnie wyłączone. Kraj każdego gracza odkrywa cały Nowy Świat na początku kampanii, więc wszyscy widzą go od pierwszego dnia. Kraje sterowane przez komputer nadal odkrywają go, eksplorując."
 atlas = "Odkryty świat ma na karcie {ui:tab.maps} dziesięć map: ląd, kraje, kultury, religie, zasoby i inne. Przycisk {ui:compare} stawia dwa światy obok siebie."
 
 [library]
@@ -92,6 +98,8 @@ title = "Twoje światy"
 lead = "Wszystko, co wygenerujesz, zostaje w bibliotece generatora razem z kodem, mapami i notatkami."
 versions_title = "{ui:world_versions}"
 versions_text = "Wybierz gotowy świat. Przycisk {ui:part.peoples.button} tworzy nowe kraje, kultury i religie na tym samym lądzie; {ui:part.resources.button} losuje od nowa tylko zasoby. Poprzednia wersja zostaje w bibliotece."
+old_title = "Światy z wcześniejszej wersji"
+old_text = "Świat stworzony przez wcześniejszą wersję generatora zachowuje własne pliki. Generator nie tworzy dla niego nowych społeczności ani zasobów i nie zmienia jego ustawień na tym samym lądzie, a przyczynę podaje. {ui:like_this} zaczyna nowy świat z jego ustawieniami; nowsza wersja może z tego samego kodu zrobić inny ląd."
 queue_title = "Kilka światów po kolei"
 queue_text = "Przycisk {ui:enqueue} zapisuje bieżące ustawienia jako zadanie, a {ui:run_queue} tworzy światy jeden po drugim. Możesz dodawać kolejne, gdy jeden się generuje."
 share_title = "Podziel się światem"
@@ -116,7 +124,7 @@ multiplayer_text = "Obsługiwany i przetestowany przez społeczność. Każdy gr
 ironman = "Ironman i osiągnięcia"
 ironman_text = "Działają na zwykłych zasadach gry."
 maps = "Przeróbki mapy"
-maps_text = "Mody zastępujące obie Ameryki są niezgodne z RNW. Inne połączenia nie były testowane."
+maps_text = "Mody zastępujące te same kontynenty są niezgodne z RNW. Inne połączenia nie były testowane."
 system = "System"
 system_text = "Windows albo Linux i Steam Deck przez Proton. macOS nie jest obsługiwany."
 
@@ -136,6 +144,8 @@ blocked_q = "Windows lub antywirus blokuje generator"
 blocked_a = "Generator nie ma podpisu cyfrowego, więc Smart App Control lub antywirus mogą zgłaszać zastrzeżenia. Nie potrzebuje uprawnień administratora. W [informacjach o wydaniu](https://github.com/Sir-Starch/eu5-random-new-world/releases) są wyniki skanowania każdego pliku; blokadę zgłoś, proszę, na GitHubie."
 picture_q = "Menu modów wciąż pokazuje stary obraz mapy"
 picture_a = "Zamknij menu modów z poziomu menu głównego EU5 i otwórz je ponownie. Jeśli zmienił się sam świat, uruchom grę od nowa."
+playset_q = "Generator ostrzega o moich modach"
+playset_a = "Strona gotowego świata sprawdza aktywne mody. Ostrzega, gdy mod ładowany po świecie ma pliki w tych samych ścieżkach, bo EU5 czyta wtedy pliki tego moda i Nowy Świat może wyjść błędnie, albo gdy zaznaczono więcej niż jeden świat RNW. Przenieś ten mod przed świat w kolejności wczytywania albo go odznacz."
 library_q = "Gdzie są moje światy?"
 library_a = "W bibliotece poza folderami modów, dzięki czemu każda kopia generatora widzi te same światy. Windows: `%LOCALAPPDATA%\\RandomNewWorld`. Linux: `~/.local/share/random-new-world`. Proton: ścieżka Windows wewnątrz prefiksu Protona dla EU5."
 bug_q = "Trafił się błąd"

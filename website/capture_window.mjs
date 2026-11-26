@@ -1,6 +1,6 @@
 // Real frames of the generator's window for the guide's first steps, in every official language.
 //
-//   git worktree add --detach /tmp/rnw-release v1.1.0      # the release the guide describes
+//   git worktree add --detach /tmp/rnw-release v1.3.0      # the release the guide describes
 //   (cd /tmp/rnw-release && uv sync --locked) && ln -s "$PWD/desktop/node_modules" /tmp/rnw-release/desktop/
 //   node website/capture_window.mjs /tmp/rnw-release
 //

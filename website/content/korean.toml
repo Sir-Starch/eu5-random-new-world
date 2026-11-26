@@ -1,4 +1,4 @@
-source = "f462402450b2b2b9"
+source = "852be0f3a33f039d"
 
 [meta]
 title = "Random New World · 플레이어 가이드"
@@ -21,7 +21,7 @@ workshop = "창작마당"
 
 [hero]
 kicker = "플레이어 가이드"
-lead = "다음 EU5 캠페인에서 아메리카 대륙을 새로운 세계로 바꿔 보세요. 미지의 바다를 향해 서쪽으로 항해하거나, 그곳 원주민 국가를 이끌 수 있습니다. 구세계는 바닐라 그대로입니다."
+lead = "다음 EU5 캠페인에서 아메리카 대륙과 선택적으로 아프리카·오세아니아를 새로운 세계로 바꿔 보세요(유라시아는 개발 중). 미지의 바다로 항해하거나 원주민 국가를 이끌 수 있습니다. 선택하지 않은 대륙은 바닐라 그대로입니다."
 fact_generator = "생성기 {v:version}"
 fact_game = "EU5 {v:game}"
 fact_languages = "11개 언어"
@@ -43,7 +43,7 @@ lead = "첫 캠페인이라면 기본 설정으로 충분합니다. 이 페이�
 "4_text" = "{game:mods_dlcs}에서 새 월드(예: **RNW: Small continents 7K3Q**)에 체크하고 {game:apply}을 누른 뒤 1337년 새 캠페인을 시작하세요."
 "4_note" = "**Random New World (RNW)** 자체는 체크하지 마세요. 생성기만 들어 있습니다. 캠페인에 필요한 것은 모두 월드 모드에 들어 있습니다."
 ready_title = "바로 플레이하고 싶나요?"
-ready_text = "완성된 월드인 [RNW: The Wall CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151)를 구독하세요. 생성기가 필요 없습니다."
+ready_text = "완성된 월드를 구독하면 생성기가 필요 없습니다. [The Wall](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151)은 넘어야 할 산악 장벽이고, [Seas & Islands](https://steamcommunity.com/sharedfiles/filedetails/?id=3836463904)는 항해할 섬들의 바다입니다."
 
 [rules]
 title = "플레이 전에"
@@ -61,6 +61,7 @@ lead = "생성된 지도도 여느 모드와 같지만, 몇 가지 지켜야 할
 title = "월드 종류"
 lead = "월드 종류는 시작 설정의 묶음입니다. 마음에 드는 형태를 고른 뒤 {ui:new_tab.world} 탭이나 {ui:new_tab.advanced}에서 조정하세요."
 wall_note = "{ui:control.new_world.wall_allow_gaps}을 끄면 장벽은 끊김 없는 장애물이 되어, 배가 건너지도 돌아가지도 못합니다."
+omerika_text = "{ui:new_tab.advanced}의 {ui:control.new_world.template_permille}로 땅이 아메리카를 얼마나 닮을지 정하세요. 해안, 바다, 산, 강은 항상 새로 만들어집니다. 아니면 {ui:new_tab.world} 탭에서 {ui:control.new_world.keep_geography}를 선택해, 실제 아메리카를 게임이 그린 그대로 두고 그곳의 사회만 생성할 수 있습니다. 이런 월드는 전체 월드보다 훨씬 빨리 완성됩니다."
 
 [settings]
 title = "내 마음대로"
@@ -75,6 +76,10 @@ ocean_title = "{ui:control.new_world.expand_oceans}"
 ocean_text = "기본으로 켜져 있습니다. 대륙이 아메리카의 원래 윤곽을 넘어 넓게 펼쳐질 수 있습니다. 땅을 대양 한가운데 쪽으로 옮기려면 {ui:new_tab.advanced}에서 {ui:control.new_world.centre_permille}를 높이세요."
 peoples_title = "원주민 사회"
 peoples_text = "{ui:new_tab.world} 탭의 {ui:quick.states}로 빠르게 고를 수 있습니다. {ui:new_tab.advanced}에서 {ui:control.natives.state_share_permille}은 사람이 사는 땅 중 국가가 차지하는 비율(3~60%)을, {ui:control.natives.peasant_peak_permille}은 정착지의 농민 비율 상한(30~80%)을 정합니다. 척박한 땅은 부족 사회로 남기 쉽습니다."
+history_title = "{ui:quick.turbulence}"
+history_text = "1337년 이전의 300년은 시뮬레이션됩니다. 왕국이 일어나고 갈라지며 사람들을 이동시킵니다. {ui:new_tab.world} 탭에서 {ui:quick.turbulence.calm}, {ui:quick.turbulence.varied}(기본값), {ui:quick.turbulence.turbulent} 중에서 고르거나, {ui:new_tab.advanced}에서 같은 이름의 슬라이더를 움직이세요. 평온한 월드는 오래되고 큰 왕국이 더 많이 남고, 격동하는 월드는 작은 국가가 더 많고 국경 변화도 더 최근입니다."
+past_title = "과거 읽기"
+past_text = "{ui:reveal_world}를 눌러 지도를 열고 장소를 클릭하세요. 그 카드에는 {ui:history.tab_place}, {ui:history.tab_society}, {ui:history.chronicle}, {ui:history.tab_relations} 탭이 있어, 1337년 그 나라의 정부와 사회 가치관, 그렇게 되기까지의 사건, 첫날 다른 나라에 대한 호감도를 볼 수 있습니다."
 resources_title = "자원"
 resources_text = "{ui:new_tab.advanced}에서 자원마다 빈도를 정할 수 있습니다. 1×는 기본 게임과 같고, 0은 그 자원을 없앱니다. 한 자원을 늘리면 다른 자원이 들어갈 지역이 줄어듭니다. 어디에 무엇이 나올지는 여전히 기후와 지형이 정합니다."
 
@@ -84,7 +89,8 @@ lead = "새 월드는 가려진 상태로 시작합니다. 국가 선택 화면�
 covered = "가림: 신대륙은 Terra Incognita"
 shown = "공개: 1337년의 원주민 국가들"
 reveal_text = "생성기 안에서 월드의 지도를 보여 줍니다. 게임은 따로 설정을 유지합니다."
-show_text = "EU5의 모드 그림과 국가 선택 지도를 공개합니다. {ui:new_tab.output} 탭에서 정하거나, 나중에 월드의 {ui:tab.world} 탭에서 다시 생성하지 않고 바꿀 수 있습니다. 그다음 모드 메뉴를 닫았다가 다시 여세요."
+show_text = "{ui:new_tab.world} 탭에서 기본으로 선택되어 있습니다. EU5의 모드 그림과 국가 선택 지도가 신대륙을 가립니다. 보이려면 선택을 해제하세요. 완성된 월드의 {ui:tab.world} 탭에도 같은 체크 칸이 있어, 다시 생성하지 않고 바꿀 수 있습니다. 그다음 모드 메뉴를 닫았다가 다시 여세요. 실제 아메리카를 유지하는 월드는 가려지지 않습니다."
+start_text = "멀티플레이용이며 {ui:new_tab.world} 탭에 있고 기본으로 꺼져 있습니다. 캠페인이 시작될 때 모든 플레이어의 국가가 신대륙 전체를 발견하므로 모두가 첫날부터 볼 수 있습니다. 컴퓨터가 운영하는 국가는 여전히 탐험해서 찾습니다."
 atlas = "공개한 월드는 {ui:tab.maps}에서 땅, 국가, 문화, 종교, 자원 등 10가지 지도를 보여 줍니다. {ui:compare}로 두 월드를 나란히 볼 수 있습니다."
 
 [library]
@@ -92,6 +98,8 @@ title = "내 월드"
 lead = "생성한 모든 것은 코드, 지도, 메모와 함께 생성기 라이브러리에 남습니다."
 versions_title = "{ui:world_versions}"
 versions_text = "완성된 월드를 고르세요. {ui:part.peoples.button}은 같은 땅 위에 새 국가와 문화, 종교를 만들고, {ui:part.resources.button}은 자원만 다시 배치합니다. 이전 버전은 라이브러리에 남습니다."
+old_title = "이전 버전의 월드"
+old_text = "생성기의 이전 버전으로 만든 월드는 자기 파일을 그대로 유지합니다. 생성기는 그 월드에 새 사회나 자원을 만들지 않고, 같은 땅에서 설정을 바꾸지도 않으며, 그 이유를 알려 줍니다. {ui:like_this}를 누르면 그 설정으로 새 월드를 시작합니다. 더 새로운 버전은 같은 코드로 다른 땅을 만들 수 있습니다."
 queue_title = "여러 월드를 연달아"
 queue_text = "{ui:enqueue}는 현재 설정을 작업으로 저장하고, {ui:run_queue}은 월드를 하나씩 차례로 만듭니다. 생성 중에도 더 추가할 수 있습니다."
 share_title = "월드 공유하기"
@@ -116,7 +124,7 @@ multiplayer_text = "지원하며 커뮤니티에서 테스트했습니다. 모�
 ironman = "철인과 업적"
 ironman_text = "게임의 일반 규칙대로 작동합니다."
 maps = "지도 개편 모드"
-maps_text = "아메리카 대륙을 바꾸는 모드는 RNW와 충돌합니다. 다른 조합은 검증되지 않았습니다."
+maps_text = "같은 대륙을 바꾸는 모드는 RNW와 충돌합니다. 다른 조합은 검증되지 않았습니다."
 system = "시스템"
 system_text = "Windows, 또는 Proton을 통한 Linux와 Steam Deck. macOS는 지원하지 않습니다."
 
@@ -136,6 +144,8 @@ blocked_q = "Windows나 백신이 생성기를 막음"
 blocked_a = "생성기에는 디지털 서명이 없어 Smart App Control이나 백신이 문제를 제기할 수 있습니다. 관리자 권한은 필요 없습니다. [릴리스 노트](https://github.com/Sir-Starch/eu5-random-new-world/releases)에 파일별 검사 결과가 있습니다. 차단되면 GitHub에 알려 주세요."
 picture_q = "모드 메뉴에 예전 지도 그림이 그대로 보임"
 picture_a = "EU5 주 메뉴에서 모드 메뉴를 닫았다가 다시 여세요. 월드 자체가 바뀌었다면 게임을 완전히 다시 시작하세요."
+playset_q = "생성기가 내 모드를 경고합니다"
+playset_a = "완성된 월드의 페이지는 활성화된 모드를 점검합니다. 월드보다 나중에 불러오는 모드가 같은 경로에 파일을 가지고 있으면 EU5가 그 모드의 파일을 읽어 신대륙이 잘못 나올 수 있으므로 경고하며, RNW 월드가 둘 이상 선택된 경우에도 경고합니다. 그 모드를 불러오기 순서에서 월드보다 앞에 두거나 선택을 해제하세요."
 library_q = "내 월드는 어디에 저장되나요?"
 library_a = "모드 폴더 밖의 라이브러리에 저장되므로, 생성기의 어느 사본에서든 같은 월드가 보입니다. Windows: `%LOCALAPPDATA%\\RandomNewWorld`. Linux: `~/.local/share/random-new-world`. Proton: EU5 Proton 프리픽스 안의 Windows 위치."
 bug_q = "버그를 찾았어요"

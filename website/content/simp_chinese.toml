@@ -1,4 +1,4 @@
-source = "f462402450b2b2b9"
+source = "852be0f3a33f039d"
 
 [meta]
 title = "Random New World · 玩家指南"
@@ -21,7 +21,7 @@ workshop = "创意工坊"
 
 [hero]
 kicker = "玩家指南"
-lead = "在下一场EU5战役中，用一个全新的世界取代美洲。向西驶入未知的海域，或者领导一个原住民国家。旧世界保持原版不变。"
+lead = "在下一场EU5战役中，用一个全新的世界取代美洲（并可选非洲或大洋洲，欧亚开发中）。驶入未知的海域，或者领导一个原住民国家。未选择的洲保持原版不变。"
 fact_generator = "生成器 {v:version}"
 fact_game = "EU5 {v:game}"
 fact_languages = "11种语言"
@@ -43,7 +43,7 @@ lead = "第一场战役用默认设置就足够了。本页的其他内容可以
 "4_text" = "在{game:mods_dlcs}中勾选你的新世界，例如**RNW: Small continents 7K3Q**，点击{game:apply}，然后开始一场1337年的新战役。"
 "4_note" = "不要勾选**Random New World (RNW)**本身：它只包含生成器。战役所需的一切都在你的世界模组里。"
 ready_title = "只想直接开玩？"
-ready_text = "订阅现成的世界[RNW: The Wall CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151)，无需生成器。"
+ready_text = "订阅现成的世界即可，无需生成器：[The Wall](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151)是一道需要翻越的山脉屏障，[Seas & Islands](https://steamcommunity.com/sharedfiles/filedetails/?id=3836463904)是一片可供航行的岛海。"
 
 [rules]
 title = "开始之前"
@@ -61,6 +61,7 @@ lead = "生成的地图和其他模组一样，只是有几条自己的规则。
 title = "世界类型"
 lead = "世界类型就是一套初始设置。选择你喜欢的形状，再在{ui:new_tab.world}标签页或{ui:new_tab.advanced}中调整。"
 wall_note = "关闭{ui:control.new_world.wall_allow_gaps}后，高墙会成为一道连续的屏障，船只既无法穿越，也无法绕行。"
+omerika_text = "在{ui:new_tab.advanced}中调整{ui:control.new_world.template_permille}，可决定陆地与美洲的相似程度；海岸、海洋、山脉和河流始终是全新的。也可以在{ui:new_tab.world}标签页中勾选{ui:control.new_world.keep_geography}，让真实的美洲保持游戏绘制的原样，只生成其中的社会。这样的世界比完整世界快得多。"
 
 [settings]
 title = "按你的想法"
@@ -75,6 +76,10 @@ ocean_title = "{ui:control.new_world.expand_oceans}"
 ocean_text = "默认开启：大陆可以越过美洲原有的轮廓向外延伸。在{ui:new_tab.advanced}中调高{ui:control.new_world.centre_permille}，可让陆地移向大洋中部。"
 peoples_title = "原住民社会"
 peoples_text = "{ui:new_tab.world}标签页中的{ui:quick.states}是快速选项。在{ui:new_tab.advanced}中，{ui:control.natives.state_share_permille}决定有人居住的土地中国家所占的比例（3–60%），{ui:control.natives.peasant_peak_permille}限制定居地中农民所占比例的上限（30–80%）。贫瘠的耕地更多保持部落形态。"
+history_title = "{ui:quick.turbulence}"
+history_text = "1337年之前的三个世纪会被模拟：王国兴起、分裂，并迁移人口。在{ui:new_tab.world}标签页中选择{ui:quick.turbulence.calm}、{ui:quick.turbulence.varied}（默认）或{ui:quick.turbulence.turbulent}，也可以在{ui:new_tab.advanced}中拖动同名滑块。平静的世界保留更古老、更庞大的王国；动荡的世界则有更多更小的国家，边界变化也更近。"
+past_title = "读懂过去"
+past_text = "点击{ui:reveal_world}，打开一张地图，再点击某个地点。它的卡片有{ui:history.tab_place}、{ui:history.tab_society}、{ui:history.chronicle}和{ui:history.tab_relations}几个标签页：该国1337年的政府与社会价值观、造就它的事件，以及它在第一天对其他国家的看法。"
 resources_title = "资源"
 resources_text = "在{ui:new_tab.advanced}中，每种资源都有自己的出现频率：1×与原版相同，0则完全移除。一种资源越多，留给其他资源的地点就越少。每种资源能出现在哪里，仍由气候和地形决定。"
 
@@ -84,7 +89,8 @@ lead = "新世界一开始是隐藏的。选择国家时，新世界所在处显
 covered = "隐藏：新世界是Terra Incognita"
 shown = "显示：1337年的原住民国家"
 reveal_text = "在生成器内显示该世界的地图。游戏中的设置另行保存。"
-show_text = "显示EU5中的模组图片和选择国家时的地图。可在{ui:new_tab.output}标签页中设置，也可以之后在该世界的{ui:tab.world}标签页中更改，无需重新生成；然后关闭并重新打开模组菜单。"
+show_text = "该选项在{ui:new_tab.world}标签页中默认勾选：EU5中的模组图片和选择国家时的地图会隐藏新世界。取消勾选即可显示。已完成世界的{ui:tab.world}标签页中有同样的复选框，修改它无需重新生成；然后关闭并重新打开模组菜单。保留真实美洲的世界不会被遮盖。"
+start_text = "供多人游戏使用，位于{ui:new_tab.world}标签页，默认关闭。战役开始时，每位玩家的国家都会发现整个新世界，所有人从第一天起就能看到它。由电脑控制的国家仍通过探索来发现。"
 atlas = "显示后的世界在{ui:tab.maps}中提供十种地图：陆地、国家、文化、宗教、资源等。{ui:compare}可将两个世界并排对照。"
 
 [library]
@@ -92,6 +98,8 @@ title = "你的世界"
 lead = "你生成的一切都会连同代码、地图和笔记一起保存在生成器的库中。"
 versions_title = "{ui:world_versions}"
 versions_text = "选择一个已完成的世界。{ui:part.peoples.button}会在同一片陆地上生成新的国家、文化和宗教；{ui:part.resources.button}只重新分配资源。旧版本会保留在库中。"
+old_title = "旧版本的世界"
+old_text = "由生成器旧版本制作的世界会保持自己的文件。生成器不会为它重新生成社会或资源，也不会在同一片陆地上更改它的设置，并会说明原因。{ui:like_this}会用它的设置开始一个新世界；较新的版本可能让同一个代码生成另一片陆地。"
 queue_title = "连续生成多个世界"
 queue_text = "{ui:enqueue}会把当前设置保存为一项任务，{ui:run_queue}则依次生成这些世界。生成过程中也可以继续添加。"
 share_title = "分享世界"
@@ -116,7 +124,7 @@ multiplayer_text = "支持，并已由社区测试。所有玩家都需要相同
 ironman = "铁人模式与成就"
 ironman_text = "按游戏的常规规则生效。"
 maps = "地图大改模组"
-maps_text = "替换美洲的模组与RNW冲突。其他组合未经测试。"
+maps_text = "替换相同大洲的模组与RNW冲突。其他组合未经测试。"
 system = "系统"
 system_text = "Windows，或通过Proton运行的Linux和Steam Deck。不支持macOS。"
 
@@ -136,6 +144,8 @@ blocked_q = "Windows或杀毒软件拦截了生成器"
 blocked_a = "生成器没有数字签名，因此Smart App Control或杀毒软件可能会提出警告。它不需要管理员权限。[发布说明](https://github.com/Sir-Starch/eu5-random-new-world/releases)列出了每个文件的扫描结果；如遇拦截，请在GitHub上反馈。"
 picture_q = "模组菜单仍显示旧的地图图片"
 picture_a = "从EU5主菜单关闭模组菜单后重新打开。如果是世界本身发生了变化，请完全重启游戏。"
+playset_q = "生成器就我的模组发出警告"
+playset_a = "已完成世界的页面会检查你启用的模组。如果某个在世界之后加载的模组在相同路径下有文件，EU5就会读取该模组的文件，新世界可能出错；如果勾选了不止一个RNW世界，也会发出警告。请在加载顺序中把该模组放到世界之前，或取消勾选。"
 library_q = "我的世界保存在哪里？"
 library_a = "保存在模组文件夹之外的库中，因此生成器的每个副本都能看到相同的世界。Windows：`%LOCALAPPDATA%\\RandomNewWorld`。Linux：`~/.local/share/random-new-world`。Proton：EU5的Proton前缀中的Windows位置。"
 bug_q = "我发现了一个bug"

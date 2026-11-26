@@ -866,9 +866,26 @@ h3 {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   background: var(--sea);
   border-bottom: 1px solid var(--line);
+}
+
+/* Omerika carries settings of its own, so its card takes the whole row: picture, then words. */
+.type-wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+}
+
+.type-wide .vignette {
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+}
+
+.type-wide .type-body {
+  padding: 10px 0;
 }
 
 .types-extra {
@@ -1267,6 +1284,15 @@ h3 {
   .types,
   .rules {
     grid-template-columns: 1fr;
+  }
+
+  .type-wide {
+    display: block;
+  }
+
+  .type-wide .vignette {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
   }
 
   .leg {

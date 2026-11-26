@@ -1,4 +1,4 @@
-source = "f462402450b2b2b9"
+source = "852be0f3a33f039d"
 
 [meta]
 title = "Random New World · Oyuncu rehberi"
@@ -21,7 +21,7 @@ workshop = "Atölye"
 
 [hero]
 kicker = "Oyuncu rehberi"
-lead = "Bir sonraki EU5 seferiniz için Amerika kıtalarının yerine yeni bir dünya koyun. Batıya, bilinmeyen sulara yelken açın ya da yerli ülkelerinden birini yönetin. Eski Dünya olduğu gibi kalır."
+lead = "Bir sonraki EU5 seferiniz için Amerika kıtalarının — ve isteğe bağlı olarak Afrika ya da Okyanusya’nın — yerine yeni bir dünya koyun (Avrasya geliştirme aşamasında). Bilinmeyen sulara yelken açın ya da yerli ülkelerden birini yönetin. Seçilmeyen kıtalar olduğu gibi kalır."
 fact_generator = "Oluşturucu {v:version}"
 fact_game = "EU5 {v:game}"
 fact_languages = "11 dil"
@@ -43,7 +43,7 @@ lead = "İlk sefer için varsayılan ayarlar yeterlidir. Bu sayfadaki geri kalan
 "4_text" = "{game:mods_dlcs} menüsünde yeni dünyanızı, örneğin **RNW: Small continents 7K3Q** modunu işaretleyin, {game:apply} düğmesine tıklayın ve 1337’de yeni bir sefer başlatın."
 "4_note" = "**Random New World (RNW)** modunun kendisini işaretlemeyin: içinde yalnızca oluşturucu var. Dünya modunuz seferin ihtiyaç duyduğu her şeyi içerir."
 ready_title = "Hemen oynamak mı istiyorsunuz?"
-ready_text = "Hazır bir dünya olan [RNW: The Wall CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151) moduna abone olun. Oluşturucuya gerek yok."
+ready_text = "Oluşturucuya gerek olmadan hazır bir dünyaya abone olun: [The Wall](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151), aşılacak bir dağ engeli, ya da [Seas & Islands](https://steamcommunity.com/sharedfiles/filedetails/?id=3836463904), yelken açılacak bir ada denizi."
 
 [rules]
 title = "Oynamadan önce"
@@ -61,6 +61,7 @@ lead = "Oluşturulan harita da diğerleri gibi bir moddur, ama kendine özgü bi
 title = "Dünya türleri"
 lead = "Dünya türü, hazır bir başlangıç ayarları setidir. Beğendiğiniz şekli seçin, sonra {ui:new_tab.world} sekmesinde ya da {ui:new_tab.advanced} bölümünde ayarlayın."
 wall_note = "{ui:control.new_world.wall_allow_gaps} kapalıyken Duvar, gemilerin ne geçebildiği ne de etrafından dolaşabildiği kesintisiz bir engele dönüşür."
+omerika_text = "Karanın Amerika kıtalarını ne kadar yakından izleyeceğini {ui:new_tab.advanced} bölümündeki {ui:control.new_world.template_permille} ile seçersiniz; kıyılar, denizler, dağlar ve nehirler her zaman yenidir. Ya da {ui:new_tab.world} sekmesinde {ui:control.new_world.keep_geography} seçeneğini işaretleyip gerçek Amerika kıtalarını oyunun çizdiği gibi koruyabilir ve yalnızca toplumlarını oluşturabilirsiniz. Böyle bir dünya tam bir dünyadan çok daha hızlı hazır olur."
 
 [settings]
 title = "Kendinize göre"
@@ -75,6 +76,10 @@ ocean_title = "{ui:control.new_world.expand_oceans}"
 ocean_text = "Varsayılan olarak açıktır: kıtalar Amerika kıtalarının eski sınırlarının ötesine taşabilir. Karayı okyanusun ortasına doğru kaydırmak için {ui:new_tab.advanced} bölümünde {ui:control.new_world.centre_permille} değerini artırın."
 peoples_title = "Yerli toplumlar"
 peoples_text = "Hızlı seçim, {ui:new_tab.world} sekmesindeki {ui:quick.states} ayarıdır. {ui:new_tab.advanced} bölümünde {ui:control.natives.state_share_permille}, yerleşik toprakların ne kadarının devletlere ait olduğunu (%3–60), {ui:control.natives.peasant_peak_permille} ise yerleşik bir konumdaki köylü payının üst sınırını (%30–80) belirler. Verimsiz topraklar daha çok kabile düzeninde kalır."
+history_title = "{ui:quick.turbulence}"
+history_text = "1337’den önceki üç yüzyıl simüle edilir: devletler yükselir, bölünür ve halkları yerinden oynatır. {ui:new_tab.world} sekmesinde {ui:quick.turbulence.calm}, {ui:quick.turbulence.varied} (varsayılan) veya {ui:quick.turbulence.turbulent} seçeneğini seçin ya da {ui:new_tab.advanced} bölümündeki aynı adlı kaydırıcıyı oynatın. Sakin dünyalar daha eski ve büyük devletleri korur; çalkantılı dünyalarda daha çok ve daha küçük devlet ile daha yakın tarihli sınır değişiklikleri olur."
+past_title = "Geçmişi okuyun"
+past_text = "{ui:reveal_world} düğmesine basın, bir harita açın ve bir yere tıklayın. Kartında {ui:history.tab_place}, {ui:history.tab_society}, {ui:history.chronicle} ve {ui:history.tab_relations} sekmeleri bulunur: ülkenin 1337’deki hükûmeti ve toplumsal değerleri, onu biçimlendiren olaylar ve ilk gün diğer ülkelere karşı görüşü."
 resources_title = "Kaynaklar"
 resources_text = "{ui:new_tab.advanced} bölümünde her kaynağın kendi sıklığı vardır: 1× temel oyunla aynıdır, 0 kaynağı kaldırır. Birinden fazlası, diğerlerine daha az konum bırakır. Her birinin nerede çıkabileceğine yine iklim ve arazi karar verir."
 
@@ -84,7 +89,8 @@ lead = "Yeni dünyalar gizli başlar. Ülke seçiminde Yeni Dünya’nın yerind
 covered = "Gizli: Yeni Dünya Terra Incognita’dır"
 shown = "Açık: 1337’nin yerli ülkeleri"
 reveal_text = "Dünyanın haritalarını oluşturucu içinde açar. Oyun kendi ayarını korur."
-show_text = "EU5’teki mod resmini ve ülke seçimi haritasını açar. Bunu {ui:new_tab.output} sekmesinde ya da daha sonra dünyanın {ui:tab.world} sekmesinde, yeniden oluşturmadan ayarlayın; ardından mod menüsünü kapatıp yeniden açın."
+show_text = "Kutu, {ui:new_tab.world} sekmesinde varsayılan olarak işaretlidir: EU5’teki mod resmi ve ülke seçimi haritası Yeni Dünya’yı gizler. Göstermek için işareti kaldırın. Bitmiş bir dünyanın {ui:tab.world} sekmesinde de aynı kutu vardır; onu yeniden oluşturmadan değiştirebilirsiniz. Ardından mod menüsünü kapatıp yeniden açın. Gerçek Amerika kıtalarını koruyan bir dünya hiçbir zaman örtülmez."
+start_text = "Çok oyunculu içindir, {ui:new_tab.world} sekmesindedir ve varsayılan olarak kapalıdır. Her oyuncunun ülkesi kampanya başında tüm Yeni Dünya’yı keşfeder; böylece herkes onu ilk günden görür. Bilgisayarın yönettiği ülkeler onu yine keşif yaparak bulur."
 atlas = "Açılmış bir dünya, {ui:tab.maps} altında on harita sunar: kara, ülkeler, kültürler, dinler, kaynaklar ve dahası. {ui:compare} iki dünyayı yan yana koyar."
 
 [library]
@@ -92,6 +98,8 @@ title = "Dünyalarınız"
 lead = "Oluşturduğunuz her şey kodu, haritaları ve notlarıyla birlikte oluşturucunun kütüphanesinde kalır."
 versions_title = "{ui:world_versions}"
 versions_text = "Hazır bir dünya seçin. {ui:part.peoples.button} aynı kara üzerinde yeni ülkeler, kültürler ve dinler oluşturur; {ui:part.resources.button} yalnızca kaynakları yeniden dağıtır. Önceki sürüm kütüphanede kalır."
+old_title = "Önceki sürümlerden dünyalar"
+old_text = "Oluşturucunun önceki bir sürümünün yaptığı dünya kendi dosyalarını korur. Oluşturucu onun için yeni toplumlar veya kaynaklar üretmez, aynı kara üzerinde ayarlarını da değiştirmez ve nedenini söyler. {ui:like_this}, ayarlarından yeni bir dünya başlatır; daha yeni bir sürüm aynı koddan başka bir kara çıkarabilir."
 queue_title = "Art arda birkaç dünya"
 queue_text = "{ui:enqueue} mevcut ayarları bir iş olarak saklar, {ui:run_queue} ise dünyaları birbiri ardına oluşturur. Biri oluşturulurken yenilerini ekleyebilirsiniz."
 share_title = "Bir dünyayı paylaşın"
@@ -116,7 +124,7 @@ multiplayer_text = "Desteklenir ve topluluk tarafından test edildi. Her oyuncun
 ironman = "Tek Şans ve başarımlar"
 ironman_text = "Oyunun standart kurallarıyla çalışır."
 maps = "Harita elden geçirmeleri"
-maps_text = "Amerika kıtalarını değiştiren modlar RNW ile çakışır. Diğer birleşimler test edilmedi."
+maps_text = "Aynı kıtaları değiştiren modlar RNW ile çakışır. Diğer birleşimler test edilmedi."
 system = "Sistem"
 system_text = "Windows ya da Proton üzerinden Linux ve Steam Deck. macOS desteklenmez."
 
@@ -136,6 +144,8 @@ blocked_q = "Windows ya da antivirüs oluşturucuyu engelliyor"
 blocked_a = "Oluşturucu dijital olarak imzalı değildir, bu yüzden Smart App Control ya da bir antivirüs itiraz edebilir. Yönetici izni gerektirmez. [Sürüm notları](https://github.com/Sir-Starch/eu5-random-new-world/releases) her dosyanın tarama sonuçlarını listeler; bir engellemeyle karşılaşırsanız lütfen GitHub’da bildirin."
 picture_q = "Mod menüsü hâlâ eski harita resmini gösteriyor"
 picture_a = "Mod menüsünü EU5’in ana menüsünden kapatıp yeniden açın. Dünyanın kendisi değiştiyse oyunu tamamen yeniden başlatın."
+playset_q = "Oluşturucu modlarım hakkında uyarıyor"
+playset_a = "Bitmiş bir dünyanın sayfası etkin modlarınızı denetler. Dünyadan sonra yüklenen bir mod aynı yollarda dosyalara sahipse, EU5 o zaman o modun dosyalarını okuyacağı için Yeni Dünya hatalı çıkabilir; ya da birden fazla RNW dünyası işaretliyse uyarır. O modu yükleme sırasında dünyadan önceye alın ya da işaretini kaldırın."
 library_q = "Dünyalarım nerede saklanıyor?"
 library_a = "Mod klasörlerinin dışındaki bir kütüphanede; böylece oluşturucunun her kopyası aynı dünyaları görür. Windows: `%LOCALAPPDATA%\\RandomNewWorld`. Linux: `~/.local/share/random-new-world`. Proton: EU5’in Proton önekindeki Windows konumu."
 bug_q = "Bir hata buldum"

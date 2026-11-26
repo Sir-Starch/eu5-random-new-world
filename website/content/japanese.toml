@@ -1,4 +1,4 @@
-source = "f462402450b2b2b9"
+source = "852be0f3a33f039d"
 
 [meta]
 title = "Random New World · プレイヤーガイド"
@@ -21,7 +21,7 @@ workshop = "ワークショップ"
 
 [hero]
 kicker = "プレイヤーガイド"
-lead = "次のEU5キャンペーンでは、南北アメリカを新しい世界に置き換えましょう。未知の海へ西に漕ぎ出すもよし、先住民の国を率いるもよし。旧世界はバニラのままです。"
+lead = "次のEU5キャンペーンでは、南北アメリカ（希望によりアフリカやオセアニアも）を新しい世界に置き換えましょう（ユーラシアは開発中）。未知の海へ漕ぎ出すもよし、先住民の国を率いるもよし。選ばない大陸はバニラのままです。"
 fact_generator = "生成ツール {v:version}"
 fact_game = "EU5 {v:game}"
 fact_languages = "11言語"
@@ -43,7 +43,7 @@ lead = "最初のキャンペーンなら初期設定で十分です。このペ
 "4_text" = "{game:mods_dlcs}で新しいワールド（例：**RNW: Small continents 7K3Q**）にチェックを入れ、{game:apply}を押して1337年の新規キャンペーンを始めます。"
 "4_note" = "**Random New World (RNW)** 自体にはチェックを入れないでください。中身は生成ツールだけです。キャンペーンに必要なものはすべてワールドModに入っています。"
 ready_title = "すぐに遊びたいなら"
-ready_text = "完成済みのワールド [RNW: The Wall CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151) をサブスクライブしてください。生成ツールは不要です。"
+ready_text = "完成済みのワールドを購読すれば、生成ツールは不要です。[The Wall](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151) は越えるべき山の障壁、[Seas & Islands](https://steamcommunity.com/sharedfiles/filedetails/?id=3836463904) は航海する島々の海です。"
 
 [rules]
 title = "遊ぶ前に"
@@ -61,6 +61,7 @@ lead = "生成した地図もほかと同じMODの一つですが、守るべき
 title = "ワールドの種類"
 lead = "ワールドの種類とは、最初の設定一式のことです。好みの形を選んでから、{ui:new_tab.world}タブや{ui:new_tab.advanced}で調整します。"
 wall_note = "{ui:control.new_world.wall_allow_gaps}をオフにすると、壁は途切れのない障壁になり、船は越えることも回り込むこともできません。"
+omerika_text = "{ui:new_tab.advanced}の{ui:control.new_world.template_permille}で、陸地をどれだけアメリカ大陸に近づけるかを選びます。海岸線、海、山、川はつねに新しくなります。あるいは{ui:new_tab.world}タブで{ui:control.new_world.keep_geography}にチェックを入れると、実際のアメリカ大陸をゲームの描くままに残し、その社会だけを生成します。このワールドは通常のワールドよりずっと早く完成します。"
 
 [settings]
 title = "自分好みに"
@@ -75,6 +76,10 @@ ocean_title = "{ui:control.new_world.expand_oceans}"
 ocean_text = "初期設定でオンです。大陸は南北アメリカの元の輪郭を越えて広がれます。{ui:new_tab.advanced}で{ui:control.new_world.centre_permille}を上げると、陸地が大洋の中ほどへ移ります。"
 peoples_title = "先住民の社会"
 peoples_text = "{ui:new_tab.world}タブの{ui:quick.states}で手早く選べます。{ui:new_tab.advanced}では、{ui:control.natives.state_share_permille}が人の住む土地のうち国家が持つ割合（3〜60%）を、{ui:control.natives.peasant_peak_permille}が定住地での農民の割合の上限（30〜80%）を決めます。痩せた土地では部族社会が多く残ります。"
+history_title = "{ui:quick.turbulence}"
+history_text = "1337年より前の3世紀がシミュレートされ、王国は興り、分裂し、人々を移動させます。{ui:new_tab.world}タブで{ui:quick.turbulence.calm}、{ui:quick.turbulence.varied}（初期設定）、{ui:quick.turbulence.turbulent}から選ぶか、{ui:new_tab.advanced}にある同名のスライダーを動かします。穏やかなワールドでは古く大きな国が残り、荒れたワールドでは小国が増え、国境の変動も最近のものが多くなります。"
+past_title = "過去を読む"
+past_text = "{ui:reveal_world}を押して地図を開き、場所をクリックします。そのカードには{ui:history.tab_place}、{ui:history.tab_society}、{ui:history.chronicle}、{ui:history.tab_relations}のタブがあり、1337年におけるその国の政府と社会的価値、そこに至った出来事、初日の他国への好感度が分かります。"
 resources_title = "資源"
 resources_text = "{ui:new_tab.advanced}では資源ごとに出現頻度を設定できます。1×は基本ゲームと同じ、0はその資源をなくします。ある資源を増やすと、ほかの資源に回る場所は減ります。どこに何が出るかは、引き続き気候と地形が決めます。"
 
@@ -84,7 +89,8 @@ lead = "新しいワールドは最初は隠されています。国の選択画
 covered = "非表示：新世界はTerra Incognita"
 shown = "表示：1337年の先住民の国々"
 reveal_text = "生成ツールの中でワールドの地図を表示します。ゲーム側の設定は別です。"
-show_text = "EU5のMod画像と国の選択画面の地図を表示します。{ui:new_tab.output}タブで設定するか、あとからワールドの{ui:tab.world}タブで、生成し直さずに変更できます。そのあとMODメニューを閉じて開き直してください。"
+show_text = "{ui:new_tab.world}タブでは初期設定でチェックが入っており、EU5のMod画像と国の選択画面の地図で新世界が隠されます。表示したいときはチェックを外します。完成したワールドの{ui:tab.world}タブにも同じチェックボックスがあり、生成し直さずに変更できます。そのあとMODメニューを閉じて開き直してください。実際のアメリカ大陸を残すワールドが覆われることはありません。"
+start_text = "マルチプレイ用の設定で、{ui:new_tab.world}タブにあり、初期設定ではオフです。キャンペーン開始時にすべてのプレイヤーの国が新世界全体を発見するので、全員が初日から見られます。コンピューターの国はこれまでどおり探索して見つけます。"
 atlas = "表示したワールドでは、{ui:tab.maps}で陸地、国、文化、宗教、資源など10種類の地図を見られます。{ui:compare}で2つのワールドを並べられます。"
 
 [library]
@@ -92,6 +98,8 @@ title = "あなたのワールド"
 lead = "生成したものはすべて、コード・地図・メモとともに生成ツールのライブラリに残ります。"
 versions_title = "{ui:world_versions}"
 versions_text = "完成したワールドを選びます。{ui:part.peoples.button}は同じ陸地に新しい国・文化・宗教を作り、{ui:part.resources.button}は資源だけを配り直します。前のバージョンはライブラリに残ります。"
+old_title = "以前のバージョンのワールド"
+old_text = "生成ツールの以前のバージョンで作られたワールドは、自分のファイルを保ちます。生成ツールはそのワールドに新しい社会や資源を作らず、同じ陸地での設定変更も行わず、その理由を表示します。{ui:like_this}を使うと、そのワールドの設定から新しいワールドを始められます。新しいバージョンでは、同じコードから別の陸地ができることがあります。"
 queue_title = "複数のワールドを続けて"
 queue_text = "{ui:enqueue}で現在の設定をジョブとして保存し、{ui:run_queue}でワールドを1つずつ順に作ります。生成中でもジョブを追加できます。"
 share_title = "ワールドを共有する"
@@ -116,7 +124,7 @@ multiplayer_text = "対応しており、コミュニティで動作確認済み
 ironman = "鉄人と実績"
 ironman_text = "ゲームの通常のルールどおりに機能します。"
 maps = "地図の大型改変Mod"
-maps_text = "南北アメリカを置き換えるModはRNWと競合します。ほかの組み合わせは未検証です。"
+maps_text = "同じ大陸を置き換えるModはRNWと競合します。他の組み合わせは未検証です。"
 system = "システム"
 system_text = "Windows、またはProton経由のLinuxとSteam Deck。macOSには対応していません。"
 
@@ -136,6 +144,8 @@ blocked_q = "Windowsやウイルス対策ソフトが生成ツールをブロッ
 blocked_a = "生成ツールにはデジタル署名がないため、Smart App Controlやウイルス対策ソフトが警告することがあります。管理者権限は不要です。[リリースノート](https://github.com/Sir-Starch/eu5-random-new-world/releases)に各ファイルのスキャン結果を載せています。ブロックされた場合はGitHubでお知らせください。"
 picture_q = "MODメニューに古い地図の画像が表示される"
 picture_a = "EU5のメインメニューからMODメニューを閉じ、もう一度開いてください。ワールドそのものを変えた場合は、ゲームを完全に再起動してください。"
+playset_q = "生成ツールがMODについて警告する"
+playset_a = "完成したワールドのページは、有効なMODを調べます。ワールドより後に読み込まれるMODが同じパスにファイルを持つと、EU5がそのMODのファイルを読むため新世界が正しく出ないことがあり、その場合や、RNWのワールドが複数チェックされている場合に警告します。そのMODを読み込み順でワールドより前に置くか、チェックを外してください。"
 library_q = "ワールドはどこに保存されている？"
 library_a = "Modフォルダとは別のライブラリです。そのため、どの生成ツールのコピーからも同じワールドが見えます。Windows：`%LOCALAPPDATA%\\RandomNewWorld`。Linux：`~/.local/share/random-new-world`。Proton：EU5のProtonプレフィックス内にあるWindowsの場所です。"
 bug_q = "バグを見つけた"

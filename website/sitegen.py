@@ -3,8 +3,8 @@
 The Workshop page's *Guide* button leads here. One static page per official EU5 language,
 rendered from ``content/<language>.toml``; the root page sends a visitor to their language.
 Nothing is fetched at run time: fonts are subset to the characters each page uses, pictures are
-cut from the owner-approved screenshots in ``docs/images/showcase``, and the chart art (world-type
-silhouettes, the Terra Incognita fog on the hero map, rhumb lines) is drawn here.
+cut from the owner-approved screenshots in ``docs/images/showcase`` (the world types included),
+and the chart art (the Terra Incognita fog on the hero map, rhumb lines) is drawn here.
 
 The guide describes a **released** generator, ``RELEASE``. Its controls are named in the
 window's own words of that release: English from ``rnw/gui/text.py`` and the translations from
@@ -161,6 +161,7 @@ WORLD_TYPES: Final[tuple[str, ...]] = (
     "archipelago",
     "islands",
     "wall",
+    "omerika",
 )
 
 
@@ -267,8 +268,9 @@ def git_show(path: str) -> str:
     return done.stdout
 
 
-def window_english() -> dict[str, str]:
-    module = ast.parse(git_show("src/rnw/gui/text.py"))
+def release_strings(path: str, name: str) -> dict[str, str]:
+    """A module-level ``name = {...}`` dictionary of texts in a source file of the release."""
+    module = ast.parse(git_show(path))
     for node in module.body:
         if isinstance(node, ast.Assign):
             target, value = node.targets[0], node.value
@@ -276,12 +278,21 @@ def window_english() -> dict[str, str]:
             target, value = node.target, node.value
         else:
             continue
-        if isinstance(target, ast.Name) and target.id == "STRINGS":
+        if isinstance(target, ast.Name) and target.id == name:
             strings = cast("object", ast.literal_eval(value))
             if isinstance(strings, dict):
                 return {str(k): str(v) for k, v in cast("dict[object, object]", strings).items()}
-    message = "STRINGS not found in rnw/gui/text.py"
+    message = f"{name} not found in {path}"
     raise BuildError(message)
+
+
+def window_english() -> dict[str, str]:
+    """The window's English, as ``rnw.gui.text.sources`` joins it: its own strings and the
+    society panel's (the tabs of a location's card)."""
+    return {
+        **release_strings("src/rnw/gui/text.py", "STRINGS"),
+        **release_strings("src/rnw/history_presenter.py", "SOURCES"),
+    }
 
 
 def window_fingerprint(english: str) -> str:
@@ -448,7 +459,7 @@ COMPASS: Final = (
 
 
 class Noise:
-    """Value noise on a seeded lattice, a few octaves: coastlines for the chart vignettes."""
+    """Value noise on a seeded lattice, a few octaves: the edge of the fog on the hero map."""
 
     def __init__(self, seed: int, size: int = 64) -> None:
         rng = random.Random(seed)
@@ -477,280 +488,6 @@ class Noise:
             amp *= 0.5
             freq *= 2.0
         return total / norm
-
-
-@dataclass(frozen=True)
-class Blob:
-    x: float
-    y: float
-    rx: float
-    ry: float
-    w: float = 1.0
-
-
-def world_blobs(kind: str, rng: random.Random) -> list[Blob]:
-    """Metaball recipes that read like each world type's typical result."""
-    blobs: list[Blob] = []
-
-    def isles(n: int, size: tuple[float, float], area: tuple[float, float, float, float]) -> None:
-        for _ in range(n):
-            r = rng.uniform(*size)
-            blobs.append(
-                Blob(
-                    rng.uniform(area[0], area[1]),
-                    rng.uniform(area[2], area[3]),
-                    r,
-                    r * rng.uniform(0.7, 1.3),
-                )
-            )
-
-    if kind == "supercontinent":
-        for x, y, rx, ry in (
-            (0.5, 0.46, 0.25, 0.22),
-            (0.32, 0.34, 0.13, 0.12),
-            (0.69, 0.3, 0.14, 0.11),
-            (0.4, 0.7, 0.15, 0.14),
-            (0.67, 0.68, 0.12, 0.15),
-            (0.2, 0.56, 0.07, 0.06),
-        ):
-            blobs.append(Blob(x, y, rx, ry))
-        isles(3, (0.025, 0.04), (0.12, 0.88, 0.12, 0.88))
-    elif kind == "continents":
-        blobs += [
-            Blob(0.4, 0.27, 0.2, 0.15),
-            Blob(0.3, 0.32, 0.12, 0.1),
-            Blob(0.6, 0.68, 0.17, 0.17),
-        ]
-        blobs += [Blob(0.48, 0.47, 0.035, 0.08, 0.9), Blob(0.54, 0.55, 0.04, 0.06, 0.9)]
-        isles(5, (0.02, 0.035), (0.15, 0.88, 0.15, 0.9))
-    elif kind == "small_continents":
-        for x, y in ((0.28, 0.3), (0.68, 0.26), (0.36, 0.7), (0.72, 0.68)):
-            blobs.append(
-                Blob(x + rng.uniform(-0.03, 0.03), y + rng.uniform(-0.03, 0.03), 0.13, 0.12)
-            )
-        isles(3, (0.02, 0.03), (0.1, 0.9, 0.1, 0.9))
-    elif kind == "archipelago":
-        for x, y in (
-            (0.22, 0.28),
-            (0.5, 0.2),
-            (0.78, 0.32),
-            (0.3, 0.62),
-            (0.58, 0.5),
-            (0.8, 0.72),
-            (0.48, 0.82),
-        ):
-            blobs.append(
-                Blob(
-                    x + rng.uniform(-0.03, 0.03),
-                    y + rng.uniform(-0.03, 0.03),
-                    rng.uniform(0.06, 0.085),
-                    rng.uniform(0.05, 0.08),
-                )
-            )
-        isles(16, (0.014, 0.026), (0.06, 0.94, 0.08, 0.92))
-    elif kind == "islands":
-        isles(34, (0.016, 0.034), (0.05, 0.95, 0.07, 0.93))
-    elif kind == "wall":
-        steps = 24
-        for i in range(steps + 1):
-            y = -0.1 + 1.2 * i / steps
-            x = 0.5 + 0.05 * math.sin(y * 5.2) + 0.02 * math.sin(y * 13)
-            blobs.append(Blob(x, y, 0.085, 0.07))
-        isles(6, (0.018, 0.03), (0.08, 0.3, 0.1, 0.9))
-        isles(6, (0.018, 0.03), (0.7, 0.92, 0.1, 0.9))
-    else:
-        raise BuildError(kind)
-    return blobs
-
-
-def marching_squares(
-    values: list[list[float]], level: float = 0.0
-) -> list[list[tuple[float, float]]]:
-    """Closed contours of a field padded with sea; points in grid units."""
-    h, w = len(values), len(values[0])
-    segments: list[tuple[tuple[float, float], tuple[float, float]]] = []
-
-    def lerp(p: tuple[int, int], q: tuple[int, int]) -> tuple[float, float]:
-        a, b = values[p[1]][p[0]], values[q[1]][q[0]]
-        t = 0.5 if a == b else (level - a) / (b - a)
-        return (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
-
-    for y in range(h - 1):
-        for x in range(w - 1):
-            c = [(x, y), (x + 1, y), (x + 1, y + 1), (x, y + 1)]
-            inside = [values[py][px] > level for px, py in c]
-            idx = sum(1 << i for i, v in enumerate(inside) if v)
-            if idx in (0, 15):
-                continue
-            edges = [(c[0], c[1]), (c[1], c[2]), (c[2], c[3]), (c[3], c[0])]
-            crossings = [
-                lerp(*e)
-                for e, a, b in zip(edges, inside, inside[1:] + inside[:1], strict=True)
-                if a != b
-            ]
-            if len(crossings) == 2:
-                segments.append((crossings[0], crossings[1]))
-            else:  # saddle: pair by the centre value
-                centre = sum(values[py][px] for px, py in c) / 4 > level
-                e = [lerp(*edge) for edge in edges]
-                if (idx == 5) == centre:
-                    segments += [(e[0], e[1]), (e[2], e[3])]
-                else:
-                    segments += [(e[0], e[3]), (e[1], e[2])]
-
-    def key(p: tuple[float, float]) -> tuple[int, int]:
-        return (round(p[0] * 1000), round(p[1] * 1000))
-
-    links: dict[tuple[int, int], list[int]] = {}
-    for i, (a, b) in enumerate(segments):
-        links.setdefault(key(a), []).append(i)
-        links.setdefault(key(b), []).append(i)
-    used = [False] * len(segments)
-    loops: list[list[tuple[float, float]]] = []
-    for start in range(len(segments)):
-        if used[start]:
-            continue
-        used[start] = True
-        a, b = segments[start]
-        loop = [a, b]
-        current = b
-        while True:
-            nxt = next((i for i in links[key(current)] if not used[i]), None)
-            if nxt is None:
-                break
-            used[nxt] = True
-            p, q = segments[nxt]
-            current = q if key(p) == key(current) else p
-            loop.append(current)
-        loops.append(loop)
-    return loops
-
-
-def chaikin(points: list[tuple[float, float]], rounds: int = 2) -> list[tuple[float, float]]:
-    for _ in range(rounds):
-        n = len(points)
-        out: list[tuple[float, float]] = []
-        for i in range(n):
-            p, q = points[i], points[(i + 1) % n]
-            out += [
-                (0.75 * p[0] + 0.25 * q[0], 0.75 * p[1] + 0.25 * q[1]),
-                (0.25 * p[0] + 0.75 * q[0], 0.25 * p[1] + 0.75 * q[1]),
-            ]
-        points = out
-    return points
-
-
-def polygon_area(points: list[tuple[float, float]]) -> float:
-    return 0.5 * sum(
-        p[0] * q[1] - q[0] * p[1] for p, q in zip(points, points[1:] + points[:1], strict=True)
-    )
-
-
-def simplify(points: list[tuple[float, float]], tolerance: float) -> list[tuple[float, float]]:
-    """Ramer-Douglas-Peucker on a closed ring: fewer points, the same coast at chart scale."""
-
-    def rdp(pts: list[tuple[float, float]]) -> list[tuple[float, float]]:
-        if len(pts) < 3:
-            return pts
-        (x1, y1), (x2, y2) = pts[0], pts[-1]
-        dx, dy = x2 - x1, y2 - y1
-        norm = math.hypot(dx, dy) or 1e-9
-        index, worst = 0, -1.0
-        for i in range(1, len(pts) - 1):
-            d = abs(dy * pts[i][0] - dx * pts[i][1] + x2 * y1 - y2 * x1) / norm
-            if d > worst:
-                index, worst = i, d
-        if worst <= tolerance:
-            return [pts[0], pts[-1]]
-        return rdp(pts[: index + 1])[:-1] + rdp(pts[index:])
-
-    half = len(points) // 2
-    return rdp(points[: half + 1])[:-1] + rdp([*points[half:], points[0]])[:-1]
-
-
-WATER_LINES: Final = (("#4a6273", 15), ("#34444f", 11.5), ("#5f7c8f", 7.5), ("#34444f", 4.5))
-
-
-def world_svg(kind: str) -> str:
-    """A chart vignette of a world type: water-lined coasts on the sea, mountains as hachures."""
-    seed = int(hashlib.sha256(kind.encode()).hexdigest()[:8], 16)
-    rng = random.Random(seed)
-    noise = Noise(seed)
-    vw, vh = 300.0, 200.0
-    gw, gh = 150, 100
-    blobs = world_blobs(kind, rng)
-    field_: list[list[float]] = []
-    for gy in range(gh + 1):
-        row: list[float] = []
-        for gx in range(gw + 1):
-            if gx in (0, gw) or (kind != "wall" and gy in (0, gh)):
-                row.append(-1.0)
-                continue
-            u, v = gx / gw, gy / gh
-            wu = u + 0.09 * noise(u * 3 + 11, v * 3, 3)  # warped: peninsulas and gulfs
-            wv = v + 0.09 * noise(u * 3, v * 3 + 7, 3)
-            mass = sum(
-                b.w * math.exp(-(((wu - b.x) / b.rx) ** 2 + ((wv - b.y) / b.ry) ** 2))
-                for b in blobs
-            )
-            value = 1 - math.exp(-1.3 * mass)  # interiors saturate, so the noise shapes every coast
-            value += (
-                0.34 * noise(u * 6, v * 6)
-                + 0.18 * noise(u * 16 + 3, v * 16 + 5, 3)
-                + 0.08 * noise(u * 40, v * 40, 2)
-            )
-            row.append(value - 0.55)
-        field_.append(row)
-    if kind == "wall":  # the Wall runs off the chart at both poles
-        field_.insert(0, [-1.0] * (gw + 1))
-        field_.append([-1.0] * (gw + 1))
-        offset = 1
-    else:
-        offset = 0
-    sx, sy = vw / gw, vh / gh
-    paths: list[str] = []
-    for loop in marching_squares(field_):
-        if len(loop) < 6:
-            continue
-        closed = abs(loop[0][0] - loop[-1][0]) + abs(loop[0][1] - loop[-1][1]) < 1e-6
-        pts = [(x * sx, (y - offset) * sy) for x, y in chaikin(loop[:-1] if closed else loop, 1)]
-        if abs(polygon_area(pts)) < 6:
-            continue
-        pts = simplify(pts, 0.35)
-        paths.append(
-            "M"
-            + "L".join(f"{x:.1f},{y:.1f}" for x, y in pts).replace(".0,", ",").replace(".0L", "L")
-            + "Z"
-        )
-    coast = "".join(paths)
-    marks: list[tuple[int, int]] = []
-    cells = [(gx, gy) for gy in range(2, gh - 2, 3) for gx in range(2, gw - 2, 3)]
-    rng.shuffle(cells)
-    for gx, gy in cells:
-        value = field_[gy + offset][gx]
-        if value > (0.38 if kind == "wall" else 0.45) and all(
-            abs(gx - mx) > 5 or abs(gy - my) > 4 for mx, my in marks
-        ):
-            marks.append((gx, gy))
-        if len(marks) >= (14 if kind == "wall" else 7):
-            break
-    hachures = "".join(
-        f"M{gx * sx - 4.5:.1f},{gy * sy + 2:.1f}l4.5-6 4.5 6" for gx, gy in sorted(marks)
-    )
-    rings = "".join(
-        f'<use href="#c" stroke="{color}" stroke-width="{width}"/>' for color, width in WATER_LINES
-    )
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {vw:.0f} {vh:.0f}">'
-        f'<defs><path id="c" d="{coast}" fill-rule="evenodd"/></defs>'
-        '<rect width="300" height="200" fill="#34444f"/>'
-        '<path d="M0 66.7H300M0 133.3H300M100 0V200M200 0V200" stroke="#e9d9b4" stroke-opacity=".1" '
-        'stroke-width=".6" stroke-dasharray="2 4"/>'
-        f'<g fill="none" stroke-linejoin="round">{rings}</g>'
-        '<use href="#c" fill="#d8c59d" stroke="#2b241d" stroke-width="1.1" stroke-linejoin="round"/>'
-        f'<path d="{hachures}" fill="none" stroke="#6e5838" stroke-width="1.2" stroke-linecap="round" '
-        'stroke-linejoin="round"/></svg>\n'
-    )
 
 
 def hero_fog(seed: int = 1337) -> str:
@@ -823,6 +560,17 @@ PICTURES: Final[dict[str, Picture]] = {
     "covered": Picture("covered", "02-lobby-terra-incognita.png", (0, 0, 2520, 1260), (640, 1100)),
     "shown": Picture("shown", "05-native-realms.png", (520, 60, 2560, 1080), (640, 1100)),
 }
+# One screenshot of a world per type, the one that shows its name best. Every frame is cut to the
+# same square of the New World's canvas, so the types compare at a glance.
+WORLD_SQUARE: Final = (860, 0, 2300, 1440)
+PICTURES.update(
+    {
+        f"world-{kind}": Picture(
+            f"world-{kind}", f"world-types/{kind}.jpg", WORLD_SQUARE, (360, 720)
+        )
+        for kind in WORLD_TYPES
+    }
+)
 OG_IMAGE: Final = ("01-procedural-continents.png", (380, 0, 2560, 1145))  # 1.904 ≈ 1200×630
 
 
@@ -1043,15 +791,23 @@ def section_rules(page: Page) -> str:
     )
 
 
+WORLD_SIZES: Final = "(max-width: 520px) 100vw, (max-width: 900px) 50vw, 360px"
+
+
 def section_types(page: Page) -> str:
-    cards = "".join(
-        (
-            '<li class="type">'
-            f'<img class="vignette" src="/assets/world-{kind}.svg" width="300" height="200" alt="" loading="lazy">'
-            f"<h3>{esc(page.ui(f'type.{kind}'))}</h3><p>{esc(page.ui(f'type.{kind}.about'))}</p></li>"
+    def card(kind: str) -> str:
+        vignette = picture_html(f"world-{kind}", "", WORLD_SIZES, "vignette")
+        title = f"<h3>{esc(page.ui(f'type.{kind}'))}</h3>"
+        about = f"<p>{esc(page.ui(f'type.{kind}.about'))}</p>"
+        if kind != "omerika":
+            return f'<li class="type">{vignette}{title}{about}</li>'
+        # Omerika has settings of its own to explain: its card spans the row.
+        return (
+            f'<li class="type type-wide">{vignette}<div class="type-body">{title}{about}'
+            f"<p>{page.t('types.omerika_text')}</p></div></li>"
         )
-        for kind in WORLD_TYPES
-    )
+
+    cards = "".join(card(kind) for kind in WORLD_TYPES)
     for kind in WORLD_TYPES:
         page.display.update(page.ui(f"type.{kind}"))
     extra = "".join(
@@ -1079,7 +835,7 @@ def section_settings(page: Page) -> str:
     return (
         '<section id="settings" class="sec">'
         f"{section_head(page, 'settings', 'settings.title', 'settings.lead')}"
-        f"{legend(page, 'settings', ('seed', 'sketch', 'draw', 'ocean', 'peoples', 'resources'))}"
+        f"{legend(page, 'settings', ('seed', 'sketch', 'draw', 'ocean', 'peoples', 'history', 'past', 'resources'))}"
         "</section>"
     )
 
@@ -1097,8 +853,9 @@ def section_hidden(page: Page) -> str:
         f'<figure class="shot">{shown}<figcaption>{page.t("hidden.shown")}</figcaption></figure>'
         "</div>"
         '<dl class="legend two">'
-        f'<div class="lg"><dt><span class="ui">{esc(page.ui("reveal_world"))}</span></dt><dd>{page.t("hidden.reveal_text")}</dd></div>'
         f'<div class="lg"><dt><span class="ui">{esc(page.ui("lobby_cover"))}</span></dt><dd>{page.t("hidden.show_text")}</dd></div>'
+        f'<div class="lg"><dt><span class="ui">{esc(page.ui("control.new_world.reveal_at_start"))}</span></dt><dd>{page.t("hidden.start_text")}</dd></div>'
+        f'<div class="lg"><dt><span class="ui">{esc(page.ui("reveal_world"))}</span></dt><dd>{page.t("hidden.reveal_text")}</dd></div>'
         "</dl>"
         f'<p class="aside-note">{page.t("hidden.atlas")}</p></section>'
     )
@@ -1108,7 +865,7 @@ def section_library(page: Page) -> str:
     return (
         '<section id="library" class="sec">'
         f"{section_head(page, 'library', 'library.title', 'library.lead')}"
-        f"{legend(page, 'library', ('versions', 'queue', 'share', 'move', 'clean'))}"
+        f"{legend(page, 'library', ('versions', 'old', 'queue', 'share', 'move', 'clean'))}"
         "</section>"
     )
 
@@ -1148,6 +905,7 @@ HELP: Final[tuple[str, ...]] = (
     "error",
     "blocked",
     "picture",
+    "playset",
     "library",
     "bug",
 )
@@ -1458,8 +1216,6 @@ def render(
     files["index.html"] = render_root(css, fonts)
     files["404.html"] = render_404(css, fonts)
     files["assets/rhumbs.svg"] = rhumb_background() + "\n"
-    for kind in WORLD_TYPES:
-        files[f"assets/world-{kind}.svg"] = world_svg(kind)
     urls = "".join(f"<url><loc>{SITE}/{lang.slug}/</loc></url>" for lang in LANGUAGES)
     files["sitemap.xml"] = (
         '<?xml version="1.0" encoding="UTF-8"?>'
