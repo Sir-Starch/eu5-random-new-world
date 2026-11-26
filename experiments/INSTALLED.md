@@ -2388,3 +2388,25 @@ files. The recovery receipt passed, and the native library adopted the corrected
 2026-11-25, **African terrain junctions and connected starting countries** (C563, source `f7b2180`, pending epoch 64). [V-EXEC] Rebuilt the owner's GUGH seed and controls, with a fresh peoples roll for a new ID, for EU5 1.4.9 / Steam build 26655995. Installed **RNW: Combined world AAYT** as `rnw_exp_world_aaytdhrr2j` in the existing Windows/Proton profile. All 1,465 canonical files match digest `116273d0845ce8edce13621f285ec540e210477ead9a07efa694cf23daca80b4`. The installed-file check also compared the other 29 mod folders and 10 top-level profile files across the copy.
 
 [V-EXEC] Updated the local `rnw_exp_hub` in the same profile. Both offscreen Wine window self-tests passed, and the updater verified the installed file set. The preceding hub is retained at `.rnw-hub-backups/1.3.0-1795647368231052668`. Wheel SHA-256 `11c66fd3f7bc569763f41df427edd88e1fdb3b5fdd013adf1188ce760e99f2a9`; Tauri executable SHA-256 `b430c1a46eb018cd312fbb445357763125553a3e1d938c09805970020943fa37`.
+
+2026-11-26, **Normal land and location size** (C564, pending epoch 64, sources
+`414c6b5ff5be081f3a480659dab801a4bb79ad84` and
+`51345f61587870e0bb13626bfe163e9a423dfbe6`). [V-EXEC] Installed the
+seed 17 default all-continent map **RNW: Combined world 6XHN** in
+`rnw_exp_world_6xhn6drv3m` for EU5 1.4.9 / Steam build 26655995. All 1,466
+canonical files match digest
+`6e9d7f6dbfe96b27eaaf221704952728d7f317845106a52919298f140bbd3b4f`.
+The copy preserved the other 31 mod directories and 10 top-level profile
+files by size and modification time. The installed recovery receipt reads
+back the calibrated settings. See the [location counts](../docs/continent-generation-plan.md#normal-land-and-location-size).
+
+[V-EXEC] Updated `rnw_exp_hub`. Both offscreen Wine self-tests and installed
+file verification passed. The recovery check also read the existing AAYT and
+IDYB receipts. The previous hub is retained in
+`.rnw-hub-backups/1.3.0-1795660782998917573`. The Windows wheel
+SHA-256 is `48835fc1898a6c8ffc9f06b955d72f21725b8951280b8d54ce39f4e4cb073dd6`.
+Candidate `local_data/location-defaults/final-package/rnw_exp_hub`.
+
+Locked checks passed with 3,927 Python and 48 Rust tests. The installed-game
+checks passed (16 passed, 4 optional skips), including a repeat of the
+America-only reference (`424e5729…cf63`, 884 files).
