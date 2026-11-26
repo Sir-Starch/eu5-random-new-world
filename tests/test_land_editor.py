@@ -332,7 +332,11 @@ def test_the_land_tools_of_the_window_follow_the_continents_and_open_the_editor(
         tools.editor_button.click()
         assert opened == ["america"]
         controller.set_continent("africa", enabled=True)
-        pump(tools.rows["africa"].isVisible)
+        pump(
+            lambda: (
+                tools.rows["africa"].isVisible() and tools.rows["africa"].edit_button.isEnabled()
+            )
+        )
         tools.rows["africa"].edit_button.click()
         assert opened == ["america", "africa"]
         assert tools.rows["america"].name.isVisible()  # several continents are named
@@ -340,7 +344,12 @@ def test_the_land_tools_of_the_window_follow_the_continents_and_open_the_editor(
         picture = tmp_path / "africa.png"
         _ = picture.write_bytes(_square_picture())
         assert controller.choose_land_image(picture, "africa") is None
-        pump(tools.rows["africa"].clear_button.isVisible)
+        pump(
+            lambda: (
+                tools.rows["africa"].clear_button.isVisible()
+                and tools.rows["africa"].clear_button.isEnabled()
+            )
+        )
         assert "Africa" in tools.rows["africa"].state.text()
         tools.rows["africa"].clear_button.click()
         pump(lambda: not tools.rows["africa"].clear_button.isVisible())
