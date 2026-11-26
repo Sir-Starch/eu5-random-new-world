@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from rnw.app import controls
+from rnw.epoch import CURRENT
 
 if TYPE_CHECKING:
     from rnw.settings import RegionalSettings
@@ -35,12 +36,19 @@ class Part:
     scale: int = PERMILLE
     fixed: int | None = None
 
-    def value(self, preset: str, defaults: RegionalSettings | None = None) -> int:
+    def value(
+        self,
+        preset: str,
+        defaults: RegionalSettings | None = None,
+        *,
+        algorithm: int = CURRENT,
+        composed: bool = False,
+    ) -> int:
         """The control's value for ``preset``, kept in the control's playable range; for another
         continent than America, ``defaults`` are the values of its own type."""
         if defaults is None:
             control = controls.BY_KEY[self.key]
-            base = control.default(preset)
+            base = control.default(preset, algorithm=algorithm, composed=composed)
         else:
             control = controls.REGION_BY_KEY[self.key]
             base = controls.region_value(control, defaults)
@@ -55,9 +63,19 @@ class Level:
     name: str
     parts: tuple[Part, ...]
 
-    def values(self, preset: str, defaults: RegionalSettings | None = None) -> dict[str, int]:
+    def values(
+        self,
+        preset: str,
+        defaults: RegionalSettings | None = None,
+        *,
+        algorithm: int = CURRENT,
+        composed: bool = False,
+    ) -> dict[str, int]:
         """Control key -> value of this level for ``preset`` (a continent's ``defaults``)."""
-        return {part.key: part.value(preset, defaults) for part in self.parts}
+        return {
+            part.key: part.value(preset, defaults, algorithm=algorithm, composed=composed)
+            for part in self.parts
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,12 +94,21 @@ class Quick:
         return frozenset(part.key for level in self.levels for part in level.parts)
 
     def current(
-        self, preset: str, values: dict[str, int], defaults: RegionalSettings | None = None
+        self,
+        preset: str,
+        values: dict[str, int],
+        defaults: RegionalSettings | None = None,
+        *,
+        algorithm: int = CURRENT,
+        composed: bool = False,
     ) -> str | None:
         """The level whose values every touched control holds in ``values``; None: custom."""
         for level in self.levels:
             if all(
-                values.get(key) == number for key, number in level.values(preset, defaults).items()
+                values.get(key) == number
+                for key, number in level.values(
+                    preset, defaults, algorithm=algorithm, composed=composed
+                ).items()
             ):
                 return level.name
         return None

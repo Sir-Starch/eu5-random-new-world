@@ -125,7 +125,7 @@ def label(world: World, *, name: str | None = None) -> worldname.Label:
         code = decode(world.code)
         origin = code.origin
         settings = (
-            build_settings(world.preset, world.record.settings)
+            build_settings(world.preset, world.record.settings, algorithm=world.record.algorithm)
             if world.record is not None
             else code.settings()
         )

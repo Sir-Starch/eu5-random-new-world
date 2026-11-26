@@ -194,7 +194,7 @@ def generate(
     _require_profile(request)
     _require_epoch(request)
     started = time.monotonic()
-    settings = request.code.settings()
+    settings = request.code.settings(algorithm=request.algorithm)
     kept = settings.new_world.keep_geography
     timing_type = f"{request.code.preset}:real" if kept else request.code.preset
     if not settings.continents.america:
@@ -247,7 +247,7 @@ def generate(
         request.game.directory,
         output,
         seed=request.code.seed,
-        settings=replace(settings, algorithm=request.algorithm),
+        settings=settings,
         accept_build=request.accept_build,
         replace=True,
         check_memory=request.check_memory,
@@ -567,7 +567,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
             game.directory,
             scratch,
             seed=record.seed,
-            settings=replace(record.resolved_settings(), algorithm=record.algorithm),
+            settings=record.resolved_settings(),
             accept_build=None,
             replace=True,
             check_memory=check_memory,

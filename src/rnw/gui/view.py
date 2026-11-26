@@ -92,7 +92,6 @@ def _control_info(control: controls.Control, default: int) -> dict[str, object]:
 
 def static(controller: Controller) -> dict[str, object]:
     """What the window needs once: its strings, the choices it offers and their ranges."""
-    preset = controller.preset
     return {
         "title": TITLE,
         "version": __version__,
@@ -105,7 +104,8 @@ def static(controller: Controller) -> dict[str, object]:
         "world_types": list(WORLD_TYPES),
         "groups": list(controls.GROUPS),
         "controls": [
-            _control_info(control, control.default(preset)) for control in controls.CONTROLS
+            _control_info(control, controller.default_value(control.key))
+            for control in controls.CONTROLS
         ],
         "quick": [
             {
@@ -311,7 +311,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         if not america or not controls.visible(control, c.preset, keeps=keeps):
             continue
         value = c.value(control.key)
-        default = control.default(c.preset)
+        default = c.default_value(control.key)
         values[control.key] = {
             "shown": control.shown(value),
             "position": control.position(value),

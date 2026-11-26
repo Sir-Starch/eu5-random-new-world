@@ -15,7 +15,7 @@ import hashlib
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
-from rnw.settings import PRESETS, TITLES
+from rnw.settings import PRESETS, TITLES, preset_settings
 
 if TYPE_CHECKING:
     from rnw.settings import Settings
@@ -72,7 +72,7 @@ def display_name(
     elif origin in {"custom", "chaos_custom"}:
         title = "Custom world"
     elif settings is not None and preset in PRESETS:
-        base = PRESETS[preset].new_world
+        base = preset_settings(preset, algorithm=settings.algorithm).new_world
         shape = replace(
             settings.new_world,
             precious_permille=base.precious_permille,

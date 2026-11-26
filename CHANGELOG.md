@@ -5,6 +5,10 @@
 Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
 worlds and saves are not rewritten or migrated.
 
+- Tune **Normal** land for America, Africa and Oceania to bring the number of
+  playable locations closer to vanilla. Each continent has its own default
+  spacing. The **Location size** slider still lets you make finer or coarser maps.
+
 - Smooth relief and material transitions on both sides of generated African land
   connections to Asia and Iberia. Grow restored Morocco and the Mamluks as
   connected territories around their retained holdings.

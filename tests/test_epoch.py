@@ -7,7 +7,7 @@ import hashlib
 import pytest
 
 from rnw import __version__, epoch
-from rnw.settings import PRESETS, canonical_json
+from rnw.settings import PRESETS, canonical_json, preset_settings
 
 # The digest of every preset's resolved settings, by epoch. A preset's value is part of the
 # algorithm (a short code resolves to it): changing one without a new epoch would make an old
@@ -76,12 +76,14 @@ PRESET_DIGESTS = {
     61: "ff6684d5cfa720d8a12cc828e9020ce482ea2d0f4e6649363c31e058ccbecc92",
     62: "ff6684d5cfa720d8a12cc828e9020ce482ea2d0f4e6649363c31e058ccbecc92",
     63: "ff6684d5cfa720d8a12cc828e9020ce482ea2d0f4e6649363c31e058ccbecc92",
-    64: "ff6684d5cfa720d8a12cc828e9020ce482ea2d0f4e6649363c31e058ccbecc92",
+    64: "bccf8c318f9b2de2f6dcdd72a61e3d37b7cfcef211beef6e09745eb9476f8ec2",
 }
 
 
-def _preset_digest() -> str:
-    document = {name: settings.to_json_data() for name, settings in sorted(PRESETS.items())}
+def _preset_digest(algorithm: int) -> str:
+    document = {
+        name: preset_settings(name, algorithm=algorithm).to_json_data() for name in sorted(PRESETS)
+    }
     return hashlib.sha256(canonical_json(document).encode("ascii")).hexdigest()
 
 
@@ -108,6 +110,7 @@ def test_a_version_that_is_not_a_release_is_refused() -> None:
             _ = epoch.parse(bad)
 
 
-def test_the_presets_of_the_running_epoch_are_pinned() -> None:
-    """Retuning a preset needs a new epoch (``rnw.epoch``) and a new line here."""
-    assert _preset_digest() == PRESET_DIGESTS[epoch.CURRENT]
+@pytest.mark.parametrize("algorithm", epoch.selectable())
+def test_the_presets_of_each_selectable_epoch_are_pinned(algorithm: int) -> None:
+    """The pending epoch can be tuned. Released world codes keep their defaults."""
+    assert _preset_digest(algorithm) == PRESET_DIGESTS[algorithm]

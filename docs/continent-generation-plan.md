@@ -387,6 +387,33 @@ locations and impassable mountains separately. This shows the relative starting
 scale of the regions. Generated counts will depend on preset, land share and
 terrain. See [previous timings](performance-plan.md) for the current baseline.
 
+### Normal land and location size
+
+The Normal land choice uses the preset's land share and its default location
+spacing. On EU5 1.4.9 (build 26655995), the America-only Continents preset uses
+66 px. It uses 51 px when sharing the map with another generated continent.
+The regional defaults are 66 px for Africa (Supercontinent) and 72 px for Oceania
+(Archipelago). Other world types adjust those spacings for their usual amount of
+land. The Location size control takes the player's value directly, from 40 to
+90 px. The world-wide location budget still applies. The budget estimate uses
+the smaller American land area on the shared canvas, except for The Wall.
+
+[V-LOCAL] [V-EXEC] Read back the passable land locations from the installed
+game and the seed 17 exports (C564). America alone has 4,582, compared with
+4,434 in vanilla (+3.3%). A prior seed 17 export with the old 53 px
+default had 6,999. The separate America-only Supercontinent reference has
+4,594 passable locations.
+
+| Continent | Vanilla | All three generated at Normal | Difference |
+|---|---:|---:|---:|
+| America | 4,434 | 4,266 | −3.8% |
+| Africa | 2,433 | 2,494 | +2.5% |
+| Oceania | 790 | 857 | +8.5% |
+
+The seed 17 exports have zero split generated cells, unreachable sea zones or
+lost Old World contacts. The shared map has 26,702 locations of all classes.
+These are measurements for the named seeds and chosen presets.
+
 ## Implementation and acceptance order
 
 1. Extract the world-level orchestration and regional inputs, keeping the

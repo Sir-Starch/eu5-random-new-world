@@ -16,7 +16,8 @@ import math
 from dataclasses import dataclass, replace
 from typing import Final, cast
 
-from rnw.settings import PRESETS, RESOURCE_FIELDS, WORLD_TYPES, RegionalSettings, Settings
+from rnw.epoch import CURRENT
+from rnw.settings import RESOURCE_FIELDS, WORLD_TYPES, RegionalSettings, Settings, preset_settings
 
 STEPS: Final[int] = 1000
 # Locations of a world, estimated from its settings (C118): those outside the New World on
@@ -67,9 +68,10 @@ class Control:
         """The field inside the section."""
         return self.key.split(".", 1)[1]
 
-    def default(self, preset: str) -> int:
+    def default(self, preset: str, *, algorithm: int = CURRENT, composed: bool = False) -> int:
         """The value of the world type ``preset``."""
-        section = cast("object", getattr(PRESETS[preset], self.section))
+        base = preset_settings(preset, algorithm=algorithm, composed=composed)
+        section = cast("object", getattr(base, self.section))
         return cast("int", getattr(section, self.field))
 
     def allows(self, value: int) -> bool:
@@ -319,7 +321,10 @@ def _american_locations(settings: Settings) -> int:
     if world.keep_geography:
         return VANILLA_LOCATIONS
     wide = bool(world.expand_oceans or world.landform)
-    land_area = WIDE_LAND_CELLS if wide else LAND_CELLS
+    # Measured on the shared EU5 1.4.9 canvas: America's land fits the smaller
+    # coefficient even with expanded oceans. The Wall keeps its own land budget.
+    wide_land = wide and (not settings.continents.regions or world.landform)
+    land_area = WIDE_LAND_CELLS if wide_land else LAND_CELLS
     sea_area = WIDE_SEA_ZONES if wide else SEA_ZONES
     share = world.land_permille
     if world.landform:

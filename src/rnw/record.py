@@ -175,7 +175,7 @@ class Record:
     def resolved_settings(self) -> Settings:
         """The settings the world was made with, read from the record and not from the presets."""
         try:
-            return build_settings(self.preset, dict(self.settings))
+            return build_settings(self.preset, dict(self.settings), algorithm=self.algorithm)
         except SettingsError as error:
             message = f"The record's settings cannot be read: {error}"
             raise RecordError(message) from error

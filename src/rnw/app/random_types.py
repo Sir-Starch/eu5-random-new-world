@@ -15,6 +15,7 @@ import secrets
 from typing import TYPE_CHECKING, Final
 
 from rnw.app import controls
+from rnw.epoch import CURRENT
 from rnw.settings import WORLD_TYPES, build_settings
 
 if TYPE_CHECKING:
@@ -30,13 +31,19 @@ CHOICES: Final[tuple[str, ...]] = (*MODES, *WORLD_TYPES)
 ATTEMPTS: Final[int] = 1000
 
 
-def draw(mode: str, rng: random.Random | None = None) -> tuple[str, dict[str, int]]:
+def draw(
+    mode: str,
+    rng: random.Random | None = None,
+    *,
+    algorithm: int = CURRENT,
+    composed: bool = False,
+) -> tuple[str, dict[str, int]]:
     """A world type and the changes of its controls that ``mode`` draws; the changes are the
     values that differ from the type's own, as the window keeps them."""
     source = rng if rng is not None else secrets.SystemRandom()
     preset = source.choice(WORLD_TYPES)
     if mode == CHAOS:
-        return preset, _advanced_changes(preset, source)
+        return preset, _advanced_changes(preset, source, algorithm, composed=composed)
     if mode == RANDOM:
         return preset, {}
     message = f"Unknown random world type: {mode!r}"
@@ -48,19 +55,22 @@ def _own_group(preset: str) -> str:
     return {"wall": "wall", "omerika": "omerika"}.get(preset, "")
 
 
-def _advanced_changes(preset: str, rng: random.Random) -> dict[str, int]:
+def _advanced_changes(
+    preset: str, rng: random.Random, algorithm: int, *, composed: bool
+) -> dict[str, int]:
     for _ in range(ATTEMPTS):
         values = {
             control.key: control.value_at(rng.randint(0, controls.STEPS))
             for control in controls.ADVANCED
             if control.group not in {"wall", "omerika"} or control.group == _own_group(preset)
         }
-        settings = build_settings(preset, controls.nested(values))
+        settings = build_settings(preset, controls.nested(values), algorithm=algorithm)
         if controls.estimated_locations(settings) <= controls.LOCATION_BUDGET:
             return {
                 key: number
                 for key, number in values.items()
-                if number != controls.BY_KEY[key].default(preset)
+                if number
+                != controls.BY_KEY[key].default(preset, algorithm=algorithm, composed=composed)
             }
     message = f"No Advanced draw for {preset} fits the location budget in {ATTEMPTS} tries"
     raise RuntimeError(message)

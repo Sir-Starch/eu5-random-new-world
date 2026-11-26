@@ -15,6 +15,35 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+def test_normal_land_restores_regional_spacing_after_manual_changes(tmp_path: Path) -> None:
+    controller = Controller(data=tmp_path)
+    key = "new_world.location_px"
+    low, high = controls.BY_KEY[key].low, controls.BY_KEY[key].high
+    single = controller.value(key)
+    for region in ("africa", "oceania"):
+        controller.set_continent(region, enabled=True)
+    defaults = controller.world_code().settings()
+    assert controller.value(key) == defaults.new_world.location_px < single
+    assert controller.quick_level("land") == "normal"
+    controller.set_value(key, low)
+    assert controller.estimated_locations() < controls.LOCATION_BUDGET
+
+    for size in (low, high):
+        controller.set_value(key, size)
+        for region in ("africa", "oceania"):
+            controller.set_region_value(region, key, size)
+        restored = Controller(data=tmp_path)
+        assert restored.use_code(controller.code) is None
+        settings = restored.world_code().settings()
+        assert settings.new_world.location_px == size
+        assert all(region.new_world.location_px == size for region in settings.continents.regions)
+
+    controller.set_quick("land", "normal")
+    for region in ("africa", "oceania"):
+        controller.set_region_quick(region, "land", "normal")
+    assert controller.world_code().settings() == defaults
+
+
 def test_continent_presets_and_overrides_travel_independently(tmp_path: Path) -> None:
     controller = Controller(data=tmp_path)
     assert controller.continent_selection() == {"america": True, "africa": False, "oceania": False}

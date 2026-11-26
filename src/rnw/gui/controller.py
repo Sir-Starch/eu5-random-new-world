@@ -410,6 +410,10 @@ class Controller:
         raw = self.other_changes.get("continents")
         return dict(cast("dict[str, object]", raw)) if isinstance(raw, dict) else {}
 
+    def _composed(self) -> bool:
+        raw = self._continent_document()
+        return any(raw.get(key, False) is not False for key in REGIONAL_PRESETS)
+
     def sea_circumnavigation(self) -> bool | None:
         """The regional option is available when the world has no Wall."""
         selection = self.continent_selection()
@@ -458,7 +462,9 @@ class Controller:
         if defaults and isinstance(raw, dict):
             raw = {"preset": cast("dict[str, object]", raw).get("preset", REGIONAL_PRESETS[key][0])}
         return build_settings(
-            self.preset, {"continents": {key: raw if raw is not False else True}}
+            self.preset,
+            {"continents": {key: raw if raw is not False else True}},
+            algorithm=self.algorithm,
         ).continents.regions[0]
 
     def _edit_region(self, key: str, changes: dict[str, object]) -> None:
@@ -637,7 +643,9 @@ class Controller:
     def _draw(self) -> None:
         """Draw the world type, and for Total Chaos the Advanced values, of the random mode."""
         if self.mode is not None:
-            self.preset, self.changes = random_types.draw(self.mode)
+            self.preset, self.changes = random_types.draw(
+                self.mode, algorithm=self.algorithm, composed=self._composed()
+            )
             self.origin = "chaos" if self.mode == random_types.CHAOS else ""
 
     def randomize_settings(self) -> None:
@@ -707,11 +715,6 @@ class Controller:
             return text("outside_range", names=names)
         self.mode, self.preset, self.seed = None, code.preset, code.seed
         self._use_origin(code)
-        self.changes = {
-            key: number
-            for key, number in shown.items()
-            if number != controls.BY_KEY[key].default(code.preset)
-        }
         self.other_changes = other
         self._regional_drafts.clear()
         notices: list[str] = []
@@ -725,6 +728,9 @@ class Controller:
             notices.append(text("epoch.followed", release=code.generator, epoch=self.algorithm))
         else:
             notices.append(text("other_version", made=code.generator, current=__version__))
+        self.changes = {
+            key: number for key, number in shown.items() if number != self.default_value(key)
+        }
         if set(other) - {"rolls", "mask", "continents"}:
             notices.append(text("other_changes"))
         if not self._keep_drawings_of(code.settings()):
@@ -740,7 +746,13 @@ class Controller:
 
     def value(self, key: str) -> int:
         """The current value of a control: the changed one, or the world type's."""
-        return self.changes.get(key, controls.BY_KEY[key].default(self.preset))
+        return self.changes.get(key, self.default_value(key))
+
+    def default_value(self, key: str) -> int:
+        """The world type's value for the chosen algorithm epoch."""
+        return controls.BY_KEY[key].default(
+            self.preset, algorithm=self.algorithm, composed=self._composed()
+        )
 
     def set_value(self, key: str, number: int) -> None:
         """Change one setting, kept inside its playable range."""
@@ -748,7 +760,7 @@ class Controller:
         number = min(control.high, max(control.low, number))
         if number != self.value(key):
             self._custom_origin()
-        if number == control.default(self.preset):
+        if number == self.default_value(key):
             _ = self.changes.pop(key, None)
         else:
             self.changes[key] = number
@@ -757,14 +769,21 @@ class Controller:
     def quick_level(self, name: str) -> str | None:
         """The level of a quick setting that the controls hold now; None: a custom mix."""
         values = {control.key: self.value(control.key) for control in controls.CONTROLS}
-        return quick.BY_NAME[name].current(self.preset, values)
+        return quick.BY_NAME[name].current(
+            self.preset, values, algorithm=self.algorithm, composed=self._composed()
+        )
 
     def set_quick(self, name: str, level: str) -> None:
         """Set the controls of one answer of a quick setting."""
-        for key, number in quick.BY_NAME[name].level(level).values(self.preset).items():
+        values = (
+            quick.BY_NAME[name]
+            .level(level)
+            .values(self.preset, algorithm=self.algorithm, composed=self._composed())
+        )
+        for key, number in values.items():
             if number != self.value(key):
                 self._custom_origin()
-            if number == controls.BY_KEY[key].default(self.preset):
+            if number == self.default_value(key):
                 _ = self.changes.pop(key, None)
             else:
                 self.changes[key] = number
@@ -892,7 +911,7 @@ class Controller:
 
     def estimated_locations(self) -> int:
         """Locations the chosen world will have, roughly."""
-        return controls.estimated_locations(build_settings(self.preset, self._change_document()))
+        return controls.estimated_locations(self.world_code().settings())
 
     # -- the library ---------------------------------------------------------------------------
 
@@ -1340,7 +1359,7 @@ class Controller:
         return service.area_inputs(self.game, self._area_settings(), continent, self.seed)
 
     def _area_settings(self) -> Settings:
-        return build_settings(self.preset, self._change_document())
+        return self.world_code().settings()
 
     def prepare_land_area(self, continent: str = AMERICA) -> str | None:
         """Cut the area the editor draws ``continent`` on from the installed game's map, as a task
@@ -1379,7 +1398,7 @@ class Controller:
             _ = service.land_template(
                 game,
                 output,
-                build_settings(self.preset, self._change_document()),
+                self._area_settings(),
                 data=self.data,
                 continent=continent,
                 seed=seed,

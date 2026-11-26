@@ -35,6 +35,8 @@ from rnw.settings import PRESETS, SettingsError, build_settings
 if TYPE_CHECKING:
     from collections.abc import Collection
 
+    from rnw.settings import Settings
+
 PREFIX: Final[str] = "RNW1"
 IN_TEXT: Final[re.Pattern[str]] = re.compile(r"\bRNW1(?:-[A-Za-z0-9]+)+", re.IGNORECASE)
 FORMAT: Final[int] = 1
@@ -165,9 +167,10 @@ class WorldCode:
                 _ = cast("dict[str, object]", section).setdefault("expand_oceans", 0)
         return changes
 
-    def settings(self):  # noqa: ANN201 - Settings is imported lazily by callers that need it
+    def settings(self, *, algorithm: int | None = None) -> Settings:
         """The settings this code stands for (the preset with its changes applied)."""
-        return build_settings(self.preset, self.resolved_changes())
+        made = epoch_of(self.generator) if algorithm is None else algorithm
+        return build_settings(self.preset, self.resolved_changes(), algorithm=made)
 
 
 def random_seed() -> int:

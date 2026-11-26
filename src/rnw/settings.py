@@ -14,6 +14,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final, cast
 
 from rnw.epoch import CURRENT as ALGORITHM
+from rnw.epoch import REGIONAL_LOCATION_DEFAULTS
 from rnw.rng import RNG_VERSION, check_seed
 
 if TYPE_CHECKING:
@@ -625,6 +626,48 @@ PRESETS["omerika"] = replace(
         min_island_px=400,
     ),
 )
+_LEGACY_PRESETS = PRESETS.copy()
+# Calibrated against passable land locations in EU5 1.4.9. Larger land presets
+# use more space per cell. The location slider still sets the spacing directly.
+_AMERICAN_LOCATION_PX: Final[dict[str, int]] = {
+    "continents": 66,
+    "supercontinent": 73,
+    "small_continents": 57,
+    "archipelago": 51,
+    "islands": 51,
+    "omerika": 57,
+}
+_REGIONAL_LOCATION_PX: Final[dict[str, int]] = {
+    "america": 51,
+    "africa": 66,
+    "oceania": 72,
+}
+for _name, _spacing in _AMERICAN_LOCATION_PX.items():
+    _preset = PRESETS[_name]
+    PRESETS[_name] = replace(_preset, new_world=replace(_preset.new_world, location_px=_spacing))
+
+
+def preset_settings(preset: str, *, algorithm: int = ALGORITHM, composed: bool = False) -> Settings:
+    """The preset's defaults in the epoch in which they will be used."""
+    if algorithm < REGIONAL_LOCATION_DEFAULTS:
+        return replace(_LEGACY_PRESETS[preset], algorithm=algorithm)
+    settings = PRESETS[preset]
+    if composed:
+        # America has less land when the continents share the oceans.
+        spacing = _regional_location_px("america", preset, "continents")
+        settings = replace(settings, new_world=replace(settings.new_world, location_px=spacing))
+    return settings if settings.algorithm == algorithm else replace(settings, algorithm=algorithm)
+
+
+def _regional_location_px(key: str, preset: str, default: str) -> int:
+    """Keep a regional baseline and the spacing differences between world types."""
+    offset = (
+        _LEGACY_PRESETS[preset].new_world.location_px
+        - _LEGACY_PRESETS[default].new_world.location_px
+    )
+    return _REGIONAL_LOCATION_PX[key] + offset
+
+
 # English names, for a mod's metadata and the window's default text.
 TITLES: Final[dict[str, str]] = {
     "omerika": "Omerika",
@@ -697,7 +740,7 @@ def _merge[
     return replace(base, **changes)
 
 
-def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings:
+def _regional_settings(key: str, fields_: dict[str, object], algorithm: int) -> RegionalSettings:
     fallback, band = REGIONAL_PRESETS[key]
     allowed = {"preset", "new_world", "natives", "resources", "mask"}
     if key == "africa":
@@ -717,9 +760,12 @@ def _regional_settings(key: str, fields_: dict[str, object]) -> RegionalSettings
     if not isinstance(preset, str) or preset not in PRESETS or preset in {"wall", "omerika"}:
         message = f"Invalid {key} preset: {preset}"
         raise SettingsError(message)
-    base = PRESETS[preset]
+    base = preset_settings(preset, algorithm=algorithm)
+    spacing = base.new_world.location_px
+    if algorithm >= REGIONAL_LOCATION_DEFAULTS:
+        spacing = _regional_location_px(key, preset, fallback)
     land = _merge(
-        replace(base.new_world, ocean_band_px=band, expand_oceans=0),
+        replace(base.new_world, ocean_band_px=band, expand_oceans=0, location_px=spacing),
         f"{key} geography",
         fields_.get("new_world", {}),
     )
@@ -810,7 +856,7 @@ def _mamluk_policy(value: object) -> MamlukPolicy:
     raise SettingsError(message)
 
 
-def _continents(raw: object) -> ContinentSettings:
+def _continents(raw: object, algorithm: int) -> ContinentSettings:
     if not isinstance(raw, dict):
         message = "Continent settings must be an object"
         raise SettingsError(message)
@@ -836,7 +882,7 @@ def _continents(raw: object) -> ContinentSettings:
         if not isinstance(value, dict):
             message = f"Settings for {key} must be an object or a switch"
             raise SettingsError(message)
-        configured.append(_regional_settings(key, cast("dict[str, object]", value)))
+        configured.append(_regional_settings(key, cast("dict[str, object]", value), algorithm))
     if not (america or configured):
         message = "Choose at least one continent"
         raise SettingsError(message)
@@ -854,7 +900,9 @@ def drawn_ids(settings: Settings) -> dict[str, int]:
     return found
 
 
-def build_settings(preset: str, overrides: dict[str, object] | None = None) -> Settings:
+def build_settings(
+    preset: str, overrides: dict[str, object] | None = None, *, algorithm: int = ALGORITHM
+) -> Settings:
     """Apply a JSON-like override object to a named preset and validate it."""
     data = dict(overrides or {})
     schema = data.pop("schema", SCHEMA_VERSION)
@@ -865,7 +913,6 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
     if not isinstance(name, str) or name not in PRESETS:
         message = f"Unknown preset: {name}; choose one of {', '.join(sorted(PRESETS))}"
         raise SettingsError(message)
-    base = PRESETS[name]
     unknown = sorted(
         set(data)
         - {
@@ -883,6 +930,8 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
     if unknown:
         message = f"Unknown settings sections: {', '.join(unknown)}"
         raise SettingsError(message)
+    continents = _continents(data.get("continents", {}), algorithm)
+    base = preset_settings(name, algorithm=algorithm, composed=bool(continents.regions))
     synthetic = _merge(base.synthetic, "synthetic", data.get("synthetic", {}))
     if synthetic.old_world_columns * 2 > synthetic.width:
         message = "Setting old_world_columns must leave at least half of the canvas"
@@ -897,7 +946,8 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         rolls=_merge(base.rolls, "rolls", data.get("rolls", {})),
         mask=_merge(base.mask, "mask", data.get("mask", {})),
         resources=_merge(base.resources, "resources", data.get("resources", {})),
-        continents=_continents(data.get("continents", {})),
+        continents=continents,
+        algorithm=algorithm,
     )
 
     if resolved.new_world.landform and resolved.mask.id:

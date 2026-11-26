@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 from rnw import __version__, epoch
 from rnw.app import library, preferences
 from rnw.app.worldcode import decode, encode, new_code
-from rnw.gui.controller import Phase
+from rnw.gui.controller import Controller, Phase
 from rnw.gui.text import text
 from tests.test_controller import (
     _controller,  # pyright: ignore[reportPrivateUsage]
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from rnw.app.service import Exporter
-    from rnw.gui.controller import Controller
     from rnw.landmask import LandMask
     from rnw.progress import Progress
     from rnw.settings import Settings
@@ -144,6 +143,25 @@ def test_unticking_the_features_makes_new_worlds_of_the_current_epoch_again(
     assert controller.algorithm == epoch.CURRENT
     assert decode(controller.code).generator == __version__
     assert controller.epoch_choices() == []
+
+
+def test_pasted_older_codes_use_that_epochs_location_defaults(tmp_path: Path) -> None:
+    controller = Controller(data=tmp_path)
+    key = "new_world.location_px"
+    current = controller.default_value(key)
+    controller.set_experimental(True)
+    old_code = replace(new_code("continents", 17), generator=epoch.stamp_of(OLDER))
+    assert controller.use_code(encode(old_code)) is None
+    assert controller.value(key) == old_code.settings().new_world.location_px == 53
+    assert controller.quick_level("land") == "normal"
+
+    override = replace(old_code, changes={"new_world": {"location_px": current}})
+    assert controller.use_code(encode(override)) is None
+    assert controller.value(key) == current
+    assert controller.world_code().settings() == override.settings()
+    controller.set_quick("land", "normal")
+    assert controller.value(key) == 53
+    assert controller.world_code().changes is None
 
 
 def test_a_world_is_made_by_the_epoch_chosen_and_its_record_says_so(
