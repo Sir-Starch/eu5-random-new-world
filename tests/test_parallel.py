@@ -376,15 +376,19 @@ def test_shared_readings_allow_an_independent_consumer_before_the_other_finishes
 def test_numpy_does_not_ask_for_huge_pages() -> None:
     """Importing the package first stops numpy asking for huge pages, which stalled the machine."""
     code = (
-        "import rnw\nfrom numpy._core import multiarray\nprint(multiarray._get_madvise_hugepage())"
+        "import os, rnw\n"
+        "from numpy._core import multiarray\n"
+        "print(os.environ.get('NUMPY_MADVISE_HUGEPAGE'), multiarray._get_madvise_hugepage())"
     )
     env = {key: value for key, value in os.environ.items() if key != "NUMPY_MADVISE_HUGEPAGE"}
     result = subprocess.run(  # noqa: S603 - our own interpreter and a fixed program
         [sys.executable, "-c", code], capture_output=True, text=True, check=True, env=env
     )
-    assert result.stdout.strip() == "False"
+    assert result.stdout.strip() == "0 False"
     env["NUMPY_MADVISE_HUGEPAGE"] = "1"
     result = subprocess.run(  # noqa: S603 - our own interpreter and a fixed program
         [sys.executable, "-c", code], capture_output=True, text=True, check=True, env=env
     )
-    assert result.stdout.strip() == "True"
+    # NumPy only enables madvise(MADV_HUGEPAGE) on Linux; other platforms always report False.
+    expected = "1 True" if sys.platform.startswith("linux") else "1 False"
+    assert result.stdout.strip() == expected
