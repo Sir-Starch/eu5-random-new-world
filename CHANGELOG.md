@@ -2,8 +2,16 @@
 
 ## Unreleased
 
-Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
-worlds and saves are not rewritten or migrated.
+## 1.3.0 — 2026-11-26
+
+- **Generate Africa and Oceania alongside or instead of America**, in one world and one mod. Each continent has its own world type, quick questions, Advanced settings, whole-map sketches and drawable sheet in the land editor; **Keep the real Americas** can run alongside generated Africa and Oceania.
+- **African boundaries and starts:** four choices for Morocco's Iberian holdings (**Keep Morocco** by default, restoring 86 African holdings with their 1337 pops, towns, markets, institutions and buildings), **Keep Mamluks** (68 restored African holdings) or **Independent Sultanate of Damascus**, optional or required land bridges to Asia along the Arabian shore or the original frontier, an optional **Allow a land connection to Iberia (no strait)** that closes the Mediterranean, continuous Mediterranean sea areas, and released open-Atlantic island sites.
+- **Natural wastelands and river-first geography:** impassable wastelands are planned across dunes, plateaus, hills, flat wilds and mountains by climate and ground; active coasts raise cordilleras, seasonal rainfall drives drainage before cell partitioning, locations are sized by climate and ground (with regional **Normal** spacing for America, Africa and Oceania), raw materials pool over broader vanilla classes, and **Keep a sea route around the world** opens a channel through generated land when needed rather than reserving a southern map band.
+- **Compact sea cells, playable cities and plan-based populations:** open water uses a regular grid with local shore and strait partitions; passable land locations stay below the engine's city-grid limit (15,000–20,000 px); populations follow each cell's planned area rather than its grown pixels; marriage and heir religion laws and Australian reforms match vanilla conditions; and retained rivers cut from their sources end cleanly at the replaced continent's edge.
+- **Window rework, Terra Incognita appearance and Proton Experimental:** nine-phase progress tracking, lit-sheet physical maps, the aged-chart **Terra Incognita** appearance in the Tauri window, full feature parity in the classic Qt window, an `icuuc.dll` forwarder so the classic window opens under Valve's Proton Experimental, and disabled numpy huge-page requests to stop machine-wide export stalls.
+- **Targets EU5 1.4.\*** (latest verified: **1.4.9 / Steam build 26655995**); most patches within the 1.4 branch work without needing a generator update. Algorithm epoch **64**: a 1.2.2 code can make another world at epoch 64; turn on **Experimental features** in Settings to choose epoch **63** (1.2.2), **62** (1.2.1) or **61** (1.2.0). Existing worlds and saves are not rewritten or migrated.
+
+The entries below describe each change in detail.
 
 - Tune **Normal** land for America, Africa and Oceania to bring the number of
   playable locations closer to vanilla. Each continent has its own default

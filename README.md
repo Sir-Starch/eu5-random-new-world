@@ -4,22 +4,22 @@
 
 # Random New World for Europa Universalis V
 
-**A standalone procedural New World generator for EU5 — full-scale continents, physical geography, and native societies with an untouched vanilla Old World.**
+**A standalone procedural continent generator for EU5 — centered on the New World, with optional Africa and Oceania (Eurasia WIP), physical geography, and native societies while preserving ungenerated lands.**
 
 [![check](https://github.com/Sir-Starch/eu5-random-new-world/actions/workflows/check.yml/badge.svg)](https://github.com/Sir-Starch/eu5-random-new-world/actions/workflows/check.yml)
 [![License: MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](LICENSE)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)
 ![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
-![EU5 1.4.7](https://img.shields.io/badge/EU5-1.4.7-8B6F47.svg)
+![EU5 1.4.*](https://img.shields.io/badge/EU5-1.4.*-8B6F47.svg)
 ![Ironman & Achievements](https://img.shields.io/badge/Ironman%20%26%20Achievements-supported-success.svg)
-![Version: 1.2.2](https://img.shields.io/badge/version-1.2.2-blue.svg)
+![Version: 1.3.0](https://img.shields.io/badge/version-1.3.0-blue.svg)
 [![Discord](https://img.shields.io/badge/Discord-join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/dnfZGzK4FQ)
 
 </div>
 
 ---
 
-**Random New World (RNW)** is a standalone desktop application (Python + Rust, with a Tauri window) that replaces the Americas with a procedurally generated landmass while keeping the Old World completely vanilla.
+**Random New World (RNW)** is a standalone desktop application (Python + Rust, with a Tauri window and classic Qt fallback) focused primarily on generating the New World, and now also supporting **Africa** and **Oceania** (with **Eurasia** work in progress) while keeping any unselected continents completely vanilla.
 
 Each seed simulates elevation, climate zones, drainage basins, sea currents, resources, provinces, and native civilizations from scratch, compiling the result into a standard, self-contained EU5 map mod. Every world has a short shareable **World Code** and reproduces byte-for-byte on any machine running the same game build and generator version.
 
@@ -28,7 +28,7 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 ![Random New World procedural generation showcase](docs/images/showcase/rnw_showcase_full.gif)
 
 > [!IMPORTANT]
-> **Compatibility:** The published RNW 1.2.2 targets official EU5 **1.4.7, Steam build 26377361**. The 1.3.0 development version adds **EU5 1.4.9, Steam build 26655995**. Keep each generated map and its campaign on the exact EU5 version used to generate it, and keep its world mod.
+> **Compatibility:** Targets **EU5 1.4.\*** (latest verified: **1.4.9 / Steam build 26655995**). Most updates within the 1.4 branch work without needing a generator update; RNW **1.3.0** uses algorithm epoch **64**. Keep each generated map and its campaign on the exact EU5 version used to generate it, and keep its world mod.
 
 Read [Known limitations](docs/known-limitations.md) before playing: supported game
 build, save and mod compatibility, generation requirements and known visual issues.
@@ -37,16 +37,16 @@ build, save and mod compatibility, generation requirements and known visual issu
 
 | Layer | Capabilities |
 |---|---|
-| **Landmasses & Canvas** | Six archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), plus **Random** and **Total Chaos** modes, coastline sketch previews, and custom hand-drawn outlines. Optional **+65% ocean expansion** (`62.5M px` canvas) claims surrounding ocean space across the Pacific and Atlantic beyond the vanilla Americas footprint, while preserving or relocating enclosed island groups (Polynesia, Hawaii, Atlantic islets). |
-| **Physical Geography** | Unified elevation, climate, biome, terrain material, and vegetation simulation; drainage-driven river networks, hydrologically integrated lakes, and branching mountain ranges with realistic relief and passes; vanilla-calibrated continental shelves and coastlines. |
-| **Seas & Navigation** | Guaranteed natural harbors for coastal sea zones; shape-aware water naming (gulfs, straits, bays, capes); dynamic reshaping of vanilla oceans and impassable `ocean_wasteland` basins; continuous ocean currents, shipping lanes, and physical-shore army strait crossings (`adjacencies.csv`). |
-| **Political & Region Keys** | Compact, connected locations, provinces, areas, and regions. Vanilla American region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
-| **Native Societies & History** | 300-year causal prehistory simulation (1037–1337) shaping starting polities, regional power settings, starting alliances, subjects, and opinions. Conservative population migration, primary identity cores, and fine-grained controls for state land targets, historical turbulence, and peasant/tribesman balance. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) seeded as ambitious centres with prudent or overreaching strategies. |
-| **Economy & Institutions** | Starting development matching EU5 exact rules (including river size weighting), valid initial laws and policies, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. Individual 0–3× placement weights for all 34 ordinary New World RGOs alongside precious resources. |
+| **Continents, Landmasses & Canvas** | Independently generate **America**, **Africa** and **Oceania** in one world and one mod, each with its own presets, quick choices, whole-map sketches and custom hand-drawn outlines. Six archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), plus **Random**, **Total Chaos** and *Omerika* (*Keep the real Americas* option). Optional **+65% ocean expansion** (`62.5M px` canvas), regional **Normal** location sizing, and optional/required land bridges from Africa to Asia and Iberia. |
+| **Physical Geography** | Coastal cordilleras, seasonal rainfall, drainage-first river networks and hydrologically integrated lakes; locations sized and shaped by climate, terrain and rivers; natural wastelands (dunes, plateaus, hills, flat wilds, mountains) planned from terrain and climate; vanilla-calibrated continental shelves and coastlines. |
+| **Seas & Navigation** | Compact, even open-water grid with local shore and strait partitions; guaranteed natural harbors; shape-aware water naming (gulfs, straits, bays, capes) and continuous Mediterranean sea areas; dynamic ocean currents, shipping lanes, world sea-route routing, and physical-shore army strait crossings (`adjacencies.csv`). |
+| **Political & Region Keys** | Compact, connected locations (bounded below the engine's city-grid limit), provinces, areas, and regions. Vanilla region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
+| **Native Societies & History** | 300-year causal prehistory simulation (1037–1337) shaping starting polities, regional power settings, starting alliances, subjects, and opinions. Plan-based population distribution, primary identity cores, Morocco and Mamluk/Damascus African start choices, and fine-grained controls for state land targets, historical turbulence, and peasant/tribesman balance. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*). |
+| **Economy & Institutions** | Starting development matching EU5 exact rules (including river size weighting), valid initial laws and policies, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. Pooled raw-material sampling and individual 0–3× placement weights for all 34 ordinary New World RGOs alongside precious resources. |
 | **Dynamic Content & L10n** | [Procedural regional stories, formable nations ladder with missions & cores, restorations of fallen realms, narrative Our History storytelling, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Settle the Frontier enabled across all New World land countries. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
-| **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. Optional multiplayer reveal at game start. **Ironman and Achievements are fully supported.** |
+| **True Terra Incognita & Look** | Spoiler-free by default: generated continents remain masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal them. Optional per-continent multiplayer reveal at game start. Includes the aged-chart **Terra Incognita** window appearance alongside Dark and Light, classic Qt parity and Valve Proton Experimental support. **Ironman and Achievements are fully supported.** |
 
-The **1.2.0** update introduces simulated prehistory, starting geopolitics, starting laws and diplomatic budgets, narrative Our History storytelling, regional formable nations with missions, and responsive generator workbench features. See the [1.2.0 candidate notes](docs/releases/1.2.0.md), the [roadmap](docs/roadmap.md) and the [1.2.0 plan](docs/history-plan.md) for full design and details.
+The **1.3.0** update expands RNW beyond America with optional generation of Africa and Oceania (with Eurasia work in progress), alongside natural wastelands, river-first geography, compact sea cells, pooled raw materials, the Terra Incognita window theme, and EU5 1.4.9 verification. See the [1.3.0 release notes](docs/releases/1.3.0.md), the [continent generation plan](docs/continent-generation-plan.md) and the [roadmap](docs/roadmap.md) for full design and details.
 
 ## Screenshots
 
@@ -123,14 +123,14 @@ EU5 compiles its map topology, meshes, and splines during initial mod loading �
 flowchart LR
     G[("EU5 Installation<br/>(read-only)")] --> R["Verify & fingerprint<br/>map contract"]
     C(["World Code<br/>archetype + seed + params"]) --> W
-    R --> W["Compile New World<br/>Python + Rust core"]
+    R --> W["Compile World<br/>Python + Rust core"]
     W --> V{"Strict Validators<br/>(fail-fast)"}
     V --> M[/"Standalone Mod<br/>mod/rnw_exp_world_…"/]
     M --> P(("Play 1337 Campaign<br/>(Ironman & Achievements OK)"))
 
 ```
 
-* **Untouched Old World:** Every pixel, province key, and adjacency outside the New World canvas is verified against the vanilla installation baseline.
+* **Untouched Ungenerated Continents:** Every pixel, province key, and adjacency outside the selected continents' canvases is verified against the vanilla installation baseline.
 * **Bit-for-Byte Deterministic:** Frozen releases with the same algorithm epoch, resolved settings, seed and game inputs produce identical world files across operating systems and CPU thread counts (excluding presentation metadata). Synthetic digests are checked in CI; the full game-derived reference is verified locally.
 * **Fail-Fast Invariants:** Unverified game builds, unhandled vanilla script references, or broken map invariants halt compilation immediately — never emitting silently corrupted mods.
 * **Native Rust Core:** Compute-heavy kernels (simplex/domain-warped noise, distance fields, drainage routing, terrain slot assignment, LZAV compression) are written in Rust and verified bit-identical against Python reference implementations in [`tests/reference/`](tests/reference/).
@@ -162,7 +162,7 @@ No Python or Rust installation is required for the [released packages](https://g
 
 #### Requirements
 
-* **Europa Universalis V (official 1.4.9 / Steam build 26655995)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
+* **Europa Universalis V (official 1.4.*, latest verified: 1.4.9 / Steam build 26655995)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
 * **Node.js 20+** (only needed when building the Tauri desktop window from source).

@@ -53,8 +53,8 @@ proof that its gate still makes the old bytes ([ADR 0013](adr/0013-experimental-
 `tests/test_epoch_selection.py` and `tests/test_epoch_controller.py` need no game: the window of
 epochs, the switches, the stamps and what the controller makes of the choice.
 
-The reference export compares epoch 64 of pending RNW 1.3.0 with `tests/golden_world.json` on
-EU5 1.4.9. `tests/golden_world_1.4.7.json` records its pre-climate-calibration result on EU5
+The reference export compares epoch 64 of RNW 1.3.0 with `tests/golden_world.json` on
+EU5 1.4.9. `tests/golden_world_1.4.7.json` records an earlier epoch-64 reference on EU5
 1.4.7. The frozen
 epoch-63, epoch-62, epoch-61, epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch63.json`,
 `tests/golden_world_epoch62.json`, `tests/golden_world_epoch61.json`, `tests/golden_world_epoch60.json` and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples

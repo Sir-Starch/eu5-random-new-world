@@ -1,13 +1,14 @@
 # Using the generator
 
 **Random New World creates a new map for your next Europa Universalis V campaign.**
-It replaces the Americas with new continents, islands, resources and native societies,
-while keeping the Old World intact. Each world becomes its own mod that you enable in EU5.
+Built around the New World first, it can replace America, Africa and/or Oceania (with Eurasia
+work in progress) with new continents, islands, resources and native societies, while keeping
+unselected continents intact. Each world becomes its own mod that you enable in EU5.
 
 If you came here from Steam, start with the steps below. The default settings are enough
 for your first world; you can explore the other options whenever you want.
 
-**Current compatibility:** Published RNW 1.2.2 targets EU5 **1.4.7** (Steam build 26377361). The 1.3.0 development version adds EU5 **1.4.9** (Steam build 26655995). Continue each generated map's campaign on the exact EU5 version used to create it.
+**Current compatibility:** RNW 1.3.0 targets **EU5 1.4.\*** (latest verified: **1.4.9**, Steam build 26655995). Most patches within the 1.4 branch work without needing a generator update. Continue each generated map's campaign on the exact EU5 version used to create it.
 See [known limitations](known-limitations.md) for game updates, saves and mod compatibility.
 
 ## Quick start: from Steam to your first campaign
@@ -102,6 +103,15 @@ and lets the seed add a second one along the Arabian shore. **Keep Mamluks**
 enables both options by default. You can turn either off. African shores can also
 approach Europe closely enough for an army crossing over one navigable strait.
 
+**Allow a land connection to Iberia (no strait)** (off by default) lets a seed join
+Africa to southern Iberia by land where the Strait of Gibraltar is (35 in 100 chance),
+or every world with **Require the land connection to Iberia**. When the bridge is built
+the strait disappears and the Mediterranean has no sea outlet to the Atlantic; if the
+Asian link is also present, it becomes an inland sea. **Keep a sea route around the world**
+(under **The whole world**, on by default for regional worlds) checks after the continents
+are built that ships can still sail around the globe, opening a narrow channel through
+generated land only if needed.
+
 When generating Africa, **Morocco's Iberian holdings** offers four outcomes for
 Ronda, Algeciras, Gibraltar and Marbella.
 
@@ -139,7 +149,10 @@ adjust the broad choices on the World tab or individual values in Advanced.
 The quick choices for land, native peoples, native states, extraordinary peoples,
 historical turbulence and precious resources adjust the same settings you can change
 individually in **Advanced** (**Customize** in the classic window), for each continent
-separately.
+separately. **Normal** land uses each continent's own default location spacing so playable
+counts sit close to vanilla (on 1.4.9, 66 px for America alone or 51 px when sharing the
+map with another generated continent, 66 px for Africa and 72 px for Oceania); **Location
+size** in **Advanced → Land and sea** adjusts it between 40 and 90 px.
 
 In **Total Chaos**, **Randomize settings again** draws another world type and another set
 of Advanced values, keeping the seed. **Random** beside the seed changes only the seed.
@@ -508,8 +521,8 @@ Tick **Experimental features** in **Settings** to show options that are not mean
 player. Unticking it hides them and returns them to their defaults.
 
 The first one is the **Algorithm epoch** on the new-world page, beside the seed and the world
-code. It lists the current epoch (the default) and the older ones this generator still makes
-(epoch 62 of release 1.2.1 and epoch 61 of release 1.2.0 for 1.2.2). Choose an older one to make a
+code. It lists the current epoch (the default, 64 for 1.3.0) and the older ones this generator still makes
+(epoch 63 of release 1.2.2, epoch 62 of release 1.2.1 and epoch 61 of release 1.2.0). Choose an older one to make a
 world as that release made it, for a campaign that continues an old world or to compare two
 algorithms. The world code of such a world names that release, so it also opens in the older
 generator; pasting a code of a listed older epoch while the box is ticked selects its epoch on
@@ -665,7 +678,7 @@ commands. Commands use the normal application data directory unless you set
 stores the recipe; making exactly the same world again also needs the original
 generation algorithm, resolved settings and rolls, and game inputs.
 
-RNW 1.2.2 uses **algorithm epoch 63**; 1.2.1 used **epoch 62**, 1.2.0 **epoch 61**, 1.1.0 **epoch 60** and 1.0.0 **epoch 59**. An epoch identifies a
+RNW 1.3.0 uses **algorithm epoch 64**; 1.2.2 used **epoch 63**, 1.2.1 **epoch 62**, 1.2.0 **epoch 61**, 1.1.0 **epoch 60** and 1.0.0 **epoch 59**. An epoch identifies a
 generation algorithm, so the same code can produce different worlds after an epoch
 change. For development builds, a version number alone is not enough to identify the
 algorithm. Older output is not silently migrated. The [version policy](adr/0003-versioning.md)

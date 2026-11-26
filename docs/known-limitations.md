@@ -1,14 +1,13 @@
 # Known limitations
 
-These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday use, see the
+These limits apply to **RNW 1.3.0 / epoch 64**. For installation and everyday use, see the
 [generator guide](generator-guide.md).
 
 ## Game compatibility and saves
 
-- **RNW 1.2.2 targets official EU5 1.4.7, Steam build 26377361.** EU5 1.4.9
-  support starts with RNW 1.3.0. This
-  compatibility guidance does not migrate an existing map to a different game
-  version.
+- **RNW 1.3.0 targets official EU5 1.4.\* (latest verified: 1.4.9, Steam build 26655995).**
+  Most updates within the 1.4 branch do not prevent the generator from running, though
+  compatibility guidance does not migrate an existing map to a different game version.
 - **New 1337 campaigns only.** A generated map cannot be added to an existing
   campaign. Keep the exact generated world mod used by each save and continue
   that campaign on the exact EU5 version used to generate its map. Updating the
@@ -19,7 +18,7 @@ These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday us
   world you intend to play, with the Workshop generator item disabled. Fully
   restart EU5 before switching maps or replacing a loaded world's files;
   switching within the same game session can mix map data and cause crashes.
-- **Other mods can conflict.** Map overhauls and mods replacing American
+- **Other mods can conflict.** Map overhauls and mods replacing generated continents'
   geography or content are the main risk; compatibility with arbitrary mod
   combinations is not guaranteed. Refined Colonization is supported with this
   load order: **Refined Colonization → generated RNW world mod**. If the New World
@@ -65,6 +64,10 @@ These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday us
 - **A very high Wasteland setting gives a little less than asked.** From 1.3.0 every passable
   location must still reach a coast when the wastelands are planned, so at the top of the
   slider a few per cent of the asked cells stay passable.
+- **Closing the Strait of Gibraltar seals the Mediterranean.** When **Allow a land connection to
+  Iberia (no strait)** builds a bridge in Africa, the Mediterranean has no sea outlet to the
+  Atlantic and its ports cannot reach the Atlantic or Americas by sea (and if the Asian link is
+  also present, it becomes an inland sea). Turn the option off to keep the strait.
 - **Some seeds and settings cannot produce a valid world.** Generation stops
   with an error in that case. Use **Generate with a new seed** to retry.
 - **A world made by an earlier algorithm gets no versions.** A version keeps the

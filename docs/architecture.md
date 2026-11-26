@@ -1,7 +1,7 @@
 # Current architecture
 
 RNW is an external Python/Rust generator with a desktop application: a Tauri window (Svelte/TypeScript and a Rust shell) and the classic Qt window as its fallback.
-RNW 1.2.2 is the released baseline. RNW 1.3.0 is the development target at epoch 64.
+RNW 1.3.0 targets epoch 64 (after 1.2.2 at epoch 63).
 It reads the player's EU5 installation and emits one self-contained local world
 mod. America, Africa and Oceania can be replaced independently. The rest of the
 world uses the installed map and setup, with its connections to the new regions

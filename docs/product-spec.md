@@ -1,10 +1,10 @@
 # Product specification
 
-Random New World generates New World geography and societies for EU5 while
-preserving the vanilla Old World, except for the continents the player chooses to generate
-(1.3.0). The 1.1.0 product was accepted by the owner (C437, C475); the
-[roadmap](roadmap.md) separates its shipping scope from future work. RNW 1.2.2 is the
-current release and RNW 1.3.0 is in development.
+Random New World generates procedural geography and societies for Europa Universalis V —
+centered on the New World first, with optional generation of Africa and Oceania (1.3.0) and
+Eurasia in progress — while preserving ungenerated continents as vanilla. The 1.1.0 product
+was accepted by the owner (C437, C475); the [roadmap](roadmap.md) separates its shipping scope
+from future work. RNW 1.3.0 (epoch 64) follows RNW 1.2.2.
 
 ## Player journey
 

@@ -104,8 +104,11 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (1, 2, 0),  # Causal prehistory, final start, closed-basin water and the Omerika world type.
     (1, 2, 1),  # Market centres only where the calibrated settlement plan puts them.
     (1, 2, 2),  # Subcontinents cut at the waist, with whole islands; smooth drawn coasts.
-    (1, 3, 0),  # Planned wastelands; cordilleras, open climate, rough hills, rivers before cells;
-    # raw materials pooled over broader classes.
+    (
+        1,
+        3,
+        0,
+    ),  # Africa and Oceania, natural wastelands, river-first geography, compact seas, city bounds.
 )
 
 

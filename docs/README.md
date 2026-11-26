@@ -1,7 +1,7 @@
 # Documentation
 
-RNW 1.2.2 (epoch 63) shipped on 2026-11-11 for official EU5 1.4.7 / Steam build 26377361.
-The pending RNW 1.3.0 (epoch 64) also supports official EU5 1.4.9 / Steam build 26655995.
+RNW 1.3.0 (epoch 64) targets official **EU5 1.4.\*** (latest verified: **1.4.9 / Steam build 26655995**). Most patches in the 1.4 branch work without a generator update.
+Earlier releases: RNW 1.2.2 (epoch 63, shipped 2026-11-11 for EU5 1.4.7).
 Continue each generated map's campaign on the exact EU5 version used to create it.
 Start with [AGENTS.md](../AGENTS.md) for working instructions and
 [architecture](architecture.md) for current code. This index distinguishes current
@@ -24,7 +24,7 @@ guidance from the historical record; an old unchecked box is not a current task.
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
 | [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |
-| [Changelog](../CHANGELOG.md), [1.2.2 notes](releases/1.2.2.md), [1.2.1 notes](releases/1.2.1.md), [1.2.0 notes](releases/1.2.0.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
+| [Changelog](../CHANGELOG.md), [1.3.0 notes](releases/1.3.0.md), [1.2.2 notes](releases/1.2.2.md), [1.2.1 notes](releases/1.2.1.md), [1.2.0 notes](releases/1.2.0.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
 
 ## Subsystem references
 

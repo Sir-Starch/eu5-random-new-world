@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "eu5-random-new-world"
 version = "1.3.0"
-description = "Procedurally generated New Worlds for Europa Universalis V"
+description = "Procedural continent generator for Europa Universalis V (New World, Africa and Oceania)"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MPL-2.0"
