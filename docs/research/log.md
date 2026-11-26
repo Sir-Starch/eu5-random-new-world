@@ -2332,3 +2332,7 @@ coasts, the Wall's barrier is recorded in `NewWorld.barrier` and everything else
 coastal cells with a per-kind coast preference read from the vanilla wastelands. A reserve of classes without a vanilla rate did not close the
 shortfall at 200 and 500 per mille (reachability is the limit) and was dropped. [V-EXEC]
 Reproduced: epoch 64 reference twice and epoch 63 (the predecessor) once after the reorder.
+
+## 2026-11-26 — RNW 1.3.0 released (C565)
+
+[V-EXEC] Published RNW 1.3.0 (epoch 64, targeting EU5 1.4.* with latest verified 1.4.9 / Steam build 26655995) on GitHub from tag `v1.3.0` at `ee19fb850c4eb90d1f9bb2980251cedd068c4fb3`. Before tagging, candidate commits `c8b9b4a` and `ee19fb8` fixed a WebKitGTK `<select>` horizontal overflow in Settings and a Windows `madvise` huge-page test assertion, then fixed a 2 ms `tests/test_land_editor.py` button-enablement timing race caught on `native (macos-15)` during the initial tag attempt. On `ee19fb8`, general CI run `45811337092`, candidate dispatch `45815287477`, tagged release run `45818083592` and Discord release workflow `45821456094` passed all jobs. Posted assets passed `packaging/release.py audit` and `SHA256SUMS` verification before and after publication. Exact archive and Windows binary hashes plus VirusTotal results (0 detections on launcher and `_native.pyd`; one Trapmine `suspicious.low.ml.score` on `random-new-world.exe`, accepted in writing by the owner on 2026-11-26) are recorded in [1.3.0.md](../releases/1.3.0.md#checksums-and-windows-binary-scans).

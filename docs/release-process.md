@@ -36,6 +36,17 @@ VirusTotal reports no detections for the launcher and native module. Trapmine re
 window's low-confidence `suspicious.low.ml.score`; the owner accepted that exact tagged-file
 heuristic as a false positive in writing on 2026-11-11. The Workshop page update remains the owner's step.
 
+[RNW 1.3.0](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.3.0)
+(epoch 64, EU5 1.4.\* / latest verified 1.4.9, Steam build 26655995) was published on 2026-11-26 from tag `v1.3.0` at
+`ee19fb850c4eb90d1f9bb2980251cedd068c4fb3`; its tagged workflow run 45818083592 passed all five
+jobs, and the Discord announcement run 45821456094 succeeded (C565). All five archives passed
+`packaging/release.py audit` and the combined `SHA256SUMS` checks both from the draft and after
+publication. Exact archive and Windows-binary hashes are in the [release notes](releases/1.3.0.md).
+VirusTotal reports no detections for the launcher and native module, and Trapmine reports
+`suspicious.low.ml.score` on `generator/window/random-new-world.exe`; the owner accepted that
+tagged-file heuristic as a false positive in writing on 2026-11-26. Updating the Workshop item and
+deploying the rebuilt player's guide remain the owner's steps.
+
 | Field | Stable value |
 |---|---|
 | Public name | Random New World (RNW) |
@@ -129,12 +140,12 @@ metadata gives the launch instruction, and the page carries the full guide.
 For each localized title or description update, set `SetItemUpdateLanguage` and
 submit **both** `SetItemTitle` and `SetItemDescription` on the same update handle.
 Keep the localized Workshop title format matching the published release:
-**Random New World (RNW MAJOR.MINOR.PATCH)** for `english`, `braz_por`, `french`,
+**[RNW MAJOR.MINOR.PATCH] Random New World + Oceania + Africa** for `english`, `braz_por`, `french`,
 `german`, `polish`, `spanish` and `turkish`, where players search by the English
-mod name; **Случайный Новый Свет (RNW MAJOR.MINOR.PATCH)** for `russian`;
-**随机新大陆 (RNW MAJOR.MINOR.PATCH)** for `simp_chinese`;
-**ランダム新大陸 (RNW MAJOR.MINOR.PATCH)** for `japanese`; and
-**무작위 신대륙 (RNW MAJOR.MINOR.PATCH)** for `korean`. Snapshot the live texts
+mod name; **[RNW MAJOR.MINOR.PATCH] Случайный Новый Свет + Океания + Африка** for `russian`;
+**[RNW MAJOR.MINOR.PATCH] 随机新大陆 + 大洋洲 + 非洲** for `simp_chinese`;
+**[RNW MAJOR.MINOR.PATCH] ランダム新大陸 + オセアニア + アフリカ** for `japanese`; and
+**[RNW MAJOR.MINOR.PATCH] 무작위 신대륙 + 오세아니아 + 아프리카** for `korean`. Snapshot the live texts
 first; a title-only update resubmits that language's existing description exactly. Omitting one field can
 clear it: the 2026-11-12 repair reproduced this for a description, then restored
 it from the snapshot. After submission, query every official language without

@@ -2,31 +2,20 @@
 
 ## Start here
 
-RNW **1.2.2** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.2.2)
-(2026-11-11, smoother drawn coasts, a unified land editor and lower memory use; 1.2.1, 1.2.0,
-1.1.0 and 1.0.0 are earlier releases). The generator reaches players through
+RNW **1.3.0** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.3.0)
+(2026-11-26, optional generation of Africa and Oceania beside or instead of America, reworked
+window, natural wastelands, upgraded rivers/climates/location spacing, Proton ICU forwarder and
+Settings select overflow fix; 1.2.2, 1.2.1, 1.2.0, 1.1.0 and 1.0.0 are earlier releases). The
+generator reaches players through
 [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331); updating that
-item to 1.2.2 is the owner's step (change notes: `docs/releases/1.2.2-workshop.bbcode`). The
-publication-rules review remains accepted (C437–C439, C441); the owner accepted the tagged
-Tauri-window low-confidence heuristic in writing (C532). RNW 1.2.2 targets EU5 1.4.7 / Steam
-build 26377361. The development target is **EU5 1.4.9 / Steam build 26655995**, including Across
-the Pillars ([audit](docs/research/compatibility-1-4-9.md)); frozen release epochs
-**60** (1.1.0), **61** (1.2.0), **62** (1.2.1) and **63** (1.2.2); the next release is **1.3.0**,
-whose pending epoch is **64** (natural wastelands, `rnw.barrens`; cordilleras, rivers before
-cells, open climate, rough hills, C534; pooled raw materials, C535; cells sized by what they
-become and graded, C536; coastal cells sized like inland ones, C537; grounds sized against their
-neighbours, the shore corrected and the climate smoothed once, C538; coastal cells sized at the
-inland density, inland cells banded, two gradations, gentler polar approach, C539; dry climates
-calibrated from the area of vanilla land, C550; no passable location above what the game can
-draw a city on, C555; people follow the area the planner gave each cell, not its pixels, C556; rectangular open-sea
-cells and a local cut along shores and straits, C558).
-The 1.3.0 headline is optional generation of
-Africa and Oceania beside or instead of America ([plan](docs/continent-generation-plan.md),
-C545–C551), with a window reworked for several continents, the Terra Incognita appearance and
-the hub's ICU forwarder for Valve's Proton (C553); the [changelog](CHANGELOG.md) lists all of it.
-An output change in this cycle refines that epoch; one after its tag starts a new one (ADR 0003).
-Check the installed build before work that depends on game files, and audit changed inputs after
-a game patch.
+item to 1.3.0 is the owner's step (change notes: `docs/releases/1.3.0-workshop.bbcode`). The
+publication-rules review remains accepted (C437–C439, C441); the owner accepted the tagged 1.3.0
+Tauri-window low-confidence heuristic in writing (C565). RNW 1.3.0 targets **EU5 1.4.\***,
+latest verified **1.4.9 / Steam build 26655995**, including Across the Pillars
+([audit](docs/research/compatibility-1-4-9.md)); frozen release epochs **60** (1.1.0),
+**61** (1.2.0), **62** (1.2.1), **63** (1.2.2) and **64** (1.3.0). Future output changes after
+1.3.0 start a new pending epoch (**65**, ADR 0003). Check the installed build before work that
+depends on game files, and audit changed inputs after a game patch.
 
 Read [docs/README.md](docs/README.md) for the document map and
 [architecture](docs/architecture.md) for code ownership and invariants.

@@ -50,10 +50,10 @@ KOFI: Final = "https://ko-fi.com/rnw"
 
 # The release the guide describes. Bump with a release; the terms follow the tag.
 RELEASE: Final[dict[str, str]] = {
-    "tag": "v1.2.2",
-    "version": "1.2.2",
+    "tag": "v1.3.0",
+    "version": "1.3.0",
     "game": "1.4.*",
-    "verified": "1.4.7",
+    "verified": "1.4.9",
 }
 
 
