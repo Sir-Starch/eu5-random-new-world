@@ -128,9 +128,14 @@ metadata gives the launch instruction, and the page carries the full guide.
 
 For each localized title or description update, set `SetItemUpdateLanguage` and
 submit **both** `SetItemTitle` and `SetItemDescription` on the same update handle.
-Keep the title **Random New World (RNW MAJOR.MINOR.PATCH)** in every language,
-matching the published release. Snapshot the live texts first; a title-only repair
-resubmits that language's existing description exactly. Omitting one field can
+Keep the localized Workshop title format matching the published release:
+**Random New World (RNW MAJOR.MINOR.PATCH)** for `english`, `braz_por`, `french`,
+`german`, `polish`, `spanish` and `turkish`, where players search by the English
+mod name; **Случайный Новый Свет (RNW MAJOR.MINOR.PATCH)** for `russian`;
+**随机新大陆 (RNW MAJOR.MINOR.PATCH)** for `simp_chinese`;
+**ランダム新大陸 (RNW MAJOR.MINOR.PATCH)** for `japanese`; and
+**무작위 신대륙 (RNW MAJOR.MINOR.PATCH)** for `korean`. Snapshot the live texts
+first; a title-only update resubmits that language's existing description exactly. Omitting one field can
 clear it: the 2026-11-12 repair reproduced this for a description, then restored
 it from the snapshot. After submission, query every official language without
 cached responses and verify both fields, plus the preview URL. See
